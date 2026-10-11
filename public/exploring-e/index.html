@@ -222,6 +222,7 @@ h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
   cursor: pointer;
 }
 .btn .v { font-size: 1.15em; }
+.btn:disabled { opacity: .45; cursor: default; }
 .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
 .chips button {
   font: 500 .88rem var(--mono);
@@ -393,12 +394,43 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 3. Push sideways -->
-  <section class="panel" aria-labelledby="s-h">
+  <!-- 3. One sideways piece -->
+  <section class="panel" aria-labelledby="o-h">
     <div class="panel-head">
       <p class="station">Station 3</p>
+      <h2 id="o-h">One sideways piece</h2>
+      <p>Every push so far went forward, along the number line. Stand a second number line upright through 0 and the line becomes a plane, the plane of <a href="/complex-numbers/">complex numbers</a>, where multiplying by <span class="v">i</span> turns a number a quarter turn. Now push sideways. Split a push of <span class="v">iθ</span> into <span class="v">n</span> pieces, and each piece multiplies by 1 + <span class="v">iθ</span>/<span class="v">n</span>. To see what one piece does, call wherever you are <span class="v">z</span>. Multiplying it out, <span class="v">z</span>(1 + <span class="v">iθ</span>/<span class="v">n</span>) = <span class="v">z</span> + (<span class="v">θ</span>/<span class="v">n</span>)<span class="v">iz</span>: you keep <span class="v">z</span> and add a small piece of <span class="v">iz</span>, which is <span class="v">z</span> turned a quarter turn. So the piece is <b>at right angles</b> to the line from 0 to <span class="v">z</span>. Drag <span class="v">z</span> anywhere and the piece turns with it. Slide <b>Pieces taken</b> to keep going: each new piece is at right angles to the new <span class="v">z</span>, so it leans further round. The dashed circle runs through where you started. A pure turn would keep you on it, but every piece also stretches you a little, so the walk drifts outward. Then shrink the pieces with the <b>Piece size</b> slider: <b>a small sideways piece turns you by about its own size, in radians, and hardly stretches you at all.</b></p>
+    </div>
+    <div class="split">
+      <svg class="plane" id="planeO" role="img" aria-label="A point z, the quarter-turned copy iz, and a small piece of iz added at right angles to z"></svg>
+      <div class="side">
+        <div class="stack long-labels">
+          <div class="slider">
+            <label for="o-size">Piece size</label>
+            <input type="range" id="o-size" min="0" max="7" step="1" value="5">
+            <output id="o-sizeOut" for="o-size"></output>
+          </div>
+          <div class="slider">
+            <label for="o-m">Pieces taken</label>
+            <input type="range" id="o-m" min="0" max="14" step="1" value="0">
+            <output id="o-mOut" for="o-m"></output>
+          </div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="o-reset">Reset</button>
+        </div>
+        <dl class="pair wide" id="o-out"></dl>
+        <p class="note" id="o-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Push sideways -->
+  <section class="panel" aria-labelledby="s-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
       <h2 id="s-h">Push sideways</h2>
-      <p>Every push so far went forward, along the number line. Stand a second number line upright through 0 and the line becomes a plane, the plane of <a href="/complex-numbers/">complex numbers</a>, where multiplying by <span class="v">i</span> turns a number a quarter turn. So multiplying by 1 + <span class="v">iθ</span>/<span class="v">n</span> adds a piece <b>at right angles</b> to where you are. Split a push of <span class="v">iθ</span> into <span class="v">n</span> pieces and the walk curls round the circle of radius 1. It's Station 2's recipe with <span class="v">x</span> = <span class="v">iθ</span>, so it settles on <span class="v">e</span><sup><span class="v">iθ</span></sup>.</p>
+      <p>Now take the pieces one after another. It's Station 2's recipe with the push <span class="v">x</span> = <span class="v">iθ</span>: start at 1 and multiply by 1 + <span class="v">iθ</span>/<span class="v">n</span>, <span class="v">n</span> times, so the push of <span class="v">iθ</span> is split into <span class="v">n</span> pieces. As Station 3 showed, each piece is at right angles to the line from 0 out to where you are then, so it turns you a little and barely stretches you. With a few pieces, a small square at each corner marks the right angle. Piece after piece, the walk curls round the circle of radius 1, and as <span class="v">n</span> grows it settles on <span class="v">e</span><sup><span class="v">iθ</span></sup>.</p>
     </div>
     <div class="split">
       <svg class="plane" id="plane3" role="img" aria-label="Successive powers of one plus i theta over n, curling from 1 around the unit circle toward e to the i theta"></svg>
@@ -406,14 +438,14 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
         <div class="chips" id="s-presets" role="group" aria-label="Set the push θ to"></div>
         <div class="stack">
           <div class="slider">
-            <label for="s-th">Push <span class="v">θ</span></label>
-            <input type="range" id="s-th" min="0" max="360" step="1" value="90">
-            <output id="s-thOut" for="s-th"></output>
-          </div>
-          <div class="slider">
             <label for="s-n">Pieces <span class="v">n</span></label>
             <input type="range" id="s-n" min="0" max="13" step="1" value="0">
             <output id="s-nOut" for="s-n"></output>
+          </div>
+          <div class="slider">
+            <label for="s-th">Push <span class="v">θ</span></label>
+            <input type="range" id="s-th" min="0" max="360" step="1" value="90">
+            <output id="s-thOut" for="s-th"></output>
           </div>
         </div>
         <dl class="pair wide" id="s-out"></dl>
@@ -422,12 +454,12 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 4. Wrap the line around the circle -->
+  <!-- 5. Wrap the line around the circle -->
   <section class="panel" aria-labelledby="w-h">
     <div class="panel-head">
-      <p class="station">Station 4</p>
+      <p class="station">Station 5</p>
       <h2 id="w-h">Wrap the line around the circle</h2>
-      <p>Each sideways piece is at right angles to the line from 0, so it slides along the circle instead of away from it. Pushing sideways by <span class="v">θ</span> walks a distance <span class="v">θ</span> around the circle. So here is <span class="v">e</span><sup><span class="v">iθ</span></sup> without any pieces: take the number line from 0 to <span class="v">θ</span>, stand it up at 1, and wrap it around the circle. Every number <span class="v">t</span> on it lands on <span class="v">e</span><sup><span class="v">it</span></sup>. The circle is 2π around, so π reaches exactly halfway, at −1. <b><span class="v">e</span><sup><span class="v">iπ</span></sup> = −1</b>, which is Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.</p>
+      <p>Each sideways piece is at right angles to the line from 0, so it slides along the circle instead of away from it. Pushing sideways by <span class="v">θ</span> walks a distance <span class="v">θ</span> around the circle. So here is <span class="v">e</span><sup><span class="v">iθ</span></sup> without any pieces: take the number line from 0 to <span class="v">θ</span>, stand it up at 1, and wrap it around the circle. Every number <span class="v">t</span> on it lands on <span class="v">e</span><sup><span class="v">it</span></sup>. The circle is 2π around, so π/2 reaches a quarter of the way, at <span class="v">i</span>, and π reaches exactly halfway, at −1. Halfway is two quarter turns, so <b><span class="v">e</span><sup><span class="v">iπ</span></sup> = <span class="v">i</span> × <span class="v">i</span> = −1</b>, which is Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.</p>
     </div>
     <div class="split">
       <svg class="plane" id="plane4" role="img" aria-label="The number line from 0 to theta, standing up at 1 and wrapping around the unit circle"></svg>
@@ -454,12 +486,39 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 5. Both at once -->
+  <!-- 6. Reading e^iθ -->
+  <section class="panel" aria-labelledby="r-h">
+    <div class="panel-head">
+      <p class="station">Station 6</p>
+      <h2 id="r-h">Reading <span class="v">e</span><sup><span class="v">iθ</span></sup></h2>
+      <p>Stations 4 and 5 found the same thing two ways. Put plainly, <b><span class="v">e</span><sup><span class="v">iθ</span></sup> is where you end up after walking a distance <span class="v">θ</span> round the circle from 1.</b> Nothing gets added to 1. You only ever multiply, and each symbol has its own job. <span class="v">i</span> sets the direction, <span class="v">θ</span> sets how far, π comes from the circle, and <span class="v">e</span> names where you land. Walk the circle and the readout shows each one at work.</p>
+    </div>
+    <div class="split">
+      <svg class="plane" id="planeR" role="img" aria-label="A walk of length theta around the unit circle from 1, with an arrow showing the sideways direction i times where you are"></svg>
+      <div class="side">
+        <div class="chips" id="r-presets" role="group" aria-label="Set the walk θ to"></div>
+        <div class="stack">
+          <div class="slider">
+            <label for="r-th">Walk <span class="v">θ</span></label>
+            <input type="range" id="r-th" min="0" max="360" step="1" value="120">
+            <output id="r-thOut" for="r-th"></output>
+          </div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="r-play">Walk it</button>
+        </div>
+        <dl class="pair" id="r-out"></dl>
+        <p class="note" id="r-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Both at once -->
   <section class="panel" aria-labelledby="b-h">
     <div class="panel-head">
-      <p class="station">Station 5</p>
+      <p class="station">Station 7</p>
       <h2 id="b-h">Both at once</h2>
-      <p>Station 2 pushed forward and Station 3 pushed sideways. Push at a slant and you do both. Each piece multiplies by 1 + (<span class="v">a</span> + <span class="v">bi</span>)/<span class="v">n</span>: the forward part <span class="v">a</span> stretches and the sideways part <span class="v">b</span> turns. You land on <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup>, stretched to <span class="v">e</span><sup><span class="v">a</span></sup> and turned <span class="v">b</span> radians, so <b><span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup> × <span class="v">e</span><sup><span class="v">bi</span></sup></b>, a stretch times a turn. In between, the walk spirals.</p>
+      <p>Station 2 pushed forward and Station 4 pushed sideways. Push at a slant and you do both. Each piece multiplies by 1 + (<span class="v">a</span> + <span class="v">bi</span>)/<span class="v">n</span>: the forward part <span class="v">a</span> stretches and the sideways part <span class="v">b</span> turns. You land on <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup>, stretched to <span class="v">e</span><sup><span class="v">a</span></sup> and turned <span class="v">b</span> radians, so <b><span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup> × <span class="v">e</span><sup><span class="v">bi</span></sup></b>, a stretch times a turn. In between, the walk spirals.</p>
     </div>
     <div class="split">
       <svg class="plane" id="plane5" role="img" aria-label="Successive powers of one plus a plus b i over n, from 1 toward e to the a plus b i"></svg>
@@ -495,9 +554,40 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
       <li><b>The last piece adds about <span class="v">e</span> times the first.</b> In Station 1 the first of a million pieces adds a millionth of 1, and the last adds a millionth of nearly <span class="v">e</span>. Growth on growth, all the way up.</li>
       <li><b>Pushes add, results multiply.</b> Pushing by 2 is pushing by 1 twice, so <span class="v">e</span><sup>2</sup> = <span class="v">e</span> × <span class="v">e</span>. The same rule works sideways: turning by <span class="v">θ</span> then by <span class="v">φ</span> is turning by <span class="v">θ</span> + <span class="v">φ</span>, so <span class="v">e</span><sup><span class="v">iθ</span></sup> × <span class="v">e</span><sup><span class="v">iφ</span></sup> = <span class="v">e</span><sup><span class="v">i</span>(<span class="v">θ</span>+<span class="v">φ</span>)</sup>. That's the complex numbers rule that angles add, written as powers.</li>
       <li><b><span class="v">e</span><sup><span class="v">iθ</span></sup> isn't <span class="v">e</span> multiplied by itself <span class="v">iθ</span> times.</b> That has no meaning. For a complex power, the recipe is what the power means, and it earns the name by following the rule above.</li>
-      <li><b>Why radians.</b> Station 4 wraps the number line around a circle of radius 1, so a length along the line becomes the same length of arc. An angle measured by its arc on a circle of radius 1 is an angle in radians. In degrees the wrap would need stretching by π/180, which is why <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span> only works with <span class="v">θ</span> in radians.</li>
+      <li><b>Why radians.</b> Station 5 wraps the number line around a circle of radius 1, so a length along the line becomes the same length of arc. An angle measured by its arc on a circle of radius 1 is an angle in radians. In degrees the wrap would need stretching by π/180, which is why <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span> only works with <span class="v">θ</span> in radians.</li>
       <li><b>Every number is a stretch and a turn.</b> Any complex number can be written <span class="v">r</span><span class="v">e</span><sup><span class="v">iθ</span></sup>: a length <span class="v">r</span> and an angle <span class="v">θ</span>. Multiplying two of them multiplies the lengths and adds the angles in one step.</li>
-      <li><b>Five numbers in one line.</b> <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0 uses 0, 1, <span class="v">e</span>, <span class="v">i</span>, and π once each, and nothing else. Read through Station 4, it says something plainer: walk halfway round a circle and you face the other way.</li>
+      <li><b>Five numbers in one line.</b> <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0 uses 0, 1, <span class="v">e</span>, <span class="v">i</span>, and π once each, and nothing else. Read through Station 5, it says something plainer: walk halfway round a circle and you face the other way.</li>
+    </ul>
+  </section>
+
+  <section class="notes" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <ul>
+      <li><b>Found before anyone noticed it.</b> In 1618 an appendix to an English edition of John Napier's work on logarithms gave a table of what we'd now call natural logarithms, logarithms to the base <span class="v">e</span>. It carried no author's name, though it was probably by William Oughtred, and nobody picked out the base as a number worth naming.</li>
+      <li><b>A question about interest.</b> Jacob Bernoulli worked on interest added more and more often: a year's interest of 100% added all at once, or in two halves, or monthly, or every instant. That's Station 1's recipe, (1 + 1/<span class="v">n</span>)<sup><span class="v">n</span></sup>. He published it in 1690 and showed that however often the interest is added, the total stays between 2 and 3.</li>
+      <li><b>Euler gave it its letter.</b> Leonhard Euler wrote <span class="v">e</span> for the number in a paper on firing cannons, written in 1727 or 1728 and not printed until 1862. He used it again in a letter to Christian Goldbach on 25 November 1731, and in print in his <i>Mechanica</i> of 1736. Nobody knows why he picked <span class="v">e</span>. It almost certainly wasn't for his own name.</li>
+      <li><b>The recipe, in Euler's words.</b> In his <i>Introductio in analysin infinitorum</i> of 1748, Euler wrote <span class="v">e</span> as (1 + 1/<span class="v">i</span>)<sup><span class="v">i</span></sup> and <span class="v">e</span><sup><span class="v">z</span></sup> as (1 + <span class="v">z</span>/<span class="v">i</span>)<sup><span class="v">i</span></sup>, Stations 1 and 2 with an infinitely large number of pieces. A chapter later he put a sideways push through the same recipe, (1 + <span class="v">v</span>√−1/<span class="v">i</span>)<sup><span class="v">i</span></sup>, and reached <span class="v">e</span><sup><span class="v">v</span>√−1</sup> = cos <span class="v">v</span> + √−1 sin <span class="v">v</span>, which is Station 4. His <span class="v">i</span> was that infinitely large number, not √−1. He only started writing <span class="v">i</span> for √−1 in 1777.</li>
+      <li><b>Nobody knows who first wrote <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.</b> Roger Cotes had the formula in a disguised form, in the language of logarithms, in 1714, and Euler published it plainly in 1748. Either one gives Euler's identity in a line, but the historian Robin Wilson found that neither seems to have written it down, and that it's unknown who first did.</li>
+      <li><b><span class="v">e</span> never settles into a pattern of digits.</b> Euler proved in 1737 that <span class="v">e</span> isn't a fraction, so its decimals never repeat. In 1873 Charles Hermite went further and proved that no equation with whole-number coefficients has <span class="v">e</span> as a solution, so <span class="v">e</span> is transcendental. It was the first number shown to be transcendental that wasn't built for the purpose.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>John Napier, <i>A Description of the Admirable Table of Logarithmes</i>, translated by Edward Wright (London, 1618 edition), with its anonymous appendix.</li>
+      <li>Jacob Bernoulli, "Quaestiones nonnullae de usuris, cum solutione problematis de sorte alearum," <i>Acta Eruditorum</i> (May 1690), pp. 219–223.</li>
+      <li>Leonhard Euler, "Meditatio in experimenta explosione tormentorum nuper instituta" (written 1727 or 1728), printed in his <i>Opera postuma</i> (St Petersburg, 1862).</li>
+      <li>Leonhard Euler, letter to Christian Goldbach, 25 November 1731, in P. H. Fuss, ed., <i>Correspondance mathématique et physique</i>, volume 1 (St Petersburg, 1843), pp. 56–60.</li>
+      <li>Leonhard Euler, <i>Mechanica</i>, volume 1, chapter 2, §171 (St Petersburg, 1736).</li>
+      <li>Leonhard Euler, "De fractionibus continuis dissertatio" (presented 1737, printed 1744).</li>
+      <li>Leonhard Euler, <i>Introductio in analysin infinitorum</i>, volume 1, chapters 7 and 8 (Lausanne, 1748).</li>
+      <li>Leonhard Euler, "De formulis differentialibus angularibus maxime irrationalibus, quas tamen per logarithmos et arcus circulares integrare licet" (presented 1777, printed 1794), for <span class="v">i</span> as √−1.</li>
+      <li>Roger Cotes, "Logometria," <i>Philosophical Transactions of the Royal Society</i> (1714), reprinted in his <i>Harmonia mensurarum</i> (Cambridge, 1722).</li>
+      <li>Charles Hermite, "Sur la fonction exponentielle," <i>Comptes rendus de l'Académie des sciences</i> 77 (1873).</li>
+      <li>Eli Maor, <i>e: The Story of a Number</i> (Princeton University Press, 1994).</li>
+      <li>Robin Wilson, <i>Euler's Pioneering Equation: The Most Beautiful Theorem in Mathematics</i> (Oxford University Press, 2018), pp. 151–152.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/HistTopics/e/">"The number e"</a>, MacTutor History of Mathematics.</li>
     </ul>
   </section>
 </div>
@@ -869,6 +959,72 @@ class Plane {
   }
 }
 
+// keep a point on the board, snapping drags to friendly values
+const halfSnap = (v) => {
+  const h = Math.round(v * 2) / 2;
+  return Math.abs(v - h) < 0.08 ? h : Math.round(v * 20) / 20;
+};
+function tidy(plane, z, how) {
+  const lim = plane.r - 0.15;
+  const re = clamp(z.re, -lim, lim), im = clamp(z.im, -lim, lim);
+  return how === "drag" ? C(halfSnap(re), halfSnap(im)) : C(Math.round(re * 100) / 100, Math.round(im * 100) / 100);
+}
+
+// a point you can drag, or move with the arrow keys
+function handle(plane, { cls, label, name, set, get }) {
+  const g = svgEl("g", {
+    class: `handle ${cls}`, tabindex: 0, role: "slider",
+    "aria-roledescription": "draggable point", "aria-label": name,
+  });
+  const text = svgEl("text", { class: "lab var" }, label);
+  g.append(
+    svgEl("circle", { class: "hit", r: 24 }),
+    svgEl("circle", { class: "halo", r: 13 }),
+    svgEl("circle", { class: "knob", r: 7 }),
+    text,
+  );
+  plane.top.appendChild(g);
+
+  let dragging = false;
+  g.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dragging = true;
+    g.setPointerCapture(e.pointerId);
+    g.classList.add("drag");
+    g.focus({ preventScroll: true });
+    set(plane.toZ(e), "drag");
+  });
+  g.addEventListener("pointermove", (e) => { if (dragging) set(plane.toZ(e), "drag"); });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    g.classList.remove("drag");
+  };
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => g.addEventListener(t, end));
+  // keep a finger on a point from scrolling the page
+  g.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  g.addEventListener("keydown", (e) => {
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const st = e.shiftKey ? 0.5 : 0.1, z = get();
+    set(C(z.re + d[0] * st, z.im + d[1] * st), "key");
+  });
+
+  return {
+    label(t) { text.textContent = t; },
+    place(z, valueText) {
+      const [x, y] = plane.at(z);
+      g.setAttribute("transform", `translate(${f1(x)} ${f1(y)})`);
+      const r = abs(z), u = r < 1e-6 ? C(0.7, 0.7) : scale(z, 1 / r);
+      text.setAttribute("x", f1(u.re * 20));
+      text.setAttribute("y", f1(-u.im * 20 + 5));
+      g.setAttribute("aria-valuetext", valueText);
+    },
+  };
+}
+
 // turns that have a tidy name in terms of π, by whole degrees
 const PI_NAMES = { 45: "π/4", 90: "π/2", 180: "π", 270: "3π/2", 360: "2π" };
 // a radian amount for a slider readout, with its π name when it has one
@@ -921,7 +1077,119 @@ const iTimes = (t) => (t.name === "1" ? "i" : t.name === "2π" ? "2πi" : t.name
 const TURN_PRESETS = [ONE_RADIAN, turnOf(90), turnOf(180), turnOf(270), turnOf(360)];
 const sameTurn = (a, b) => a.deg === b.deg && a.th === b.th;
 
-// ---------- Station 3: push sideways ----------
+// ---------- Station 3: one sideways piece ----------
+
+const pO = new Plane($("planeO"), 1.6);
+const O_SIZES = [0.01, 0.05, 0.1, 0.2, 0.25, 0.5, 0.75, 1];
+// the walk starts at z0 and takes m pieces of the chosen size
+const O_START = { z0: ONE, si: 5, m: 0 };
+const Os = { ...O_START };
+const pctOf = (v) => `${+v.toPrecision(2)}%`;
+// enough digits to tell the turn from the piece size
+const sig = (v) => String(+v.toPrecision(5));
+// how far past the starting circle a total stretch f has carried z
+const drift = (f) => (f < 2 ? `${pctOf((f - 1) * 100)} further out than` : `${num(f, 1)} times as far out as`);
+// enough pieces for a full turn, but not so many the walk leaves the board
+function oMax(e, r0) {
+  if (r0 < 1e-6) return 0;
+  const full = Math.ceil((2 * Math.PI) / Math.atan(e) - 1e-9);
+  return Math.max(1, Math.min(full, Math.floor(Math.log(30 / r0) / Math.log(Math.hypot(1, e)))));
+}
+
+const hO = handle(pO, {
+  cls: "cz", label: "z", name: "Starting point",
+  get: () => Os.z0,
+  set: (z, how) => {
+    // within the board's usual view, however far out the walk has zoomed it
+    const r = abs(z), lim = 1.45;
+    Os.z0 = tidy(pO, r > lim ? scale(z, lim / r) : z, how);
+    drawO();
+  },
+});
+
+function drawO() {
+  const e = O_SIZES[Os.si], r0 = abs(Os.z0), M = oMax(e, r0);
+  Os.m = Math.min(Os.m, M);
+  const m = Os.m, pts = cwalk(C(1, e), m).map((p) => mul(Os.z0, p)), z = pts[m], r = abs(z);
+  const iz = mul(C(0, 1), z), next = C(z.re + e * iz.re, z.im + e * iz.im);
+  pO.setRange(Math.max(1.6, Math.ceil(Math.max(abs(next), r0) * 1.3 * 2) / 2));
+  const items = [];
+  // the circle through the start: a pure turn would stay on it
+  if (r0 > 0.05) items.push(pO.circle(r0, "unit"));
+  // the pieces already taken
+  if (m > 0) {
+    items.push(pO.poly(thin(pts), "ray cp"));
+    if (m <= 60) pts.slice(1).forEach((p) => items.push(pO.dot(p, 3, "dot cp")));
+  }
+  if (r > 1e-6) {
+    // iz, the quarter turn of z, drawn from 0
+    items.push(pO.line(ZERO, iz, "leg cw"), pO.rightAngle(arg(z), "cw"), pO.labOut(iz, "iz", "var cw", 18));
+    items.push(pO.line(ZERO, z, "ray cz"), pO.line(ZERO, next, "faint cp"));
+    // how far the piece turns z
+    items.push(...pO.arc(Math.min(40, r * pO.k * 0.5), arg(z), arg(next), "cp", false));
+    // the piece itself: a short copy of iz, from z, at right angles to the line from 0
+    const [x, y] = pO.at(z), [tx, ty] = pO.at(next), len = Math.hypot(tx - x, ty - y);
+    const u = [z.re / r, -z.im / r], v = [-z.im / r, -z.re / r], sq = Math.min(9, len * 0.6);
+    const pt = (a, b) => `${f1(x + (-u[0] * a + v[0] * b) * sq)},${f1(y + (-u[1] * a + v[1] * b) * sq)}`;
+    if (len > 6) items.push(svgEl("polyline", { class: "thin cw", fill: "none", points: `${pt(1, 0)} ${pt(1, 1)} ${pt(0, 1)}` }));
+    items.push(pO.line(z, next, "ray cw"));
+    if (len > 14) {
+      const dx = (tx - x) / len, dy = (ty - y) / len, L = 9, W = 4.5;
+      items.push(svgEl("polygon", { class: "head cw", points: `${f1(tx)},${f1(ty)} ${f1(tx - dx * L - dy * W)},${f1(ty - dy * L + dx * W)} ${f1(tx - dx * L + dy * W)},${f1(ty - dy * L - dx * W)}` }));
+    }
+    items.push(pO.dot(next, 5, "dot cp"));
+    // once the walk has moved on, z is its end and the handle is where it started
+    if (m > 0) items.push(pO.dot(z, 6, "dot cz"), pO.labOut(z, "z", "var cz", 20));
+  }
+  pO.scene.replaceChildren(...items);
+  hO.label(m > 0 ? "" : "z");
+  hO.place(Os.z0, `start = ${cx(Os.z0)}`);
+
+  const turn = Math.atan(e), stretch = Math.hypot(1, e);
+  $("o-sizeOut").textContent = `θ/n = ${num(e)}`;
+  const slider = $("o-m");
+  slider.max = M;
+  slider.value = m;
+  slider.disabled = M === 0;
+  $("o-mOut").textContent = `${big(m)} of ${big(M)}`;
+  const rows = [
+    `<div><dt class="cw">Piece</dt><dd>${num(e)} × iz<small>length ${num(e * r, 3)}, at right angles to z</small></dd></div>`,
+    `<div><dt class="cp">Turns z</dt><dd>${sig(turn)} radians<small>${num(turn / DEG, 2)}°, for a piece of size ${num(e)}</small></dd></div>`,
+    `<div><dt class="cp">Stretches</dt><dd>×${fix(stretch, 5)}<small>length ${num(r, 3)} becomes ${num(r * stretch, 3)}</small></dd></div>`,
+  ];
+  if (m > 0) rows.push(`<div><dt>So far</dt><dd>${big(m)} piece${m === 1 ? "" : "s"}<small>turned ${fix(m * turn, 3)} radians in all, ${drift(stretch ** m)} the dashed circle</small></dd></div>`);
+  $("o-out").innerHTML = rows.join("");
+
+  const Z = '<span class="v">z</span>';
+  let note;
+  if (r0 < 1e-6) note = `At 0 there's nothing to turn: <span class="v">i</span> × 0 = 0, so the piece has no length. Drag ${Z} away from 0.`;
+  else if (e >= 0.5) note = `A piece this big turns ${Z} by ${fix(turn, 3)} radians, less than its size of ${num(e)}, and stretches it by ${pctOf((stretch - 1) * 100)}. Make the piece smaller.`;
+  else note = `The turn, ${sig(turn)} radians, is within ${(e - turn) / e < 1e-4 ? "0.01%" : pctOf(((e - turn) / e) * 100)} of the piece size, ${num(e)}, and the stretch adds ${stretch - 1 < 1e-4 ? "under 0.01%" : `only ${pctOf((stretch - 1) * 100)}`}. Halve the piece and the turn halves, but the extra stretch drops to about a quarter. So tiny pieces are almost pure turns, each by its own size, and <span class="v">n</span> pieces of <span class="v">θ</span>/<span class="v">n</span> turn you <span class="v">θ</span> radians.`;
+  if (m > 0 && r0 > 1e-6) {
+    note += ` After ${big(m)} piece${m === 1 ? "" : "s"} the stretches have added up: ${Z} is ${drift(stretch ** m)} the dashed circle.`;
+    note += m * turn >= 2 * Math.PI - 1e-9
+      ? ` That's a full turn. Shrink the pieces and the walk drifts out less, which is how Station 4's walk can settle onto the circle.`
+      : m === M ? ` That's as far out as this walk goes.` : "";
+  }
+  $("o-note").innerHTML = note;
+  $("o-reset").disabled = m === 0 && Os.si === O_START.si && Os.z0.re === 1 && Os.z0.im === 0;
+}
+
+$("o-size").addEventListener("input", (ev) => {
+  // keep about the same total turn, in pieces of the new size
+  const turned = Os.m * Math.atan(O_SIZES[Os.si]);
+  Os.si = +ev.target.value;
+  Os.m = Math.round(turned / Math.atan(O_SIZES[Os.si]));
+  drawO();
+});
+$("o-m").addEventListener("input", (ev) => { Os.m = +ev.target.value; drawO(); });
+$("o-reset").addEventListener("click", () => {
+  Object.assign(Os, O_START);
+  $("o-size").value = Os.si;
+  drawO();
+});
+
+// ---------- Station 4: push sideways ----------
 
 const p3 = new Plane($("plane3"), 1.6);
 const Ss = { t: turnOf(90), ni: 0 };
@@ -946,11 +1214,25 @@ function drawS() {
   if (n <= 60) pts.slice(1, -1).forEach((p) => items.push(p3.dot(p, 3, "dot cp")));
   if (n <= 12 && gap > 22) pts.slice(1, -1).forEach((p, j) => items.push(p3.labOut(p, String(j + 1), "small cp", 13)));
   items.push(p3.dot(ONE, 4, "dot cz"), p3.lab(ONE, "1", "small cz", 9, 12));
+  // a half turn is two quarter turns, so ring the quarter-turn point i that the walk passes halfway
+  if (Ss.t.name === "π") {
+    items.push(svgEl("circle", { class: "ring ct", cx: f1(p3.x(0)), cy: f1(p3.y(1)), r: 7 }));
+    // zoomed far out, its label would sit on top of the target's
+    if (k > 54) items.push(eLabel(p3, C(0, 1), "iπ/2", -26));
+  }
   items.push(svgEl("circle", { class: "ring ct", cx: f1(p3.x(target.re)), cy: f1(p3.y(target.im)), r: 8 }));
   // the walk always lands outside the circle, so the target is labelled from inside it
   items.push(eLabel(p3, target, iTimes(Ss.t), -26));
   items.push(p3.dot(end, 6, "dot cp"));
-  items.push(p3.labOut(end, plural(n), "small cp", 16 + Math.abs(end.re / abs(end)) * 28));
+  // out from the end of the walk, or above or below it when that would run off the board
+  const endLab = p3.labOut(end, plural(n), "small cp", 16 + Math.abs(end.re / abs(end)) * 28);
+  const half = plural(n).length * 3.4 + 4, lx = +endLab.getAttribute("x");
+  if (lx < half || lx > S - half) {
+    const [x, y] = p3.at(end);
+    endLab.setAttribute("x", f1(clamp(x, half, S - half)));
+    endLab.setAttribute("y", f1(y + (end.im >= 0 ? -14 : 20)));
+  }
+  items.push(endLab);
   p3.scene.replaceChildren(...items);
 
   const e = th / n, stretch = Math.hypot(1, e) ** n, miss = abs(C(end.re - target.re, end.im - target.im));
@@ -966,7 +1248,11 @@ function drawS() {
     : miss < 0.005
       ? `Within 0.005 of the circle. `
       : `Off by <b>${num(miss, 3)}</b>. Each piece turns a little and stretches a tiny bit more, and the stretches add up to ×${num(stretch, 3)}. More, smaller pieces shrink each stretch faster than they pile up. `;
-  if (Ss.t.name === "1") note += `<b><span class="v">e</span><sup><span class="v">i</span></sup> = cos 1 + <span class="v">i</span> sin 1 ≈ 0.5403 + 0.8415<span class="v">i</span>.</b> A push of 1 sideways goes one radian round the circle, about 57.3°.`;
+  if (Ss.t.name === "π/2") note += `<b><span class="v">e</span><sup><span class="v">i</span>π/2</sup> = <span class="v">i</span>.</b> The circle is 2π around, so a sideways push of π/2 goes a quarter of the way round, a quarter turn. That's the same quarter turn as multiplying by <span class="v">i</span>.`;
+  else if (Ss.t.name === "π") note += `<b><span class="v">e</span><sup><span class="v">i</span>π</sup> = −1.</b> Split the push of <span class="v">i</span>π into two halves of <span class="v">i</span>π/2. The first half settles on <span class="v">e</span><sup><span class="v">i</span>π/2</sup> = <span class="v">i</span>, the ringed point, a quarter turn from 1. The second half does the same quarter turn again from there, which multiplies by <span class="v">i</span> again. So <span class="v">e</span><sup><span class="v">i</span>π</sup> = <span class="v">i</span> × <span class="v">i</span> = −1. That's Euler's identity: <span class="v">i</span>² = −1, done as one smooth half turn instead of two quarter-turn jumps.`;
+  else if (Ss.t.name === "3π/2") note += `<b><span class="v">e</span><sup>3π<span class="v">i</span>/2</sup> = −<span class="v">i</span>.</b> Three quarter turns, so <span class="v">i</span> × <span class="v">i</span> × <span class="v">i</span> = −<span class="v">i</span>.`;
+  else if (Ss.t.name === "2π") note += `<b><span class="v">e</span><sup>2π<span class="v">i</span></sup> = 1.</b> Four quarter turns, so <span class="v">i</span> × <span class="v">i</span> × <span class="v">i</span> × <span class="v">i</span> = 1. All the way round brings you home.`;
+  else if (Ss.t.name === "1") note += `<b><span class="v">e</span><sup><span class="v">i</span></sup> = cos 1 + <span class="v">i</span> sin 1 ≈ 0.5403 + 0.8415<span class="v">i</span>.</b> A push of 1 sideways goes one radian round the circle, about 57.3°.`;
   else note += `With infinitely many pieces it lands exactly on the circle, at <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>.`;
   $("s-note").innerHTML = note;
   pressChips($("s-presets"), (j) => sameTurn(TURN_PRESETS[j], Ss.t));
@@ -980,7 +1266,7 @@ chipRow($("s-presets"), TURN_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Se
 $("s-th").addEventListener("input", (e) => { Ss.t = turnOf(+e.target.value); drawS(); });
 $("s-n").addEventListener("input", (e) => { Ss.ni = +e.target.value; drawS(); });
 
-// ---------- Station 4: wrap the line around the circle ----------
+// ---------- Station 5: wrap the line around the circle ----------
 
 const p4 = new Plane($("plane4"), 3.5);
 const Ws = { t: turnOf(180), wrap: 0, anim: 0 };
@@ -1026,7 +1312,7 @@ function drawW() {
   ].join("");
   let note;
   if (pct < 100) note = `Bend the line until it hugs the circle. Its tip is heading for the ring.`;
-  else if (Ws.t.name === "π") note = `<b><span class="v">e</span><sup><span class="v">iπ</span></sup> = −1.</b> The circle is 2π around, so a length of π reaches halfway, facing the other way. That's Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.`;
+  else if (Ws.t.name === "π") note = `<b><span class="v">e</span><sup><span class="v">iπ</span></sup> = −1.</b> The circle is 2π around, so a length of π reaches halfway, facing the other way. Each quarter of the way, π/2, is a quarter turn, which is multiplying by <span class="v">i</span>, so this is <span class="v">i</span> × <span class="v">i</span> = −1. That's Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.`;
   else if (Ws.t.name === "π/2") note = `<b><span class="v">e</span><sup><span class="v">iπ</span>/2</sup> = <span class="v">i</span>.</b> A quarter of the way round is a quarter turn.`;
   else if (Ws.t.name === "2π") note = `<b><span class="v">e</span><sup>2π<span class="v">i</span></sup> = 1.</b> The whole circle is 2π long, so the line wraps once round and comes home.`;
   else if (Ws.t.name === "1") note = `<b>One radian.</b> A length of 1 wrapped round a circle of radius 1 makes an angle of about 57.3°. That's what a radian is.`;
@@ -1062,7 +1348,94 @@ chipRow($("w-presets"), W_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Set t
 $("w-th").addEventListener("input", (e) => { Ws.t = turnOf(+e.target.value); drawW(); });
 $("w-wrap").addEventListener("input", (e) => { stopWrap(); Ws.wrap = +e.target.value / 100; drawW(); });
 
-// ---------- Station 5: both at once ----------
+// ---------- Station 6: reading e^iθ ----------
+
+const pR = new Plane($("planeR"), 1.6);
+const Rs = { t: turnOf(120), anim: 0 };
+const QUARTERS = [[90, "π/2", "a quarter of the way round"], [180, "π", "halfway round"], [270, "3π/2", "three quarters of the way round"], [360, "2π", "all the way round"]];
+
+function drawR() {
+  const th = Rs.t.th, w = polar(1, th), iw = mul(C(0, 1), w), deg0 = Rs.t.deg === 0;
+  const items = [pR.circle(1, "unit")];
+  // the circle's length, marked off in quarters
+  for (const [deg, name] of QUARTERS) {
+    const q = polar(1, deg * DEG), [x, y] = pR.at(q), u = [q.re, -q.im];
+    items.push(svgEl("line", { class: "tick cz", x1: f1(x - u[0] * 6), y1: f1(y - u[1] * 6), x2: f1(x + u[0] * 6), y2: f1(y + u[1] * 6) }));
+    // 2π sits above 1, out of the way of the start's label
+    items.push(deg === 360 ? pR.lab(q, name, "small cz", 16, -12) : pR.labOut(q, name, "small cz", 20));
+  }
+  // the walk, a distance θ along the circle
+  if (th > 0) {
+    const N = Math.max(2, Math.ceil(Rs.t.deg / 3));
+    items.push(pR.poly([...Array(N + 1).keys()].map((j) => polar(1, (th * j) / N)), "ray cp walk"));
+    // halfway along the arc, inside it, but kept off the π mark at −1
+    const mid = Math.abs(th / 2 - Math.PI) < 0.4 ? Math.PI - 0.55 : th / 2;
+    if (th > 0.45) items.push(pR.lab(polar(0.62, mid), `θ = ${Rs.t.name || num(th)}`, "small cp"));
+  }
+  items.push(pR.line(ZERO, w, "faint cp"));
+  items.push(pR.dot(ONE, 4, "dot cz"));
+  // the direction: i times where you are, at right angles to the spoke
+  const [x, y] = pR.at(w), tip = C(w.re + iw.re * 0.55, w.im + iw.im * 0.55), [tx, ty] = pR.at(tip);
+  const ux = -w.re, uy = w.im, sq = 8;
+  const pt = (a, b) => `${f1(x + (ux * a - w.im * b) * sq)},${f1(y + (uy * a - w.re * b) * sq)}`;
+  items.push(svgEl("polyline", { class: "thin cw", fill: "none", points: `${pt(1, 0)} ${pt(1, 1)} ${pt(0, 1)}` }));
+  items.push(pR.line(w, tip, "ray cw"));
+  const dx = (tx - x) / Math.hypot(tx - x, ty - y), dy = (ty - y) / Math.hypot(tx - x, ty - y), L = 9, Wd = 4.5;
+  items.push(svgEl("polygon", { class: "head cw", points: `${f1(tx + dx * 3)},${f1(ty + dy * 3)} ${f1(tx - dx * L - dy * Wd)},${f1(ty - dy * L + dx * Wd)} ${f1(tx - dx * L + dy * Wd)},${f1(ty - dy * L - dx * Wd)}` }));
+  items.push(svgEl("text", { class: "lab var cw", x: f1(tx + dx * 14), y: f1(ty + dy * 14 + 5) }, "i"));
+  items.push(pR.dot(w, 6, "dot cp"));
+  // the label sits inside the circle, just behind the walker, clear of the arrow
+  const back = C(-0.8 * w.re - 0.6 * iw.re, -0.8 * w.im - 0.6 * iw.im), lw = pR.lab(w, "e", "var ct", back.re * 26, -back.im * 26 + 6);
+  lw.appendChild(svgEl("tspan", { dy: -7, "font-size": 12 }, deg0 ? "0" : iTimes(Rs.t)));
+  items.push(lw);
+  pR.scene.replaceChildren(...items);
+
+  const name = Rs.t.name || num(th), deg = Rs.t.deg, quarter = QUARTERS.find(([d]) => d === deg);
+  const share = quarter ? quarter[2] : `${num(th / (2 * Math.PI), 2)} of the way round, ${num(th / DEG, 1)}°`;
+  // brackets only round a number with two parts or a minus sign
+  const wb = /[ −]/.test(cx(w)) ? `(${cx(w)})` : cx(w);
+  $("r-thOut").textContent = thOut(Rs.t);
+  $("r-out").innerHTML = [
+    `<div><dt class="cw"><span class="v">i</span></dt><dd>Direction<small><span class="v">i</span> × ${wb} = ${cx(iw)}, at right angles to where you are, so you slide along the circle</small></dd></div>`,
+    `<div><dt class="cp"><span class="v">θ</span></dt><dd>How far: ${name}<small>${th > 0 ? `the length of the amber arc from 1` : "no walk yet"}</small></dd></div>`,
+    `<div><dt class="cz">π</dt><dd>The circle: 2π ≈ 6.28 around<small>${deg0 ? "you haven't started round it" : `so a walk of ${name} is ${share}`}</small></dd></div>`,
+    `<div><dt class="ct"><span class="v">e</span></dt><dd>e<sup>${deg0 ? "0" : iTimes(Rs.t)}</sup> = ${cx(w, 3)}<small>the recipe's name for where you land, cos θ + i sin θ</small></dd></div>`,
+  ].join("");
+  const I = '<span class="v">i</span>', E = '<span class="v">e</span>';
+  let note;
+  if (deg === 0) note = `No walk, so you stay at 1: ${E}<sup>0</sup> = 1. At 1 the direction ${I} points straight up.`;
+  else if (Rs.t.name === "π/2") note = `<b>${E}<sup>${I}π/2</sup> = ${I}.</b> A quarter of the circle is π/2 long, so walking π/2 is a quarter turn, the same turn as multiplying by ${I}.`;
+  else if (Rs.t.name === "π") note = `<b>${E}<sup>${I}π</sup> = −1.</b> Half the circle is π long, so walking π puts you facing the other way. That's two quarter turns, ${I} × ${I} = −1, done as one smooth walk. It's Euler's identity, ${E}<sup>${I}π</sup> + 1 = 0.`;
+  else if (Rs.t.name === "3π/2") note = `<b>${E}<sup>3π${I}/2</sup> = −${I}.</b> Three quarters of the way round is three quarter turns: ${I} × ${I} × ${I} = −${I}.`;
+  else if (Rs.t.name === "2π") note = `<b>${E}<sup>2π${I}</sup> = 1.</b> The whole circle is 2π long, so you're home. Four quarter turns: ${I} × ${I} × ${I} × ${I} = 1.`;
+  else if (Rs.t.name === "1") note = `<b>${E}<sup>${I}</sup> ≈ 0.5403 + 0.8415${I}.</b> A walk of 1 round a circle of radius 1 is one radian, about 57.3°.`;
+  else note = `Walking ${name} round the circle lands on ${E}<sup><span class="v">iθ</span></sup> = ${cx(w, 3)}. Because ${E}<sup><span class="v">iθ</span></sup> is a number you multiply by, multiplying any point by it turns that point by ${name} around 0, the same as it turned 1.`;
+  $("r-note").innerHTML = note;
+  pressChips($("r-presets"), (j) => !Rs.anim && sameTurn(TURN_PRESETS[j], Rs.t));
+}
+
+function setR(t) {
+  Rs.t = t;
+  $("r-th").value = Math.round(t.deg);
+  drawR();
+}
+function stopR() { if (Rs.anim) { cancelAnimationFrame(Rs.anim); Rs.anim = 0; } }
+$("r-play").addEventListener("click", () => {
+  stopR();
+  const goal = Rs.t.deg > 0 ? Rs.t : turnOf(360);
+  if (!motionOK()) { setR(goal); return; }
+  const ms = 400 + 1600 * (goal.deg / 360), t0 = performance.now();
+  const frame = (now) => {
+    const t = Math.min(1, (now - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+    Rs.anim = t < 1 ? requestAnimationFrame(frame) : 0;
+    setR(t < 1 ? { deg: goal.deg * e, th: goal.th * e, name: null } : goal);
+  };
+  Rs.anim = requestAnimationFrame(frame);
+});
+chipRow($("r-presets"), TURN_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Set the walk θ to", (j) => { stopR(); setR(TURN_PRESETS[j]); });
+$("r-th").addEventListener("input", (e) => { stopR(); Rs.t = turnOf(+e.target.value); drawR(); });
+
+// ---------- Station 7: both at once ----------
 
 const p5 = new Plane($("plane5"), 3.5);
 const Bs = { a: 1, deg: 90, ni: 8 };
@@ -1108,7 +1481,7 @@ function drawB() {
   $("b-note").innerHTML = (deg === 0
     ? `With no sideways push it stays on the number line, as in Station 2, and settles on <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}.`
     : Math.abs(a) < 1e-9
-      ? `With no forward push it stays on the circle, as in Station 3, and settles on <span class="v">e</span><sup>${power(a, deg)}</sup>.`
+      ? `With no forward push it stays on the circle, as in Station 4, and settles on <span class="v">e</span><sup>${power(a, deg)}</sup>.`
       : `The forward push stretches the length to <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}. The sideways push turns it ${num(b)} radians. ${a < 0 ? "Shrinking" : "Growing"} while turning makes a spiral.`) + gap;
   pressChips($("b-presets"), (j) => B_PRESETS[j][0] === a && B_PRESETS[j][1] === deg);
 }
@@ -1127,8 +1500,10 @@ $("b-n").addEventListener("input", (e) => { Bs.ni = +e.target.value; drawB(); })
 
 drawG();
 drawP();
+drawO();
 drawS();
 drawW();
+drawR();
 drawB();
 </script>
 </body>
