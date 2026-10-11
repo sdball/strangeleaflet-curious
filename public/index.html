@@ -632,6 +632,13 @@ function run(raw) {
     case "examine": {
       if (!nouns.length) return say("Examine what?");
       if (isLeaflet(nouns)) return say(LEAFLET);
+      if (nouns.includes("curios")) {
+        if (cabinetOpen) {
+          return say("Inside the cabinet you can see shelves of curios. Some emiting sounds, some spiraling off curving graphs of equations, some glowing with pixels.");
+        } else {
+          return say("Behind the closed doors of the cabinet you can see shelves of curios; each fascinating in its own way.");
+        }
+      };
       if (nouns.includes("cabinet")) {
         if (cabinetOpen) {
           say("The cabinet is made of high quality polished wood with ornate carvings. Through its open doors you can see shelves of curios that each have a paper tag.");
