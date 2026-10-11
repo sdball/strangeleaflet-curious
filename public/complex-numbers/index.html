@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Complex Numbers — The Cabinet of Curios</title>
-<meta name="description" content="Multiplying by i turns the plane a quarter turn. Drag points to watch lengths multiply and angles add, turn a set of axes, and build e and Euler's formula from many small steps.">
+<meta name="description" content="Multiplying by i turns the plane a quarter turn. Drag points to watch lengths multiply and angles add, turn a set of axes, and build Euler's formula from many small turns.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -251,7 +251,6 @@ h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .slider { display: flex; align-items: center; gap: .6rem; }
 .slider label { font-size: .92rem; color: var(--board-muted); white-space: nowrap; min-width: 4.2rem; }
 .slider input { flex: 1; min-width: 0; margin: 0; accent-color: var(--zw); }
-.long-labels .slider label { min-width: 5.6rem; }
 .slider output { font: 500 .88rem var(--mono); white-space: nowrap; min-width: 6.5rem; text-align: right; }
 .check { display: flex; align-items: center; gap: .5rem; font-size: .95rem; min-height: 36px; cursor: pointer; }
 .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--zw); }
@@ -533,7 +532,7 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     <div class="panel-head">
       <p class="station">Station 7</p>
       <h2 id="e-h">Many small turns</h2>
-      <p>Multiplying by 1 + <span class="v">iε</span> pushes a point sideways by <span class="v">ε</span> of its length, because <span class="v">iz</span> is at right angles to <span class="v">z</span>. For a small <span class="v">ε</span> that's nearly a pure turn. Split the angle <span class="v">θ</span> into <span class="v">n</span> of those nudges, starting from 1. <b>The more nudges, the closer you land to the circle</b>, at cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>.</p>
+      <p>Multiplying by 1 + <span class="v">iε</span> pushes a point sideways by <span class="v">ε</span> of its length, because <span class="v">iz</span> is at right angles to <span class="v">z</span>. For a small <span class="v">ε</span> that's nearly a pure turn. Split the angle <span class="v">θ</span> into <span class="v">n</span> of those nudges, starting from 1. <b>The more nudges, the closer you land to the circle</b>, at cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>. That point is <span class="v">e</span><sup><span class="v">iθ</span></sup>, and <a href="/exploring-e/">Exploring <span class="v">e</span></a> shows where the <span class="v">e</span> comes from.</p>
     </div>
     <div class="split">
       <svg class="plane" id="plane4" role="img" aria-label="Successive powers of one plus i theta over n, spiraling from 1 toward the point at angle theta on the unit circle"></svg>
@@ -552,41 +551,6 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
         </div>
         <dl class="pair wide" id="e-out"></dl>
         <p class="note" id="e-note"></p>
-      </div>
-    </div>
-  </section>
-
-  <!-- 8. What is e? -->
-  <section class="panel" aria-labelledby="x-h">
-    <div class="panel-head">
-      <p class="station">Station 8</p>
-      <h2 id="x-h">What is <span class="v">e</span>?</h2>
-      <p>Station 7 pushed sideways. Push forward instead. Multiplying by 1 + 1/<span class="v">n</span> pushes a point forward by 1/<span class="v">n</span> of its length, so it grows. Do that <span class="v">n</span> times, starting from 1. Smaller pieces add a little more each time, but never past 2.71828…. <b>That number is <span class="v">e</span>.</b></p>
-      <p>The recipe works for any push <span class="v">x</span>, not just 1: (1 + <span class="v">x</span>/<span class="v">n</span>)<sup><span class="v">n</span></sup> settles on <span class="v">e</span><sup><span class="v">x</span></sup>, <span class="v">e</span> raised to the power <span class="v">x</span>. For <span class="v">x</span> = 2 that's <span class="v">e</span> × <span class="v">e</span>, and for <span class="v">x</span> = ½ it's √<span class="v">e</span>. All the recipe does is multiply, so <span class="v">x</span> can be complex too. Push by <span class="v">a</span> + <span class="v">bi</span>, so each step multiplies by 1 + (<span class="v">a</span> + <span class="v">bi</span>)/<span class="v">n</span>. The forward part <span class="v">a</span> stretches and the sideways part <span class="v">b</span> turns, and you land on <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup>, stretched to <span class="v">e</span><sup><span class="v">a</span></sup> and turned <span class="v">b</span> radians. Station 7 was the push <span class="v">iθ</span>, with no forward part, which is why its circle is <span class="v">e</span><sup><span class="v">iθ</span></sup>. That can't mean <span class="v">e</span> multiplied by itself <span class="v">iθ</span> times. For a complex power, the recipe is what the power means, and it still follows the rule powers follow, <span class="v">e</span><sup><span class="v">x</span></sup> × <span class="v">e</span><sup><span class="v">y</span></sup> = <span class="v">e</span><sup><span class="v">x</span>+<span class="v">y</span></sup>: the stretches multiply and the turns add.</p>
-    </div>
-    <div class="split">
-      <svg class="plane" id="plane5" role="img" aria-label="Successive powers of one plus a plus b i over n, from 1 toward e to the a plus b i"></svg>
-      <div class="side">
-        <div class="chips" id="x-presets" role="group" aria-label="Set the push to"></div>
-        <div class="stack long-labels">
-          <div class="slider">
-            <label for="x-a">Forward <span class="v">a</span></label>
-            <input type="range" id="x-a" min="-1" max="2" step="0.05" value="1">
-            <output id="x-aOut" for="x-a"></output>
-          </div>
-          <div class="slider">
-            <label for="x-b">Sideways <span class="v">b</span></label>
-            <input type="range" id="x-b" min="0" max="360" step="1" value="0">
-            <output id="x-bOut" for="x-b"></output>
-          </div>
-          <div class="slider">
-            <label for="x-n">Steps <span class="v">n</span></label>
-            <input type="range" id="x-n" min="0" max="15" step="1" value="3">
-            <output id="x-nOut" for="x-n"></output>
-          </div>
-        </div>
-        <dl class="pair wide" id="x-out"></dl>
-        <p class="note" id="x-note"></p>
       </div>
     </div>
   </section>
@@ -1653,116 +1617,6 @@ function draw4() {
 $("e-th").addEventListener("input", (e) => { E.deg = +e.target.value; draw4(); });
 $("e-n").addEventListener("input", (e) => { E.n = +e.target.value; draw4(); });
 
-// ---------- Station 8: what is e? ----------
-
-const p5 = new Plane($("plane5"), 3.5);
-const X_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 50, 100, 250, 1000];
-const X = { a: 1, deg: 0, ni: 3 };
-// the exponent a + bi, with friendly turns written in terms of π
-const PI_TURNS = { 45: "iπ/4", 90: "iπ/2", 180: "iπ", 270: "3πi/2", 360: "2πi" };
-function power(a, deg) {
-  const im = deg === 0 ? "" : PI_TURNS[deg] || `${num(deg * DEG)}i`;
-  if (!im) return num(a);
-  return Math.abs(a) < 1e-9 ? im : `${num(a)} + ${im}`;
-}
-const eTo = (a, deg) => (a === 1 && deg === 0 ? "e" : `e<sup>${power(a, deg)}</sup>`);
-const X_PRESETS = [[1, 0], [-1, 0], [0, 90], [0, 180], [0, 360], [1, 90]];
-
-function draw5() {
-  const { a, deg } = X, n = X_STEPS[X.ni], b = deg * DEG;
-  const step = C(1 + a / n, b / n);
-  const pts = [ONE];
-  for (let j = 0; j < n; j++) pts.push(mul(pts[j], step));
-  const end = pts[n], target = polar(Math.exp(a), b);
-  const far = Math.max(abs(target), ...pts.map(abs));
-  // extra room so the label past the target stays on the board
-  p5.setRange(Math.max(1.6, Math.ceil(far * 1.3 * 2) / 2));
-  const k = p5.k;
-
-  const items = [p5.circle(1, "unit")];
-  if (Math.abs(a) > 1e-9 && deg > 0) items.push(p5.circle(abs(target), "orbit"));
-  if (deg > 0) items.push(...p5.arc(abs(target) * k, 0, b, "ct", false));
-  // keep long walks light: a few hundred corners is plenty to draw
-  const every = Math.ceil(n / 400);
-  items.push(p5.poly(pts.filter((_, j) => j % every === 0 || j === n), "ray cp"));
-  if (n <= 60) pts.slice(1, -1).forEach((p) => items.push(p5.dot(p, 3, "dot cp")));
-  items.push(p5.dot(ONE, 4, "dot cz"), p5.lab(ONE, "1", "small cz", 9, 12));
-  items.push(svgEl("circle", { class: "ring ct", cx: f1(p5.x(target.re)), cy: f1(p5.y(target.im)), r: 8 }));
-  const lt = p5.labOut(target, "e", "var ct", 24);
-  if (!(a === 1 && deg === 0)) lt.appendChild(svgEl("tspan", { dy: -7, "font-size": 12 }, power(a, deg)));
-  items.push(lt);
-  items.push(p5.dot(end, 6, "dot cp"));
-  if (abs(end) > 0) {
-    // above or below the point, whichever keeps clear of the target's label
-    const [x, y] = p5.at(end), [tx, ty] = p5.at(target);
-    const u = scale(target, 1 / abs(target)), lx = tx + u.re * 24, ly = ty - u.im * 24;
-    const ex = clamp(x, 50, S - 50);
-    let dy = end.im >= 0 ? -18 : 18;
-    if (Math.abs(ex - lx) < 70 && Math.abs(y + dy - ly) < 14) dy = -dy;
-    items.push(svgEl("text", { class: "lab small cp", x: f1(ex), y: f1(clamp(y + dy, 14, S - 14)) }, `${n} step${n === 1 ? "" : "s"}`));
-  }
-  p5.scene.replaceChildren(...items);
-
-  // readout
-  const grow = abs(step), turnDeg = arg(step) / DEG;
-  const how = (len, turned) => [`length ${num(len, 3)}`, deg > 0 ? `turned ${num(turned, 1)}°` : ""].filter(Boolean).join(", ");
-  $("x-aOut").textContent = `a = ${num(a)}`;
-  $("x-bOut").textContent = `${deg}° = ${num(b)} rad`;
-  $("x-nOut").textContent = `${n} step${n === 1 ? "" : "s"}`;
-  // the step as 1 + (a + bi)/n, or 1 − |a|/n for a push straight back
-  const push = a !== 0 && deg > 0 ? `+ (${cx(C(a, b))})` : a < 0 && deg === 0 ? `${MINUS} ${num(-a)}` : `+ ${cx(C(a, b))}`;
-  $("x-out").innerHTML = [
-    `<div><dt>Step</dt><dd>× (1 ${push}/${n})<small>= ${cx(step, 4)}, ${grow >= 1 ? "grows" : "shrinks"} ×${num(grow, 4)}${deg > 0 ? `, turns ${num(turnDeg, 2)}°` : ""}</small></dd></div>`,
-    `<div><dt class="cp">After ${n}</dt><dd>${cx(end, 4)}<small>${how(abs(end), turnDeg * n)}</small></dd></div>`,
-    `<div><dt class="ct">Target</dt><dd>${cx(target, 4)}<small>${eTo(a, deg)}, ${how(Math.exp(a), deg)}</small></dd></div>`,
-  ].join("");
-
-  const missBy = abs(C(end.re - target.re, end.im - target.im));
-  const gap = missBy < 0.005
-    ? ` With ${n} steps you're within 0.005 of it.`
-    : ` With ${n} step${n === 1 ? "" : "s"} you're off by <b>${num(missBy, 3)}</b>. More, smaller steps close the gap.`;
-  const flat = Math.abs(a) < 1e-9;
-  let note;
-  if (a === 1 && deg === 0) {
-    note = `(1 + 1/${n})${sup(n)} = ${end.re.toFixed(5)}. More steps creep up on 2.71828…, but never get past it. <b>That's <span class="v">e</span>.</b>`;
-  } else if (flat && deg === 180) {
-    note = `<b><span class="v">e</span><sup><span class="v">iπ</span></sup> = −1.</b> This is Euler's identity, often written <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0. Pushing sideways for π radians is a half turn, the same half turn Station 2 needed to reach −1.${gap}`;
-  } else if (flat && deg === 90) {
-    note = `<b><span class="v">e</span><sup><span class="v">iπ</span>/2</sup> = <span class="v">i</span>.</b> π/2 radians is a quarter turn, so this lands on <span class="v">i</span>, the quarter turn from Station 4.${gap}`;
-  } else if (flat && deg === 360) {
-    note = `<b><span class="v">e</span><sup>2π<span class="v">i</span></sup> = 1.</b> A full turn brings you home.${gap}`;
-  } else if (a === -1 && deg === 0) {
-    note = `<b><span class="v">e</span><sup>−1</sup> = 1/<span class="v">e</span> ≈ 0.368.</b> Pushing backwards shrinks, and undoes pushing forwards: <span class="v">e</span><sup>−1</sup> × <span class="v">e</span> = 1.${gap}`;
-  } else if (deg === 0) {
-    note = `With no sideways push it only ${a < 0 ? "shrinks" : "grows"}, staying on the number line, and settles on <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}.${gap}`;
-  } else {
-    note = `Pushing forward stretches the length to <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}. Pushing sideways turns it ${num(b)} radians. Together that's <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup>(cos <span class="v">b</span> + <span class="v">i</span> sin <span class="v">b</span>), a stretch and a turn.${gap}`;
-  }
-  $("x-note").innerHTML = note;
-  [...$("x-presets").children].forEach((btn, j) => {
-    const [pa, pd] = X_PRESETS[j];
-    btn.setAttribute("aria-pressed", pa === a && pd === deg);
-  });
-}
-
-$("x-presets").replaceChildren(...X_PRESETS.map(([a, deg]) => {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.innerHTML = eTo(a, deg);
-  b.setAttribute("aria-label", `Set the push to e to the ${power(a, deg)}`);
-  b.addEventListener("click", () => {
-    X.a = a;
-    X.deg = deg;
-    $("x-a").value = a;
-    $("x-b").value = deg;
-    draw5();
-  });
-  return b;
-}));
-$("x-a").addEventListener("input", (e) => { X.a = Math.round(+e.target.value * 100) / 100; draw5(); });
-$("x-b").addEventListener("input", (e) => { X.deg = +e.target.value; draw5(); });
-$("x-n").addEventListener("input", (e) => { X.ni = +e.target.value; draw5(); });
-
 // ---------- Start ----------
 
 setZoom(0);
@@ -1773,7 +1627,6 @@ paint1();
 draw2();
 draw3();
 draw4();
-draw5();
 </script>
 </body>
 </html>
