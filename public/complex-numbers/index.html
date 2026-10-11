@@ -419,7 +419,7 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     <div class="panel-head">
       <p class="station">Station 3</p>
       <h2 id="t-h">Check the guess</h2>
-      <p>Station 2 found <span class="v">i</span> by guessing that multiplying turns things. All we really know about <span class="v">i</span> is that <span class="v">i</span> × <span class="v">i</span> = −1. Is multiplying by <span class="v">i</span> a quarter turn for every point, or only for 1 and <span class="v">i</span>? Pick numbers below to multiply by <span class="v">i</span>. The working uses ordinary algebra plus that one fact, and each answer gets plotted next to the number it came from.</p>
+      <p>Station 2 found <span class="v">i</span> by guessing that multiplying turns things. All we really know about <span class="v">i</span> is that <span class="v">i</span> × <span class="v">i</span> = −1. Is multiplying by <span class="v">i</span> a quarter turn for every point, or only for 1 and <span class="v">i</span>? Pick numbers below to multiply by <span class="v">i</span>, or drag <span class="v">z</span> anywhere you like. The working uses ordinary algebra plus that one fact, and each answer gets plotted next to the number it came from.</p>
     </div>
     <div class="split">
       <svg class="plane" id="planeT" role="img" aria-label="Numbers you've multiplied by i, each plotted with its answer"></svg>
@@ -795,7 +795,7 @@ const wrap180 = (d) => {
   return v === -180 ? 180 : v;
 };
 
-function handle(plane, { cls, label, name, set, get, key, labelAt }) {
+function handle(plane, { cls, label, name, set, get, key, labelAt, start, end: done }) {
   const g = svgEl("g", {
     class: `handle ${cls}`, tabindex: 0, role: "slider",
     "aria-roledescription": "draggable point", "aria-label": name,
@@ -817,10 +817,16 @@ function handle(plane, { cls, label, name, set, get, key, labelAt }) {
     g.setPointerCapture(e.pointerId);
     g.classList.add("drag");
     g.focus({ preventScroll: true });
+    if (start) start();
     set(plane.toZ(e), "drag");
   });
   g.addEventListener("pointermove", (e) => { if (dragging) set(plane.toZ(e), "drag"); });
-  const end = () => { dragging = false; g.classList.remove("drag"); };
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    g.classList.remove("drag");
+    if (done) done();
+  };
   ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => g.addEventListener(t, end));
   // keep a finger on a point from scrolling the page
   g.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
@@ -1131,6 +1137,15 @@ const T_PICKS = [
 ];
 const same = (a, b) => Math.abs(a.re - b.re) < 1e-9 && Math.abs(a.im - b.im) < 1e-9;
 
+const hzT = handle(pt, {
+  cls: "cz", label: "z", name: "Point z",
+  get: () => T.tries[T.tries.length - 1],
+  // grabbing z leaves where it was behind as an earlier try
+  start: () => T.tries.push(T.tries[T.tries.length - 1]),
+  set: (z, how) => { T.tries[T.tries.length - 1] = tidy(pt, z, how); drawT(); },
+  end: () => tryT(T.tries.pop()),
+});
+
 function tryT(z) {
   T.tries = T.tries.filter((t) => !same(t, z));
   T.tries.push(z);
@@ -1151,11 +1166,13 @@ function drawT() {
   const r = abs(z);
   items.push(pt.circle(r, "orbit"));
   items.push(pt.line(ZERO, z, "ray cz"), pt.line(ZERO, iz, "ray cp"));
-  items.push(pt.rightAngle(arg(z), "cw"));
-  items.push(...pt.arc(r * k, arg(z) + 0.1, arg(z) + Math.PI / 2 - 0.1, "cw"));
-  items.push(pt.dot(z, 6, "dot cz"), pt.labOut(z, "z", "var cz", 20));
+  if (r > 0.3) {
+    items.push(pt.rightAngle(arg(z), "cw"));
+    items.push(...pt.arc(r * k, arg(z) + 0.1, arg(z) + Math.PI / 2 - 0.1, "cw"));
+  }
   items.push(pt.dot(iz, 6, "dot cp"), pt.labOut(iz, "iz", "var cp", 20));
   pt.scene.replaceChildren(...items);
+  hzT.place(z, cx(z));
 
   // the working, skipping lines that don't change anything
   const a = z.re, b = z.im;
@@ -1168,13 +1185,13 @@ function drawT() {
   const lines = steps.filter(([t], j) => j === 0 || t.slice(2) !== steps[j - 1][0].replace(/^= /, ""));
   $("t-work").innerHTML = lines.map(([t, why]) => `<div>${t}${why ? `<span class="why">${why}</span>` : ""}</div>`).join("");
 
-  const az = deg0(arg(z));
+  const az = r < 1e-9 ? null : deg0(arg(z));
   $("t-z").textContent = cx(z);
   $("t-iz").textContent = cx(iz);
   $("t-zr").textContent = num(r);
   $("t-izr").innerHTML = `${num(abs(iz))}<small>the same</small>`;
-  $("t-za").textContent = `${az}°`;
-  $("t-iza").innerHTML = `${(az + 90) % 360}°<small>= ${az}° + 90°</small>`;
+  $("t-za").textContent = az === null ? "none" : `${az}°`;
+  $("t-iza").innerHTML = az === null ? "none" : `${(az + 90) % 360}°<small>= ${az}° + 90°</small>`;
   $("t-note").innerHTML = `<b>${n} number${n === 1 ? "" : "s"} tried.</b> Every answer is the same distance from 0 as the number it came from, and 90° further round. `
     + (n < 3 ? "Try a few more." : "Nobody told the algebra to turn anything. It turns all on its own, so the guess holds for <span class=\"v\">i</span>. Station 4 shows why.");
   [...$("t-try").children].forEach((btn, j) => btn.setAttribute("aria-pressed", same(T_PICKS[j][1], z)));
