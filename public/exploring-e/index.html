@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Number e — The Cabinet of Curios</title>
+<meta name="description" content="Grow 1 in smaller and smaller pieces and it settles on 2.71828…, the number e. Then push sideways instead and the same recipe walks around a circle to Euler's identity.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: drafting vellum */
+  --bg: #E7ECEC;
+  --ink: #18242E;
+  --muted: #55636E;
+  --line: #C4CED0;
+  --plate: #F4F7F6;
+  --focus: #B23A22;
+
+  /* Panel: a slate plotting board, dark in either theme */
+  --board: #17222C;
+  --board-deep: #101920;
+  --board-edge: #2D3C49;
+  --board-ink: #E8EDF0;
+  --board-muted: #9AACBA;
+  --grid: #1F2D39;
+  --axis: #536A7D;
+
+  /* What things are on the board */
+  --z: #F1EAD8;      /* the number you start with: chalk */
+  --w: #FF8060;      /* the turn: vermilion */
+  --zw: #F4C552;     /* the result: amber */
+  --frame: #5FD1C3;  /* turned axes: teal */
+
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11181D; --ink: #E4EAEC; --muted: #9CA9B1; --line: #2D3940; --plate: #182127;
+    --focus: #F08A6C; --board: #151F28; --board-deep: #0D151B; --board-edge: #2A3946;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11181D; --ink: #E4EAEC; --muted: #9CA9B1; --line: #2D3940; --plate: #182127;
+  --focus: #F08A6C; --board: #151F28; --board-deep: #0D151B; --board-edge: #2A3946;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 500 .85em var(--mono); }
+.v { font: italic 400 1.08em var(--serif); }
+
+.back {
+  display: inline-block;
+  color: var(--muted);
+  font-size: .95rem;
+  text-underline-offset: 3px;
+  margin-bottom: 1rem;
+}
+h1 {
+  font: 400 clamp(2.3rem, 7vw, 3.5rem)/1.05 var(--serif);
+  letter-spacing: -0.015em;
+  margin: 0 0 .5rem;
+}
+.lede { margin: 0 0 .6rem; color: var(--muted); max-width: 62ch; }
+.zoom-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; }
+.zoom-row .note { flex: 1 1 12rem; }
+.howto { margin: 0 0 1.4rem; color: var(--muted); font-size: .95rem; max-width: 62ch; }
+h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--board);
+  color: var(--board-ink);
+  border: 1px solid var(--board-edge);
+  border-radius: 14px;
+  padding: 1rem 1rem 1.1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 18px 32px -24px rgba(0,0,0,.8);
+}
+.panel :focus-visible { outline-color: var(--zw); }
+.station { font: 700 .75rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--board-muted); margin: 0 0 .15rem; }
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .25rem 0 0; color: var(--board-muted); max-width: 64ch; }
+.panel-head p b { color: var(--board-ink); font-weight: 700; }
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 430px) minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+.split.tall { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
+@media (max-width: 800px) { .split, .split.tall { grid-template-columns: minmax(0, 1fr); } }
+.side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .9rem; align-content: start; min-width: 0; }
+
+.cz { color: var(--z); }
+.cw { color: var(--w); }
+.cp { color: var(--zw); }
+.ct { color: var(--frame); }
+
+/* ---------- The plane ---------- */
+.plane {
+  display: block;
+  width: 100%;
+  max-width: 430px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  background: var(--board-deep);
+  border: 1px solid var(--board-edge);
+  border-radius: 8px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.line {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  aspect-ratio: 520 / 220;
+  margin: 0 auto;
+  background: var(--board-deep);
+  border: 1px solid var(--board-edge);
+  border-radius: 8px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.plane .numline, .line .numline { stroke: var(--z); stroke-width: 3; stroke-opacity: .75; stroke-linecap: round; }
+.line .tick { stroke: var(--board-muted); stroke-width: 1.5; }
+.line .tick-lab { fill: var(--board-muted); font: 500 17px var(--mono); text-anchor: middle; }
+.plane .hop, .line .hop { fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; }
+.line .head, .line .dot { fill: currentColor; }
+.line .mark { fill: var(--zw); fill-opacity: .5; }
+.line .ring { fill: none; stroke: currentColor; stroke-width: 2; stroke-dasharray: 3 3; }
+.line .lab {
+  fill: currentColor;
+  font: 700 19px var(--sans);
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--board-deep);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.line .lab.var { font: italic 400 24px var(--serif); }
+.line .lab.small { font: 500 16px var(--mono); }
+.plane .grid { stroke: var(--grid); stroke-width: 1; }
+.plane .axis { stroke: var(--axis); stroke-width: 1.5; }
+.plane .tick-lab { fill: var(--board-muted); font: 500 11px var(--mono); }
+.plane .ax-lab { fill: var(--board-muted); font: italic 400 15px var(--serif); }
+.plane .unit { fill: none; stroke: var(--axis); stroke-width: 1.25; stroke-dasharray: 3 4; }
+.plane .orbit { fill: none; stroke: var(--axis); stroke-width: 1; stroke-dasharray: 2 5; }
+.plane .ray { fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; }
+.plane .thin { stroke: currentColor; stroke-width: 1.25; stroke-opacity: .55; }
+.plane .dash { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 4 4; }
+.plane .faint { fill: none; stroke: currentColor; stroke-width: 1; stroke-opacity: .35; stroke-dasharray: 3 5; }
+.plane .leg { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-dasharray: 5 4; stroke-opacity: .85; }
+.plane .tri { fill: currentColor; fill-opacity: .13; stroke: currentColor; stroke-opacity: .55; stroke-width: 1.25; stroke-dasharray: 4 4; }
+.plane .tgrid { stroke: currentColor; stroke-opacity: .2; stroke-width: 1; }
+.plane .taxis { stroke: currentColor; stroke-opacity: .65; stroke-width: 1.5; }
+.plane .tick { stroke: currentColor; stroke-width: 1.5; }
+.plane .arc { fill: none; stroke: currentColor; stroke-width: 2; }
+.plane .head, .plane .dot { fill: currentColor; }
+.plane .ring { fill: none; stroke: currentColor; stroke-width: 2; }
+.plane .lab {
+  fill: currentColor;
+  font: 700 14px var(--sans);
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--board-deep);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.plane .lab.var { font: italic 400 17px var(--serif); }
+.plane .lab.small { font: 500 11px var(--mono); }
+
+.handle { cursor: grab; outline: none; touch-action: none; }
+.handle.drag { cursor: grabbing; }
+.handle .hit { fill: transparent; }
+.handle .knob { fill: currentColor; stroke: var(--board-deep); stroke-width: 2; }
+.handle .halo { fill: none; stroke: currentColor; stroke-width: 2; opacity: 0; transition: opacity .15s; }
+.handle:hover .halo { opacity: .45; }
+.handle:focus-visible .halo, .handle.drag .halo { opacity: 1; }
+
+/* ---------- Controls ---------- */
+.btns { display: flex; flex-wrap: wrap; gap: .5rem; }
+.btn {
+  font: 700 1rem var(--sans);
+  color: var(--board-ink);
+  background: transparent;
+  border: 1px solid var(--board-edge);
+  border-radius: 6px;
+  padding: .35rem .85rem;
+  min-height: 42px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.btn .v { font-size: 1.15em; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chips button {
+  font: 500 .88rem var(--mono);
+  color: var(--board-muted);
+  background: transparent;
+  border: 1px solid var(--board-edge);
+  border-radius: 999px;
+  padding: 0 .75rem;
+  min-height: 36px;
+  cursor: pointer;
+}
+.chips button[aria-pressed="true"] { color: var(--board-deep); background: var(--w); border-color: var(--w); }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--board-edge); border-radius: 6px; overflow: hidden; }
+.seg button {
+  font: 700 .95rem var(--sans);
+  color: var(--board-muted);
+  background: transparent;
+  border: 0;
+  padding: .4rem .85rem;
+  min-height: 42px;
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--board-edge); }
+.seg button[aria-pressed="true"] { background: var(--board-edge); color: var(--board-ink); }
+
+.slider { display: flex; align-items: center; gap: .6rem; }
+.slider label { font-size: .92rem; color: var(--board-muted); white-space: nowrap; min-width: 4.2rem; }
+.slider input { flex: 1; min-width: 0; margin: 0; accent-color: var(--zw); }
+.long-labels .slider label { min-width: 5.6rem; }
+.slider output { font: 500 .88rem var(--mono); white-space: nowrap; min-width: 6.5rem; text-align: right; }
+.check { display: flex; align-items: center; gap: .5rem; font-size: .95rem; min-height: 36px; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--zw); }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem; }
+
+/* ---------- Readouts ---------- */
+.pair { margin: 0; display: grid; gap: .35rem; }
+.pair > div { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); align-items: baseline; gap: .6rem; }
+.pair dt { font: italic 400 1.25rem/1 var(--serif); text-align: right; }
+.pair dd { margin: 0; font: 500 1rem var(--mono); overflow-wrap: anywhere; }
+.pair dd small { display: block; font: 400 .9rem var(--sans); color: var(--board-muted); }
+.pair.wide > div { grid-template-columns: 4.6rem minmax(0, 1fr); }
+.pair.wide dt { font: 700 .8rem var(--sans); text-transform: uppercase; letter-spacing: .06em; }
+
+.work {
+  font: 500 .95rem/1.7 var(--mono);
+  background: var(--board-deep);
+  border: 1px solid var(--board-edge);
+  border-radius: 8px;
+  padding: .55rem .75rem;
+  overflow-x: auto;
+}
+.work div { white-space: nowrap; }
+.work.wrap div { white-space: normal; }
+.work .why { color: var(--board-muted); font: 400 .88rem var(--sans); margin-left: .5rem; }
+.work h3 { font: 700 .75rem var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--board-muted); margin: .2rem 0 .1rem; }
+.work h3:not(:first-child) { margin-top: .7rem; }
+
+
+.table-wrap { overflow-x: auto; }
+table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mono); }
+.polar th, .polar td { padding: .3rem .4rem; text-align: right; vertical-align: top; border-bottom: 1px solid var(--board-edge); }
+.polar thead th { font: 700 .75rem var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--board-muted); }
+.polar tbody th { font: italic 400 1.2rem/1.1 var(--serif); text-align: left; }
+.polar td { white-space: nowrap; }
+.polar td:nth-child(2) { text-align: left; }
+.polar small { display: block; font: 400 .78rem var(--mono); color: var(--board-muted); white-space: nowrap; }
+.polar tr:last-child th, .polar tr:last-child td { border-bottom: 0; }
+@media (max-width: 480px) {
+  table.polar { font-size: .85rem; }
+  .polar th, .polar td { padding: .3rem .25rem; }
+  .polar small { font-size: .72rem; }
+}
+
+
+.note { margin: 0; font-size: .95rem; color: var(--board-muted); }
+.note b { color: var(--board-ink); }
+
+/* ---------- Prose ---------- */
+.notes { max-width: 66ch; margin-top: 2.25rem; }
+.notes li { margin-bottom: .6rem; }
+.notes code { font: 500 .92em var(--mono); white-space: nowrap; }
+.sources { max-width: 66ch; margin-top: 2.25rem; color: var(--muted); font-size: .92rem; }
+.sources h2 { color: var(--ink); }
+.sources li { margin-bottom: .45rem; }
+
+.pieces { width: 100%; border-collapse: collapse; font: 500 .9rem var(--mono); }
+.pieces caption { font: 700 .75rem var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--board-muted); text-align: left; padding-bottom: .3rem; }
+.pieces th, .pieces td { padding: .25rem .4rem; text-align: right; border-bottom: 1px solid var(--board-edge); white-space: nowrap; }
+.pieces thead th { font: 700 .72rem var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--board-muted); }
+.pieces td:first-child { color: var(--board-muted); }
+.pieces tr:last-child td { border-bottom: 0; }
+.line .ehat { fill: none; stroke: currentColor; stroke-width: 2; }
+.line .mark { fill: var(--zw); fill-opacity: .5; }
+.line .off { fill: var(--zw); font: 500 14px var(--mono); dominant-baseline: central; }
+
+@media (prefers-reduced-motion: reduce) {
+  .handle .halo { transition: none; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>The Number <span class="v">e</span></h1>
+  <p class="lede">Grow 1 by all of itself and you get 2. Grow it in smaller and smaller pieces, each building on the last, and you get a little more every time, but never more than 2.71828…. That number is <span class="v">e</span>. Start on the number line, where <span class="v">e</span> and its powers come from, then push sideways into the plane of <a href="/complex-numbers/">complex numbers</a>, where the same recipe walks around a circle.</p>
+
+  <!-- 1. Growth on growth -->
+  <section class="panel" aria-labelledby="g-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="g-h">Growth on growth</h2>
+      <p>Start at 1 and grow it by all of itself in one step: you land on 2. Now split that growth into <span class="v">n</span> pieces. Each piece multiplies by 1 + 1/<span class="v">n</span>, so it adds 1/<span class="v">n</span> of whatever you have <b>now</b>, including what the earlier pieces added. That growth on growth lands you a little further every time you split it finer. Every landing leaves a mark. Zoom in as the marks bunch up: they crowd toward 2.71828…, but never get past it. <b>That number is <span class="v">e</span>.</b></p>
+    </div>
+    <div class="split tall">
+      <svg class="line" id="line1" role="img" aria-label="A number line from 1, with hops of 1 plus 1 over n, landing just short of e"></svg>
+      <div class="side">
+        <div class="stack">
+          <div class="slider">
+            <label for="g-n">Pieces <span class="v">n</span></label>
+            <input type="range" id="g-n" min="0" max="16" step="1" value="0">
+            <output id="g-nOut" for="g-n"></output>
+          </div>
+        </div>
+        <div class="zoom-row">
+          <span class="note">Zoom</span>
+          <div class="seg" role="group" aria-label="Zoom" id="g-zoom"></div>
+        </div>
+        <dl class="pair wide" id="g-out"></dl>
+        <div class="table-wrap"><table class="pieces" id="g-work"></table></div>
+        <p class="note" id="g-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Powers of e -->
+  <section class="panel" aria-labelledby="p-h">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="p-h">Powers of <span class="v">e</span></h2>
+      <p>The recipe takes any push <span class="v">x</span>, not just 1: multiply by 1 + <span class="v">x</span>/<span class="v">n</span>, <span class="v">n</span> times. Push by 2 and look halfway. The first half of the steps push by 1 in <span class="v">n</span>/2 pieces, which is exactly Station 1's recipe, so they land near <span class="v">e</span>. The second half do it again from there. So you land near <span class="v">e</span> × <span class="v">e</span>, and the recipe settles on <b><span class="v">e</span><sup><span class="v">x</span></sup>, <span class="v">e</span> raised to the power <span class="v">x</span></b>. Pushes add while the results multiply.</p>
+    </div>
+    <div class="split tall">
+      <svg class="line" id="line2" role="img" aria-label="A number line from 1, with hops of 1 plus x over n, landing near e to the x"></svg>
+      <div class="side">
+        <div class="chips" id="p-presets" role="group" aria-label="Set the push x to"></div>
+        <div class="stack">
+          <div class="slider">
+            <label for="p-x">Push <span class="v">x</span></label>
+            <input type="range" id="p-x" min="-1" max="3" step="0.05" value="2">
+            <output id="p-xOut" for="p-x"></output>
+          </div>
+          <div class="slider">
+            <label for="p-n">Pieces <span class="v">n</span></label>
+            <input type="range" id="p-n" min="0" max="13" step="1" value="8">
+            <output id="p-nOut" for="p-n"></output>
+          </div>
+        </div>
+        <dl class="pair wide" id="p-out"></dl>
+        <p class="note" id="p-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Push sideways -->
+  <section class="panel" aria-labelledby="s-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s-h">Push sideways</h2>
+      <p>Every push so far went forward, along the number line. Stand a second number line upright through 0 and the line becomes a plane, the plane of <a href="/complex-numbers/">complex numbers</a>, where multiplying by <span class="v">i</span> turns a number a quarter turn. So multiplying by 1 + <span class="v">iθ</span>/<span class="v">n</span> adds a piece <b>at right angles</b> to where you are. Split a push of <span class="v">iθ</span> into <span class="v">n</span> pieces and the walk curls round the circle of radius 1. It's Station 2's recipe with <span class="v">x</span> = <span class="v">iθ</span>, so it settles on <span class="v">e</span><sup><span class="v">iθ</span></sup>.</p>
+    </div>
+    <div class="split">
+      <svg class="plane" id="plane3" role="img" aria-label="Successive powers of one plus i theta over n, curling from 1 around the unit circle toward e to the i theta"></svg>
+      <div class="side">
+        <div class="chips" id="s-presets" role="group" aria-label="Set the push θ to"></div>
+        <div class="stack">
+          <div class="slider">
+            <label for="s-th">Push <span class="v">θ</span></label>
+            <input type="range" id="s-th" min="0" max="360" step="1" value="90">
+            <output id="s-thOut" for="s-th"></output>
+          </div>
+          <div class="slider">
+            <label for="s-n">Pieces <span class="v">n</span></label>
+            <input type="range" id="s-n" min="0" max="13" step="1" value="0">
+            <output id="s-nOut" for="s-n"></output>
+          </div>
+        </div>
+        <dl class="pair wide" id="s-out"></dl>
+        <p class="note" id="s-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Wrap the line around the circle -->
+  <section class="panel" aria-labelledby="w-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="w-h">Wrap the line around the circle</h2>
+      <p>Each sideways piece is at right angles to the line from 0, so it slides along the circle instead of away from it. Pushing sideways by <span class="v">θ</span> walks a distance <span class="v">θ</span> around the circle. So here is <span class="v">e</span><sup><span class="v">iθ</span></sup> without any pieces: take the number line from 0 to <span class="v">θ</span>, stand it up at 1, and wrap it around the circle. Every number <span class="v">t</span> on it lands on <span class="v">e</span><sup><span class="v">it</span></sup>. The circle is 2π around, so π reaches exactly halfway, at −1. <b><span class="v">e</span><sup><span class="v">iπ</span></sup> = −1</b>, which is Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.</p>
+    </div>
+    <div class="split">
+      <svg class="plane" id="plane4" role="img" aria-label="The number line from 0 to theta, standing up at 1 and wrapping around the unit circle"></svg>
+      <div class="side">
+        <div class="chips" id="w-presets" role="group" aria-label="Set the length θ to"></div>
+        <div class="stack">
+          <div class="slider">
+            <label for="w-th">Length <span class="v">θ</span></label>
+            <input type="range" id="w-th" min="0" max="360" step="1" value="180">
+            <output id="w-thOut" for="w-th"></output>
+          </div>
+          <div class="slider">
+            <label for="w-wrap">Wrap</label>
+            <input type="range" id="w-wrap" min="0" max="100" step="1" value="0">
+            <output id="w-wrapOut" for="w-wrap"></output>
+          </div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="w-play">Wrap it</button>
+        </div>
+        <dl class="pair wide" id="w-out"></dl>
+        <p class="note" id="w-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Both at once -->
+  <section class="panel" aria-labelledby="b-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
+      <h2 id="b-h">Both at once</h2>
+      <p>Station 2 pushed forward and Station 3 pushed sideways. Push at a slant and you do both. Each piece multiplies by 1 + (<span class="v">a</span> + <span class="v">bi</span>)/<span class="v">n</span>: the forward part <span class="v">a</span> stretches and the sideways part <span class="v">b</span> turns. You land on <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup>, stretched to <span class="v">e</span><sup><span class="v">a</span></sup> and turned <span class="v">b</span> radians, so <b><span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup> × <span class="v">e</span><sup><span class="v">bi</span></sup></b>, a stretch times a turn. In between, the walk spirals.</p>
+    </div>
+    <div class="split">
+      <svg class="plane" id="plane5" role="img" aria-label="Successive powers of one plus a plus b i over n, from 1 toward e to the a plus b i"></svg>
+      <div class="side">
+        <div class="chips" id="b-presets" role="group" aria-label="Set the push to"></div>
+        <div class="stack long-labels">
+          <div class="slider">
+            <label for="b-a">Forward <span class="v">a</span></label>
+            <input type="range" id="b-a" min="-1" max="2" step="0.05" value="1">
+            <output id="b-aOut" for="b-a"></output>
+          </div>
+          <div class="slider">
+            <label for="b-b">Sideways <span class="v">b</span></label>
+            <input type="range" id="b-b" min="0" max="360" step="1" value="90">
+            <output id="b-bOut" for="b-b"></output>
+          </div>
+          <div class="slider">
+            <label for="b-n">Pieces <span class="v">n</span></label>
+            <input type="range" id="b-n" min="0" max="13" step="1" value="8">
+            <output id="b-nOut" for="b-n"></output>
+          </div>
+        </div>
+        <dl class="pair wide" id="b-out"></dl>
+        <p class="note" id="b-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <ul>
+      <li><b><span class="v">e</span> grows at the rate of its own size.</b> Each piece adds 1/<span class="v">n</span> of what you have now, so the bigger you get, the faster you grow. That's why <span class="v">e</span> turns up wherever something grows or shrinks in proportion to how much there is: money earning interest, a population with room to spread, a cup of tea cooling toward room temperature.</li>
+      <li><b>The last piece adds about <span class="v">e</span> times the first.</b> In Station 1 the first of a million pieces adds a millionth of 1, and the last adds a millionth of nearly <span class="v">e</span>. Growth on growth, all the way up.</li>
+      <li><b>Pushes add, results multiply.</b> Pushing by 2 is pushing by 1 twice, so <span class="v">e</span><sup>2</sup> = <span class="v">e</span> × <span class="v">e</span>. The same rule works sideways: turning by <span class="v">θ</span> then by <span class="v">φ</span> is turning by <span class="v">θ</span> + <span class="v">φ</span>, so <span class="v">e</span><sup><span class="v">iθ</span></sup> × <span class="v">e</span><sup><span class="v">iφ</span></sup> = <span class="v">e</span><sup><span class="v">i</span>(<span class="v">θ</span>+<span class="v">φ</span>)</sup>. That's the complex numbers rule that angles add, written as powers.</li>
+      <li><b><span class="v">e</span><sup><span class="v">iθ</span></sup> isn't <span class="v">e</span> multiplied by itself <span class="v">iθ</span> times.</b> That has no meaning. For a complex power, the recipe is what the power means, and it earns the name by following the rule above.</li>
+      <li><b>Why radians.</b> Station 4 wraps the number line around a circle of radius 1, so a length along the line becomes the same length of arc. An angle measured by its arc on a circle of radius 1 is an angle in radians. In degrees the wrap would need stretching by π/180, which is why <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span> only works with <span class="v">θ</span> in radians.</li>
+      <li><b>Every number is a stretch and a turn.</b> Any complex number can be written <span class="v">r</span><span class="v">e</span><sup><span class="v">iθ</span></sup>: a length <span class="v">r</span> and an angle <span class="v">θ</span>. Multiplying two of them multiplies the lengths and adds the angles in one step.</li>
+      <li><b>Five numbers in one line.</b> <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0 uses 0, 1, <span class="v">e</span>, <span class="v">i</span>, and π once each, and nothing else. Read through Station 4, it says something plainer: walk halfway round a circle and you face the other way.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const E = Math.E;
+
+// ---------- Formatting ----------
+
+const MINUS = "−";
+function num(x, d = 2) {
+  const v = +x.toFixed(d);
+  return v === 0 ? "0" : (v < 0 ? MINUS : "") + Math.abs(v);
+}
+// fixed decimals, keeping trailing zeros
+const fix = (x, d) => (x < 0 ? MINUS : "") + Math.abs(x).toFixed(d);
+const big = (n) => n.toLocaleString("en-US");
+const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+const sup = (n) => [...String(n)].map((d) => SUP[d]).join("");
+
+// ---------- The number line ----------
+
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const f1 = (v) => Math.round(v * 10) / 10;
+
+// a stretch of the number line from lo to hi, with room above it for hops
+class Ruler {
+  constructor(svg) {
+    this.svg = svg;
+    this.W = 520;
+    this.H = 220;
+    this.y0 = 150;
+    this.pad = 34;
+    svg.setAttribute("viewBox", `0 0 ${this.W} ${this.H}`);
+    const id = `${svg.id}-clip`, defs = svgEl("defs"), clip = svgEl("clipPath", { id });
+    clip.appendChild(svgEl("rect", { x: 0, y: 0, width: this.W, height: this.H }));
+    defs.appendChild(clip);
+    this.base = svgEl("g");
+    this.scene = svgEl("g", { "clip-path": `url(#${id})` });
+    svg.append(defs, this.base, this.scene);
+  }
+  setRange(lo, hi) {
+    if (lo === this.lo && hi === this.hi) return;
+    this.lo = lo;
+    this.hi = hi;
+    this.k = (this.W - 2 * this.pad) / (hi - lo);
+    // labels every 1, 2, or 5 of some power of ten, no more than six of them
+    let step = 1e-7, m = 1;
+    for (let p = -7; p <= 3; p++) {
+      const hit = [1, 2, 5].find((c) => (hi - lo) / (c * 10 ** p) <= 6);
+      if (hit) { m = hit; step = hit * 10 ** p; break; }
+    }
+    const minor = step / (m === 2 ? 4 : 5), d = Math.max(0, Math.ceil(-Math.log10(step) - 1e-9));
+    const y = this.y0, kids = [svgEl("line", { class: "numline", x1: 12, y1: y, x2: this.W - 12, y2: y })];
+    for (let j = Math.ceil(lo / minor - 1e-9); j * minor <= hi + 1e-12; j++) {
+      const v = j * minor, x = this.x(v), major = Math.abs(v / step - Math.round(v / step)) < 1e-6;
+      kids.push(svgEl("line", { class: "tick", x1: f1(x), y1: y - (major ? 8 : 4), x2: f1(x), y2: y + (major ? 8 : 4) }));
+      if (major) kids.push(svgEl("text", { class: "tick-lab", x: f1(x), y: y + 30 }, fix(Math.abs(v) < 1e-12 ? 0 : v, d)));
+    }
+    this.base.replaceChildren(...kids);
+  }
+  x(v) { return this.pad + (v - this.lo) * this.k; }
+  // a hop from a to b, arching higher the longer it is
+  hop(a, b, cls) {
+    const xa = this.x(a), xb = this.x(b), y = this.y0;
+    const h = Math.min(70, Math.max(5, Math.abs(xb - xa) * 0.45));
+    return svgEl("path", { class: `hop ${cls}`, d: `M${f1(xa)} ${y}Q${f1((xa + xb) / 2)} ${f1(y - 2 * h)} ${f1(xb)} ${y}` });
+  }
+  dot(v, r, cls) { return svgEl("circle", { class: `dot ${cls}`, cx: f1(this.x(v)), cy: this.y0, r }); }
+  ring(v, r, cls) { return svgEl("circle", { class: `ehat ${cls}`, cx: f1(this.x(v)), cy: this.y0, r }); }
+  lab(v, text, cls, dy) { return svgEl("text", { class: `lab ${cls}`, x: f1(clamp(this.x(v), 24, this.W - 24)), y: this.y0 + dy }, text); }
+  // where a point off the left or right edge is, with its value
+  offEdge(v, d) {
+    if (v < this.lo) return svgEl("text", { class: "off", x: 8, y: this.y0 - 22, "text-anchor": "start" }, `◀ ${fix(v, d)}`);
+    if (v > this.hi) return svgEl("text", { class: "off", x: this.W - 8, y: this.y0 - 22, "text-anchor": "end" }, `${fix(v, d)} ▶`);
+    return null;
+  }
+}
+
+// a row of buttons, one pressed
+function segButtons(el, labels, what, onPick) {
+  el.replaceChildren(...labels.map((label, j) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.setAttribute("aria-label", `${what} ${label}`);
+    b.addEventListener("click", () => onPick(j));
+    return b;
+  }));
+}
+const markSeg = (el, j) => [...el.children].forEach((b, i) => b.setAttribute("aria-pressed", i === j));
+
+// (1 + x/n)^n, and the landing after every step when there are few enough to draw
+const settle = (x, n) => (1 + x / n <= 0 ? (1 + x / n) ** n : Math.exp(n * Math.log1p(x / n)));
+function walk(x, n) {
+  const pts = [1];
+  for (let j = 0; j < n; j++) pts.push(pts[j] * (1 + x / n));
+  return pts;
+}
+
+// ---------- Station 1: growth on growth ----------
+
+const g = new Ruler($("line1"));
+const G_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 20, 50, 100, 365, 1000, 10000, 100000, 1000000];
+const G_ZOOMS = [
+  { show: "1×", lo: 0, hi: 3, d: 2 },
+  { show: "3×", lo: 2, hi: 3, d: 3 },
+  { show: "150×", lo: 2.7, hi: 2.72, d: 4 },
+  { show: "10,000×", lo: 2.718, hi: 2.7183, d: 6 },
+];
+const Gs = { ni: 0, zoom: 0, marks: new Set() };
+
+function drawG() {
+  const n = G_STEPS[Gs.ni], z = G_ZOOMS[Gs.zoom], end = settle(1, n);
+  Gs.marks.add(n);
+  g.setRange(z.lo, z.hi);
+  const items = [];
+  // every landing so far
+  for (const m of Gs.marks) items.push(g.dot(settle(1, m), 4, "mark"));
+  // the hops, while they're few enough to see
+  if (n <= 100) {
+    const pts = walk(1, n);
+    for (let j = 0; j < n; j++) items.push(g.hop(pts[j], pts[j + 1], "cp"));
+    if (n <= 20) pts.slice(1, -1).forEach((p) => items.push(g.dot(p, 3, "cp")));
+  } else {
+    items.push(svgEl("line", { class: "hop cp", x1: f1(g.x(1)), y1: g.y0 - 6, x2: f1(g.x(end)), y2: g.y0 - 6 }));
+  }
+  if (z.lo <= 1) items.push(g.dot(1, 5, "cz"), g.lab(1, "1", "cz", -26));
+  items.push(g.ring(E, 9, "ct"), g.lab(E, "e", "var ct", 52));
+  items.push(g.dot(end, 6, "cp"));
+  const off = g.offEdge(end, z.d);
+  if (off) items.push(off);
+  g.scene.replaceChildren(...items);
+
+  const short = E - end;
+  $("g-nOut").textContent = `${big(n)} piece${n === 1 ? "" : "s"}`;
+  $("g-out").innerHTML = [
+    `<div><dt>Step</dt><dd>× (1 + 1/${big(n)})<small>adds 1/${big(n)} of what you have</small></dd></div>`,
+    `<div><dt class="cp">Lands</dt><dd>${fix(end, 7)}<small>after ${big(n)} piece${n === 1 ? "" : "s"}</small></dd></div>`,
+    `<div><dt class="ct">e</dt><dd>2.7182818…<small>${short < 5e-8 ? "less than 0.0000001 more" : `${fix(short, 7)} more`}</small></dd></div>`,
+  ].join("");
+
+  // the first few pieces, each adding a bit more than the last
+  const d = n > 100 ? 7 : 5, row = (j) => {
+    const was = Math.exp(j * Math.log1p(1 / n)), now = was * (1 + 1 / n);
+    return `<tr><td>${big(j + 1)}</td><td>+ ${fix(now - was, d)}</td><td>${fix(now, d)}</td></tr>`;
+  };
+  const rows = n <= 6 ? [...Array(n).keys()].map(row) : [row(0), row(1), row(2), `<tr><td>⋮</td><td>⋮</td><td>⋮</td></tr>`, row(n - 1)];
+  $("g-work").innerHTML = `<caption>Each piece adds 1/${big(n)} of what you have now</caption>`
+    + `<thead><tr><th>piece</th><th>adds</th><th>now</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+
+  const count = Gs.marks.size;
+  $("g-note").innerHTML = (n === 1
+    ? `One piece adds all of 1 at once and lands on 2. Try two pieces: the second one grows the first one's growth too.`
+    : n === 2
+      ? `Two pieces: the first adds 0.5, and the second adds half of 1.5, which is 0.75. The extra 0.25 is growth on growth.`
+      : end > z.hi || end < z.lo
+        ? `It landed off this stretch of the line. Pick a wider view, or more pieces.`
+        : `More pieces add more growth on growth, but each split adds less than the one before.`)
+    + ` <b>${count} landing${count === 1 ? "" : "s"}</b> marked, every one short of <span class="v">e</span>.`;
+  markSeg($("g-zoom"), Gs.zoom);
+}
+
+segButtons($("g-zoom"), G_ZOOMS.map((z) => z.show), "Zoom", (j) => { Gs.zoom = j; drawG(); });
+$("g-n").addEventListener("input", (e) => { Gs.ni = +e.target.value; drawG(); });
+
+// ---------- Station 2: powers of e ----------
+
+const p = new Ruler($("line2"));
+const P_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 20, 50, 100, 365, 1000];
+const Ps = { x: 2, ni: 8 };
+const P_PRESETS = [["½", 0.5], ["1", 1], ["2", 2], ["3", 3], ["−1", -1], ["0", 0]];
+// names for e to a whole power, or a half
+const ePow = (k) => (k === 0 ? "1" : k === 1 ? "e" : k === -1 ? "1/e" : `e${k < 0 ? "⁻" : ""}${sup(Math.abs(k))}`);
+
+function drawP() {
+  const x = Ps.x, n = P_STEPS[Ps.ni], pts = walk(x, n), end = pts[n], target = Math.exp(x);
+  const lo = Math.min(0, ...pts), hi = Math.max(1.25, target * 1.12, ...pts.map((v) => v * 1.05));
+  p.setRange(lo, hi);
+  const items = [];
+  // e to each whole power that fits
+  for (let k = -2; k <= 3; k++) {
+    const v = Math.exp(k);
+    if (k === 0 || v > hi || p.x(v) - p.x(0) < 16) continue;
+    items.push(p.ring(v, 7, "ct"), p.lab(v, ePow(k), "small ct", 52));
+  }
+  for (let j = 0; j < n; j++) items.push(p.hop(pts[j], pts[j + 1], "cp"));
+  if (n <= 20) pts.slice(1, -1).forEach((v) => items.push(p.dot(v, 3, "cp")));
+  items.push(p.dot(1, 5, "cz"), p.lab(1, "1", "cz", -26));
+  if (!Number.isInteger(x)) {
+    items.push(p.ring(target, 9, "ct"));
+    const t = p.lab(target, "e", "var ct", -30);
+    t.appendChild(svgEl("tspan", { dy: -7, "font-size": 13 }, num(x)));
+    items.push(t);
+  }
+  items.push(p.dot(end, 6, "cp"));
+  p.scene.replaceChildren(...items);
+
+  const name = { 0.5: "√e", 1: "e", 2: "e × e", 3: "e × e × e", [-1]: "1/e", 0: "1" }[x];
+  $("p-xOut").textContent = `x = ${num(x)}`;
+  $("p-nOut").textContent = `${big(n)} piece${n === 1 ? "" : "s"}`;
+  $("p-out").innerHTML = [
+    `<div><dt>Step</dt><dd>× (1 ${x < 0 ? MINUS : "+"} ${num(Math.abs(x))}/${big(n)})<small>= ${fix(1 + x / n, 5)}</small></dd></div>`,
+    `<div><dt class="cp">Lands</dt><dd>${fix(end, 5)}<small>after ${big(n)} piece${n === 1 ? "" : "s"}</small></dd></div>`,
+    `<div><dt class="ct">Target</dt><dd>${fix(target, 5)}<small>e<sup>${num(x)}</sup>${name ? ` = ${name}` : ""}</small></dd></div>`,
+  ].join("");
+
+  let note;
+  if (x === 0) note = `No push, no growth: <span class="v">e</span><sup>0</sup> = 1.`;
+  else if (x === 1) note = `This is Station 1's recipe, so it settles on <span class="v">e</span>.`;
+  else if (x === 0.5) note = `A push of ½, done twice, is a push of 1. So <span class="v">e</span><sup>½</sup> is the number that times itself makes <span class="v">e</span>: √<span class="v">e</span> = ${fix(Math.sqrt(E), 5)}.`;
+  else if (x === -1) note = `A backward push shrinks. A push of −1 undoes a push of 1, so <span class="v">e</span><sup>−1</sup> × <span class="v">e</span> = 1 and <span class="v">e</span><sup>−1</sup> = 1/<span class="v">e</span>.`;
+  else if (Number.isInteger(x) && x > 1) note = `A push of ${x} is ${x} pushes of 1 in a row. Each one is Station 1's recipe, multiplying by nearly <span class="v">e</span>, so together they land near ${name}.`;
+  else note = `For any push <span class="v">x</span> the recipe settles on <span class="v">e</span><sup><span class="v">x</span></sup>. Splitting the push splits it into powers that multiply: <span class="v">e</span><sup><span class="v">a</span>+<span class="v">b</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup> × <span class="v">e</span><sup><span class="v">b</span></sup>.`;
+  const gap = target - end;
+  const pieces = `${big(n)} piece${n === 1 ? "" : "s"}`;
+  note += Math.abs(gap) < 5e-4 ? ` With ${pieces} it's within 0.0005.` : ` With ${pieces} it's ${fix(gap, 4)} short. More pieces close the gap.`;
+  $("p-note").innerHTML = note;
+  [...$("p-presets").children].forEach((b, j) => b.setAttribute("aria-pressed", P_PRESETS[j][1] === x));
+}
+
+$("p-presets").replaceChildren(...P_PRESETS.map(([label, v]) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = `x = ${label}`;
+  b.setAttribute("aria-label", `Set the push x to ${label}`);
+  b.addEventListener("click", () => { Ps.x = v; $("p-x").value = v; drawP(); });
+  return b;
+}));
+$("p-x").addEventListener("input", (e) => { Ps.x = Math.round(+e.target.value * 100) / 100; drawP(); });
+$("p-n").addEventListener("input", (e) => { Ps.ni = +e.target.value; drawP(); });
+
+// ---------- The plane ----------
+
+const C = (re, im = 0) => ({ re, im });
+const ZERO = C(0), ONE = C(1);
+const mul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const scale = (z, s) => C(z.re * s, z.im * s);
+const abs = (z) => Math.hypot(z.re, z.im);
+const arg = (z) => Math.atan2(z.im, z.re);
+const polar = (r, t) => C(r * Math.cos(t), r * Math.sin(t));
+const DEG = Math.PI / 180;
+const motionOK = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
+function cx(z, d = 2) {
+  const re = +z.re.toFixed(d), im = +z.im.toFixed(d);
+  if (im === 0) return num(re, d);
+  const ip = Math.abs(im) === 1 ? "i" : `${Math.abs(im)}i`;
+  if (re === 0) return (im < 0 ? MINUS : "") + ip;
+  return `${num(re, d)} ${im < 0 ? MINUS : "+"} ${ip}`;
+}
+
+const S = 400; // viewBox size
+
+class Plane {
+  constructor(svg, range, { labels = ["Re", "Im"], plainY = false, skipOnes = false } = {}) {
+    this.svg = svg;
+    this.skipOnes = skipOnes;
+    this.labels = labels;
+    this.plainY = plainY;
+    svg.setAttribute("viewBox", `0 0 ${S} ${S}`);
+    this.base = svgEl("g");
+    this.scene = svgEl("g");
+    this.top = svgEl("g");
+    svg.append(this.base, this.scene, this.top);
+    this.setRange(range);
+  }
+  setRange(r) {
+    if (r === this.r) return;
+    this.r = r;
+    this.k = S / 2 / r;
+    this.drawBase();
+  }
+  x(re) { return S / 2 + re * this.k; }
+  y(im) { return S / 2 - im * this.k; }
+  at(z) { return [this.x(z.re), this.y(z.im)]; }
+  toZ(e) {
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(this.svg.getScreenCTM().inverse());
+    return C((p.x - S / 2) / this.k, (S / 2 - p.y) / this.k);
+  }
+
+  drawBase() {
+    const r = this.r, kids = [];
+    const step = [1, 2, 5, 10, 25, 50].find((st) => r / st <= 8) || 100;
+    for (let v = step; v < r; v += step) for (const s of [v, -v]) {
+      kids.push(svgEl("line", { class: "grid", x1: this.x(s), y1: 0, x2: this.x(s), y2: S }));
+      kids.push(svgEl("line", { class: "grid", x1: 0, y1: this.y(s), x2: S, y2: this.y(s) }));
+    }
+    kids.push(svgEl("line", { class: "axis", x1: 0, y1: S / 2, x2: S, y2: S / 2 }));
+    kids.push(svgEl("line", { class: "axis", x1: S / 2, y1: 0, x2: S / 2, y2: S }));
+    // label every other line when labels would crowd
+    const every = r / step > 5 ? 2 * step : step;
+    for (let v = step; v < r - 0.25; v += step) for (const s of [v, -v]) {
+      if ((this.skipOnes && v === 1) || v % every) continue;
+      kids.push(svgEl("text", { class: "tick-lab", x: this.x(s), y: S / 2 + 15, "text-anchor": "middle" }, num(s)));
+      const yl = this.plainY ? num(s) : s === 1 ? "i" : s === -1 ? MINUS + "i" : num(s) + "i";
+      kids.push(svgEl("text", { class: "tick-lab", x: S / 2 - 6, y: this.y(s) + 4, "text-anchor": "end" }, yl));
+    }
+    kids.push(svgEl("text", { class: "ax-lab", x: S - 8, y: S / 2 - 9, "text-anchor": "end" }, this.labels[0]));
+    kids.push(svgEl("text", { class: "ax-lab", x: S / 2 + 9, y: 19 }, this.labels[1]));
+    this.base.replaceChildren(...kids);
+  }
+
+  // shapes, in complex coordinates
+  line(a, b, cls) {
+    const [x1, y1] = this.at(a), [x2, y2] = this.at(b);
+    return svgEl("line", { class: cls, x1: f1(x1), y1: f1(y1), x2: f1(x2), y2: f1(y2) });
+  }
+  poly(pts, cls, closed = false) {
+    const points = pts.map((p) => this.at(p).map(f1).join(",")).join(" ");
+    return svgEl(closed ? "polygon" : "polyline", { class: cls, points });
+  }
+  dot(z, r, cls) {
+    const [x, y] = this.at(z);
+    return svgEl("circle", { class: cls, cx: f1(x), cy: f1(y), r });
+  }
+  circle(radius, cls) {
+    return svgEl("circle", { class: cls, cx: S / 2, cy: S / 2, r: f1(radius * this.k) });
+  }
+  lab(z, text, cls, dx = 0, dy = 0) {
+    const [x, y] = this.at(z);
+    return svgEl("text", { class: `lab ${cls}`, x: f1(x + dx), y: f1(y + dy) }, text);
+  }
+  // a label pushed away from zero
+  labOut(z, text, cls, d = 18) {
+    const r = abs(z);
+    const u = r < 1e-6 ? C(0.7, 0.7) : scale(z, 1 / r);
+    return this.lab(z, text, cls, u.re * d, -u.im * d);
+  }
+  // an arc around zero, radius in screen px, angles in radians, arrow at the end
+  arc(rp, a0, a1, cls, arrow = true) {
+    const d = a1 - a0;
+    if (Math.abs(d) < 0.01 || rp < 1) return [];
+    const P = (a) => [f1(S / 2 + rp * Math.cos(a)), f1(S / 2 - rp * Math.sin(a))];
+    const [x0, y0] = P(a0), [x1, y1] = P(a1);
+    const sweep = d > 0 ? 0 : 1;
+    let path;
+    if (Math.abs(d) > 1.9 * Math.PI) {
+      const [xm, ym] = P(a0 + d / 2);
+      path = `M${x0} ${y0}A${rp} ${rp} 0 0 ${sweep} ${xm} ${ym}A${rp} ${rp} 0 0 ${sweep} ${x1} ${y1}`;
+    } else {
+      path = `M${x0} ${y0}A${rp} ${rp} 0 ${Math.abs(d) > Math.PI ? 1 : 0} ${sweep} ${x1} ${y1}`;
+    }
+    const out = [svgEl("path", { class: `arc ${cls}`, d: path })];
+    if (arrow && rp * Math.abs(d) > 14) {
+      const dir = d > 0 ? 1 : -1;
+      const tx = -Math.sin(a1) * dir, ty = -Math.cos(a1) * dir; // tangent on screen
+      const L = 9, W = 4.5, bx = x1 - tx * L, by = y1 - ty * L;
+      out.push(svgEl("polygon", {
+        class: `head ${cls}`,
+        points: `${x1},${y1} ${f1(bx - ty * W)},${f1(by + tx * W)} ${f1(bx + ty * W)},${f1(by - tx * W)}`,
+      }));
+    }
+    return out;
+  }
+  // the little square that marks a right angle at zero, between angle a and a + 90°
+  rightAngle(a, cls, s = 13) {
+    const u = [Math.cos(a), -Math.sin(a)], v = [-Math.sin(a), -Math.cos(a)];
+    const o = [S / 2, S / 2];
+    const pt = (p, q) => `${f1(o[0] + (u[0] * p + v[0] * q) * s)},${f1(o[1] + (u[1] * p + v[1] * q) * s)}`;
+    return svgEl("polyline", { class: `thin ${cls}`, fill: "none", points: `${pt(1, 0)} ${pt(1, 1)} ${pt(0, 1)}` });
+  }
+}
+
+// turns that have a tidy name in terms of π, by whole degrees
+const PI_NAMES = { 45: "π/4", 90: "π/2", 180: "π", 270: "3π/2", 360: "2π" };
+// a radian amount for a slider readout, with its π name when it has one
+const radOut = (sym, deg) => `${sym} = ${PI_NAMES[deg] ? `${PI_NAMES[deg]} ≈ ` : ""}${num(deg * DEG)}`;
+// the point label "e^power" with the power as a raised tspan
+function eLabel(pl, z, power, d = 24) {
+  const t = pl.labOut(z, "e", "var ct", d);
+  if (power) t.appendChild(svgEl("tspan", { dy: -7, "font-size": 12 }, power));
+  return t;
+}
+// a step-count label beside the walk's end, kept clear of the target's label
+function endLabel(pl, end, target, text) {
+  const [x, y] = pl.at(end), [tx, ty] = pl.at(target);
+  const u = abs(target) > 1e-9 ? scale(target, 1 / abs(target)) : C(1, 0);
+  const lx = tx + u.re * 24, ly = ty - u.im * 24, ex = clamp(x, 50, S - 50);
+  let dy = end.im >= 0 ? -18 : 18;
+  if (Math.abs(ex - lx) < 70 && Math.abs(y + dy - ly) < 14) dy = -dy;
+  return svgEl("text", { class: "lab small cp", x: f1(ex), y: f1(clamp(y + dy, 14, S - 14)) }, text);
+}
+function chipRow(el, items, what, onPick) {
+  el.replaceChildren(...items.map(([html, aria], j) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = html;
+    b.setAttribute("aria-label", `${what} ${aria}`);
+    b.addEventListener("click", () => onPick(j));
+    return b;
+  }));
+}
+const pressChips = (el, test) => [...el.children].forEach((b, j) => b.setAttribute("aria-pressed", test(j)));
+const W_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 20, 50, 100, 250, 1000];
+const plural = (n) => `${big(n)} piece${n === 1 ? "" : "s"}`;
+// the walk from 1, multiplying by step n times
+function cwalk(step, n) {
+  const pts = [ONE];
+  for (let j = 0; j < n; j++) pts.push(mul(pts[j], step));
+  return pts;
+}
+// keep long walks light: a few hundred corners is plenty to draw
+const thin = (pts) => { const every = Math.ceil((pts.length - 1) / 400); return pts.filter((_, j) => j % every === 0 || j === pts.length - 1); };
+
+// a push θ, either from the whole-degree slider or exactly 1 radian
+const turnOf = (deg) => ({ deg, th: deg * DEG, name: PI_NAMES[deg] || null });
+const ONE_RADIAN = { deg: 57, th: 1, name: "1" };
+const thOut = (t) => (t.name === "1" ? "θ = 1" : radOut("θ", t.deg));
+// a number times i, leaving out a 1: i, 1.57i
+const iCoef = (v) => (v === 1 ? "i" : `${num(v)}i`);
+// iθ written the usual way: i, iπ/2, iπ, 3πi/2, 2πi, 1.2i
+const iTimes = (t) => (t.name === "1" ? "i" : t.name === "2π" ? "2πi" : t.name === "3π/2" ? "3πi/2" : t.name ? `i${t.name}` : `${num(t.th)}i`);
+const TURN_PRESETS = [ONE_RADIAN, turnOf(90), turnOf(180), turnOf(270), turnOf(360)];
+const sameTurn = (a, b) => a.deg === b.deg && a.th === b.th;
+
+// ---------- Station 3: push sideways ----------
+
+const p3 = new Plane($("plane3"), 1.6);
+const Ss = { t: turnOf(90), ni: 0 };
+
+function drawS() {
+  const n = W_STEPS[Ss.ni], th = Ss.t.th, pts = cwalk(C(1, th / n), n), end = pts[n], target = polar(1, th);
+  p3.setRange(Math.max(1.6, Math.ceil(Math.max(...pts.map(abs)) * 1.3 * 2) / 2));
+  const k = p3.k, items = [p3.circle(1, "unit")];
+  // each piece is at right angles to the spoke it starts from
+  if (n <= 60) pts.forEach((p) => items.push(p3.line(ZERO, p, "faint cp")));
+  if (th > 0) items.push(...p3.arc(k, 0, th, "ct", false));
+  items.push(p3.poly(thin(pts), "ray cp"));
+  // while the pieces are big enough to see, mark each corner's right angle and number each landing
+  const scr = pts.map((p) => p3.at(p)), gap = Math.min(...scr.slice(1).map(([x, y], j) => Math.hypot(x - scr[j][0], y - scr[j][1])));
+  if (n <= 12 && gap > 18) {
+    pts.slice(0, -1).forEach((p, j) => {
+      const r = abs(p), u = [p.re / r, -p.im / r], v = [-p.im / r, -p.re / r], [x, y] = scr[j], sq = 8;
+      const pt = (a, b) => `${f1(x + (-u[0] * a + v[0] * b) * sq)},${f1(y + (-u[1] * a + v[1] * b) * sq)}`;
+      items.push(svgEl("polyline", { class: "thin cp", fill: "none", points: `${pt(1, 0)} ${pt(1, 1)} ${pt(0, 1)}` }));
+    });
+  }
+  if (n <= 60) pts.slice(1, -1).forEach((p) => items.push(p3.dot(p, 3, "dot cp")));
+  if (n <= 12 && gap > 22) pts.slice(1, -1).forEach((p, j) => items.push(p3.labOut(p, String(j + 1), "small cp", 13)));
+  items.push(p3.dot(ONE, 4, "dot cz"), p3.lab(ONE, "1", "small cz", 9, 12));
+  items.push(svgEl("circle", { class: "ring ct", cx: f1(p3.x(target.re)), cy: f1(p3.y(target.im)), r: 8 }));
+  // the walk always lands outside the circle, so the target is labelled from inside it
+  items.push(eLabel(p3, target, iTimes(Ss.t), -26));
+  items.push(p3.dot(end, 6, "dot cp"));
+  items.push(p3.labOut(end, plural(n), "small cp", 16 + Math.abs(end.re / abs(end)) * 28));
+  p3.scene.replaceChildren(...items);
+
+  const e = th / n, stretch = Math.hypot(1, e) ** n, miss = abs(C(end.re - target.re, end.im - target.im));
+  $("s-thOut").textContent = thOut(Ss.t);
+  $("s-nOut").textContent = plural(n);
+  $("s-out").innerHTML = [
+    `<div><dt>Step</dt><dd>× (1 + ${iCoef(th)}/${big(n)})<small>= ${cx(C(1, e), 4)}, turns ${num(Math.atan(e) / DEG, 2)}°, stretches ×${num(Math.hypot(1, e), 6)}</small></dd></div>`,
+    `<div><dt class="cp">Lands</dt><dd>${cx(end, 4)}<small>length ${num(abs(end), 4)}</small></dd></div>`,
+    `<div><dt class="ct">Target</dt><dd>${cx(target, 4)}<small>e<sup>${iTimes(Ss.t)}</sup> = cos θ + i sin θ, length 1</small></dd></div>`,
+  ].join("");
+  let note = n === 1
+    ? `One piece pushes straight up from 1, at right angles to it, and lands on 1 + ${th === 1 ? "" : num(th)}<span class="v">i</span>. One big push stretches as much as it turns, so it overshoots the circle. Split it into more pieces and watch the walk bend round. `
+    : miss < 0.005
+      ? `Within 0.005 of the circle. `
+      : `Off by <b>${num(miss, 3)}</b>. Each piece turns a little and stretches a tiny bit more, and the stretches add up to ×${num(stretch, 3)}. More, smaller pieces shrink each stretch faster than they pile up. `;
+  if (Ss.t.name === "1") note += `<b><span class="v">e</span><sup><span class="v">i</span></sup> = cos 1 + <span class="v">i</span> sin 1 ≈ 0.5403 + 0.8415<span class="v">i</span>.</b> A push of 1 sideways goes one radian round the circle, about 57.3°.`;
+  else note += `With infinitely many pieces it lands exactly on the circle, at <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>.`;
+  $("s-note").innerHTML = note;
+  pressChips($("s-presets"), (j) => sameTurn(TURN_PRESETS[j], Ss.t));
+}
+
+chipRow($("s-presets"), TURN_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Set the push θ to", (j) => {
+  Ss.t = TURN_PRESETS[j];
+  $("s-th").value = Ss.t.deg;
+  drawS();
+});
+$("s-th").addEventListener("input", (e) => { Ss.t = turnOf(+e.target.value); drawS(); });
+$("s-n").addEventListener("input", (e) => { Ss.ni = +e.target.value; drawS(); });
+
+// ---------- Station 4: wrap the line around the circle ----------
+
+const p4 = new Plane($("plane4"), 3.5);
+const Ws = { t: turnOf(180), wrap: 0, anim: 0 };
+const W_PRESETS = [ONE_RADIAN, turnOf(90), turnOf(180), turnOf(360)];
+// where length t of the line lands when it's bent to curvature c, standing up at 1
+function bend(t, c) {
+  if (c < 1e-6) return C(1, t);
+  return C(1 - 1 / c + Math.cos(c * t) / c, Math.sin(c * t) / c);
+}
+
+function drawW() {
+  const th = Ws.t.th, c = Ws.wrap, tip = bend(th, c), target = polar(1, th);
+  const N = 240, line = [...Array(N + 1).keys()].map((j) => bend((th * j) / N, c));
+  const far = Math.max(1.3, ...line.map((z) => Math.max(Math.abs(z.re), Math.abs(z.im))));
+  p4.setRange(Math.max(1.6, Math.round(far * 1.18 * 10) / 10));
+  const items = [p4.circle(1, "unit")];
+  if (th > 0) items.push(p4.poly(line, "ray cp"));
+  // ticks along the line, with π's marks in teal
+  const tick = (t, cls, len, label, out = 15) => {
+    const z = bend(t, c), nrm = c < 1e-6 ? C(1, 0) : polar(1, c * t);
+    const a = p4.at(z), px = nrm.re, py = -nrm.im;
+    items.push(svgEl("line", { class: `tick ${cls}`, x1: f1(a[0] - px * len), y1: f1(a[1] - py * len), x2: f1(a[0] + px * len), y2: f1(a[1] + py * len) }));
+    if (label) items.push(svgEl("text", { class: `lab small ${cls}`, x: f1(a[0] + px * out), y: f1(a[1] + py * out) }, label));
+  };
+  const pis = [[Math.PI / 2, "π/2"], [Math.PI, "π"], [1.5 * Math.PI, "3π/2"], [2 * Math.PI, "2π"]].filter(([t]) => t <= th + 1e-9);
+  for (let j = 0; j * 0.5 <= th + 1e-9; j++) {
+    const t = j * 0.5, whole = j % 2 === 0;
+    tick(t, "cz", whole ? 5 : 3, whole ? String(t) : null);
+  }
+  for (const [t, name] of pis) tick(t, "ct", 7, name, -16);
+  items.push(p4.dot(ONE, 4, "dot cz"));
+  items.push(svgEl("circle", { class: "ring ct", cx: f1(p4.x(target.re)), cy: f1(p4.y(target.im)), r: 8 }));
+  items.push(eLabel(p4, target, iTimes(Ws.t), 26));
+  items.push(p4.dot(tip, 6, "dot cp"));
+  p4.scene.replaceChildren(...items);
+
+  const pct = Math.round(c * 100), name = Ws.t.name || num(th);
+  $("w-thOut").textContent = thOut(Ws.t);
+  $("w-wrapOut").textContent = `${pct}%`;
+  $("w-out").innerHTML = [
+    `<div><dt class="cp">Tip</dt><dd>${cx(tip, 3)}<small>the number ${name} on the line, ${pct === 100 ? "wrapped" : pct === 0 ? "standing straight up" : `${pct}% wrapped`}</small></dd></div>`,
+    `<div><dt class="ct">Target</dt><dd>${cx(target, 3)}<small>e<sup>${iTimes(Ws.t)}</sup>, ${num(th / DEG, 1)}° round the circle</small></dd></div>`,
+  ].join("");
+  let note;
+  if (pct < 100) note = `Bend the line until it hugs the circle. Its tip is heading for the ring.`;
+  else if (Ws.t.name === "π") note = `<b><span class="v">e</span><sup><span class="v">iπ</span></sup> = −1.</b> The circle is 2π around, so a length of π reaches halfway, facing the other way. That's Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.`;
+  else if (Ws.t.name === "π/2") note = `<b><span class="v">e</span><sup><span class="v">iπ</span>/2</sup> = <span class="v">i</span>.</b> A quarter of the way round is a quarter turn.`;
+  else if (Ws.t.name === "2π") note = `<b><span class="v">e</span><sup>2π<span class="v">i</span></sup> = 1.</b> The whole circle is 2π long, so the line wraps once round and comes home.`;
+  else if (Ws.t.name === "1") note = `<b>One radian.</b> A length of 1 wrapped round a circle of radius 1 makes an angle of about 57.3°. That's what a radian is.`;
+  else note = `Wrapped, the number <span class="v">θ</span> lands on <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>, the point ${num(th)} of the way along the circle.`;
+  $("w-note").innerHTML = note;
+  $("w-play").textContent = c >= 1 ? "Unwrap it" : "Wrap it";
+  pressChips($("w-presets"), (j) => sameTurn(W_PRESETS[j], Ws.t));
+}
+
+function setWrap(c) {
+  Ws.wrap = c;
+  $("w-wrap").value = Math.round(c * 100);
+  drawW();
+}
+function stopWrap() { if (Ws.anim) { cancelAnimationFrame(Ws.anim); Ws.anim = 0; } }
+$("w-play").addEventListener("click", () => {
+  stopWrap();
+  const from = Ws.wrap, to = from >= 1 ? 0 : 1;
+  if (!motionOK()) { setWrap(to); return; }
+  const ms = 1600 * Math.abs(to - from), t0 = performance.now();
+  const frame = (now) => {
+    const t = Math.min(1, (now - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+    setWrap(from + (to - from) * e);
+    Ws.anim = t < 1 ? requestAnimationFrame(frame) : 0;
+  };
+  Ws.anim = requestAnimationFrame(frame);
+});
+chipRow($("w-presets"), W_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Set the length θ to", (j) => {
+  Ws.t = W_PRESETS[j];
+  $("w-th").value = Ws.t.deg;
+  drawW();
+});
+$("w-th").addEventListener("input", (e) => { Ws.t = turnOf(+e.target.value); drawW(); });
+$("w-wrap").addEventListener("input", (e) => { stopWrap(); Ws.wrap = +e.target.value / 100; drawW(); });
+
+// ---------- Station 5: both at once ----------
+
+const p5 = new Plane($("plane5"), 3.5);
+const Bs = { a: 1, deg: 90, ni: 8 };
+// the power a + bi, with b named in terms of π when it can be
+function power(a, deg) {
+  const im = deg === 0 ? "" : deg === 360 ? "2πi" : deg === 270 ? "3πi/2" : PI_NAMES[deg] ? `i${PI_NAMES[deg]}` : `${num(deg * DEG)}i`;
+  if (!im) return num(a);
+  return Math.abs(a) < 1e-9 ? im : `${num(a)} + ${im}`;
+}
+const eTo = (a, deg) => (a === 1 && deg === 0 ? "e" : `e<sup>${power(a, deg)}</sup>`);
+const B_PRESETS = [[1, 0], [0, 180], [1, 90], [-0.5, 360], [0.5, 270]];
+
+function drawB() {
+  const { a, deg } = Bs, n = W_STEPS[Bs.ni], b = deg * DEG;
+  const step = C(1 + a / n, b / n), pts = cwalk(step, n), end = pts[n], target = polar(Math.exp(a), b);
+  const far = Math.max(abs(target), ...pts.map(abs));
+  p5.setRange(Math.max(1.6, Math.ceil(far * 1.3 * 2) / 2));
+  const k = p5.k, items = [p5.circle(1, "unit")];
+  if (Math.abs(a) > 1e-9 && deg > 0) items.push(p5.circle(abs(target), "orbit"));
+  if (deg > 0) items.push(...p5.arc(abs(target) * k, 0, b, "ct", false));
+  items.push(p5.poly(thin(pts), "ray cp"));
+  if (n <= 60) pts.slice(1, -1).forEach((p) => items.push(p5.dot(p, 3, "dot cp")));
+  items.push(p5.dot(ONE, 4, "dot cz"), p5.lab(ONE, "1", "small cz", 9, 12));
+  items.push(svgEl("circle", { class: "ring ct", cx: f1(p5.x(target.re)), cy: f1(p5.y(target.im)), r: 8 }));
+  items.push(eLabel(p5, target, a === 1 && deg === 0 ? "" : power(a, deg)));
+  items.push(p5.dot(end, 6, "dot cp"));
+  if (abs(end) > 0) items.push(endLabel(p5, end, target, plural(n)));
+  p5.scene.replaceChildren(...items);
+
+  const grow = abs(step), turnDeg = arg(step) / DEG;
+  const how = (len, turned) => [`length ${num(len, 3)}`, deg > 0 ? `turned ${num(turned, 1)}°` : ""].filter(Boolean).join(", ");
+  const push = a !== 0 && deg > 0 ? `+ (${cx(C(a, b))})` : a < 0 && deg === 0 ? `${MINUS} ${num(-a)}` : `+ ${cx(C(a, b))}`;
+  $("b-aOut").textContent = `a = ${num(a)}`;
+  $("b-bOut").textContent = radOut("b", deg);
+  $("b-nOut").textContent = plural(n);
+  $("b-out").innerHTML = [
+    `<div><dt>Step</dt><dd>× (1 ${push}/${big(n)})<small>= ${cx(step, 4)}, ${grow >= 1 ? "grows" : "shrinks"} ×${num(grow, 4)}${deg > 0 ? `, turns ${num(turnDeg, 2)}°` : ""}</small></dd></div>`,
+    `<div><dt class="cp">Lands</dt><dd>${cx(end, 4)}<small>${how(abs(end), turnDeg * n)}</small></dd></div>`,
+    `<div><dt class="ct">Target</dt><dd>${cx(target, 4)}<small>${eTo(a, deg)}, ${how(Math.exp(a), deg)}</small></dd></div>`,
+  ].join("");
+  const miss = abs(C(end.re - target.re, end.im - target.im));
+  const gap = miss < 0.005 ? ` With ${plural(n)} it's within 0.005.` : ` With ${plural(n)} it's off by <b>${num(miss, 3)}</b>. More pieces close the gap.`;
+  $("b-note").innerHTML = (deg === 0
+    ? `With no sideways push it stays on the number line, as in Station 2, and settles on <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}.`
+    : Math.abs(a) < 1e-9
+      ? `With no forward push it stays on the circle, as in Station 3, and settles on <span class="v">e</span><sup>${power(a, deg)}</sup>.`
+      : `The forward push stretches the length to <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}. The sideways push turns it ${num(b)} radians. ${a < 0 ? "Shrinking" : "Growing"} while turning makes a spiral.`) + gap;
+  pressChips($("b-presets"), (j) => B_PRESETS[j][0] === a && B_PRESETS[j][1] === deg);
+}
+
+chipRow($("b-presets"), B_PRESETS.map(([a, deg]) => [eTo(a, deg), `e to the ${power(a, deg)}`]), "Set the push to", (j) => {
+  [Bs.a, Bs.deg] = B_PRESETS[j];
+  $("b-a").value = Bs.a;
+  $("b-b").value = Bs.deg;
+  drawB();
+});
+$("b-a").addEventListener("input", (e) => { Bs.a = Math.round(+e.target.value * 100) / 100; drawB(); });
+$("b-b").addEventListener("input", (e) => { Bs.deg = +e.target.value; drawB(); });
+$("b-n").addEventListener("input", (e) => { Bs.ni = +e.target.value; drawB(); });
+
+// ---------- Start ----------
+
+drawG();
+drawP();
+drawS();
+drawW();
+drawB();
+</script>
+</body>
+</html>
