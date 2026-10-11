@@ -1224,7 +1224,7 @@ const POW_NAME = ["1", "i", MINUS + "1", MINUS + "i"];
 const hz1 = handle(p1, {
   cls: "cz", label: "z", name: "Point z",
   get: () => Q.z,
-  set: (z, how) => { stopTurn(); Q.z = tidy(p1, z, how); Q.turns = 0; draw1(); },
+  set: (z, how) => { stopTurn(); Q.z = tidy(p1, z, how); Q.turns = 0; draw1(); paint1(); },
 });
 
 function draw1(z = Q.z) {
