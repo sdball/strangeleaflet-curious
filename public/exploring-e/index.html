@@ -402,7 +402,7 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     <div class="panel-head">
       <p class="station">Station 3</p>
       <h2 id="o-h">One sideways piece</h2>
-      <p>Every push so far went forward, along the number line. Stand a second number line upright through 0 and the line becomes a plane, the plane of <a href="/complex-numbers/">complex numbers</a>, where multiplying by <span class="v">i</span> turns a number a quarter turn. Now push sideways. Split a push of <span class="v">iθ</span> into <span class="v">n</span> pieces, and each piece multiplies by 1 + <span class="v">iθ</span>/<span class="v">n</span>. To see what one piece does, call wherever you are <span class="v">z</span>. Multiplying it out, <span class="v">z</span>(1 + <span class="v">iθ</span>/<span class="v">n</span>) = <span class="v">z</span> + (<span class="v">θ</span>/<span class="v">n</span>)<span class="v">iz</span>: you keep <span class="v">z</span> and add a small piece of <span class="v">iz</span>, which is <span class="v">z</span> turned a quarter turn. So the piece is <b>at right angles</b> to the line from 0 to <span class="v">z</span>. Drag <span class="v">z</span> anywhere and the piece turns with it. Slide <b>Pieces taken</b> to keep going: each new piece is at right angles to the new <span class="v">z</span>, so it leans further round. The dashed circle runs through where you started. A pure turn would keep you on it, but every piece also stretches you a little, so the walk drifts outward. Then shrink the pieces with the <b>Piece size</b> slider: <b>a small sideways piece turns you by about its own size, in radians, and hardly stretches you at all.</b></p>
+      <p>Every push so far went forward, along the number line. Stand a second number line upright through 0 and the line becomes a plane, the plane of <a href="/complex-numbers/">complex numbers</a>, where multiplying by <span class="v">i</span> turns a number a quarter turn. Now push sideways. Split a push of <span class="v">iθ</span> into <span class="v">n</span> pieces, and each piece multiplies by 1 + <span class="v">iθ</span>/<span class="v">n</span>. To see what one piece does, call wherever you are <span class="v">z</span>. Multiplying it out, <span class="v">z</span>(1 + <span class="v">iθ</span>/<span class="v">n</span>) = <span class="v">z</span> + (<span class="v">θ</span>/<span class="v">n</span>)<span class="v">iz</span>: you keep <span class="v">z</span> and add a small piece of <span class="v">iz</span>, which is <span class="v">z</span> turned a quarter turn. So the piece is <b>at right angles</b> to the line from 0 to <span class="v">z</span>, and it takes you to the amber point <span class="v">z′</span> = <span class="v">z</span>(1 + <span class="v">iθ</span>/<span class="v">n</span>). Drag <span class="v">z</span> anywhere and the piece turns with it. Slide <b>Pieces taken</b> to keep going: <span class="v">z′</span> becomes the new <span class="v">z</span>, and the next piece is at right angles to that, so it leans further round. The dashed circle runs through where you started. A pure turn would keep you on it, but every piece also stretches you a little, so the walk drifts outward. Then shrink the pieces with the <b>Piece size</b> slider: <b>a small sideways piece turns you by about its own size, in radians, and hardly stretches you at all.</b></p>
     </div>
     <div class="split">
       <svg class="plane" id="planeO" role="img" aria-label="A point z, the quarter-turned copy iz, and a small piece of iz added at right angles to z"></svg>
@@ -998,7 +998,7 @@ function tidy(plane, z, how) {
 }
 
 // a point you can drag, or move with the arrow keys
-function handle(plane, { cls, label, name, set, get }) {
+function handle(plane, { cls, label, name, set, get, start, end: done }) {
   const g = svgEl("g", {
     class: `handle ${cls}`, tabindex: 0, role: "slider",
     "aria-roledescription": "draggable point", "aria-label": name,
@@ -1020,6 +1020,7 @@ function handle(plane, { cls, label, name, set, get }) {
     g.setPointerCapture(e.pointerId);
     g.classList.add("drag");
     g.focus({ preventScroll: true });
+    if (start) start();
     set(plane.toZ(e), "drag");
   });
   g.addEventListener("pointermove", (e) => { if (dragging) set(plane.toZ(e), "drag"); });
@@ -1027,6 +1028,7 @@ function handle(plane, { cls, label, name, set, get }) {
     if (!dragging) return;
     dragging = false;
     g.classList.remove("drag");
+    if (done) done();
   };
   ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => g.addEventListener(t, end));
   // keep a finger on a point from scrolling the page
@@ -1040,7 +1042,6 @@ function handle(plane, { cls, label, name, set, get }) {
   });
 
   return {
-    label(t) { text.textContent = t; },
     place(z, valueText) {
       const [x, y] = plane.at(z);
       g.setAttribute("transform", `translate(${f1(x)} ${f1(y)})`);
@@ -1123,15 +1124,22 @@ function oMax(e, r0) {
   return Math.max(1, Math.min(full, Math.floor(Math.log(30 / r0) / Math.log(Math.hypot(1, e)))));
 }
 
+// the walk is the start times a fixed path, so dragging its end z carries the whole walk
+const div = (a, b) => { const d = b.re * b.re + b.im * b.im; return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
 const hO = handle(pO, {
-  cls: "cz", label: "z", name: "Starting point",
-  get: () => Os.z0,
+  cls: "cz", label: "z", name: "Point z",
+  get: () => cwalk(C(1, O_SIZES[Os.si]), Os.m).map((p) => mul(Os.z0, p))[Os.m],
   set: (z, how) => {
-    // within the board's usual view, however far out the walk has zoomed it
-    const r = abs(z), lim = 1.45;
-    Os.z0 = tidy(pO, r > lim ? scale(z, lim / r) : z, how);
+    const t = how === "drag" ? C(halfSnap(z.re), halfSnap(z.im)) : C(Math.round(z.re * 100) / 100, Math.round(z.im * 100) / 100);
+    const path = cwalk(C(1, O_SIZES[Os.si]), Os.m)[Os.m];
+    // keep the start within the board's usual view, however far out the walk has zoomed it
+    let z0 = div(t, path);
+    if (abs(z0) > 1.45) z0 = scale(z0, 1.45 / abs(z0));
+    Os.z0 = z0;
     drawO();
   },
+  start: () => { Os.dragging = true; },
+  end: () => { Os.dragging = false; drawO(); },
 });
 
 function drawO() {
@@ -1139,7 +1147,9 @@ function drawO() {
   Os.m = Math.min(Os.m, M);
   const m = Os.m, pts = cwalk(C(1, e), m).map((p) => mul(Os.z0, p)), z = pts[m], r = abs(z);
   const iz = mul(C(0, 1), z), next = C(z.re + e * iz.re, z.im + e * iz.im);
-  pO.setRange(Math.max(1.6, Math.ceil(Math.max(abs(next), r0) * 1.3 * 2) / 2));
+  // while z is being dragged the zoom only grows, so the point stays under the pointer
+  const want = Math.max(1.6, Math.ceil(Math.max(abs(next), r0) * 1.3 * 2) / 2);
+  pO.setRange(Os.dragging ? Math.max(want, pO.r) : want);
   const items = [];
   // the circle through the start: a pure turn would stay on it
   if (r0 > 0.05) items.push(pO.circle(r0, "unit"));
@@ -1153,7 +1163,7 @@ function drawO() {
     items.push(pO.line(ZERO, iz, "leg cw"), pO.rightAngle(arg(z), "cw"), pO.labOut(iz, "iz", "var cw", 18));
     items.push(pO.line(ZERO, z, "ray cz"), pO.line(ZERO, next, "faint cp"));
     // how far the piece turns z
-    items.push(...pO.arc(Math.min(40, r * pO.k * 0.5), arg(z), arg(next), "cp", false));
+    items.push(...pO.arc(Math.min(40, r * pO.k * 0.5), arg(z), arg(z) + Math.atan(e), "cp", false));
     // the piece itself: a short copy of iz, from z, at right angles to the line from 0
     const [x, y] = pO.at(z), [tx, ty] = pO.at(next), len = Math.hypot(tx - x, ty - y);
     const u = [z.re / r, -z.im / r], v = [-z.im / r, -z.re / r], sq = Math.min(9, len * 0.6);
@@ -1165,12 +1175,13 @@ function drawO() {
       items.push(svgEl("polygon", { class: "head cw", points: `${f1(tx)},${f1(ty)} ${f1(tx - dx * L - dy * W)},${f1(ty - dy * L + dx * W)} ${f1(tx - dx * L + dy * W)},${f1(ty - dy * L - dx * W)}` }));
     }
     items.push(pO.dot(next, 5, "dot cp"));
-    // once the walk has moved on, z is its end and the handle is where it started
-    if (m > 0) items.push(pO.dot(z, 6, "dot cz"), pO.labOut(z, "z", "var cz", 20));
+    // a tiny piece leaves z′ almost on z, too close for both labels
+    if (len > 24) items.push(pO.labOut(next, "z′", "var cp", 20));
+    // once the walk has moved on, mark where it started
+    if (m > 0) items.push(pO.dot(Os.z0, 4, "dot cz"), pO.labOut(Os.z0, "start", "small cz", 22));
   }
   pO.scene.replaceChildren(...items);
-  hO.label(m > 0 ? "" : "z");
-  hO.place(Os.z0, `start = ${cx(Os.z0)}`);
+  hO.place(z, `z = ${cx(z)}`);
 
   const turn = Math.atan(e), stretch = Math.hypot(1, e);
   $("o-sizeOut").textContent = `θ/n = ${num(e)}`;
