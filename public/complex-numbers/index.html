@@ -889,15 +889,16 @@ class NumberLine {
   }
 }
 
-// Stations 1 and 2 share these zooms. Each keeps m small enough that m² and
-// both hops stay on the board, out to 12² = 144.
+// Stations 1 and 2 share these zooms. Station 1 lets m reach the end of the
+// line and m² run off it. Station 2 keeps m within max, so m² and both hops
+// stay on the board, out to 12² = 144.
 const ZOOMS = [
   { show: "2.5", r: 2.6, max: 1.5, tick: 0.5, label: 1 },
   { show: "5", r: 5.2, max: 2.2, tick: 0.5, label: 1 },
   { show: "10", r: 10.4, max: 3.2, tick: 1, label: 2 },
   { show: "25", r: 26, max: 5, tick: 1, label: 5 },
   { show: "50", r: 52, max: 7.2, tick: 5, label: 10 },
-  { show: "150", r: 150, max: 12.2, tick: 10, label: 50 },
+  { show: "150", r: 156, max: 12.2, tick: 10, label: 50 },
 ];
 // drag snapping that stays useful when a pixel covers a lot of the line
 function zoomSnap(v, zi) {
@@ -928,8 +929,8 @@ function setZoom(zi) {
   setM(L.m);
 }
 function setM(v) {
-  const max = ZOOMS[L.zoom].max;
-  L.m = r2(clamp(v, -max, max));
+  const lim = +ZOOMS[L.zoom].show;
+  L.m = r2(clamp(v, -lim, lim));
   if (L.squares.size < 2000) L.squares.add(r2(L.m * L.m));
   draw0();
 }
@@ -937,7 +938,7 @@ const hm = handle(nl, {
   cls: "cw", label: "m", name: "The multiplier m, on the number line",
   labelAt: [0, -22],
   set: (z) => setM(zoomSnap(z.re, L.zoom)),
-  key: (dx, dy, big) => setM(L.m + (dx || dy) * ZOOMS[L.zoom].max / (big ? 6 : 30)),
+  key: (dx, dy, big) => setM(L.m + (dx || dy) * ZOOMS[L.zoom].show / (big ? 10 : 50)),
 });
 
 // screen points for one hop: multiply `from` by m, turning a half turn if m is negative
@@ -991,7 +992,11 @@ function draw0() {
   items.push(svgEl("circle", { class: "dot cz", cx: ox, cy: oy, r: 6 }));
   items.push(svgEl("text", { class: "lab cz", x: ox, y: oy - 28 }, "1"));
   items.push(svgEl("circle", { class: "dot cp", cx: f1(px), cy: py, r: 6 }));
-  items.push(svgEl("text", { class: "lab var cp", x: f1(clamp(px, 22, nl.W - 22)), y: py + (Math.abs(m2 - 1) < 0.2 ? 50 : -22) }, "m²"));
+  // past the edge, point the way to m²
+  const off = px > nl.W - 6;
+  if (off) items.push(svgEl("polygon", { class: "head cp", points: `${nl.W - 4},${py} ${nl.W - 16},${py - 7} ${nl.W - 16},${py + 7}` }));
+  // off the edge, label it below the line, clear of m
+  items.push(svgEl("text", { class: "lab var cp", x: f1(clamp(px, 22, nl.W - 22)), y: py + (off ? 30 : Math.abs(m2 - 1) < 0.2 ? 50 : -22) }, "m²"));
   nl.scene.replaceChildren(...items);
   hm.place(C(m), num(m));
 
@@ -1004,8 +1009,9 @@ function draw0() {
       : m > 0
         ? `A positive number only ${m > 1 ? "stretches" : "shrinks"}, so both hops stay on the same side of 0 and <span class="v">m</span> × <span class="v">m</span> = ${num(m2)} is positive.`
         : `A negative number flips to the other side of 0, a half turn. The second flip turns it back, so <span class="v">m</span> × <span class="v">m</span> = ${num(m2)} is positive again.`;
-  const zmax = ZOOMS[L.zoom].max;
-  if (Math.abs(m) >= zmax && L.zoom < ZOOMS.length - 1) $("l-note").innerHTML += ` Show more of the line to try bigger numbers.`;
+  const more = L.zoom < ZOOMS.length - 1;
+  if (off) $("l-note").innerHTML += ` <span class="v">m</span>² is past the edge of the line${more ? ". Show more of the line to see it." : "."}`;
+  else if (Math.abs(m) >= +ZOOMS[L.zoom].show && more) $("l-note").innerHTML += ` Show more of the line to try bigger numbers.`;
   const n = L.squares.size, hidden = [...L.squares].filter((sq) => sq > nl.r).length;
   $("l-count").innerHTML = `<b>${n} square${n === 1 ? "" : "s"}</b> made, and every one landed on 0 or to its right.`
     + (hidden ? ` ${hidden} ${hidden === 1 ? "is" : "are"} past the edge at this zoom.` : "");
