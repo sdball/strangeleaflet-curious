@@ -266,6 +266,7 @@ h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .pair dd small { display: block; font: 400 .9rem var(--sans); color: var(--board-muted); }
 .pair.wide > div { grid-template-columns: 4.6rem minmax(0, 1fr); }
 .pair.wide dt { font: 700 .8rem var(--sans); text-transform: uppercase; letter-spacing: .06em; }
+.pair.wide dt.sym { font: italic 400 1.25rem/1 var(--serif); text-transform: none; letter-spacing: 0; }
 
 .work {
   font: 500 .95rem/1.7 var(--mono);
@@ -315,6 +316,8 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
 .pieces thead th { font: 700 .72rem var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--board-muted); }
 .pieces td:first-child { color: var(--board-muted); }
 .pieces tr:last-child td { border-bottom: 0; }
+#ei-work td { white-space: normal; }
+#ei-work .nw { white-space: nowrap; }
 .line .ehat { fill: none; stroke: currentColor; stroke-width: 2; }
 .line .mark { fill: var(--zw); fill-opacity: .5; }
 .line .off { fill: var(--zw); font: 500 14px var(--mono); dominant-baseline: central; }
@@ -425,12 +428,36 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 4. Push sideways -->
-  <section class="panel" aria-labelledby="s-h">
+  <!-- 4. e^i -->
+  <section class="panel" aria-labelledby="ei-h">
     <div class="panel-head">
       <p class="station">Station 4</p>
+      <h2 id="ei-h"><span class="v">e</span><sup><span class="v">i</span></sup>: Station 1, sideways</h2>
+      <p>Station 1 started at 1 and multiplied by 1 + 1/<span class="v">n</span>, <span class="v">n</span> times, so each piece added 1/<span class="v">n</span> of what you had. Change just one thing: make each piece <span class="v">i</span>/<span class="v">n</span> of what you have, and multiply by 1 + <span class="v">i</span>/<span class="v">n</span> instead. Each piece is now 1/<span class="v">n</span> of where you are, turned a quarter turn, so it pushes sideways, and Station 3 showed that it turns you by about 1/<span class="v">n</span> of a radian. All <span class="v">n</span> pieces together turn you about 1 radian. It's Station 2's recipe with <span class="v">x</span> = <span class="v">i</span>, so the sideways walk settles on <b><span class="v">e</span><sup><span class="v">i</span></sup> ≈ 0.5403 + 0.8415<span class="v">i</span></b>, one radian round the circle. There's no π in it. Both walks below use the same <span class="v">n</span>: the forward one is Station 1's, heading for <span class="v">e</span>.</p>
+    </div>
+    <div class="split">
+      <svg class="plane" id="planeEi" role="img" aria-label="Two walks from 1 with the same number of pieces: forward along the number line toward e, and sideways around the circle toward e to the i"></svg>
+      <div class="side">
+        <div class="stack">
+          <div class="slider">
+            <label for="ei-n">Pieces <span class="v">n</span></label>
+            <input type="range" id="ei-n" min="0" max="13" step="1" value="0">
+            <output id="ei-nOut" for="ei-n"></output>
+          </div>
+        </div>
+        <dl class="pair wide" id="ei-out"></dl>
+        <div class="table-wrap"><table class="pieces" id="ei-work"></table></div>
+        <p class="note" id="ei-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Push sideways -->
+  <section class="panel" aria-labelledby="s-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
       <h2 id="s-h">Push sideways</h2>
-      <p>Now take the pieces one after another. It's Station 2's recipe with the push <span class="v">x</span> = <span class="v">iθ</span>: start at 1 and multiply by 1 + <span class="v">iθ</span>/<span class="v">n</span>, <span class="v">n</span> times, so the push of <span class="v">iθ</span> is split into <span class="v">n</span> pieces. As Station 3 showed, each piece is at right angles to the line from 0 out to where you are then, so it turns you a little and barely stretches you. With a few pieces, a small square at each corner marks the right angle. Piece after piece, the walk curls round the circle of radius 1, and as <span class="v">n</span> grows it settles on <span class="v">e</span><sup><span class="v">iθ</span></sup>.</p>
+      <p>Station 2 took Station 1's recipe and pushed by any <span class="v">x</span>. Do the same with Station 4: push sideways by <span class="v">iθ</span>, so each of the <span class="v">n</span> pieces multiplies by 1 + <span class="v">iθ</span>/<span class="v">n</span>. Each piece turns you about <span class="v">θ</span>/<span class="v">n</span> radians, so together they walk a distance <span class="v">θ</span> round the circle of radius 1, and as <span class="v">n</span> grows the walk settles on <span class="v">e</span><sup><span class="v">iθ</span></sup>. With a few pieces, a small square at each corner marks the right angle. Pushes add while results multiply, just as in Station 2. A push of 2<span class="v">i</span> is two pushes of <span class="v">i</span> in a row, so <span class="v">e</span><sup>2<span class="v">i</span></sup> = <span class="v">e</span><sup><span class="v">i</span></sup> × <span class="v">e</span><sup><span class="v">i</span></sup>, two radians round. Halfway round the circle is π radians, so a push of <span class="v">i</span>π lands on −1.</p>
     </div>
     <div class="split">
       <svg class="plane" id="plane3" role="img" aria-label="Successive powers of one plus i theta over n, curling from 1 around the unit circle toward e to the i theta"></svg>
@@ -454,10 +481,10 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 5. Wrap the line around the circle -->
+  <!-- 6. Wrap the line around the circle -->
   <section class="panel" aria-labelledby="w-h">
     <div class="panel-head">
-      <p class="station">Station 5</p>
+      <p class="station">Station 6</p>
       <h2 id="w-h">Wrap the line around the circle</h2>
       <p>Each sideways piece is at right angles to the line from 0, so it slides along the circle instead of away from it. Pushing sideways by <span class="v">θ</span> walks a distance <span class="v">θ</span> around the circle. So here is <span class="v">e</span><sup><span class="v">iθ</span></sup> without any pieces: take the number line from 0 to <span class="v">θ</span>, stand it up at 1, and wrap it around the circle. Every number <span class="v">t</span> on it lands on <span class="v">e</span><sup><span class="v">it</span></sup>. The circle is 2π around, so π/2 reaches a quarter of the way, at <span class="v">i</span>, and π reaches exactly halfway, at −1. Halfway is two quarter turns, so <b><span class="v">e</span><sup><span class="v">iπ</span></sup> = <span class="v">i</span> × <span class="v">i</span> = −1</b>, which is Euler's identity, <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.</p>
     </div>
@@ -486,12 +513,12 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 6. Reading e^iθ -->
+  <!-- 7. Reading e^iθ -->
   <section class="panel" aria-labelledby="r-h">
     <div class="panel-head">
-      <p class="station">Station 6</p>
+      <p class="station">Station 7</p>
       <h2 id="r-h">Reading <span class="v">e</span><sup><span class="v">iθ</span></sup></h2>
-      <p>Stations 4 and 5 found the same thing two ways. Put plainly, <b><span class="v">e</span><sup><span class="v">iθ</span></sup> is where you end up after walking a distance <span class="v">θ</span> round the circle from 1.</b> Nothing gets added to 1. You only ever multiply, and each symbol has its own job. <span class="v">i</span> sets the direction, <span class="v">θ</span> sets how far, π comes from the circle, and <span class="v">e</span> names where you land. Walk the circle and the readout shows each one at work.</p>
+      <p>Stations 5 and 6 found the same thing two ways. Put plainly, <b><span class="v">e</span><sup><span class="v">iθ</span></sup> is where you end up after walking a distance <span class="v">θ</span> round the circle from 1.</b> Nothing gets added to 1. You only ever multiply, and each symbol has its own job. <span class="v">i</span> sets the direction, <span class="v">θ</span> sets how far, π comes from the circle, and <span class="v">e</span> names where you land. Walk the circle and the readout shows each one at work.</p>
     </div>
     <div class="split">
       <svg class="plane" id="planeR" role="img" aria-label="A walk of length theta around the unit circle from 1, with an arrow showing the sideways direction i times where you are"></svg>
@@ -513,12 +540,12 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
     </div>
   </section>
 
-  <!-- 7. Both at once -->
+  <!-- 8. Both at once -->
   <section class="panel" aria-labelledby="b-h">
     <div class="panel-head">
-      <p class="station">Station 7</p>
+      <p class="station">Station 8</p>
       <h2 id="b-h">Both at once</h2>
-      <p>Station 2 pushed forward and Station 4 pushed sideways. Push at a slant and you do both. Each piece multiplies by 1 + (<span class="v">a</span> + <span class="v">bi</span>)/<span class="v">n</span>: the forward part <span class="v">a</span> stretches and the sideways part <span class="v">b</span> turns. You land on <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup>, stretched to <span class="v">e</span><sup><span class="v">a</span></sup> and turned <span class="v">b</span> radians, so <b><span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup> × <span class="v">e</span><sup><span class="v">bi</span></sup></b>, a stretch times a turn. In between, the walk spirals.</p>
+      <p>Station 2 pushed forward and Station 5 pushed sideways. Push at a slant and you do both. Each piece multiplies by 1 + (<span class="v">a</span> + <span class="v">bi</span>)/<span class="v">n</span>: the forward part <span class="v">a</span> stretches and the sideways part <span class="v">b</span> turns. You land on <span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup>, stretched to <span class="v">e</span><sup><span class="v">a</span></sup> and turned <span class="v">b</span> radians, so <b><span class="v">e</span><sup><span class="v">a</span>+<span class="v">bi</span></sup> = <span class="v">e</span><sup><span class="v">a</span></sup> × <span class="v">e</span><sup><span class="v">bi</span></sup></b>, a stretch times a turn. In between, the walk spirals.</p>
     </div>
     <div class="split">
       <svg class="plane" id="plane5" role="img" aria-label="Successive powers of one plus a plus b i over n, from 1 toward e to the a plus b i"></svg>
@@ -554,9 +581,9 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
       <li><b>The last piece adds about <span class="v">e</span> times the first.</b> In Station 1 the first of a million pieces adds a millionth of 1, and the last adds a millionth of nearly <span class="v">e</span>. Growth on growth, all the way up.</li>
       <li><b>Pushes add, results multiply.</b> Pushing by 2 is pushing by 1 twice, so <span class="v">e</span><sup>2</sup> = <span class="v">e</span> × <span class="v">e</span>. The same rule works sideways: turning by <span class="v">θ</span> then by <span class="v">φ</span> is turning by <span class="v">θ</span> + <span class="v">φ</span>, so <span class="v">e</span><sup><span class="v">iθ</span></sup> × <span class="v">e</span><sup><span class="v">iφ</span></sup> = <span class="v">e</span><sup><span class="v">i</span>(<span class="v">θ</span>+<span class="v">φ</span>)</sup>. That's the complex numbers rule that angles add, written as powers.</li>
       <li><b><span class="v">e</span><sup><span class="v">iθ</span></sup> isn't <span class="v">e</span> multiplied by itself <span class="v">iθ</span> times.</b> That has no meaning. For a complex power, the recipe is what the power means, and it earns the name by following the rule above.</li>
-      <li><b>Why radians.</b> Station 5 wraps the number line around a circle of radius 1, so a length along the line becomes the same length of arc. An angle measured by its arc on a circle of radius 1 is an angle in radians. In degrees the wrap would need stretching by π/180, which is why <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span> only works with <span class="v">θ</span> in radians.</li>
+      <li><b>Why radians.</b> Station 6 wraps the number line around a circle of radius 1, so a length along the line becomes the same length of arc. An angle measured by its arc on a circle of radius 1 is an angle in radians. In degrees the wrap would need stretching by π/180, which is why <span class="v">e</span><sup><span class="v">iθ</span></sup> = cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span> only works with <span class="v">θ</span> in radians.</li>
       <li><b>Every number is a stretch and a turn.</b> Any complex number can be written <span class="v">r</span><span class="v">e</span><sup><span class="v">iθ</span></sup>: a length <span class="v">r</span> and an angle <span class="v">θ</span>. Multiplying two of them multiplies the lengths and adds the angles in one step.</li>
-      <li><b>Five numbers in one line.</b> <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0 uses 0, 1, <span class="v">e</span>, <span class="v">i</span>, and π once each, and nothing else. Read through Station 5, it says something plainer: walk halfway round a circle and you face the other way.</li>
+      <li><b>Five numbers in one line.</b> <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0 uses 0, 1, <span class="v">e</span>, <span class="v">i</span>, and π once each, and nothing else. Read through Station 6, it says something plainer: walk halfway round a circle and you face the other way.</li>
     </ul>
   </section>
 
@@ -566,7 +593,7 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
       <li><b>Found before anyone noticed it.</b> In 1618 an appendix to an English edition of John Napier's work on logarithms gave a table of what we'd now call natural logarithms, logarithms to the base <span class="v">e</span>. It carried no author's name, though it was probably by William Oughtred, and nobody picked out the base as a number worth naming.</li>
       <li><b>A question about interest.</b> Jacob Bernoulli worked on interest added more and more often: a year's interest of 100% added all at once, or in two halves, or monthly, or every instant. That's Station 1's recipe, (1 + 1/<span class="v">n</span>)<sup><span class="v">n</span></sup>. He published it in 1690 and showed that however often the interest is added, the total stays between 2 and 3.</li>
       <li><b>Euler gave it its letter.</b> Leonhard Euler wrote <span class="v">e</span> for the number in a paper on firing cannons, written in 1727 or 1728 and not printed until 1862. He used it again in a letter to Christian Goldbach on 25 November 1731, and in print in his <i>Mechanica</i> of 1736. Nobody knows why he picked <span class="v">e</span>. It almost certainly wasn't for his own name.</li>
-      <li><b>The recipe, in Euler's words.</b> In his <i>Introductio in analysin infinitorum</i> of 1748, Euler wrote <span class="v">e</span> as (1 + 1/<span class="v">i</span>)<sup><span class="v">i</span></sup> and <span class="v">e</span><sup><span class="v">z</span></sup> as (1 + <span class="v">z</span>/<span class="v">i</span>)<sup><span class="v">i</span></sup>, Stations 1 and 2 with an infinitely large number of pieces. A chapter later he put a sideways push through the same recipe, (1 + <span class="v">v</span>√−1/<span class="v">i</span>)<sup><span class="v">i</span></sup>, and reached <span class="v">e</span><sup><span class="v">v</span>√−1</sup> = cos <span class="v">v</span> + √−1 sin <span class="v">v</span>, which is Station 4. His <span class="v">i</span> was that infinitely large number, not √−1. He only started writing <span class="v">i</span> for √−1 in 1777.</li>
+      <li><b>The recipe, in Euler's words.</b> In his <i>Introductio in analysin infinitorum</i> of 1748, Euler wrote <span class="v">e</span> as (1 + 1/<span class="v">i</span>)<sup><span class="v">i</span></sup> and <span class="v">e</span><sup><span class="v">z</span></sup> as (1 + <span class="v">z</span>/<span class="v">i</span>)<sup><span class="v">i</span></sup>, Stations 1 and 2 with an infinitely large number of pieces. A chapter later he put a sideways push through the same recipe, (1 + <span class="v">v</span>√−1/<span class="v">i</span>)<sup><span class="v">i</span></sup>, and reached <span class="v">e</span><sup><span class="v">v</span>√−1</sup> = cos <span class="v">v</span> + √−1 sin <span class="v">v</span>, which is Station 5. His <span class="v">i</span> was that infinitely large number, not √−1. He only started writing <span class="v">i</span> for √−1 in 1777.</li>
       <li><b>Nobody knows who first wrote <span class="v">e</span><sup><span class="v">iπ</span></sup> + 1 = 0.</b> Roger Cotes had the formula in a disguised form, in the language of logarithms, in 1714, and Euler published it plainly in 1748. Either one gives Euler's identity in a line, but the historian Robin Wilson found that neither seems to have written it down, and that it's unknown who first did.</li>
       <li><b><span class="v">e</span> never settles into a pattern of digits.</b> Euler proved in 1737 that <span class="v">e</span> isn't a fraction, so its decimals never repeat. In 1873 Charles Hermite went further and proved that no equation with whole-number coefficients has <span class="v">e</span> as a solution, so <span class="v">e</span> is transcendental. It was the first number shown to be transcendental that wasn't built for the purpose.</li>
     </ul>
@@ -1189,7 +1216,63 @@ $("o-reset").addEventListener("click", () => {
   drawO();
 });
 
-// ---------- Station 4: push sideways ----------
+// ---------- Station 4: e^i ----------
+
+const pEi = new Plane($("planeEi"), 3);
+const EI_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 20, 50, 100, 1000, 10000];
+const EI = polar(1, 1);
+const Ei = { ni: 0 };
+
+// a complex number that may break between its two parts on a narrow screen
+const wrapCx = (t) => t.replace(/^(.*\S) ([+−] \S+)$/, '<span class="nw">$1</span> <span class="nw">$2</span>');
+
+function drawEi() {
+  const n = EI_STEPS[Ei.ni], side = cwalk(C(1, 1 / n), n), end = side[n];
+  const fwd = walk(1, n), fend = fwd[n];
+  const items = [pEi.circle(1, "unit")];
+  // Station 1's walk, along the number line
+  items.push(pEi.poly(thin(fwd.map((v) => C(v))), "ray cz"));
+  if (n <= 20) fwd.slice(1, -1).forEach((v) => items.push(pEi.dot(C(v), 3, "dot cz")));
+  // the same recipe with i: every piece sideways
+  items.push(pEi.poly(thin(side), "ray cp"));
+  if (n <= 20) side.slice(1, -1).forEach((p) => items.push(pEi.dot(p, 3, "dot cp")));
+  items.push(pEi.dot(ONE, 4, "dot cz"));
+  items.push(svgEl("circle", { class: "ring ct", cx: f1(pEi.x(E)), cy: f1(pEi.y(0)), r: 8 }), pEi.lab(C(E), "e", "var ct", 0, 28));
+  items.push(svgEl("circle", { class: "ring ct", cx: f1(pEi.x(EI.re)), cy: f1(pEi.y(EI.im)), r: 8 }), eLabel(pEi, EI, "i", -24));
+  items.push(pEi.dot(C(fend), 5, "dot cz"), pEi.dot(end, 6, "dot cp"));
+  pEi.scene.replaceChildren(...items);
+
+  const miss = abs(C(end.re - EI.re, end.im - EI.im));
+  $("ei-nOut").textContent = plural(n);
+  $("ei-out").innerHTML = [
+    `<div><dt>Step</dt><dd>× (1 + i/${big(n)})<small>adds i/${big(n)} of what you have: 1/${big(n)} of it, turned a quarter turn</small></dd></div>`,
+    `<div><dt class="cz">Forward</dt><dd>${fix(fend, 5)}<small>Station 1's (1 + 1/${big(n)})${sup(n)}, heading for e = 2.71828…</small></dd></div>`,
+    `<div><dt class="cp">Sideways</dt><dd>${cx(end, 4)}<small>(1 + i/${big(n)})${sup(n)}: length ${fix(abs(end), 4)}, turned ${fix(arg(end), 4)} radians</small></dd></div>`,
+    `<div><dt class="ct sym">e<sup>i</sup></dt><dd>0.5403 + 0.8415i<small>length 1, turned 1 radian, about 57.3°</small></dd></div>`,
+  ].join("");
+
+  // the first few sideways pieces: each adds i/n of what you have now
+  const d = n <= 6 ? 3 : n <= 100 ? 4 : n <= 1000 ? 5 : 6;
+  const row = (j) => {
+    const was = side[j], now = side[j + 1];
+    const add = cx(C(now.re - was.re, now.im - was.im), d);
+    return `<tr><td>${big(j + 1)}</td><td>${wrapCx(/ /.test(add) ? `+ (${add})` : `+ ${add}`)}</td><td>${wrapCx(cx(now, d))}</td></tr>`;
+  };
+  const rows = n <= 6 ? [...Array(n).keys()].map(row) : [row(0), row(1), row(2), `<tr><td>⋮</td><td>⋮</td><td>⋮</td></tr>`, row(n - 1)];
+  $("ei-work").innerHTML = `<caption>Each piece adds i/${big(n)} of what you have now</caption>`
+    + `<thead><tr><th>piece</th><th>adds</th><th>now</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+
+  const I = '<span class="v">i</span>';
+  $("ei-note").innerHTML = n === 1
+    ? `One piece adds all of ${I} at once, from 1 straight up to 1 + ${I}. Forward, one piece landed on 2. Try two pieces: the second is at right angles to where the first left you, so the walk starts to turn.`
+    : n === 2
+      ? `Two pieces. The first adds ${I}/2 and lands on 1 + 0.5${I}. The second adds ${I}/2 of that, which is −0.25 + 0.5${I}: it leans back, because multiplying by ${I} turned it. Forward it's growth on growth; sideways it's turn on turn.`
+      : `${miss < 0.005 ? "Within 0.005 of" : `Off by ${num(miss, 3)} from`} <span class="v">e</span><sup>${I}</sup>. Same recipe and same <span class="v">n</span> as the forward walk; the only change is pieces of ${I}/<span class="v">n</span> instead of 1/<span class="v">n</span>. Forward pieces point along where you are, so they grow you toward <span class="v">e</span>. Sideways pieces point across it, so they turn you, 1 radian in all.`;
+}
+
+$("ei-n").addEventListener("input", (e) => { Ei.ni = +e.target.value; drawEi(); });
+
+// ---------- Station 5: push sideways ----------
 
 const p3 = new Plane($("plane3"), 1.6);
 const Ss = { t: turnOf(90), ni: 0 };
@@ -1266,7 +1349,7 @@ chipRow($("s-presets"), TURN_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Se
 $("s-th").addEventListener("input", (e) => { Ss.t = turnOf(+e.target.value); drawS(); });
 $("s-n").addEventListener("input", (e) => { Ss.ni = +e.target.value; drawS(); });
 
-// ---------- Station 5: wrap the line around the circle ----------
+// ---------- Station 6: wrap the line around the circle ----------
 
 const p4 = new Plane($("plane4"), 3.5);
 const Ws = { t: turnOf(180), wrap: 0, anim: 0 };
@@ -1348,7 +1431,7 @@ chipRow($("w-presets"), W_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Set t
 $("w-th").addEventListener("input", (e) => { Ws.t = turnOf(+e.target.value); drawW(); });
 $("w-wrap").addEventListener("input", (e) => { stopWrap(); Ws.wrap = +e.target.value / 100; drawW(); });
 
-// ---------- Station 6: reading e^iθ ----------
+// ---------- Station 7: reading e^iθ ----------
 
 const pR = new Plane($("planeR"), 1.6);
 const Rs = { t: turnOf(120), anim: 0 };
@@ -1435,7 +1518,7 @@ $("r-play").addEventListener("click", () => {
 chipRow($("r-presets"), TURN_PRESETS.map((t) => [`θ = ${t.name}`, t.name]), "Set the walk θ to", (j) => { stopR(); setR(TURN_PRESETS[j]); });
 $("r-th").addEventListener("input", (e) => { stopR(); Rs.t = turnOf(+e.target.value); drawR(); });
 
-// ---------- Station 7: both at once ----------
+// ---------- Station 8: both at once ----------
 
 const p5 = new Plane($("plane5"), 3.5);
 const Bs = { a: 1, deg: 90, ni: 8 };
@@ -1481,7 +1564,7 @@ function drawB() {
   $("b-note").innerHTML = (deg === 0
     ? `With no sideways push it stays on the number line, as in Station 2, and settles on <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}.`
     : Math.abs(a) < 1e-9
-      ? `With no forward push it stays on the circle, as in Station 4, and settles on <span class="v">e</span><sup>${power(a, deg)}</sup>.`
+      ? `With no forward push it stays on the circle, as in Station 5, and settles on <span class="v">e</span><sup>${power(a, deg)}</sup>.`
       : `The forward push stretches the length to <span class="v">e</span><sup>${num(a)}</sup> = ${num(Math.exp(a), 3)}. The sideways push turns it ${num(b)} radians. ${a < 0 ? "Shrinking" : "Growing"} while turning makes a spiral.`) + gap;
   pressChips($("b-presets"), (j) => B_PRESETS[j][0] === a && B_PRESETS[j][1] === deg);
 }
@@ -1501,6 +1584,7 @@ $("b-n").addEventListener("input", (e) => { Bs.ni = +e.target.value; drawB(); })
 drawG();
 drawP();
 drawO();
+drawEi();
 drawS();
 drawW();
 drawR();
