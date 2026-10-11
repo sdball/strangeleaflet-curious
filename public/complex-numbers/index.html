@@ -845,7 +845,11 @@ function handle(plane, { cls, label, name, set, get, key, labelAt, start, end: d
       const [x, y] = plane.at(z);
       g.setAttribute("transform", `translate(${f1(x)} ${f1(y)})`);
       const r = abs(z), u = r < 1e-6 ? C(0.7, 0.7) : scale(z, 1 / r);
-      const [lx, ly] = labelAt || [u.re * 20, -u.im * 20];
+      let [lx, ly] = labelAt || [u.re * 20, -u.im * 20];
+      // flip the label back over the point when it would fall off the board
+      const W = plane.W || S, H = plane.H || S;
+      if (x + lx < 10 || x + lx > W - 10) lx = -lx;
+      if (y + ly < 12 || y + ly > H - 12) ly = -ly;
       text.setAttribute("x", f1(lx));
       text.setAttribute("y", f1(ly));
       g.setAttribute("aria-valuetext", valueText);
@@ -889,9 +893,9 @@ class NumberLine {
   }
 }
 
-// Stations 1 and 2 share these zooms. Station 1 lets m reach the end of the
-// line and m² run off it. Station 2 keeps m within max, so m² and both hops
-// stay on the board, out to 12² = 144.
+// Stations 1 and 2 share these zooms. m can go anywhere on the board, out to
+// show, and m² can run off it. Station 1's presets zoom out until m is at
+// most max, so m² and both hops stay on the board, out to 12² = 144.
 const ZOOMS = [
   { show: "2.5", r: 2.6, max: 1.5, tick: 0.5, label: 1 },
   { show: "5", r: 5.2, max: 2.2, tick: 0.5, label: 1 },
@@ -1040,10 +1044,10 @@ $("l-clear").addEventListener("click", () => { L.squares.clear(); setM(L.m); });
 const pi = new Plane($("plane0"), ZOOMS[0].r, { labels: ["real", "imaginary"], skipOnes: true });
 const IM = { m: C(0.5, 1), zoom: 0 };
 
-// keep m within this zoom's reach, so m² stays on the board
+// keep m on the board; m² is free to run off it
 function setMi(m) {
-  const max = ZOOMS[IM.zoom].max, r = abs(m);
-  IM.m = r > max ? C(r2(m.re * max / r), r2(m.im * max / r)) : C(r2(m.re), r2(m.im));
+  const lim = +ZOOMS[IM.zoom].show;
+  IM.m = C(r2(clamp(m.re, -lim, lim)), r2(clamp(m.im, -lim, lim)));
   drawI();
 }
 function setZoomI(zi) {
@@ -1057,7 +1061,7 @@ const hmi = handle(pi, {
   get: () => IM.m,
   set: (z) => setMi(C(zoomSnap(z.re, IM.zoom), zoomSnap(z.im, IM.zoom))),
   key: (dx, dy, big) => {
-    const st = ZOOMS[IM.zoom].max / (big ? 3 : 15);
+    const st = ZOOMS[IM.zoom].show / (big ? 10 : 50);
     setMi(C(IM.m.re + dx * st, IM.m.im + dy * st));
   },
 });
@@ -1102,7 +1106,21 @@ function drawI() {
   }
   items.push(pi.dot(ONE, 5, "dot cz"));
   if (roomy) items.push(pi.lab(ONE, "1", "var cz", 8, 14));
-  items.push(pi.dot(m2, 6, "dot cp"), pi.labOut(m2, "m²", "var cp", 22));
+  items.push(pi.dot(m2, 6, "dot cp"));
+  // past the edge, point the way to m² from where its ray leaves the board
+  const far = Math.max(Math.abs(m2.re), Math.abs(m2.im)) * pi.k, off = far > S / 2 - 6;
+  if (off) {
+    const tip = scale(m2, (S / 2 - 4) / far), u = scale(m2, 1 / abs(m2));
+    const [x1, y1] = pi.at(tip), tx = u.re, ty = -u.im, bx = x1 - tx * 12, by = y1 - ty * 12;
+    items.push(svgEl("polygon", {
+      class: "head cp",
+      points: `${f1(x1)},${f1(y1)} ${f1(bx - ty * 7)},${f1(by + tx * 7)} ${f1(bx + ty * 7)},${f1(by - tx * 7)}`,
+    }));
+    // set in from the edge, and to one side of the hop coming in
+    items.push(pi.lab(tip, "m²", "var cp", -tx * 30 - ty * 18, -ty * 30 + tx * 18));
+  } else {
+    items.push(pi.labOut(m2, "m²", "var cp", 22));
+  }
   pi.scene.replaceChildren(...items);
   hmi.place(m, cx(m));
 
@@ -1129,7 +1147,9 @@ function drawI() {
     const len = Math.abs(r - 1) < 0.005 ? "keep the length at 1" : `${r > 1 ? "stretch" : "shrink"} the length to ${num(r * r)}, and −1 is 1 away from 0`;
     note = `Two hops of <span class="v">m</span> ${turn}. They ${len}. You need a half turn with no stretch.`;
   }
-  if (abs(m) >= ZOOMS[IM.zoom].max - 0.01 && IM.zoom < ZOOMS.length - 1) note += ` Show more of the plane to try bigger numbers.`;
+  const more = IM.zoom < ZOOMS.length - 1;
+  if (off) note += ` <span class="v">m</span>² is past the edge of the plane${more ? ". Show more of the plane to see it." : "."}`;
+  else if (Math.max(Math.abs(m.re), Math.abs(m.im)) >= +ZOOMS[IM.zoom].show && more) note += ` Show more of the plane to try bigger numbers.`;
   $("i-note").innerHTML = note;
 }
 
