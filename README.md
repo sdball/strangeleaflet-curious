@@ -2,6 +2,12 @@
 
 A cabinet of curiousities I can serve up from curious.strangeleaflet.com.
 
+## Run it locally
+
+```sh
+scripts/serve        # http://localhost:8000/
+scripts/serve 9000   # or pick a port
+```
 
 ## Analytics
 

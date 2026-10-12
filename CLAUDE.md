@@ -7,6 +7,7 @@ Static site served at curious.strangeleaflet.com: interactive exhibits, toys, an
 ```
 public/index.html          the hub: the shelf of curio tags plus a text-adventure interface
 public/<slug>/index.html   one curio per directory, served at /<slug>/
+scripts/serve              serves public/ locally (python3 http.server)
 .githooks/pre-commit       refuses staged pages without the GoatCounter snippet
 .github/workflows/static.yml  checks GoatCounter again, then deploys public/ to GitHub Pages
 ```
@@ -16,7 +17,8 @@ Pushing to `main` deploys. Only `public/` is published.
 ## Run it locally
 
 ```sh
-python3 -m http.server -d public 8000   # then open http://localhost:8000/
+scripts/serve          # then open http://localhost:8000/
+scripts/serve 9000     # or pick a port
 ```
 
 Use a server, not `file://`. Each page's back link points at `/`, which only works when served.
