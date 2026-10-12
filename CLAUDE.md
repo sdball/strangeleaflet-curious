@@ -140,6 +140,7 @@ The newer exhibits (`complex-numbers`, `exploring-e`, `morse-code`, `odometers`,
 - Explain from what the visitor already knows, one idea at a time. Prefer turns, hops, and wheels to jargon, and define a term the first time it appears.
 - In math, use the real minus sign `−` and `×`, and wrap variables in `<span class="v">` where the page styles them.
 - The hub's text interface is a Zork-style parser with in-jokes (leaflet, frotz, xyzzy). Keep new responses in that voice.
+- The text interface opens as a full-screen Infocom-on-an-Atari-800 screen: VT323 with ligatures off, white on Atari blue, an inverse status line, nothing but the prompt. Like `pocket-places`, it keeps its own fixed palette instead of light and dark tokens. `quit` (confirmed with Y) or Esc closes it.
 
 ## Before you commit
 

@@ -6,7 +6,7 @@
 <title>The Cabinet of Curios — Strange Leaflet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=VT323&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #DDE5DC;        /* pale celadon, like old museum glass */
@@ -86,11 +86,6 @@ h1 {
   border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer;
 }
 
-.toggle[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--bg);
-}
-
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
@@ -98,84 +93,91 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* Text interface */
-.console {
-  background: var(--console); border: 1.5px solid var(--ink); border-radius: 8px;
-  font-family: var(--mono); margin-bottom: 2rem; overflow: hidden;
+/* Text adventure: an Infocom game on an Atari 800. It keeps its own blue
+   screen whatever the theme, like an old TV in a dark room. */
+.terminal {
+  --atari-blue: #1A4FA3;
+  --atari-text: #F2F6FF;
+  --glow: #FFD27A;
+  --pixel: "VT323", "Courier New", ui-monospace, monospace;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: var(--atari-blue);
+  color: var(--atari-text);
+  color-scheme: dark;
+  font-family: var(--pixel);
+  font-size: clamp(20px, calc(1.6vw + 10px), 40px);
+  line-height: 1.3;
+  /* no ligatures or contextual alternates: every character keeps its own cell */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "calt" 0;
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.terminal[hidden] { display: none; }
+html.terminal-open,
+html.terminal-open body { overflow: hidden; }
+
+.status { /* the inverse status line along the top */
+  flex: none;
+  background: var(--atari-text);
+  color: var(--atari-blue);
+  padding: calc(.35em + env(safe-area-inset-top, 0px)) 1.25rem .35em;
+}
+.status-inner,
+.screen-inner {
+  max-width: 80ch;
+  margin: 0 auto;
+}
+.status-inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 2ch;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .status .score { display: none; }
 }
 
-.console[hidden] { display: none; }
-
-.log {
-  max-height: 16rem;
+.screen {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 1rem 1rem .25rem;
-  font-size: 1rem;
+  overscroll-behavior: contain;
+  padding: 1.5em 1.25rem 2em;
 }
 .log p {
-  margin: 0 0 .75rem;
+  margin: 0 0 1.25em;
   white-space: pre-wrap;
-}
-.log .cmd {
-  color: var(--brass);
-  font-weight: 700;
+  overflow-wrap: break-word;
 }
 
 .prompt {
   display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .5rem 1rem;
-  border-top: 1px dashed var(--line);
+  align-items: baseline;
 }
-.prompt span {
-  color: var(--brass);
-  font-weight: 700;
-}
+.prompt span { flex: none; }
 .prompt input {
   flex: 1;
   min-width: 0;
   font: inherit;
-  font-size: 16px; /* 16px stops iOS zooming on focus */
-  color: var(--ink);
+  font-size: max(16px, 1em); /* 16px stops iOS zooming on focus */
+  color: inherit;
   background: transparent;
   border: 0;
-  padding: .6rem 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  caret-color: var(--atari-text);
+  caret-shape: block;
 }
 .prompt input:focus-visible { outline: none; }
-.prompt button {
-  font: inherit;
-  font-size: .95rem;
-  min-height: 44px;
-  padding: 0 .9rem;
-  border-radius: 6px;
-  background: var(--ink);
-  color: var(--bg);
-  border: 0;
-  cursor: pointer;
-}
-
-.chips {
-  display: flex;
-  gap: .5rem;
-  overflow-x: auto;
-  padding: .25rem 1rem 1rem;
-  scrollbar-width: none;
-}
-.chips::-webkit-scrollbar { display: none; }
-.chip {
-  flex: none;
-  font: inherit;
-  font-size: .95rem;
-  min-height: 40px;
-  padding: 0 .85rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--line);
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-}
-.chip.verb { border-color: var(--brass); }
 
 /* Filters */
 .filters {
@@ -296,6 +298,7 @@ input:focus-visible {
   padding: .7rem 1rem;
   border-radius: 6px;
   max-width: calc(100% - 2rem);
+  z-index: 20;
   opacity: 0;
   pointer-events: none;
   transition: opacity .2s;
@@ -309,18 +312,18 @@ footer {
   font-size: .9rem;
 }
 
-.flicker { animation: flicker 1.1s ease-out; }
-/* drop-shadow follows the tag's clipped outline, so apply it to the unclipped parent */
+/* frotz: the screen's text catches a brief, warm light */
+.flicker .screen { animation: flicker 1.1s ease-out; }
 @keyframes flicker {
-  0%   { filter: drop-shadow(0 0 0 transparent); }
-  12%  { filter: drop-shadow(0 0 16px var(--brass)); }
-  22%  { filter: drop-shadow(0 0 3px var(--brass)); }
-  34%  { filter: drop-shadow(0 0 12px var(--brass)); }
-  100% { filter: drop-shadow(0 0 0 transparent); }
+  0%   { text-shadow: none; }
+  12%  { text-shadow: 0 0 12px var(--glow), 0 0 2px var(--glow); }
+  22%  { text-shadow: 0 0 3px var(--glow); }
+  34%  { text-shadow: 0 0 10px var(--glow), 0 0 2px var(--glow); }
+  100% { text-shadow: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tag, .toast { transition: none; }
-  .flicker { animation: none; }
+  .flicker .screen { animation: none; }
 }
 </style>
 <script>
@@ -338,20 +341,8 @@ footer {
       <h1>The Cabinet of Curios</h1>
       <p class="sub">Exhibits, toys, guides, and weird things! From <a href="https://strangeleaflet.com">Strange Leaflet</a></p>
     </div>
-    <button class="toggle" id="toggle" aria-pressed="false" aria-controls="console">&gt; Text Adventure Interface</button>
+    <button class="toggle" id="toggle" aria-haspopup="dialog" aria-controls="terminal">&gt; Text Adventure Interface</button>
   </header>
-
-  <section class="console" id="console" hidden aria-label="Text interface">
-    <div class="log" id="log" aria-live="polite"></div>
-    <div class="prompt">
-      <span aria-hidden="true">&gt;</span>
-      <input id="cmd" type="text" aria-label="Command"
-             autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-             enterkeyhint="go" placeholder="look, examine wave, help">
-      <button id="run" type="button">Go</button>
-    </div>
-    <div class="chips" id="chips" aria-label="Command shortcuts"></div>
-  </section>
 
   <nav class="filters" aria-label="Filter">
     <button data-kind="all" aria-pressed="true">All</button>
@@ -361,6 +352,26 @@ footer {
   </nav>
 
   <ul class="shelf" id="shelf"></ul>
+</div>
+
+<div class="terminal" id="terminal" role="dialog" aria-modal="true" aria-label="The Cabinet of Curios, a text adventure" hidden>
+  <div class="status">
+    <div class="status-inner">
+      <span>Cabinet Room</span>
+      <span><span class="score">Score: 0&nbsp;&nbsp;</span>Moves: <span id="moves">0</span></span>
+    </div>
+  </div>
+  <div class="screen" id="screen">
+    <div class="screen-inner">
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="prompt">
+        <span aria-hidden="true">&gt;</span>
+        <input id="cmd" type="text" aria-label="Command"
+               autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+               enterkeyhint="go">
+      </div>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -402,9 +413,12 @@ const CURIOS = [
 
 const $ = (id) => document.getElementById(id);
 const shelf = $("shelf"),
+  wrap = document.querySelector(".wrap"),
+  terminal = $("terminal"),
+  screen = $("screen"),
   log = $("log"),
   input = $("cmd"),
-  chips = $("chips"),
+  movesEl = $("moves"),
   toast = $("toast");
 
 // ---------- Shelf ----------
@@ -458,9 +472,18 @@ function showToast(msg) {
 
 // state
 let cabinetOpen = false;
+let moves = 0;
+let confirmingQuit = false;
 
 // consts
 const BLOG_URL = "https://strangeleaflet.com";
+
+const BANNER = `THE CABINET OF CURIOS
+An Interactive Exhibition
+Copyright (c) 2026 Strange Leaflet. All rights reserved.
+Release 1 / Serial number 261012
+
+Type HELP for ideas, or QUIT to leave the text adventure.`;
 
 const LEAFLET = `WELCOME TO THE CABINET OF CURIOS!
 
@@ -482,11 +505,14 @@ const VERBS = {
   open: ["open"],
   close: ["close"],
   go: ["go", "walk", "enter", "head"],
-  leave: ["leave", "exit", "out", "quit", "west", "w"],
+  leave: ["leave", "exit", "out", "west", "w"],
   east: ["east", "e"],
   drop: ["drop"],
   help: ["help", "?", "h"],
   inventory: ["inventory", "i", "inv"],
+  score: ["score"],
+  restart: ["restart"],
+  quit: ["quit", "q"],
 };
 
 const verbOf = (w) => Object.keys(VERBS).find((k) => VERBS[k].includes(w));
@@ -502,7 +528,7 @@ function say(text, cls) {
   if (cls) p.className = cls;
   p.textContent = text;
   log.appendChild(p);
-  log.scrollTop = log.scrollHeight;
+  screen.scrollTop = screen.scrollHeight;
 }
 
 function findCurio(words) {
@@ -529,12 +555,12 @@ function frotz(targets) {
   }
 
   if (targets.includes("cabinet")) {
-    flicker(shelf);
+    flicker(terminal);
     return say("The entire cabinet " + fade);
   }
 
   if (["me", "myself", "self"].some((w) => targets.includes(w))) {
-    flicker(consoleEl);
+    flicker(terminal);
     return say("You " + fade.replace("flickers", "flicker").replace("fades", "fade"));
   }
 
@@ -544,11 +570,17 @@ function frotz(targets) {
 
   const c = findCurio(targets);
   if (c) {
-    flicker(shelf.querySelector(`a.tag[data-id="${c.id}"]`)?.closest(".slot"));
+    flicker(terminal);
     return say(`The ${c.name} ` + fade);
   }
 
   return say(`You don't see any "${targets.join(" ")}" to frotz.`);
+}
+
+function look() {
+  say("Cabinet Room");
+  if (!cabinetOpen) return say("A tall glass-fronted cabinet stands against the wall. Each shelf holds curios that each have a paper tag tied to it. The doors are closed.\n" + EXITS);
+  return say("The cabinet stands open. On its shelves:\n" + CURIOS.map((c) => "  " + c.name).join("\n") + "\n" + EXITS);
 }
 
 function goBlog() {
@@ -569,7 +601,15 @@ function goOut() {
 function run(raw) {
   const line = raw.trim().toLowerCase().replace(/\s+/g, " ");
   if (!line) return;
-  say("> " + line, "cmd");
+  say(">" + line, "cmd");
+
+  if (confirmingQuit) {
+    confirmingQuit = false;
+    if (line[0] === "y") return setTerminal(false);
+    return say("Ok.");
+  }
+
+  movesEl.textContent = ++moves;
   const [first, ...rest] = line.split(" ");
   const nouns = rest.filter((w) => !["the", "a", "an", "at", "to", "on", "upon", "strange", "into", "through", "and"].includes(w));
   const verb = verbOf(first);
@@ -603,15 +643,14 @@ function run(raw) {
   switch (verb) {
 
     case "look":
-      if (!cabinetOpen) return say("A tall glass-fronted cabinet stands against the wall. Each shelf holds curios that each have a paper tag tied to it. The doors are closed.\n" + EXITS);
-      return say("The cabinet stands open. On its shelves:\n" + CURIOS.map((c) => "  • " + c.name).join("\n") + "\n" + EXITS);
+      return look();
 
     case "open": {
       if (isLeaflet(nouns)) return say(LEAFLET);
       if (!nouns.length || nouns.includes("cabinet") || nouns.includes("doors")) {
         if (cabinetOpen) return say("It's already open.");
-        cabinetOpen = true; setChips();
-        return say("The doors swing open with a dusty creak. Inside:\n" + CURIOS.map((c) => "  • " + c.name).join("\n"));
+        cabinetOpen = true;
+        return say("The doors swing open with a dusty creak. Inside:\n" + CURIOS.map((c) => "  " + c.name).join("\n"));
       }
       const c = findCurio(nouns);
       if (!c) return say(`There's no "${nouns.join(" ")}" in the cabinet.`);
@@ -693,80 +732,104 @@ function run(raw) {
       return say("You aren't holding that.");
 
     case "inventory":
-      return say("You are carrying:\n  • a strange leaflet");
+      return say("You are carrying:\n  A strange leaflet");
 
     case "help":
-      return say("Try: look, read leaflet, open cabinet, examine <thing>, get <thing>, east, leave, inventory.\nShort forms work too: l, x, i, e, w.");
+      return say("Try: look, read leaflet, open cabinet, examine <thing>, get <thing>, east, leave, inventory.\nShort forms work too: l, x, i, e, w.\nQUIT or Esc leaves the text adventure. RESTART begins again.");
+
+    case "score":
+      return say(`Your score is 0 (total of 0 points), in ${moves} move${moves === 1 ? "" : "s"}.\nThis gives you the rank of Browser.`);
+
+    case "restart":
+      return boot();
+
+    case "quit":
+      confirmingQuit = true;
+      return say("Do you wish to leave the game? (Y is affirmative):");
 
     default:
       return say(`I don't understand "${first}". Type help for ideas.`);
   }
 }
 
-// Chips: tap a verb, then tap a thing. No keyboard needed on a phone.
-function setChips(pendingVerb) {
-  chips.innerHTML = "";
-  const add = (label, onTap, cls = "") => {
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "chip " + cls; b.textContent = label;
-    b.addEventListener("click", onTap); chips.appendChild(b);
-  };
-  if (pendingVerb) {
-    if (pendingVerb === "examine") {
-      add("Strange leaflet", () => { run("read leaflet"); setChips(); });
-      if (!CAN_GO_BACK) add("Placard", () => { run("read placard"); setChips(); });
-    }
-    CURIOS.forEach((c) => add(c.name, () => { run(`${pendingVerb} ${c.words[0]}`); setChips(); }));
-    add("Cancel", () => setChips());
-    return;
-  }
-  add("look", () => run("look"), "verb");
-  if (!cabinetOpen) add("open cabinet", () => run("open cabinet"), "verb");
-  add("examine…", () => setChips("examine"), "verb");
-  add("get…", () => setChips("get"), "verb");
-  add("go east", () => run("go east"), "verb");
-  add("leave", () => run("leave"), "verb");
-  add("inventory", () => run("inventory"), "verb");
-  add("help", () => run("help"), "verb");
+function boot() {
+  log.innerHTML = "";
+  cabinetOpen = false;
+  confirmingQuit = false;
+  moves = 0;
+  movesEl.textContent = moves;
+  say(BANNER);
+  look();
 }
 
-$("run").addEventListener("click", () => {
-  run(input.value); input.value = "";
-});
+// up and down step through earlier commands
+const past = [];
+let pastAt = 0;
 
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
+    if (input.value.trim()) past.push(input.value);
+    pastAt = past.length;
     run(input.value);
     input.value = "";
+  } else if (e.key === "ArrowUp" && pastAt > 0) {
+    e.preventDefault();
+    input.value = past[--pastAt];
+  } else if (e.key === "ArrowDown" && pastAt < past.length) {
+    e.preventDefault();
+    input.value = past[++pastAt] ?? "";
   }
 });
 
-input.addEventListener("focus", () => {
-  setTimeout(() => input.scrollIntoView({ block: "nearest" }), 300)
-});
+// ---------- Terminal ----------
 
-// Toggle, remembered per visitor
-const toggle = $("toggle"), consoleEl = $("console");
+const toggle = $("toggle");
 
-function setConsole(on) {
-  consoleEl.hidden = !on;
-  toggle.setAttribute("aria-pressed", on);
+// keep the screen on the visible part of the page when a phone keyboard opens
+function fitViewport() {
+  const vv = window.visualViewport;
+  if (!vv || terminal.hidden) return;
+  terminal.style.height = vv.height + "px";
+  terminal.style.top = vv.offsetTop + "px";
+  screen.scrollTop = screen.scrollHeight;
+}
+window.visualViewport?.addEventListener("resize", fitViewport);
+window.visualViewport?.addEventListener("scroll", fitViewport);
+
+// opening the terminal is remembered per visitor
+function setTerminal(on) {
+  terminal.hidden = !on;
+  wrap.inert = on;
+  document.documentElement.classList.toggle("terminal-open", on);
   try { localStorage.setItem("textMode", on ? "1" : "0"); } catch (_) {}
-  if (on && !log.childElementCount) run("look");
+  if (on) {
+    if (!log.childElementCount) boot();
+    fitViewport();
+    input.focus();
+  } else {
+    toggle.focus();
+  }
 }
 
-toggle.addEventListener("click", () => setConsole(consoleEl.hidden));
+toggle.addEventListener("click", () => setTerminal(true));
+
+terminal.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") setTerminal(false);
+});
+
+// like a real terminal, a click anywhere goes to the prompt
+terminal.addEventListener("click", () => {
+  if (!getSelection().toString()) input.focus();
+});
 
 renderShelf();
-
-setChips();
 
 let saved = null;
 
 try { saved = localStorage.getItem("textMode"); } catch (_) {}
 
-if (saved === "1") setConsole(true);
+if (saved === "1") setTerminal(true);
 </script>
 </body>
 </html>
