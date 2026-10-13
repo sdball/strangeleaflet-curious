@@ -199,7 +199,7 @@ h2 { font: 400 1.75rem/1.2 var(--serif); margin: 0 0 .75rem; }
 /* the wave */
 .board .curve { fill: none; stroke: currentColor; stroke-width: 3; stroke-linejoin: round; }
 .board .curve.faint { stroke-width: 1.5; stroke-opacity: .3; }
-.board .asym { stroke: var(--tan); stroke-width: 1.25; stroke-dasharray: 3 5; stroke-opacity: .6; }
+.board .asym { stroke: currentColor; stroke-width: 1.25; stroke-dasharray: 3 5; stroke-opacity: .6; }
 .board .walk { fill: none; stroke: var(--walk); stroke-width: 6; stroke-linecap: round; stroke-opacity: .85; }
 .board .carry { stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 4 4; stroke-opacity: .7; }
 .board .now { stroke: var(--ink); stroke-width: 1; stroke-opacity: .4; }
@@ -242,11 +242,11 @@ h2 { font: 400 1.75rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .chips button:hover { border-color: var(--pencil); }
 .chips button[aria-pressed="true"] { color: var(--paper); background: var(--pencil); border-color: var(--pencil); }
 .chips .th { font-family: var(--text); font-style: italic; }
-/* station 5's picks double as the legend: each in its line's colour */
-#s5-pick button[class] { color: var(--fn); border-color: color-mix(in srgb, var(--fn) 45%, var(--edge)); }
-#s5-pick button[class][aria-pressed="true"] { color: var(--paper); background: var(--fn); border-color: var(--fn); }
-#s5-pick .csin { --fn: var(--sin); } #s5-pick .ccos { --fn: var(--cos); } #s5-pick .ctan { --fn: var(--tan); }
-#s5-pick .csec { --fn: var(--sec); } #s5-pick .ccsc { --fn: var(--csc); } #s5-pick .ccot { --fn: var(--cot); }
+/* a button per function, in its line's colour, so the row doubles as the legend */
+.fnchips button[class] { color: var(--fn); border-color: color-mix(in srgb, var(--fn) 45%, var(--edge)); }
+.fnchips button[class][aria-pressed="true"] { color: var(--paper); background: var(--fn); border-color: var(--fn); }
+.fnchips .csin { --fn: var(--sin); } .fnchips .ccos { --fn: var(--cos); } .fnchips .ctan { --fn: var(--tan); }
+.fnchips .csec { --fn: var(--sec); } .fnchips .ccsc { --fn: var(--csc); } .fnchips .ccot { --fn: var(--cot); }
 
 .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; }
 .seg button {
@@ -425,7 +425,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
       <svg class="board" id="board5" role="group" aria-label="A whole circle with upright tangent lines at x equals 1 and minus 1 and flat ones at y equals 1 and minus 1. The line through O and P, carried on past P, meets the two on P's side, marking out sine, cosine, tangent, secant, cosecant, and cotangent"></svg>
       <div class="side">
         <div class="chips" id="s5-pairs" role="group" aria-label="Show a triangle"></div>
-        <div class="chips" id="s5-pick" role="group" aria-label="Show one line"></div>
+        <div class="chips fnchips" id="s5-pick" role="group" aria-label="Show one line"></div>
         <div class="chips" id="s5-presets" role="group" aria-label="Set the angle to"></div>
         <dl class="pair" id="s5-out"></dl>
         <div class="work" id="s5-work"></div>
@@ -440,10 +440,10 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
       <p class="station">Station 6</p>
       <h2 id="s6-h">Unroll the circle</h2>
       <p>Back to sine. Walk <span class="v">P</span> round the circle and carry its height across to a graph. The graph uses the same scale as the circle, so when <span class="v">P</span> has walked some distance round, the graph has moved that same distance to the right: the circle is unrolled flat. The height traces a wave, the <b>sine wave</b>.</p>
-      <p>That walk is a better way to measure an angle than degrees. <b>An angle in radians is how far you walk round a circle of radius 1.</b> A whole turn is the whole way round, 2π ≈ 6.283, so 360° is 2π radians, 180° is π, and 90° is π/2. Press <b>Radians</b> to switch. Turn on cos <span class="v">θ</span> and you'll see the same wave, a quarter turn ahead.</p>
+      <p>That walk is a better way to measure an angle than degrees. <b>An angle in radians is how far you walk round a circle of radius 1.</b> A whole turn is the whole way round, 2π ≈ 6.283, so 360° is 2π radians, 180° is π, and 90° is π/2. Press <b>Radians</b> to switch. Then pick any of the six functions to graph it. cos <span class="v">θ</span> is the same wave a quarter turn ahead, and the other four shoot off wherever the number they divide by, cos <span class="v">θ</span> or sin <span class="v">θ</span>, is 0.</p>
     </div>
     <div class="full">
-      <svg class="board" id="board6" role="group" aria-label="A circle beside a graph. P's height is carried across to the graph, where it traces the sine wave, and the walk round the circle is laid out along the graph's axis"></svg>
+      <svg class="board" id="board6" role="group" aria-label="A circle beside a graph. P's height is carried across to the graph, where it traces the sine wave, the walk round the circle is laid out along the graph's axis, and any of the six functions can be graphed"></svg>
     </div>
     <div class="split wide">
       <div class="side">
@@ -452,10 +452,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
           <div class="seg" role="group" aria-label="Measure angles in" id="s6-unit"></div>
           <button type="button" class="btn" id="s6-go">Go round</button>
         </div>
-        <div>
-          <label class="check"><input type="checkbox" id="s6-cos"> Show cos <span class="v">θ</span></label>
-          <label class="check"><input type="checkbox" id="s6-tan"> Show tan <span class="v">θ</span></label>
-        </div>
+        <div class="chips fnchips" id="s6-show" role="group" aria-label="Graph"></div>
         <p class="note" id="s6-note" aria-live="polite"></p>
       </div>
       <dl class="pair" id="s6-out"></dl>
@@ -1247,20 +1244,29 @@ angleChips($("s5-presets"), ANGLES5, h5.set);
 
 // ---------- Station 6: unroll the circle ----------
 
-const S6 = { deg: 60, radians: false, cos: false, tan: false };
-const TOP6 = 1.3;
+const S6 = { deg: 60, radians: false, show: new Set(["sin"]) };
+// the graph reaches 1.3 for sin and cos, and further once something shoots off
+let TOP6 = 1.3;
+const tall6 = () => ["tan", "sec", "csc", "cot"].some((n) => S6.show.has(n));
 // wide beside the text, smaller-scaled on a phone so the labels stay readable
 const wide6 = matchMedia("(min-width: 640px)");
 const LAYOUT6 = {
-  wide: { W: 820, H: 270, cx: 110, cy: 135, R: 86, x0: 240 },
-  narrow: { W: 456, H: 200, cx: 62, cy: 100, R: 48, x0: 126 },
+  wide: { W: 820, pad: 46, cx: 110, R: 86, x0: 240 },
+  narrow: { W: 456, pad: 76, cx: 62, R: 48, x0: 126 },
 };
 let L6;
-const b6 = new Board($("board6"), LAYOUT6.wide);
+const b6 = new Board($("board6"), { W: 820, H: 270, cx: 110, cy: 135, R: 86 });
 // the graph's x is the walk round the circle, at the circle's own scale
 const gx = (rad) => f1(L6.x0 + rad * L6.R);
 let anim = null;
 const h6 = angleHandle(b6, S6, { wrap: true, draw: draw6, before: () => { if (anim) stopRound(); } });
+// each function in degrees, and where it has no value
+const F6 = {
+  sin: sinD, cos: cosD,
+  tan: (a) => Math.tan(a * RAD), sec: (a) => 1 / cosD(a),
+  csc: (a) => 1 / sinD(a), cot: (a) => cosD(a) / sinD(a),
+};
+const BREAKS6 = { sin: [], cos: [], tan: [90, 270], sec: [90, 270], csc: [0, 180, 360], cot: [0, 180, 360] };
 
 function base6() {
   const end = gx(2 * Math.PI), Y = (v) => b6.Y(v), items = [
@@ -1270,9 +1276,10 @@ function base6() {
     svgEl("line", { class: "axis", x1: L6.x0, y1: Y(0), x2: f1(end + 12), y2: Y(0) }),
     svgEl("line", { class: "axis", x1: L6.x0, y1: Y(TOP6), x2: L6.x0, y2: Y(-TOP6) }),
   ];
-  for (const v of [1, -1]) {
-    items.push(svgEl("line", { class: "grid strong", x1: L6.x0, y1: Y(v), x2: end, y2: Y(v) }));
-    items.push(svgEl("text", { class: "tick-lab", x: L6.x0 - 6, y: Y(v), "text-anchor": "end" }, v < 0 ? "−1" : "1"));
+  for (let v = -Math.floor(TOP6); v <= TOP6; v++) {
+    if (!v) continue;
+    items.push(svgEl("line", { class: Math.abs(v) === 1 ? "grid strong" : "grid", x1: L6.x0, y1: Y(v), x2: end, y2: Y(v) }));
+    items.push(svgEl("text", { class: "tick-lab", x: L6.x0 - 6, y: Y(v), "text-anchor": "end" }, v < 0 ? `−${-v}` : v));
   }
   for (let k = 1; k <= 4; k++) {
     const x = gx((k * Math.PI) / 2);
@@ -1290,7 +1297,9 @@ function base6() {
   b6.clip(0, Y(TOP6 + 0.1), L6.W, (2 * TOP6 + 0.2) * L6.R);
 }
 function layout6() {
-  L6 = LAYOUT6[wide6.matches ? "wide" : "narrow"];
+  TOP6 = tall6() ? 2.6 : 1.3;
+  const L = LAYOUT6[wide6.matches ? "wide" : "narrow"], H = f1(2 * TOP6 * L.R + L.pad);
+  L6 = { ...L, H, cy: H / 2 };
   b6.resize(L6);
   b6.svg.classList.toggle("small", !wide6.matches);
   base6();
@@ -1299,63 +1308,80 @@ function layout6() {
 // a curve of f over degrees d0 to d1, clamped so the clip can trim it
 function curve(f, d0, d1, cls) {
   let p = "";
-  for (let a = d0; ; a = Math.min(d1, a + 2)) {
-    p += `${p ? "L" : "M"}${gx(a * RAD)} ${b6.Y(clamp(f(a), -3, 3))}`;
+  for (let a = d0; ; a = Math.min(d1, a + 1.5)) {
+    p += `${p ? "L" : "M"}${gx(a * RAD)} ${b6.Y(clamp(f(a), -TOP6 - 1, TOP6 + 1))}`;
     if (a >= d1) break;
   }
   return svgEl("path", { class: `curve ${cls}`, d: p });
 }
-// tan, in pieces between the places it has no value
-function tanCurve(upTo, cls) {
-  return [[0, 89.5], [90.5, 269.5], [270.5, 360]]
-    .map(([a, b]) => [a, Math.min(b, upTo)])
-    .filter(([a, b]) => b > a)
-    .map(([a, b]) => curve((x) => Math.tan(x * RAD), a, b, cls));
+// a function's curve up to `upTo` degrees, in pieces between the places it has no value
+function pieces(n, upTo, cls) {
+  const br = BREAKS6[n], marks = [...new Set([0, ...br, 360])].sort((a, b) => a - b), out = [];
+  for (let j = 0; j + 1 < marks.length; j++) {
+    const a = marks[j] + (br.includes(marks[j]) ? 0.6 : 0), b = Math.min(upTo, marks[j + 1] - (br.includes(marks[j + 1]) ? 0.6 : 0));
+    if (b > a) out.push(curve(F6[n], a, b, cls));
+  }
+  return out;
 }
 
 function draw6() {
-  const d = S6.deg, rad = d * RAD, c = cosD(d), s = sinD(d), t = tanD(d), X = gx(rad), items = [];
+  const d = S6.deg, rad = d * RAD, c = cosD(d), s = sinD(d), X = gx(rad), items = [], show = FNS.filter((n) => S6.show.has(n));
+  const noT = Math.abs(c) < 1e-9, noC = Math.abs(s) < 1e-9;
+  const vals = { sin: s, cos: c, tan: noT ? null : s / c, sec: noT ? null : 1 / c, csc: noC ? null : 1 / s, cot: noC ? null : c / s };
   // the circle
   if (d > 0.5) items.push(b6.arc(1, 0, d, "walk"));
-  if (S6.cos) items.push(b6.seg(0, 0, c, 0, "side ccos"));
-  items.push(b6.seg(c, 0, c, s, "side csin"), b6.seg(0, 0, c, s, "side rad"));
-  items.push(svgEl("line", { class: "carry csin", x1: b6.X(c), y1: b6.Y(s), x2: X, y2: b6.Y(s) }));
-  // the graph
-  if (S6.tan) {
-    items.push(...[90, 270].map((a) => svgEl("line", { class: "asym", x1: gx(a * RAD), y1: b6.Y(TOP6 + 0.1), x2: gx(a * RAD), y2: b6.Y(-TOP6 - 0.1) })));
-    items.push(...tanCurve(360, "faint ctan"), ...tanCurve(d, "ctan"));
+  if (S6.show.has("cos")) items.push(b6.seg(0, 0, c, 0, "side ccos"));
+  if (S6.show.has("sin")) items.push(b6.seg(c, 0, c, s, "side csin"));
+  items.push(b6.seg(0, 0, c, s, "side rad"));
+  if (S6.show.has("sin")) items.push(svgEl("line", { class: "carry csin", x1: b6.X(c), y1: b6.Y(s), x2: X, y2: b6.Y(s) }));
+  // the graph: where each function has no value, then its curve, faint ahead and solid behind
+  const asym = new Set(show.flatMap((n) => BREAKS6[n].map((a) => `${a},${n}`)));
+  for (const key of asym) {
+    const [a, n] = key.split(","), x = gx(a * RAD);
+    if (+a > 0 && +a < 360) items.push(svgEl("line", { class: `asym c${n}`, x1: x, y1: b6.Y(TOP6 + 0.1), x2: x, y2: b6.Y(-TOP6 - 0.1) }));
   }
-  if (S6.cos) items.push(curve(cosD, 0, 360, "faint ccos"), curve(cosD, 0, d, "ccos"));
-  items.push(curve(sinD, 0, 360, "faint csin"), curve(sinD, 0, d, "csin"));
+  // sin last, so it sits on top
+  for (const n of [...show.filter((n) => n !== "sin"), ...show.filter((n) => n === "sin")]) {
+    items.push(...pieces(n, 360, `faint c${n}`), ...pieces(n, d, `c${n}`));
+  }
   if (d > 0.5) items.push(svgEl("line", { class: "walk", x1: L6.x0, y1: b6.Y(0), x2: X, y2: b6.Y(0) }));
   items.push(svgEl("line", { class: "now", x1: X, y1: b6.Y(TOP6), x2: X, y2: b6.Y(-TOP6) }));
-  if (S6.tan && t != null && Math.abs(t) <= TOP6) items.push(svgEl("circle", { class: "dot ctan", cx: X, cy: b6.Y(t), r: 4.5 }));
-  if (S6.cos) items.push(svgEl("circle", { class: "dot ccos", cx: X, cy: b6.Y(c), r: 4.5 }));
-  items.push(svgEl("circle", { class: "dot csin", cx: X, cy: b6.Y(s), r: 5.5 }));
+  for (const n of show) {
+    const v = vals[n];
+    if (v != null && Math.abs(v) <= TOP6) items.push(svgEl("circle", { class: `dot c${n}`, cx: X, cy: b6.Y(v), r: n === "sin" ? 5.5 : 4.5 }));
+  }
   b6.scene.replaceChildren(...items);
-  h6.h.place(c, s, { ...outward(d, 18), now: d, min: 0, max: 360, valueText: `θ ${S6.radians ? `${fix(rad)} radians` : dg(d)}: sine ${fix(s)}` });
+  const say = (v) => (v == null ? "no value" : fix(v));
+  h6.h.place(c, s, { ...outward(d, 18), now: d, min: 0, max: 360, valueText: `θ ${S6.radians ? `${fix(rad)} radians` : dg(d)}: ` + (show.map((n) => `${n} ${say(vals[n])}`).join(", ") || "nothing graphed") });
 
-  const pf = piFrac(d), unitHalf = S6.radians ? "π/2" : "90°";
-  const out = [
+  const pf = piFrac(d), unitHalf = S6.radians ? "π/2" : "90°", unitHalfTurn = S6.radians ? "π" : "180°", unit3 = S6.radians ? "3π/2" : "270°";
+  const how = {
+    sin: "the height, on the circle and on the graph", cos: `the width of <span class="v">P</span>`,
+    tan: "sin ÷ cos", sec: "1 ÷ cos", csc: "1 ÷ sin", cot: "cos ÷ sin",
+  };
+  $("s6-out").innerHTML = [
     S6.radians
       ? row("Angle", `${TH} = ${fix(rad)}`, `${pf ? `${pf} radians, ` : "radians, "}which is ${dg(d)}`)
       : row("Angle", `${TH} = ${dg(d)}`, `${fix(rad)} radians${pf ? `, or ${pf}` : ""}`),
     row("Walked", fix(rad), `round the circle from 1 to <span class="v">P</span>, and along the graph`, "cwalk"),
-    row(`sin ${TH}`, fix(s), "the height, on the circle and on the graph", "csin"),
-  ];
-  if (S6.cos) out.push(row(`cos ${TH}`, fix(c), "", "ccos"));
-  if (S6.tan) out.push(row(`tan ${TH}`, t == null ? "no value" : fix(t), "", "ctan"));
-  $("s6-out").innerHTML = out.join("");
+    ...show.map((n) => row(`${n} ${TH}`, say(vals[n]), how[n], `c${n}`)),
+  ].join("");
+  pressChips($("s6-show"), (j) => S6.show.has(FNS[j]));
+  pressChips($("s6-unit"), (j) => (j === 1) === S6.radians);
 
   // the caption is read aloud, so leave it alone while P is going round
   if (anim) return;
+  const has = (n) => S6.show.has(n);
   let note = S6.radians
     ? `<span class="v">P</span> has walked ${fix(rad)} round the circle, so ${TH} is ${fix(rad)} radians. One radian is the turn you make walking one radius round the circle, about 57.3°. The whole way round is 2π = 6.283 radians, so 180° is π.`
-    : `The graph lays the walk round the circle out flat. <span class="v">P</span> has gone ${fix(rad)} round, and the graph has moved ${fix(rad)} to the right, so the curve's height is <span class="v">P</span>'s height. Press <b>Radians</b> to measure the angle by that walk instead.`;
-  if (S6.cos) note += ` The cos curve is the sin curve a quarter turn ahead: cos ${TH} = sin(${TH} + ${unitHalf}).`;
-  if (S6.tan) note += ` tan ${TH} shoots off the top and comes back from the bottom wherever cos ${TH} is 0, at ${unitHalf} and ${S6.radians ? "3π/2" : "270°"}.`;
+    : `The graph lays the walk round the circle out flat. <span class="v">P</span> has gone ${fix(rad)} round, and the graph has moved ${fix(rad)} to the right${has("sin") ? `, so the sin curve's height is <span class="v">P</span>'s height` : ""}. Press <b>Radians</b> to measure the angle by that walk instead.`;
+  if (!show.length) note += ` Pick a function to graph it.`;
+  if (has("cos")) note += ` The cos curve is the sin curve a quarter turn ahead: cos ${TH} = sin(${TH} + ${unitHalf}).`;
+  if (has("tan")) note += ` tan ${TH} shoots off the top and comes back from the bottom wherever cos ${TH} is 0, at ${unitHalf} and ${unit3}.`;
+  if (has("sec")) note += ` sec ${TH} = 1 ÷ cos ${TH}, so it's never between −1 and 1, and it has no value where cos ${TH} is 0.${has("cos") ? ` Where cos ${TH} is 1 or −1, sec ${TH} touches it.` : ""}`;
+  if (has("csc")) note += ` csc ${TH} = 1 ÷ sin ${TH} does the same with sin ${TH}. It's the sec curve a quarter turn later, with no value at 0, ${unitHalfTurn}, and ${S6.radians ? "2π" : "360°"}.${has("sin") ? ` Where sin ${TH} is 1 or −1, csc ${TH} touches it.` : ""}`;
+  if (has("cot")) note += ` cot ${TH} = cos ${TH} ÷ sin ${TH} falls where tan ${TH} climbs, and has no value where sin ${TH} is 0.`;
   $("s6-note").innerHTML = note;
-  pressChips($("s6-unit"), (j) => (j === 1) === S6.radians);
 }
 
 function goRound() {
@@ -1386,8 +1412,14 @@ chipRow($("s6-unit"), [["Degrees", ""], ["Radians", ""]], (j) => {
   draw6();
 });
 $("s6-go").addEventListener("click", goRound);
-$("s6-cos").addEventListener("change", (e) => { S6.cos = e.target.checked; draw6(); });
-$("s6-tan").addEventListener("change", (e) => { S6.tan = e.target.checked; draw6(); });
+chipRow($("s6-show"), FNS.map((n) => [`${n} <span class="th">θ</span>`, `Graph ${n}`]), (j) => {
+  const n = FNS[j];
+  if (S6.show.has(n)) S6.show.delete(n);
+  else S6.show.add(n);
+  layout6();
+  draw6();
+});
+[...$("s6-show").children].forEach((b, j) => b.classList.add(`c${FNS[j]}`));
 wide6.addEventListener("change", () => { layout6(); draw6(); });
 
 // ---------- Start ----------
