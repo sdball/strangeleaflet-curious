@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Circles and Triangles — The Cabinet of Curios</title>
+<meta name="description" content="Drag a point round a circle and watch a right triangle inside it change shape. Its sides are the sine and cosine, and the same picture gives tangent, secant, cosecant, and cotangent, then unrolls into a wave.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Red+Hat+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: a green engineer's computation pad */
+  --bg: #E6EDDD;
+  --paper: #F6F9F0;
+  --sheet: #FCFDF8;
+  --ink: #1D2A21;
+  --muted: #536257;
+  --edge: #C4D2BA;
+  --rule: rgba(60, 120, 70, .10);
+  --rule-strong: rgba(60, 120, 70, .17);
+  --grid: #E1EADA;
+  --grid-strong: #C9DABF;
+  --axis: #7A8E7D;
+  --focus: #B4540A;
+  --pencil: #8A4B12;  /* station labels, angles: a brown pencil */
+
+  /* The six functions, the same colour in every station */
+  --sin: #C2362B;
+  --cos: #1D5FB0;
+  --tan: #2B7A30;
+  --sec: #B06A00;
+  --csc: #8B3FA8;
+  --cot: #0B7D84;
+  --walk: #D9A21B;    /* the walk round the circle */
+  --wood: #8C6239;
+  --wall: #E3D5C4;
+  --brick: #C8B49C;
+
+  --serif: "Libre Caslon Display", "Big Caslon", "Baskerville", Georgia, serif;
+  --text: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "Red Hat Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111914; --paper: #17211B; --sheet: #1B261F; --ink: #E4EDE3; --muted: #9DAFA0; --edge: #2E4034;
+    --rule: rgba(120, 200, 140, .045); --rule-strong: rgba(120, 200, 140, .075);
+    --grid: #223128; --grid-strong: #2D4135; --axis: #6C8571; --focus: #FFA45C; --pencil: #E3A563;
+    --sin: #FF7A6B; --cos: #6EA8FF; --tan: #6BD27A; --sec: #F2B347; --csc: #D69BFF; --cot: #4FD3D6;
+    --walk: #F3C64B; --wood: #C49466; --wall: #2C2722; --brick: #463C33;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111914; --paper: #17211B; --sheet: #1B261F; --ink: #E4EDE3; --muted: #9DAFA0; --edge: #2E4034;
+  --rule: rgba(120, 200, 140, .045); --rule-strong: rgba(120, 200, 140, .075);
+  --grid: #223128; --grid-strong: #2D4135; --axis: #6C8571; --focus: #FFA45C; --pencil: #E3A563;
+  --sin: #FF7A6B; --cos: #6EA8FF; --tan: #6BD27A; --sec: #F2B347; --csc: #D69BFF; --cot: #4FD3D6;
+  --walk: #F3C64B; --wood: #C49466; --wall: #2C2722; --brick: #463C33;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--rule-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule-strong) 1px, transparent 1px),
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 500 .85em var(--mono); border: 1px solid var(--edge); border-radius: 4px; padding: 0 .3em; background: var(--paper); }
+.v { font-style: italic; }
+sub, sup { line-height: 0; }
+
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1 {
+  font: 400 clamp(2.3rem, 7.5vw, 3.8rem)/1.05 var(--serif);
+  margin: 0 0 .6rem;
+}
+.lede { margin: 0 0 .6rem; max-width: 64ch; }
+.howto { margin: 0 0 1.6rem; color: var(--muted); font-size: .95rem; max-width: 64ch; }
+h2 { font: 400 1.75rem/1.2 var(--serif); margin: 0 0 .75rem; }
+
+.csin { color: var(--sin); }
+.ccos { color: var(--cos); }
+.ctan { color: var(--tan); }
+.csec { color: var(--sec); }
+.ccsc { color: var(--csc); }
+.ccot { color: var(--cot); }
+.cwalk { color: var(--walk); }
+.cink { color: var(--ink); }
+.cpen { color: var(--pencil); }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-top: 4px solid var(--pencil);
+  border-radius: 4px 4px 10px 10px;
+  padding: 1.1rem 1.2rem 1.25rem;
+  margin-bottom: 1.6rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03), 0 16px 30px -26px rgba(20,50,30,.6);
+}
+.station { font: 500 .78rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--pencil); margin: 0 0 .1rem; }
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .35rem 0 0; max-width: 68ch; }
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+.split.wide { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); }
+@media (max-width: 820px) { .split, .split.wide { grid-template-columns: minmax(0, 1fr); } }
+.side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .9rem; align-content: start; min-width: 0; }
+.full { margin-top: 1rem; }
+
+/* ---------- Boards ---------- */
+.board {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+#board1 { aspect-ratio: 420 / 400; }
+#board2 { aspect-ratio: 580 / 380; }
+#board3 { aspect-ratio: 360 / 420; max-width: 360px; }
+#board4, #board5 { aspect-ratio: 1 / 1; }
+#board6 { aspect-ratio: 820 / 270; }
+
+.board .grid { stroke: var(--grid); stroke-width: 1; }
+.board .grid.strong { stroke: var(--grid-strong); }
+.board .axis { stroke: var(--axis); stroke-width: 1.5; }
+.board .circle { fill: none; stroke: var(--ink); stroke-width: 1.75; stroke-opacity: .7; }
+.board .tline { stroke: var(--tan); stroke-width: 1.25; stroke-dasharray: 6 5; stroke-opacity: .7; }
+.board .side { stroke: currentColor; stroke-width: 4; stroke-linecap: round; }
+.board .side.faint { stroke-width: 2.5; stroke-opacity: .35; }
+.board .rad { color: var(--ink); stroke-width: 2.5; }
+.board .ext { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 4; stroke-opacity: .7; }
+.board .angle { fill: none; stroke: var(--pencil); stroke-width: 2; }
+.board .corner { fill: none; stroke: var(--ink); stroke-width: 1.25; stroke-opacity: .7; }
+.board .head { fill: currentColor; }
+.board .qfill { fill: var(--walk); fill-opacity: .12; }
+.board .quad { fill: var(--muted); font: italic 400 22px var(--serif); text-anchor: middle; dominant-baseline: central; }
+.board .tick-lab { fill: var(--muted); font: 400 15px var(--mono); dominant-baseline: central; }
+.board .lab {
+  fill: currentColor;
+  font: 500 17px var(--mono);
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--sheet);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.board .lab.var { font: italic 400 20px var(--text); }
+.board .th { font-family: var(--text); font-style: italic; font-size: 1.1em; }
+.board.small .lab { font-size: 20px; }
+.board.small .tick-lab { font-size: 19px; }
+
+/* the ladder */
+.board .wall { fill: var(--wall); }
+.board .brick { stroke: var(--brick); stroke-width: 1.5; }
+.board .ground { stroke: var(--ink); stroke-width: 2; stroke-opacity: .7; }
+.board .hatch { stroke: var(--axis); stroke-width: 1.25; }
+.board .rail { stroke: var(--wood); stroke-width: 7; stroke-linecap: round; }
+.board .rung { fill: var(--sheet); stroke: var(--wood); stroke-width: 2; }
+
+/* the six, one picked */
+.board .fn { transition: opacity .2s; }
+.board.dim .fn:not(.on) { opacity: .16; }
+
+/* the wave */
+.board .curve { fill: none; stroke: currentColor; stroke-width: 3; stroke-linejoin: round; }
+.board .curve.faint { stroke-width: 1.5; stroke-opacity: .3; }
+.board .asym { stroke: var(--tan); stroke-width: 1.25; stroke-dasharray: 3 5; stroke-opacity: .6; }
+.board .walk { fill: none; stroke: var(--walk); stroke-width: 6; stroke-linecap: round; stroke-opacity: .85; }
+.board .carry { stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 4 4; stroke-opacity: .7; }
+.board .now { stroke: var(--ink); stroke-width: 1; stroke-opacity: .4; }
+.board .dot { fill: currentColor; }
+
+.handle { cursor: grab; outline: none; touch-action: none; color: var(--ink); }
+.handle.drag { cursor: grabbing; }
+.handle .hit { fill: transparent; }
+.handle .knob { fill: currentColor; stroke: var(--sheet); stroke-width: 2; }
+.handle .halo { fill: none; stroke: var(--focus); stroke-width: 2.5; opacity: 0; transition: opacity .15s; }
+.handle:hover .halo { opacity: .45; }
+.handle:focus-visible .halo, .handle.drag .halo { opacity: 1; }
+
+/* ---------- Controls ---------- */
+.btn {
+  font: 600 1rem var(--text);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  padding: .35rem .9rem;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--pencil); }
+
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chips button {
+  font: 500 .9rem var(--mono);
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: 0 .85rem;
+  min-height: 40px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.chips button:hover { border-color: var(--pencil); }
+.chips button[aria-pressed="true"] { color: var(--paper); background: var(--pencil); border-color: var(--pencil); }
+.chips .th { font-family: var(--text); font-style: italic; }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; }
+.seg button {
+  font: 500 .95rem var(--text);
+  color: var(--muted);
+  background: var(--paper);
+  border: 0;
+  padding: .4rem .9rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--edge); }
+.seg button[aria-pressed="true"] { background: var(--pencil); color: var(--paper); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; }
+.row > .lbl { font-size: .95rem; color: var(--muted); }
+
+.slider { display: flex; align-items: center; gap: .6rem; }
+.slider label { font-size: .95rem; color: var(--muted); white-space: nowrap; }
+.slider input { flex: 1; min-width: 0; margin: 0; accent-color: var(--pencil); height: 40px; }
+.slider output { font: 500 .95rem var(--mono); white-space: nowrap; min-width: 3rem; text-align: right; }
+.check { display: inline-flex; align-items: center; gap: .55rem; font-size: .95rem; min-height: 44px; cursor: pointer; margin-right: 1rem; }
+.check input { width: 20px; height: 20px; margin: 0; accent-color: var(--pencil); }
+
+/* ---------- Readouts ---------- */
+.pair { margin: 0; display: grid; gap: .45rem; }
+.pair > div { display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); align-items: baseline; gap: .7rem; }
+.pair dt { font: 500 .85rem var(--mono); text-align: right; color: var(--muted); }
+.pair dt[class] { color: currentColor; }
+.pair dd { margin: 0; font: 500 .95rem var(--mono); overflow-wrap: anywhere; }
+.pair dd small { display: block; font: 400 .9rem var(--text); color: var(--muted); }
+
+.work {
+  font: 500 .95rem/1.7 var(--mono);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: .5rem .75rem;
+  margin: 0;
+  overflow-x: auto;
+}
+.work div { white-space: nowrap; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--edge); border-radius: 8px; background: var(--sheet); }
+table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 100%; }
+.signs th, .signs td { padding: .3rem .6rem; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--edge); }
+.signs tr:last-child th, .signs tr:last-child td { border-bottom: 0; }
+.signs th { font: 600 .9rem var(--text); text-align: left; }
+.signs thead th { font: 500 .8rem var(--mono); color: var(--muted); text-align: center; }
+.signs thead th:first-child { text-align: left; }
+.signs tr.hot { background: color-mix(in srgb, var(--walk) 22%, transparent); }
+.signs small { display: block; font: 400 .78rem var(--mono); color: var(--muted); }
+
+.note { margin: 0; font-size: .97rem; }
+.small-note { margin: 0; font-size: .9rem; color: var(--muted); }
+
+/* ---------- Prose ---------- */
+.notes { max-width: 68ch; margin-top: 2.4rem; }
+.notes li { margin-bottom: .7rem; }
+.sources { max-width: 68ch; margin-top: 2.4rem; color: var(--muted); font-size: .93rem; }
+.sources h2 { color: var(--ink); }
+.sources li { margin-bottom: .5rem; }
+
+@media (max-width: 480px) {
+  .panel { padding: 1rem .85rem 1.1rem; }
+  .pair > div { grid-template-columns: 4.6rem minmax(0, 1fr); gap: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .handle .halo, .board .fn { transition: none; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Circles and Triangles</h1>
+  <p class="lede">Draw a circle with a radius of 1 and fit a right triangle inside it, with its long side along the radius. Turn the radius and the other two sides change length. Those lengths are the sine and the cosine, and the same circle gives four more: tangent, secant, cosecant, and cotangent. Turn all the way round and the triangle unrolls into a wave.</p>
+  <p class="howto">Drag the point <span class="v">P</span> round each circle, or Tab to it and use the arrow keys: each press turns 1°, and <kbd>Shift</kbd> turns 15°. Every button and slider works from the keyboard too.</p>
+
+  <!-- 1. A triangle in a circle -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="s1-h">A triangle in a circle</h2>
+      <p>Draw a circle of radius 1 around a point <span class="v">O</span>. Put a point <span class="v">P</span> on it, turned an angle <span class="v">θ</span> (the Greek letter theta) up from the x-axis. Drop a line straight down from <span class="v">P</span> to the x-axis and you have a right triangle: one corner is square, and the long side, the radius, is 1. <b>The sine of <span class="v">θ</span>, written sin <span class="v">θ</span>, is the triangle's height. The cosine, cos <span class="v">θ</span>, is its width.</b> Together they say where <span class="v">P</span> is: cos <span class="v">θ</span> across and sin <span class="v">θ</span> up.</p>
+    </div>
+    <div class="split">
+      <svg class="board" id="board1" role="group" aria-label="A quarter circle of radius 1 with a right triangle inside: the radius to P, the height sin theta, and the width cos theta"></svg>
+      <div class="side">
+        <div class="chips" id="s1-presets" role="group" aria-label="Set the angle to"></div>
+        <dl class="pair" id="s1-out"></dl>
+        <p class="note" id="s1-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Any size -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="s2-h">Any size</h2>
+      <p>Most right triangles don't have a long side of 1. A ladder leaning on a wall makes one with the ladder as its long side, called the <b>hypotenuse</b>. It's Station 1's triangle scaled up by the ladder's length <span class="v">L</span>, so <b>each side is <span class="v">L</span> times as long</b>. The top reaches <span class="v">L</span> × sin <span class="v">θ</span> up the wall, and the foot stands <span class="v">L</span> × cos <span class="v">θ</span> out from it.</p>
+      <p>Divide back and you get the way sine and cosine are usually taught. The <i>opposite</i> side is across from <span class="v">θ</span>, the <i>adjacent</i> side runs alongside it, and sin <span class="v">θ</span> = opposite ÷ hypotenuse, cos <span class="v">θ</span> = adjacent ÷ hypotenuse. Drag the foot of the ladder, or change its length. Station 3 takes the third ratio, opposite ÷ adjacent.</p>
+    </div>
+    <div class="split wide">
+      <svg class="board" id="board2" role="group" aria-label="A ladder leaning on a wall, with its height up the wall, and the distance from its foot to the wall"></svg>
+      <div class="side">
+        <div class="slider">
+          <label for="s2-len">Ladder length</label>
+          <input type="range" id="s2-len" min="1" max="6" step="0.5" value="4">
+          <output id="s2-lenOut" for="s2-len"></output>
+        </div>
+        <div class="chips" id="s2-presets" role="group" aria-label="Lean the ladder at"></div>
+        <dl class="pair" id="s2-out"></dl>
+        <p class="note" id="s2-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. The tangent line -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s3-h">The tangent line</h2>
+      <p>Draw a line straight up through the point where the circle crosses the x-axis. It touches the circle there without crossing it, so it's called a <b>tangent line</b>, from the Latin for touching. Carry the radius on past <span class="v">P</span> until it meets that line. The height where they meet is the <b>tangent of <span class="v">θ</span></b>, tan <span class="v">θ</span>. The big triangle under it is the small one scaled up until its width is 1, so <b>tan <span class="v">θ</span> = sin <span class="v">θ</span> ÷ cos <span class="v">θ</span></b>, which is opposite ÷ adjacent. It's also the slope of the radius: how far it climbs for every 1 across.</p>
+    </div>
+    <div class="split">
+      <svg class="board" id="board3" role="group" aria-label="A quarter circle with a vertical tangent line at 1. The radius, carried on past P, meets the tangent line at height tan theta"></svg>
+      <div class="side">
+        <div class="chips" id="s3-presets" role="group" aria-label="Set the angle to"></div>
+        <dl class="pair" id="s3-out"></dl>
+        <p class="note" id="s3-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. All the way round -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="s4-h">All the way round</h2>
+      <p>Station 1 stopped at 90°. Keep turning and <span class="v">P</span>'s width and height can point the other way. Count them like coordinates: a width to the left of the y-axis is negative, and so is a height below the x-axis. Then <b>(cos <span class="v">θ</span>, sin <span class="v">θ</span>) is exactly where <span class="v">P</span> is</b>, at any angle. The triangle inside is always a first-quarter triangle, flipped or turned, so the sizes repeat and only the signs change. Its two short sides and the radius make a right triangle, so <b>Pythagoras says sin² <span class="v">θ</span> + cos² <span class="v">θ</span> = 1</b> at every angle, where sin² <span class="v">θ</span> means (sin <span class="v">θ</span>)².</p>
+    </div>
+    <div class="split">
+      <svg class="board" id="board4" role="group" aria-label="A whole circle of radius 1 in four quarters, with P anywhere on it and the triangle from P to the x-axis"></svg>
+      <div class="side">
+        <div class="chips" id="s4-presets" role="group" aria-label="Set the angle to"></div>
+        <dl class="pair" id="s4-out"></dl>
+        <div class="table-wrap"><table class="signs" id="s4-table"></table></div>
+        <p class="note" id="s4-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. The other three -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
+      <h2 id="s5-h">The other three</h2>
+      <p>Now draw the tangent line through <span class="v">P</span> itself, at right angles to the radius. It crosses the x-axis at a point <span class="v">S</span> and the y-axis at a point <span class="v">C</span>, and the pieces of this one picture give six functions. tan <span class="v">θ</span> is the stretch of tangent line from <span class="v">P</span> to <span class="v">S</span>, and the <b>cotangent</b>, cot <span class="v">θ</span>, is the stretch from <span class="v">P</span> to <span class="v">C</span>. The <b>secant</b>, sec <span class="v">θ</span>, runs from <span class="v">O</span> to <span class="v">S</span>, and the <b>cosecant</b>, csc <span class="v">θ</span>, from <span class="v">O</span> to <span class="v">C</span>. Each new one is a ratio of the first three: <b>sec <span class="v">θ</span> = 1 ÷ cos <span class="v">θ</span>, csc <span class="v">θ</span> = 1 ÷ sin <span class="v">θ</span>, and cot <span class="v">θ</span> = cos <span class="v">θ</span> ÷ sin <span class="v">θ</span></b>. Pick one to pick out its line and see where its ratio comes from.</p>
+    </div>
+    <div class="split">
+      <svg class="board" id="board5" role="group" aria-label="A quarter circle with the tangent line at P crossing both axes, and the six lines sine, cosine, tangent, secant, cosecant, and cotangent"></svg>
+      <div class="side">
+        <div class="chips" id="s5-pick" role="group" aria-label="Show"></div>
+        <div class="chips" id="s5-presets" role="group" aria-label="Set the angle to"></div>
+        <dl class="pair" id="s5-out"></dl>
+        <div class="work" id="s5-work"></div>
+        <p class="note" id="s5-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Unroll the circle -->
+  <section class="panel" aria-labelledby="s6-h">
+    <div class="panel-head">
+      <p class="station">Station 6</p>
+      <h2 id="s6-h">Unroll the circle</h2>
+      <p>Back to sine. Walk <span class="v">P</span> round the circle and carry its height across to a graph. The graph uses the same scale as the circle, so when <span class="v">P</span> has walked some distance round, the graph has moved that same distance to the right: the circle is unrolled flat. The height traces a wave, the <b>sine wave</b>.</p>
+      <p>That walk is a better way to measure an angle than degrees. <b>An angle in radians is how far you walk round a circle of radius 1.</b> A whole turn is the whole way round, 2π ≈ 6.283, so 360° is 2π radians, 180° is π, and 90° is π/2. Press <b>Radians</b> to switch. Turn on cos <span class="v">θ</span> and you'll see the same wave, a quarter turn ahead.</p>
+    </div>
+    <div class="full">
+      <svg class="board" id="board6" role="group" aria-label="A circle beside a graph. P's height is carried across to the graph, where it traces the sine wave, and the walk round the circle is laid out along the graph's axis"></svg>
+    </div>
+    <div class="split wide">
+      <div class="side">
+        <div class="row">
+          <span class="lbl">Measure in</span>
+          <div class="seg" role="group" aria-label="Measure angles in" id="s6-unit"></div>
+          <button type="button" class="btn" id="s6-go">Go round</button>
+        </div>
+        <div>
+          <label class="check"><input type="checkbox" id="s6-cos"> Show cos <span class="v">θ</span></label>
+          <label class="check"><input type="checkbox" id="s6-tan"> Show tan <span class="v">θ</span></label>
+        </div>
+        <p class="note" id="s6-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s6-out"></dl>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <ul>
+      <li><b>Three angles have exact values worth knowing.</b> sin 30° = ½, sin 45° = √2 ÷ 2 ≈ 0.707, and sin 60° = √3 ÷ 2 ≈ 0.866, and cos runs through the same three numbers backwards. Cut a square along its diagonal for 45°, and cut a triangle with three equal sides in half for 30° and 60°. Try them in Station 1.</li>
+      <li><b>"Co" means the other angle.</b> The two small corners of a right triangle add up to 90°, so the side opposite one corner is adjacent to the other. That makes cos <span class="v">θ</span> = sin(90° − <span class="v">θ</span>), and the same goes for cot and tan, and for csc and sec. 90° − <span class="v">θ</span> is called the complement of <span class="v">θ</span>, and the cosine is the complement's sine.</li>
+      <li><b>For small angles, sin <span class="v">θ</span> is nearly <span class="v">θ</span>.</b> In radians, sin 0.1 = 0.0998 and tan 0.1 = 0.1003. A short walk round the circle is almost a straight climb, so the height you gain is about the distance you walked. <a href="../exploring-e/">Exploring <span class="v">e</span></a> leans on this in its Station 3: a small sideways push turns you by about its own size, in radians.</li>
+      <li><b>The 1 in 4 rule is a cosine.</b> US workplace safety rules ask for a ladder's foot to stand about a quarter of its working length from the wall. That fixes cos <span class="v">θ</span> at 1 ÷ 4, so every ladder set up that way leans at about 75.5°, whatever its length. Going from a ratio back to its angle is the job of the inverse functions, written arccos or cos<sup>−1</sup>.</li>
+      <li><b>A point on the circle is a turn.</b> (cos <span class="v">θ</span>, sin <span class="v">θ</span>) is where the point 1 lands when you turn it by <span class="v">θ</span> about <span class="v">O</span>. In <a href="../complex-numbers/">Complex Numbers</a> that's the number cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>, and its Station 6 turns the axes with a table of cosines and sines. <a href="../exploring-e/">Exploring <span class="v">e</span></a> wraps the number line round this same circle in its Station 6, which is the unrolling of Station 6 here, run backwards.</li>
+      <li><b>sec and csc obey Pythagoras too.</b> In Station 5 the triangle <span class="v">O</span>, <span class="v">P</span>, <span class="v">S</span> has short sides 1 and tan <span class="v">θ</span> and long side sec <span class="v">θ</span>, so 1 + tan² <span class="v">θ</span> = sec² <span class="v">θ</span>. The triangle <span class="v">O</span>, <span class="v">P</span>, <span class="v">C</span> gives 1 + cot² <span class="v">θ</span> = csc² <span class="v">θ</span> the same way.</li>
+    </ul>
+  </section>
+
+  <section class="notes" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <ul>
+      <li><b>Chords came first.</b> Greek astronomers worked with chords: straight lines across a circle from one point on it to another. The first known table of chords was made by Hipparchus in about 140 BC, and Ptolemy's, in the second century, went up in steps of half a degree. A chord across an angle of 2<span class="v">θ</span> is twice sin <span class="v">θ</span>. Reflect Station 1's triangle in the x-axis and the line from <span class="v">P</span> to its mirror image is that chord.</li>
+      <li><b>Half chords.</b> In about 500, Aryabhata gave tables of half chords, which really are sine tables, and called the half chord <i>jya</i>.</li>
+      <li><b>A word that meant nothing.</b> Arabic astronomers took up <i>jya</i> as <i>jiba</i>, a word with no meaning that sounded like it. Later writers turned it into <i>jaib</i>, which does mean something: a fold. Translators into Latin rendered <i>jaib</i> as <i>sinus</i>, the Latin for a fold, and <i>sinus</i> became sine.</li>
+      <li><b>Shadows.</b> The first known tables of shadows were made by Arab astronomers around 860, for two kinds of shadow later called <i>umbra recta</i> and <i>umbra versa</i> in Latin. Shadows are tangents and cotangents. With the sun <span class="v">θ</span> above the horizon, a stick of length 1 standing upright casts a shadow cot <span class="v">θ</span> long, and a stick of length 1 jutting straight out from a wall casts a shadow tan <span class="v">θ</span> down the wall.</li>
+      <li><b>Naming the lines.</b> Thomas Fincke's <i>Geometriae rotundi</i>, published in Basel in 1583, introduced the words tangent and secant. Copernicus had known the secant, and called it the <i>hypotenusa</i>.</li>
+      <li><b>The co- functions.</b> Edmund Gunter suggested <i>co-sinus</i> in 1620 and was the first to use <i>cotangens</i>. The short form cot came from Jonas Moore in 1674.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/HistTopics/Trigonometric_functions/">"The trigonometric functions"</a>, MacTutor History of Mathematics (1996).</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Ptolemy/">"Claudius Ptolemy"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Fincke/">"Thomas Fincke"</a>, MacTutor History of Mathematics.</li>
+      <li>Occupational Safety and Health Administration, <a href="https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1053">29 CFR 1926.1053, "Ladders"</a>, paragraph (b)(5)(i).</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const RAD = Math.PI / 180;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+// ---------- Formatting ----------
+
+const MINUS = "−";
+// fixed decimals, with a real minus sign and no −0
+const fix = (x, d = 3) => (x < 0 && +x.toFixed(d) !== 0 ? MINUS : "") + Math.abs(x).toFixed(d);
+// a negative number in a sum gets brackets
+const par = (x, d = 3) => (x < 0 && +x.toFixed(d) !== 0 ? `(${fix(x, d)})` : fix(x, d));
+// an angle in degrees, with a decimal only when it needs one
+const dg = (d) => `${Number.isInteger(+d.toFixed(1)) ? Math.round(d) : d.toFixed(1)}°`;
+const TH = '<span class="v">θ</span>';
+
+// multiples of 15° as fractions of π
+function piFrac(d) {
+  const k = Math.round(d / 15);
+  if (Math.abs(d - k * 15) > 1e-9) return null;
+  if (k === 0) return "0";
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a), g = gcd(k, 12), n = k / g, m = 12 / g;
+  return `${n === 1 ? "" : n}π${m === 1 ? "" : `/${m}`}`;
+}
+
+// ---------- Trig in degrees ----------
+
+const sinD = (d) => Math.sin(d * RAD);
+const cosD = (d) => Math.cos(d * RAD);
+// tan has no value where the width is 0
+const tanD = (d) => (Math.abs((((d % 180) + 180) % 180) - 90) < 1e-9 ? null : Math.tan(d * RAD));
+// snap to a multiple of 15° when close, otherwise to a whole degree
+function snap(d) {
+  const s = Math.round(d / 15) * 15;
+  return Math.abs(d - s) < 3 ? s : Math.round(d);
+}
+
+// ---------- Drawing ----------
+
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const f1 = (v) => Math.round(v * 10) / 10;
+
+// a text label in screen units; any θ in it is set in italics
+function lab(x, y, text, cls = "", anchor = "middle") {
+  const t = svgEl("text", { class: `lab ${cls}`, x: f1(x), y: f1(y), "text-anchor": anchor });
+  String(text).split(/(θ)/).forEach((part) => {
+    if (part === "θ") t.appendChild(svgEl("tspan", { class: "th" }, part));
+    else if (part) t.appendChild(document.createTextNode(part));
+  });
+  return t;
+}
+// an arrowhead with its tip at (x, y), pointing along (ux, uy), in screen units
+function arrowAt(x, y, ux, uy, cls) {
+  const bx = x - ux * 12, by = y - uy * 12, px = -uy * 6, py = ux * 6;
+  return svgEl("polygon", { class: `head ${cls}`, points: `${f1(x)},${f1(y)} ${f1(bx + px)},${f1(by + py)} ${f1(bx - px)},${f1(by - py)}` });
+}
+
+// a board measured from O, with y up and R pixels to 1
+class Board {
+  constructor(svg, layout) {
+    this.svg = svg;
+    this.base = svgEl("g");
+    this.scene = svgEl("g");
+    this.top = svgEl("g");
+    svg.append(this.base, this.scene, this.top);
+    this.resize(layout);
+  }
+  resize({ W, H, cx, cy, R }) {
+    Object.assign(this, { W, H, cx, cy, R });
+    this.svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    this.svg.style.aspectRatio = `${W} / ${H}`;
+  }
+  X(x) { return f1(this.cx + x * this.R); }
+  Y(y) { return f1(this.cy - y * this.R); }
+  toXY(e) {
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(this.svg.getScreenCTM().inverse());
+    return [(p.x - this.cx) / this.R, (this.cy - p.y) / this.R];
+  }
+  seg(x1, y1, x2, y2, cls) {
+    return svgEl("line", { class: cls, x1: this.X(x1), y1: this.Y(y1), x2: this.X(x2), y2: this.Y(y2) });
+  }
+  // gridlines every `step`, stronger every half
+  grid(x0, x1, y0, y1, step) {
+    const out = [], strong = (v) => Math.abs(v * 2 - Math.round(v * 2)) < 1e-9;
+    for (let i = Math.ceil(x0 / step - 1e-9); i * step <= x1 + 1e-9; i++) {
+      out.push(this.seg(i * step, y0, i * step, y1, strong(i * step) ? "grid strong" : "grid"));
+    }
+    for (let i = Math.ceil(y0 / step - 1e-9); i * step <= y1 + 1e-9; i++) {
+      out.push(this.seg(x0, i * step, x1, i * step, strong(i * step) ? "grid strong" : "grid"));
+    }
+    return out;
+  }
+  // part of a circle of radius r about (ox, oy), counterclockwise from a° to b°
+  arc(r, a, b, cls, ox = 0, oy = 0) {
+    const rr = f1(r * this.R);
+    if (b - a >= 360) return svgEl("circle", { class: cls, cx: this.X(ox), cy: this.Y(oy), r: rr });
+    const large = b - a > 180 ? 1 : 0;
+    return svgEl("path", {
+      class: cls,
+      d: `M${this.X(ox + r * cosD(a))} ${this.Y(oy + r * sinD(a))}A${rr} ${rr} 0 ${large} 0 ${this.X(ox + r * cosD(b))} ${this.Y(oy + r * sinD(b))}`,
+    });
+  }
+  // a slice of the disc about O, counterclockwise from a° to b°
+  sector(r, a, b, cls) {
+    const rr = f1(r * this.R), large = b - a > 180 ? 1 : 0;
+    return svgEl("path", {
+      class: cls,
+      d: `M${this.X(0)} ${this.Y(0)}L${this.X(r * cosD(a))} ${this.Y(r * sinD(a))}A${rr} ${rr} 0 ${large} 0 ${this.X(r * cosD(b))} ${this.Y(r * sinD(b))}Z`,
+    });
+  }
+  // the little square in a right angle at (x, y), with sides along directions u and v
+  corner(x, y, u, v, px = 12) {
+    const q = px / this.R, a = [x + u[0] * q, y + u[1] * q], c = [x + v[0] * q, y + v[1] * q], b = [a[0] + v[0] * q, a[1] + v[1] * q];
+    return svgEl("polyline", { class: "corner", points: [a, b, c].map(([px, py]) => `${this.X(px)},${this.Y(py)}`).join(" ") });
+  }
+  // keep the scene inside a rectangle, in screen units
+  clip(x, y, width, height) {
+    if (!this.clipRect) {
+      const id = `${this.svg.id}-clip`, defs = svgEl("defs"), cp = svgEl("clipPath", { id });
+      this.clipRect = svgEl("rect");
+      cp.appendChild(this.clipRect);
+      defs.appendChild(cp);
+      this.svg.prepend(defs);
+      this.scene.setAttribute("clip-path", `url(#${id})`);
+    }
+    for (const [k, v] of Object.entries({ x, y, width, height })) this.clipRect.setAttribute(k, f1(v));
+  }
+}
+// where a label goes beside the point at angle d, pushed away from O
+const outward = (d, r = 20) => ({ lx: f1(cosD(d) * r), ly: f1(-sinD(d) * r) });
+
+// ---------- Handles ----------
+
+// a point to drag, or Tab to and nudge with the arrow keys
+function handle(board, { name, label, onPoint, onKey }) {
+  const g = svgEl("g", { class: "handle", tabindex: 0, role: "slider", "aria-roledescription": "draggable point", "aria-label": name });
+  const text = lab(0, 0, label, "var cink");
+  g.append(svgEl("circle", { class: "hit", r: 24 }), svgEl("circle", { class: "halo", r: 13 }), svgEl("circle", { class: "knob", r: 7 }), text);
+  board.top.appendChild(g);
+
+  let dragging = false;
+  g.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dragging = true;
+    g.setPointerCapture(e.pointerId);
+    g.classList.add("drag");
+    g.focus({ preventScroll: true });
+    onPoint(...board.toXY(e));
+  });
+  g.addEventListener("pointermove", (e) => { if (dragging) onPoint(...board.toXY(e)); });
+  const end = () => {
+    dragging = false;
+    g.classList.remove("drag");
+  };
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => g.addEventListener(t, end));
+  // keep a finger on a point from scrolling the page
+  g.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  g.addEventListener("keydown", (e) => {
+    const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    onKey(d * (e.shiftKey ? 15 : 1));
+  });
+
+  return {
+    place(x, y, { lx = 14, ly = -16, now, min, max, valueText }) {
+      g.setAttribute("transform", `translate(${board.X(x)} ${board.Y(y)})`);
+      text.setAttribute("x", lx);
+      text.setAttribute("y", ly);
+      text.setAttribute("text-anchor", Math.abs(lx) < 4 ? "middle" : lx < 0 ? "end" : "start");
+      g.setAttribute("aria-valuenow", f1(now));
+      g.setAttribute("aria-valuemin", min);
+      g.setAttribute("aria-valuemax", max);
+      g.setAttribute("aria-valuetext", valueText);
+    },
+  };
+}
+
+// P on the circle at S.deg. Without wrap the angle stays between lo and hi; with it, it runs 0 to 360 and round again
+function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, draw, before }) {
+  const set = (d) => {
+    if (before) before();
+    if (wrap) {
+      if (d > 360) d -= 360;
+      if (d < 0) d += 360;
+    } else d = clamp(d, lo, hi);
+    if (d === S.deg) return;
+    S.deg = d;
+    draw();
+  };
+  const h = handle(board, {
+    name: "P, the point on the circle", label: "P",
+    onPoint(x, y) {
+      let d = Math.atan2(y, x) / RAD;
+      if (d < 0) d += 360;
+      // past the end of the range, stick to whichever end is nearer
+      if (!wrap && d > hi) d = d < (hi + lo + 360) / 2 ? hi : lo;
+      set(snap(d));
+    },
+    onKey: (step) => set(Math.round(S.deg) + step),
+  });
+  return { h, set };
+}
+
+// ---------- Controls ----------
+
+function chipRow(el, items, onPick) {
+  el.replaceChildren(...items.map(([html, label], j) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = html;
+    if (label) b.setAttribute("aria-label", label);
+    b.addEventListener("click", () => onPick(j));
+    return b;
+  }));
+}
+const pressChips = (el, test) => [...el.children].forEach((b, j) => b.setAttribute("aria-pressed", test(j)));
+const angleChips = (el, angles, set) => chipRow(el, angles.map((a) => [`${a}°`, `${a} degrees`]), (j) => set(angles[j]));
+const row = (dt, dd, small, cls) => `<div><dt${cls ? ` class="${cls}"` : ""}>${dt}</dt><dd>${dd}${small ? `<small>${small}</small>` : ""}</dd></div>`;
+const valueText = (d) => `θ ${dg(d)}: sine ${fix(sinD(d))}, cosine ${fix(cosD(d))}`;
+
+// ---------- Station 1: a triangle in a circle ----------
+
+const S1 = { deg: 37 };
+const b1 = new Board($("board1"), { W: 420, H: 400, cx: 58, cy: 350, R: 290 });
+b1.base.append(
+  ...b1.grid(-0.1, 1.15, -0.1, 1.15, 0.1),
+  b1.seg(-0.16, 0, 1.2, 0, "axis"),
+  b1.seg(0, -0.16, 0, 1.16, "axis"),
+  b1.arc(1, 0, 90, "circle"),
+  svgEl("text", { class: "tick-lab", x: b1.X(1), y: b1.Y(0) + 40, "text-anchor": "middle" }, "1"),
+  svgEl("text", { class: "tick-lab", x: b1.X(0) - 12, y: b1.Y(1), "text-anchor": "end" }, "1"),
+  lab(b1.X(0) - 12, b1.Y(0) + 16, "O", "var cink", "end"),
+);
+const h1 = angleHandle(b1, S1, { lo: 0, hi: 90, draw: draw1 });
+const ANGLES1 = [0, 30, 45, 60, 90];
+
+function draw1() {
+  const d = S1.deg, c = cosD(d), s = sinD(d), items = [];
+  if (d > 0) {
+    items.push(b1.arc(0.14, 0, d, "angle"));
+    if (d >= 10) items.push(lab(b1.X(0.22 * cosD(d / 2)), b1.Y(0.22 * sinD(d / 2)), "θ", "var cpen"));
+  }
+  if (s > 0.05 && c > 0.05) items.push(b1.corner(c, 0, [-1, 0], [0, 1]));
+  items.push(b1.seg(0, 0, c, 0, "side ccos"), b1.seg(c, 0, c, s, "side csin"), b1.seg(0, 0, c, s, "side rad"));
+  if (c > 0.14) items.push(lab((b1.X(0) + b1.X(c)) / 2, b1.Y(0) + 20, "cos θ", "ccos"));
+  if (s > 0.1) items.push(lab(b1.X(c) + 10, b1.Y(s / 2), "sin θ", "csin", "start"));
+  // the radius's 1, nudged off the line toward the upper left
+  items.push(lab(b1.X(c / 2) - s * 16, b1.Y(s / 2) - c * 16, "1", "cink"));
+  b1.scene.replaceChildren(...items);
+  h1.h.place(c, s, { ...outward(d), now: d, min: 0, max: 90, valueText: valueText(d) });
+
+  $("s1-out").innerHTML = [
+    row("Angle", `${TH} = ${dg(d)}`),
+    row(`sin ${TH}`, fix(s), `the height of <span class="v">P</span>`, "csin"),
+    row(`cos ${TH}`, fix(c), `the width of <span class="v">P</span>, out from <span class="v">O</span>`, "ccos"),
+  ].join("");
+  let note;
+  if (d === 0) note = `Flat. <span class="v">P</span> sits on the x-axis, so the height is 0 and the width is the whole radius: sin 0° = 0 and cos 0° = 1.`;
+  else if (d === 90) note = `Straight up. Now the height is the whole radius and the width is 0: sin 90° = 1 and cos 90° = 0.`;
+  else if (d === 30) note = `<b>The height is exactly a half.</b> Reflect the triangle in the x-axis and the two copies make a triangle with three 60° corners, so all three of its sides are 1. Its side through <span class="v">P</span> is twice the height, so the height is ½.`;
+  else if (d === 60) note = `<b>The width is exactly a half.</b> It's the 30° triangle stood on end: height and width have swapped, so cos 60° = sin 30°.`;
+  else if (d === 45) note = `<b>Height and width match</b>, both 0.707. Station 4 shows why it's that number: height² + width² = 1, so each is the square root of ½.`;
+  else if (d < 45) note = `The triangle is wider than it is tall, so cos ${TH} is bigger than sin ${TH}. Drag <span class="v">P</span> up and the height grows while the width shrinks.`;
+  else note = `Now the triangle is taller than it is wide, so sin ${TH} is bigger than cos ${TH}. However you turn it, the long side stays 1, because <span class="v">P</span> stays on the circle.`;
+  $("s1-note").innerHTML = note;
+  pressChips($("s1-presets"), (j) => ANGLES1[j] === d);
+}
+angleChips($("s1-presets"), ANGLES1, h1.set);
+
+// ---------- Station 2: any size ----------
+
+// metres, measured from the foot of the wall
+const S2 = { deg: 70, L: 4 };
+// a narrower wall-side view on a phone, so the labels stay readable
+const wide2 = matchMedia("(min-width: 600px)");
+const LAYOUT2 = {
+  wide: { W: 580, H: 380, cx: 470, cy: 334, R: 50 },
+  narrow: { W: 432, H: 340, cx: 322, cy: 298, R: 45 },
+};
+const b2 = new Board($("board2"), LAYOUT2.wide);
+const ONE_IN_FOUR = Math.acos(0.25) / RAD;
+const ANGLES2 = [["1 in 4", ONE_IN_FOUR], ["45°", 45], ["60°", 60], ["85°", 85]];
+function base2() {
+  b2.resize(LAYOUT2[wide2.matches ? "wide" : "narrow"]);
+  b2.svg.classList.toggle("small", !wide2.matches);
+  const items = [svgEl("rect", { class: "wall", x: b2.X(0), y: b2.Y(6.6), width: f1(0.45 * b2.R), height: f1(6.6 * b2.R) })];
+  for (let j = 1; j * 0.36 < 6.6; j++) {
+    const y = j * 0.36;
+    items.push(b2.seg(0, y, 0.45, y, "brick"));
+    const x = j % 2 ? 0.22 : 0.08;
+    items.push(b2.seg(x, y, x, y - 0.36, "brick"));
+  }
+  items.push(b2.seg(-9, 0, 2.1, 0, "ground"));
+  for (let x = -8.8; x < 2; x += 0.4) items.push(b2.seg(x, 0, x - 0.2, -0.2, "hatch"));
+  items.push(b2.seg(0, 0, 0, 6.6, "ground"));
+  b2.base.replaceChildren(...items);
+}
+base2();
+
+const h2 = handle(b2, {
+  name: "The foot of the ladder", label: "",
+  onPoint(x) {
+    const out = clamp(-x, 0, S2.L);
+    set2(Math.round(Math.acos(out / S2.L) / RAD));
+  },
+  onKey: (step) => set2(Math.round(S2.deg) + step),
+});
+function set2(d) {
+  d = clamp(d, 5, 90);
+  if (d === S2.deg) return;
+  S2.deg = d;
+  draw2();
+}
+
+function draw2() {
+  const d = S2.deg, L = S2.L, c = cosD(d), s = sinD(d), fx = -L * c, ty = L * s, items = [];
+  // the triangle: up the wall, and along the ground
+  items.push(b2.seg(0, 0, 0, ty, "side csin"), b2.seg(fx, 0, 0, 0, "side ccos"));
+  if (d < 88) items.push(b2.corner(0, 0, [-1, 0], [0, 1]));
+  items.push(b2.arc(0.75, 0, d, "angle", fx, 0));
+  items.push(lab(b2.X(fx + 1.05 * cosD(d / 2)), b2.Y(1.05 * sinD(d / 2)), "θ", "var cpen"));
+  // the ladder side-on: one rail, with the rung ends showing
+  items.push(b2.seg(fx, 0, 0, ty, "rail"));
+  for (let r = 0.3; r < L - 0.1; r += 0.3) {
+    items.push(svgEl("circle", { class: "rung", cx: b2.X(fx + r * c), cy: b2.Y(r * s), r: 2.5 }));
+  }
+  items.push(lab(b2.X(0.45) + 8, b2.Y(ty / 2), `${fix(ty, 2)} m`, "csin", "start"));
+  items.push(lab((b2.X(fx) + b2.X(0)) / 2, b2.Y(0) + 30, `${fix(-fx, 2)} m`, "ccos"));
+  items.push(lab(b2.X(fx / 2) - s * 16 - 4, b2.Y(ty / 2) - c * 16 - 6, `L = ${L} m`, "cink", "end"));
+  b2.scene.replaceChildren(...items);
+  h2.place(fx, 0, { lx: 0, ly: 0, now: d, min: 5, max: 90, valueText: `θ ${dg(d)}: top ${fix(ty, 2)} metres up the wall, foot ${fix(-fx, 2)} metres out` });
+
+  $("s2-lenOut").textContent = `${L} m`;
+  $("s2-out").innerHTML = [
+    row("Angle", `${TH} = ${dg(d)}`),
+    row("Height", `${L} × sin ${dg(d)} = ${fix(ty, 2)} m`, `${L} × ${fix(s)}, up the wall. Opposite = hypotenuse × sin ${TH}.`, "csin"),
+    row("Foot", `${L} × cos ${dg(d)} = ${fix(-fx, 2)} m`, `${L} × ${fix(c)}, out from the wall. Adjacent = hypotenuse × cos ${TH}.`, "ccos"),
+    row("Ratio", `${fix(ty, 2)} ÷ ${L} = ${fix(s)}`, `opposite ÷ hypotenuse is sin ${TH}, whatever the length`),
+  ].join("");
+  let note;
+  if (Math.abs(d - ONE_IN_FOUR) < 1e-9) note = `<b>The 1 in 4 rule.</b> Ladder safety rules put the foot about a quarter of the ladder's length out from the wall. That says cos ${TH} = 1 ÷ 4, so ${TH} = 75.5° for any ladder. Change the length and the angle stays put.`;
+  else if (d === 90) note = `Straight up the wall, with the foot touching it. The whole ladder is height: ${L} × sin 90° = ${L} × 1.`;
+  else note = `Change the length and every side grows or shrinks together, so height ÷ length stays ${fix(s)}, which is sin ${dg(d)}.`;
+  $("s2-note").innerHTML = note;
+  pressChips($("s2-presets"), (j) => Math.abs(ANGLES2[j][1] - d) < 1e-9);
+}
+chipRow($("s2-presets"), ANGLES2.map(([name, a]) => [name, name === "1 in 4" ? "1 in 4, the ladder safety angle" : `${a} degrees`]), (j) => {
+  S2.deg = ANGLES2[j][1];
+  draw2();
+});
+$("s2-len").addEventListener("input", (e) => { S2.L = +e.target.value; draw2(); });
+wide2.addEventListener("change", () => { base2(); draw2(); });
+
+// ---------- Station 3: the tangent line ----------
+
+const S3 = { deg: 37 };
+const TOP3 = 2.4;
+const b3 = new Board($("board3"), { W: 360, H: 420, cx: 60, cy: 378, R: 150 });
+b3.base.append(
+  ...b3.grid(-0.1, 1.95, -0.1, 2.45, 0.1),
+  b3.seg(-0.2, 0, 1.97, 0, "axis"),
+  b3.seg(0, -0.2, 0, 2.48, "axis"),
+  b3.arc(1, 0, 90, "circle"),
+  b3.seg(1, -0.2, 1, 2.48, "tline"),
+  svgEl("text", { class: "lab ctan", transform: `translate(${b3.X(1) + 16} ${b3.Y(2.3)}) rotate(90)` }, "tangent line"),
+  svgEl("text", { class: "tick-lab", x: b3.X(0) - 12, y: b3.Y(1), "text-anchor": "end" }, "1"),
+  svgEl("text", { class: "tick-lab", x: b3.X(0) - 12, y: b3.Y(2), "text-anchor": "end" }, "2"),
+  lab(b3.X(0) - 12, b3.Y(0) + 16, "O", "var cink", "end"),
+);
+const h3 = angleHandle(b3, S3, { lo: 0, hi: 90, draw: draw3 });
+const ANGLES3 = [0, 30, 45, 60, 80];
+
+function draw3() {
+  const d = S3.deg, c = cosD(d), s = sinD(d), t = tanD(d), items = [];
+  items.push(b3.seg(0, 0, c, 0, "side faint ccos"), b3.seg(c, 0, c, s, "side faint csin"));
+  if (d > 0) {
+    items.push(b3.arc(0.16, 0, d, "angle"));
+    if (d >= 10) items.push(lab(b3.X(0.25 * cosD(d / 2)), b3.Y(0.25 * sinD(d / 2)), "θ", "var cpen"));
+  }
+  if (t == null) items.push(b3.seg(0, 1, 0, TOP3, "ext"));
+  else if (t <= TOP3) {
+    items.push(b3.seg(c, s, 1, t, "ext"), b3.seg(1, 0, 1, t, "side ctan"));
+    if (t > 0.05) items.push(b3.corner(1, 0, [-1, 0], [0, 1]));
+    if (t > 0.12) items.push(lab(b3.X(1) + 10, b3.Y(t / 2), "tan θ", "ctan", "start"));
+  } else {
+    // off the top: run both lines to the edge and say where they'd meet
+    items.push(b3.seg(c, s, TOP3 / t, TOP3, "ext"), b3.seg(1, 0, 1, TOP3, "side ctan"));
+    items.push(arrowAt(b3.X(1), b3.Y(TOP3) - 6, 0, -1, "ctan"));
+    items.push(b3.corner(1, 0, [-1, 0], [0, 1]));
+    items.push(lab(b3.X(1) + 10, b3.Y(TOP3) + 40, `tan θ = ${fix(t, 2)}`, "ctan", "start"));
+  }
+  items.push(b3.seg(0, 0, c, s, "side rad"));
+  items.push(lab(b3.X(c / 2) - s * 16, b3.Y(s / 2) - c * 16, "1", "cink"));
+  items.push(lab(b3.X(0.5), b3.Y(0) + 20, "1", "cink"));
+  b3.scene.replaceChildren(...items);
+  h3.h.place(c, s, { ...outward(d), now: d, min: 0, max: 90, valueText: `θ ${dg(d)}: tangent ${t == null ? "has no value" : fix(t)}` });
+
+  $("s3-out").innerHTML = [
+    row("Angle", `${TH} = ${dg(d)}`),
+    row(`tan ${TH}`, t == null ? "no value" : `${fix(s)} ÷ ${fix(c)} = ${fix(t)}`, `sin ${TH} ÷ cos ${TH}: the height where the radius meets the tangent line`, "ctan"),
+    row("Slope", t == null ? "straight up" : `up ${fix(t)} for every 1 across`),
+  ].join("");
+  let note;
+  if (d === 0) note = `At 0° the radius lies along the x-axis and meets the tangent line at the bottom, at height 0. tan 0° = 0.`;
+  else if (d === 45) note = `<b>tan 45° = 1.</b> Height and width are equal, so the radius climbs 1 for every 1 across, and meets the tangent line at height 1.`;
+  else if (t == null) note = `<b>tan 90° has no value.</b> The radius points straight up, alongside the tangent line, and never meets it. The width is 0, and sin 90° ÷ cos 90° would divide by 0.`;
+  else if (t > TOP3) note = `The radius meets the tangent line at ${fix(t, 2)}, off the top of the board. Close to 90° the width gets tiny and tan ${TH} grows fast: tan 80° = 5.67, and tan 89° = 57.29.`;
+  else note = `The big triangle, out to the tangent line, is the small one scaled up until its width is 1. Turning a width of ${fix(c)} into 1 means dividing by ${fix(c)}, so the height ${fix(s)} becomes ${fix(s)} ÷ ${fix(c)} = ${fix(t)}.`;
+  $("s3-note").innerHTML = note;
+  pressChips($("s3-presets"), (j) => ANGLES3[j] === d);
+}
+angleChips($("s3-presets"), ANGLES3, h3.set);
+
+// ---------- Station 4: all the way round ----------
+
+const S4 = { deg: 140 };
+const b4 = new Board($("board4"), { W: 420, H: 420, cx: 210, cy: 210, R: 160 });
+const QUADS = [["First", "0° to 90°", "+", "+", "+"], ["Second", "90° to 180°", "+", MINUS, MINUS], ["Third", "180° to 270°", MINUS, MINUS, "+"], ["Fourth", "270° to 360°", MINUS, "+", MINUS]];
+b4.base.append(
+  ...b4.grid(-1.25, 1.25, -1.25, 1.25, 0.1),
+  b4.seg(-1.28, 0, 1.28, 0, "axis"),
+  b4.seg(0, -1.28, 0, 1.28, "axis"),
+  b4.arc(1, 0, 360, "circle"),
+  ...["I", "II", "III", "IV"].map((n, j) => svgEl("text", { class: "quad", x: b4.X(1.08 * Math.sign(cosD(45 + 90 * j))), y: b4.Y(1.08 * Math.sign(sinD(45 + 90 * j))) }, n)),
+);
+const h4 = angleHandle(b4, S4, { wrap: true, draw: draw4 });
+const ANGLES4 = [30, 150, 210, 330];
+// which quarter, 1 to 4, or 0 on an axis
+const quarterOf = (d) => (d % 90 === 0 ? 0 : Math.floor((d % 360) / 90) + 1);
+
+function draw4() {
+  const d = S4.deg, c = cosD(d), s = sinD(d), t = tanD(d), q = quarterOf(d), items = [];
+  if (q) items.push(b4.sector(1, 90 * (q - 1), 90 * q, "qfill"));
+  if (d > 0) {
+    items.push(b4.arc(0.15, 0, d, "angle"));
+    if (d >= 14) items.push(lab(b4.X(0.25 * cosD(d / 2)), b4.Y(0.25 * sinD(d / 2)), "θ", "var cpen"));
+  }
+  if (Math.abs(s) > 0.06 && Math.abs(c) > 0.06) items.push(b4.corner(c, 0, [-Math.sign(c), 0], [0, Math.sign(s)]));
+  items.push(b4.seg(0, 0, c, 0, "side ccos"), b4.seg(c, 0, c, s, "side csin"), b4.seg(0, 0, c, s, "side rad"));
+  // values on the sides: cos on the far side of the axis from the triangle
+  if (Math.abs(c) > 0.18) items.push(lab((b4.X(0) + b4.X(c)) / 2, b4.Y(0) + (s >= 0 ? 18 : -18), fix(c), "ccos"));
+  if (Math.abs(s) > 0.14) {
+    const outside = Math.abs(c) < 0.84, right = (c >= 0) === outside;
+    items.push(lab(b4.X(c) + (right ? 10 : -10), b4.Y(s / 2), fix(s), "csin", right ? "start" : "end"));
+  }
+  b4.scene.replaceChildren(...items);
+  h4.h.place(c, s, { ...outward(d), now: d, min: 0, max: 360, valueText: valueText(d) });
+
+  const r = d % 180, ref = r <= 90 ? r : 180 - r;
+  const where = (v, pos, neg) => (Math.abs(v) < 1e-9 ? "on the axis" : v > 0 ? pos : neg);
+  $("s4-out").innerHTML = [
+    row("Angle", `${TH} = ${dg(d)}`),
+    row("Triangle", dg(ref), `the angle at <span class="v">O</span>, measured from the nearer side of the x-axis`),
+    row(`sin ${TH}`, fix(s), `height, ${where(s, "above the x-axis", "below the x-axis")}`, "csin"),
+    row(`cos ${TH}`, fix(c), `width, ${where(c, "right of the y-axis", "left of the y-axis")}`, "ccos"),
+    row(`tan ${TH}`, t == null ? "no value" : fix(t), `sin ${TH} ÷ cos ${TH}`, "ctan"),
+    row("Check", `${par(s)}² + ${par(c)}² = ${fix(s * s)} + ${fix(c * c)} = ${fix(s * s + c * c)}`, `sin² ${TH} + cos² ${TH} = 1`),
+  ].join("");
+  $("s4-table").innerHTML = `<thead><tr><th scope="col">Quarter</th><th scope="col" class="csin">sin</th><th scope="col" class="ccos">cos</th><th scope="col" class="ctan">tan</th></tr></thead><tbody>` +
+    QUADS.map(([name, span, a, b, c2], j) => `<tr class="${q === j + 1 ? "hot" : ""}"><th scope="row">${name}<small>${span}</small></th><td>${a}</td><td>${b}</td><td>${c2}</td></tr>`).join("") + "</tbody>";
+
+  let note;
+  if (d === 0 || d === 360) note = `<span class="v">P</span> is on the x-axis at 1: sin ${TH} = 0 and cos ${TH} = 1.${d === 360 ? " A whole turn brings you back where you started." : ""}`;
+  else if (d === 90) note = `At the top: sin 90° = 1 and cos 90° = 0, and tan 90° has no value.`;
+  else if (d === 180) note = `Halfway round, <span class="v">P</span> is at −1: sin 180° = 0 and cos 180° = −1.`;
+  else if (d === 270) note = `Three quarters round, <span class="v">P</span> is at the bottom: sin 270° = −1 and cos 270° = 0, and tan 270° has no value.`;
+  else if (q === 1) note = `In the first quarter both sides point the positive way. This is Station 1's triangle. Drag <span class="v">P</span> past 90°.`;
+  else if (q === 2) note = `Past 90°, <span class="v">P</span> is left of the y-axis, so its width counts as negative: cos ${TH} = ${fix(c)}. It's still above the x-axis, so sin ${TH} stays positive. The triangle inside is the ${dg(ref)} triangle, flipped left to right.`;
+  else if (q === 3) note = `Past 180°, <span class="v">P</span> is below and to the left, so sin ${TH} and cos ${TH} are both negative. One negative divided by another is positive, so tan ${TH} is positive again. The triangle is the ${dg(ref)} one, turned half a turn.`;
+  else note = `In the last quarter <span class="v">P</span> is below the x-axis and right of the y-axis: sin ${TH} is negative and cos ${TH} is positive. The triangle is the ${dg(ref)} one, flipped top to bottom.`;
+  $("s4-note").innerHTML = note;
+  pressChips($("s4-presets"), (j) => ANGLES4[j] === d);
+}
+angleChips($("s4-presets"), ANGLES4, h4.set);
+
+// ---------- Station 5: the other three ----------
+
+const S5 = { deg: 30, pick: "all" };
+const MAX5 = 2.4;
+const b5 = new Board($("board5"), { W: 440, H: 440, cx: 66, cy: 386, R: 150 });
+b5.base.append(
+  ...b5.grid(-0.1, MAX5, -0.1, MAX5, 0.1),
+  b5.seg(-0.3, 0, MAX5 + 0.05, 0, "axis"),
+  b5.seg(0, -0.3, 0, MAX5 + 0.05, "axis"),
+  b5.arc(1, 0, 90, "circle"),
+  lab(b5.X(0) - 12, b5.Y(0) + 16, "O", "var cink", "end"),
+);
+b5.clip(b5.X(-0.42), b5.Y(MAX5 + 0.1), (MAX5 + 0.52) * b5.R, (MAX5 + 0.4) * b5.R);
+const h5 = angleHandle(b5, S5, { lo: 1, hi: 89, draw: draw5 });
+const ANGLES5 = [30, 45, 60];
+const FNS = ["sin", "cos", "tan", "sec", "csc", "cot"];
+
+function draw5() {
+  const d = S5.deg, c = cosD(d), s = sinD(d), t = s / c, sec = 1 / c, csc = 1 / s, cot = c / s, groups = {};
+  const fnGroup = (name, ...kids) => { groups[name] = svgEl("g", { class: `fn c${name}${S5.pick === name ? " on" : ""}` }); groups[name].append(...kids); };
+  // a stretch from (x1, y1) to (x2, y2), cut off at the edge of the board with an arrowhead
+  const piece = (x1, y1, x2, y2) => {
+    let k = 1;
+    if (x2 > MAX5) k = Math.min(k, (MAX5 - x1) / (x2 - x1));
+    if (y2 > MAX5) k = Math.min(k, (MAX5 - y1) / (y2 - y1));
+    const ex = x1 + (x2 - x1) * k, ey = y1 + (y2 - y1) * k, out = [b5.seg(x1, y1, ex, ey, "side")];
+    if (k < 1) {
+      const dx = b5.X(ex) - b5.X(x1), dy = b5.Y(ey) - b5.Y(y1), len = Math.hypot(dx, dy);
+      out.push(arrowAt(b5.X(ex) + (dx / len) * 6, b5.Y(ey) + (dy / len) * 6, dx / len, dy / len, ""));
+    }
+    return { out, ex, ey, cut: k < 1 };
+  };
+  const mid = (a, b) => (a + b) / 2;
+
+  const tp = piece(c, s, sec, 0), cp = piece(c, s, 0, csc), sp = piece(0, 0, sec, 0), qp = piece(0, 0, 0, csc);
+  // label a line only when it's long enough to carry one, or when it's the one picked
+  const say = (name, len, el) => (len * b5.R >= 45 || S5.pick === name ? [el] : []);
+  // sin's label goes inside the triangle when there's room, out past the line when it's narrow
+  const sinIn = c >= 0.5;
+  fnGroup("sin", b5.seg(c, s, c, 0, "side"), ...say("sin", s, lab(b5.X(c) + (sinIn ? -8 : 8), b5.Y(s * 0.3), "sin θ", "", sinIn ? "end" : "start")));
+  fnGroup("cos", b5.seg(0, s, c, s, "side"), ...say("cos", c, lab(mid(b5.X(0), b5.X(c)), b5.Y(s) - 14, "cos θ")));
+  fnGroup("tan", ...tp.out, ...say("tan", t, lab(mid(b5.X(c), b5.X(tp.ex)) + c * 30, mid(b5.Y(s), b5.Y(tp.ey)) - s * 30, "tan θ")));
+  fnGroup("cot", ...cp.out, ...say("cot", cot, lab(mid(b5.X(c), b5.X(cp.ex)) + c * 30, mid(b5.Y(s), b5.Y(cp.ey)) - s * 30, "cot θ")));
+  fnGroup("sec", ...sp.out, lab(mid(b5.X(0), b5.X(sp.ex)), b5.Y(0) + 22, sp.cut ? `sec θ = ${fix(sec, 2)}` : "sec θ"));
+  fnGroup("csc", ...qp.out, svgEl("text", { class: "lab", transform: `translate(${b5.X(0) - 18} ${mid(b5.Y(0), b5.Y(qp.ey))}) rotate(-90)`, "text-anchor": "middle" }, qp.cut ? `csc θ = ${fix(csc, 2)}` : "csc θ"));
+
+  // the whole tangent line, faint, with its square corner at P
+  const far = 4;
+  const items = [
+    b5.seg(c + s * far, s - c * far, c - s * far, s + c * far, "tline"),
+    b5.corner(c, s, [-c, -s], [s, -c], 11),
+    b5.arc(0.16, 0, d, "angle"),
+  ];
+  if (d >= 10) items.push(lab(b5.X(0.25 * cosD(d / 2)), b5.Y(0.25 * sinD(d / 2)), "θ", "var cpen"));
+  items.push(...FNS.map((n) => groups[n]));
+  items.push(b5.seg(0, 0, c, s, "side rad"), lab(b5.X(c / 2) - s * 16, b5.Y(s / 2) - c * 16, "1", "cink"));
+  if (!sp.cut) items.push(lab(b5.X(sec) + 4, b5.Y(0) + 16, "S", "var cink", "start"));
+  if (!qp.cut) items.push(lab(b5.X(0) + 12, b5.Y(csc) - 4, "C", "var cink", "start"));
+  b5.scene.replaceChildren(...items);
+  b5.svg.classList.toggle("dim", S5.pick !== "all");
+  h5.h.place(c, s, { ...outward(d), now: d, min: 1, max: 89, valueText: `θ ${dg(d)}: ` + FNS.map((n, j) => `${n} ${fix([s, c, t, sec, csc, cot][j])}`).join(", ") });
+
+  const vals = { sin: s, cos: c, tan: t, sec, csc, cot };
+  const how = {
+    sin: `the height of <span class="v">P</span>`,
+    cos: `the width of <span class="v">P</span>`,
+    tan: `sin ÷ cos: <span class="v">P</span> to <span class="v">S</span>, along the tangent line`,
+    sec: `1 ÷ cos: <span class="v">O</span> to <span class="v">S</span>, along the x-axis`,
+    csc: `1 ÷ sin: <span class="v">O</span> to <span class="v">C</span>, up the y-axis`,
+    cot: `cos ÷ sin: <span class="v">P</span> to <span class="v">C</span>, along the tangent line`,
+  };
+  $("s5-out").innerHTML = row("Angle", `${TH} = ${dg(d)}`) + FNS.map((n) => row(`${n} ${TH}`, fix(vals[n]), how[n], `c${n}`)).join("");
+  $("s5-work").innerHTML = [
+    `<div>1 + tan² ${TH} = sec² ${TH}</div>`,
+    `<div>1 + ${fix(t * t)} = ${fix(sec * sec)}</div>`,
+    `<div>1 + cot² ${TH} = csc² ${TH}</div>`,
+    `<div>1 + ${fix(cot * cot)} = ${fix(csc * csc)}</div>`,
+  ].join("");
+
+  const other = 90 - d;
+  const notes = {
+    all: `They come in pairs. Turn ${TH} into 90° − ${TH} and the picture flips over the diagonal, swapping sin and cos, tan and cot, sec and csc. Right now 90° − ${TH} is ${dg(other)}, and sin ${dg(other)} = ${fix(cosD(other))} = cos ${TH}.`,
+    sin: `sin ${TH} is the height of <span class="v">P</span>, just as in Station 1.`,
+    cos: `cos ${TH} is the width of <span class="v">P</span>, drawn along the top here so it doesn't sit on top of the secant.`,
+    tan: `The tangent line touches the circle at <span class="v">P</span>, square to the radius. So the triangle <span class="v">O</span>, <span class="v">P</span>, <span class="v">S</span> has a right angle at <span class="v">P</span>, a side of 1 along the radius, and ${TH} at <span class="v">O</span>. That's Station 3's triangle turned on its side, so <span class="v">PS</span> is tan ${TH} = ${fix(t)}.`,
+    sec: `<span class="v">OS</span> is the long side of that same triangle. The side next to ${TH} is the radius, 1, so <span class="v">OS</span> × cos ${TH} = 1 and sec ${TH} = 1 ÷ ${fix(c)} = ${fix(sec)}. On its way from <span class="v">O</span> to <span class="v">S</span> it cuts through the circle, and secant comes from the Latin for cutting.`,
+    csc: `Use the y-axis as the base instead. Then the angle at <span class="v">O</span> is 90° − ${TH}, the complement of ${TH}, and <span class="v">OC</span> is that angle's secant: the co-secant. Its cosine is sin ${TH}, so csc ${TH} = 1 ÷ ${fix(s)} = ${fix(csc)}.`,
+    cot: `<span class="v">PC</span> runs along the tangent line from <span class="v">P</span> to the y-axis. It's the tangent of the complement, 90° − ${TH}, so cot ${TH} = cos ${TH} ÷ sin ${TH} = 1 ÷ tan ${TH} = ${fix(cot)}.`,
+  };
+  let note = notes[S5.pick];
+  if (sp.cut || qp.cut) note += ` Some lines run off the board here: the closer ${TH} gets to ${sp.cut ? "90°" : "0°"}, the longer ${sp.cut ? "sec and tan" : "csc and cot"} get, without end.`;
+  $("s5-note").innerHTML = note;
+  pressChips($("s5-pick"), (j) => (j === 0 ? "all" : FNS[j - 1]) === S5.pick);
+  pressChips($("s5-presets"), (j) => ANGLES5[j] === d);
+}
+chipRow($("s5-pick"), [["All six", "Show all six"], ...FNS.map((n) => [`${n} <span class="th">θ</span>`, `Pick out ${n}`])], (j) => {
+  S5.pick = j === 0 ? "all" : FNS[j - 1];
+  draw5();
+});
+angleChips($("s5-presets"), ANGLES5, h5.set);
+
+// ---------- Station 6: unroll the circle ----------
+
+const S6 = { deg: 60, radians: false, cos: false, tan: false };
+const TOP6 = 1.3;
+// wide beside the text, smaller-scaled on a phone so the labels stay readable
+const wide6 = matchMedia("(min-width: 640px)");
+const LAYOUT6 = {
+  wide: { W: 820, H: 270, cx: 110, cy: 135, R: 86, x0: 240 },
+  narrow: { W: 456, H: 200, cx: 62, cy: 100, R: 48, x0: 126 },
+};
+let L6;
+const b6 = new Board($("board6"), LAYOUT6.wide);
+// the graph's x is the walk round the circle, at the circle's own scale
+const gx = (rad) => f1(L6.x0 + rad * L6.R);
+let anim = null;
+const h6 = angleHandle(b6, S6, { wrap: true, draw: draw6, before: () => { if (anim) stopRound(); } });
+
+function base6() {
+  const end = gx(2 * Math.PI), Y = (v) => b6.Y(v), items = [
+    b6.seg(-1.15, 0, 1.15, 0, "axis"),
+    b6.seg(0, -1.2, 0, 1.2, "axis"),
+    b6.arc(1, 0, 360, "circle"),
+    svgEl("line", { class: "axis", x1: L6.x0, y1: Y(0), x2: f1(end + 12), y2: Y(0) }),
+    svgEl("line", { class: "axis", x1: L6.x0, y1: Y(TOP6), x2: L6.x0, y2: Y(-TOP6) }),
+  ];
+  for (const v of [1, -1]) {
+    items.push(svgEl("line", { class: "grid strong", x1: L6.x0, y1: Y(v), x2: end, y2: Y(v) }));
+    items.push(svgEl("text", { class: "tick-lab", x: L6.x0 - 6, y: Y(v), "text-anchor": "end" }, v < 0 ? "−1" : "1"));
+  }
+  for (let k = 1; k <= 4; k++) {
+    const x = gx((k * Math.PI) / 2);
+    items.push(svgEl("line", { class: "grid strong", x1: x, y1: Y(TOP6), x2: x, y2: Y(-TOP6) }));
+    items.push(svgEl("text", { class: "tick-lab", x, y: Y(-TOP6) + 12, "text-anchor": "middle" }, S6.radians ? piFrac(90 * k) : `${90 * k}°`));
+  }
+  if (S6.radians) {
+    for (let n = 1; n <= 6; n++) {
+      const x = gx(n);
+      items.push(svgEl("line", { class: "axis", x1: x, y1: Y(0) - 5, x2: x, y2: Y(0) + 5 }));
+      items.push(svgEl("text", { class: "tick-lab", x, y: Y(TOP6) - 2, "text-anchor": "middle" }, n));
+    }
+  }
+  b6.base.replaceChildren(...items);
+  b6.clip(0, Y(TOP6 + 0.1), L6.W, (2 * TOP6 + 0.2) * L6.R);
+}
+function layout6() {
+  L6 = LAYOUT6[wide6.matches ? "wide" : "narrow"];
+  b6.resize(L6);
+  b6.svg.classList.toggle("small", !wide6.matches);
+  base6();
+}
+
+// a curve of f over degrees d0 to d1, clamped so the clip can trim it
+function curve(f, d0, d1, cls) {
+  let p = "";
+  for (let a = d0; ; a = Math.min(d1, a + 2)) {
+    p += `${p ? "L" : "M"}${gx(a * RAD)} ${b6.Y(clamp(f(a), -3, 3))}`;
+    if (a >= d1) break;
+  }
+  return svgEl("path", { class: `curve ${cls}`, d: p });
+}
+// tan, in pieces between the places it has no value
+function tanCurve(upTo, cls) {
+  return [[0, 89.5], [90.5, 269.5], [270.5, 360]]
+    .map(([a, b]) => [a, Math.min(b, upTo)])
+    .filter(([a, b]) => b > a)
+    .map(([a, b]) => curve((x) => Math.tan(x * RAD), a, b, cls));
+}
+
+function draw6() {
+  const d = S6.deg, rad = d * RAD, c = cosD(d), s = sinD(d), t = tanD(d), X = gx(rad), items = [];
+  // the circle
+  if (d > 0.5) items.push(b6.arc(1, 0, d, "walk"));
+  if (S6.cos) items.push(b6.seg(0, 0, c, 0, "side ccos"));
+  items.push(b6.seg(c, 0, c, s, "side csin"), b6.seg(0, 0, c, s, "side rad"));
+  items.push(svgEl("line", { class: "carry csin", x1: b6.X(c), y1: b6.Y(s), x2: X, y2: b6.Y(s) }));
+  // the graph
+  if (S6.tan) {
+    items.push(...[90, 270].map((a) => svgEl("line", { class: "asym", x1: gx(a * RAD), y1: b6.Y(TOP6 + 0.1), x2: gx(a * RAD), y2: b6.Y(-TOP6 - 0.1) })));
+    items.push(...tanCurve(360, "faint ctan"), ...tanCurve(d, "ctan"));
+  }
+  if (S6.cos) items.push(curve(cosD, 0, 360, "faint ccos"), curve(cosD, 0, d, "ccos"));
+  items.push(curve(sinD, 0, 360, "faint csin"), curve(sinD, 0, d, "csin"));
+  if (d > 0.5) items.push(svgEl("line", { class: "walk", x1: L6.x0, y1: b6.Y(0), x2: X, y2: b6.Y(0) }));
+  items.push(svgEl("line", { class: "now", x1: X, y1: b6.Y(TOP6), x2: X, y2: b6.Y(-TOP6) }));
+  if (S6.tan && t != null && Math.abs(t) <= TOP6) items.push(svgEl("circle", { class: "dot ctan", cx: X, cy: b6.Y(t), r: 4.5 }));
+  if (S6.cos) items.push(svgEl("circle", { class: "dot ccos", cx: X, cy: b6.Y(c), r: 4.5 }));
+  items.push(svgEl("circle", { class: "dot csin", cx: X, cy: b6.Y(s), r: 5.5 }));
+  b6.scene.replaceChildren(...items);
+  h6.h.place(c, s, { ...outward(d, 18), now: d, min: 0, max: 360, valueText: `θ ${S6.radians ? `${fix(rad)} radians` : dg(d)}: sine ${fix(s)}` });
+
+  const pf = piFrac(d), unitHalf = S6.radians ? "π/2" : "90°";
+  const out = [
+    S6.radians
+      ? row("Angle", `${TH} = ${fix(rad)}`, `${pf ? `${pf} radians, ` : "radians, "}which is ${dg(d)}`)
+      : row("Angle", `${TH} = ${dg(d)}`, `${fix(rad)} radians${pf ? `, or ${pf}` : ""}`),
+    row("Walked", fix(rad), `round the circle from 1 to <span class="v">P</span>, and along the graph`, "cwalk"),
+    row(`sin ${TH}`, fix(s), "the height, on the circle and on the graph", "csin"),
+  ];
+  if (S6.cos) out.push(row(`cos ${TH}`, fix(c), "", "ccos"));
+  if (S6.tan) out.push(row(`tan ${TH}`, t == null ? "no value" : fix(t), "", "ctan"));
+  $("s6-out").innerHTML = out.join("");
+
+  // the caption is read aloud, so leave it alone while P is going round
+  if (anim) return;
+  let note = S6.radians
+    ? `<span class="v">P</span> has walked ${fix(rad)} round the circle, so ${TH} is ${fix(rad)} radians. One radian is the turn you make walking one radius round the circle, about 57.3°. The whole way round is 2π = 6.283 radians, so 180° is π.`
+    : `The graph lays the walk round the circle out flat. <span class="v">P</span> has gone ${fix(rad)} round, and the graph has moved ${fix(rad)} to the right, so the curve's height is <span class="v">P</span>'s height. Press <b>Radians</b> to measure the angle by that walk instead.`;
+  if (S6.cos) note += ` The cos curve is the sin curve a quarter turn ahead: cos ${TH} = sin(${TH} + ${unitHalf}).`;
+  if (S6.tan) note += ` tan ${TH} shoots off the top and comes back from the bottom wherever cos ${TH} is 0, at ${unitHalf} and ${S6.radians ? "3π/2" : "270°"}.`;
+  $("s6-note").innerHTML = note;
+  pressChips($("s6-unit"), (j) => (j === 1) === S6.radians);
+}
+
+function goRound() {
+  if (anim) { stopRound(); return; }
+  // without motion, jump straight to the whole wave
+  if (reduceMotion.matches) { S6.deg = 360; draw6(); return; }
+  const from = S6.deg >= 360 ? 0 : S6.deg, t0 = performance.now(), ms = ((360 - from) / 360) * 6000;
+  $("s6-go").textContent = "Stop";
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / ms);
+    S6.deg = from + (360 - from) * k;
+    if (k < 1) { draw6(); anim = requestAnimationFrame(step); }
+    else stopRound();
+  };
+  anim = requestAnimationFrame(step);
+}
+function stopRound() {
+  if (anim) cancelAnimationFrame(anim);
+  anim = null;
+  $("s6-go").textContent = "Go round";
+  S6.deg = Math.round(S6.deg);
+  draw6();
+}
+
+chipRow($("s6-unit"), [["Degrees", ""], ["Radians", ""]], (j) => {
+  S6.radians = j === 1;
+  base6();
+  draw6();
+});
+$("s6-go").addEventListener("click", goRound);
+$("s6-cos").addEventListener("change", (e) => { S6.cos = e.target.checked; draw6(); });
+$("s6-tan").addEventListener("change", (e) => { S6.tan = e.target.checked; draw6(); });
+wide6.addEventListener("change", () => { layout6(); draw6(); });
+
+// ---------- Start ----------
+
+layout6();
+draw1();
+draw2();
+draw3();
+draw4();
+draw5();
+draw6();
+</script>
+</body>
+</html>
