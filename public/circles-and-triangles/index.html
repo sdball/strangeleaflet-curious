@@ -158,7 +158,7 @@ h2 { font: 400 1.75rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .board .grid.strong { stroke: var(--grid-strong); }
 .board .axis { stroke: var(--axis); stroke-width: 1.5; }
 .board .circle { fill: none; stroke: var(--ink); stroke-width: 1.75; stroke-opacity: .7; }
-.board .tline { stroke: var(--tan); stroke-width: 1.25; stroke-dasharray: 6 5; stroke-opacity: .7; }
+.board .tline { stroke: currentColor; stroke-width: 1.25; stroke-dasharray: 6 5; stroke-opacity: .7; }
 .board .side { stroke: currentColor; stroke-width: 4; stroke-linecap: round; }
 .board .side.faint { stroke-width: 2.5; stroke-opacity: .35; }
 .board .rad { color: var(--ink); stroke-width: 2.5; }
@@ -242,6 +242,11 @@ h2 { font: 400 1.75rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .chips button:hover { border-color: var(--pencil); }
 .chips button[aria-pressed="true"] { color: var(--paper); background: var(--pencil); border-color: var(--pencil); }
 .chips .th { font-family: var(--text); font-style: italic; }
+/* station 5's picks double as the legend: each in its line's colour */
+#s5-pick button[class] { color: var(--fn); border-color: color-mix(in srgb, var(--fn) 45%, var(--edge)); }
+#s5-pick button[class][aria-pressed="true"] { color: var(--paper); background: var(--fn); border-color: var(--fn); }
+#s5-pick .csin { --fn: var(--sin); } #s5-pick .ccos { --fn: var(--cos); } #s5-pick .ctan { --fn: var(--tan); }
+#s5-pick .csec { --fn: var(--sec); } #s5-pick .ccsc { --fn: var(--csc); } #s5-pick .ccot { --fn: var(--cot); }
 
 .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; }
 .seg button {
@@ -407,10 +412,10 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
     <div class="panel-head">
       <p class="station">Station 5</p>
       <h2 id="s5-h">The other three</h2>
-      <p>Now draw the tangent line through <span class="v">P</span> itself, at right angles to the radius. It crosses the x-axis at a point <span class="v">S</span> and the y-axis at a point <span class="v">C</span>, and the pieces of this one picture give six functions. tan <span class="v">θ</span> is the stretch of tangent line from <span class="v">P</span> to <span class="v">S</span>, and the <b>cotangent</b>, cot <span class="v">θ</span>, is the stretch from <span class="v">P</span> to <span class="v">C</span>. The <b>secant</b>, sec <span class="v">θ</span>, runs from <span class="v">O</span> to <span class="v">S</span>, and the <b>cosecant</b>, csc <span class="v">θ</span>, from <span class="v">O</span> to <span class="v">C</span>. Each new one is a ratio of the first three: <b>sec <span class="v">θ</span> = 1 ÷ cos <span class="v">θ</span>, csc <span class="v">θ</span> = 1 ÷ sin <span class="v">θ</span>, and cot <span class="v">θ</span> = cos <span class="v">θ</span> ÷ sin <span class="v">θ</span></b>. Pick one to pick out its line and see where its ratio comes from.</p>
+      <p>Station 3's tangent line stood upright at <span class="v">x</span> = 1. Add a second one lying flat along the top of the circle, at <span class="v">y</span> = 1, and carry the radius on past <span class="v">P</span> until it meets both: the upright line at a point <span class="v">T</span> and the flat one at a point <span class="v">C</span>. That one picture holds six functions. tan <span class="v">θ</span> is the height of <span class="v">T</span>, as in Station 3, and the <b>cotangent</b>, cot <span class="v">θ</span>, is how far along the top line <span class="v">C</span> is. The <b>secant</b>, sec <span class="v">θ</span>, is the distance from <span class="v">O</span> out to <span class="v">T</span>, and the <b>cosecant</b>, csc <span class="v">θ</span>, the distance from <span class="v">O</span> out to <span class="v">C</span>. Both run along the carried-on radius, so they're drawn either side of it. Each new one is a ratio of the first three: <b>sec <span class="v">θ</span> = 1 ÷ cos <span class="v">θ</span>, csc <span class="v">θ</span> = 1 ÷ sin <span class="v">θ</span>, and cot <span class="v">θ</span> = cos <span class="v">θ</span> ÷ sin <span class="v">θ</span></b>. Pick one to pick out its line and see where its ratio comes from.</p>
     </div>
     <div class="split">
-      <svg class="board" id="board5" role="group" aria-label="A quarter circle with the tangent line at P crossing both axes, and the six lines sine, cosine, tangent, secant, cosecant, and cotangent"></svg>
+      <svg class="board" id="board5" role="group" aria-label="A quarter circle with an upright tangent line at x equals 1 and a flat one at y equals 1. The radius, carried on past P, meets both, marking out sine, cosine, tangent, secant, cosecant, and cotangent"></svg>
       <div class="side">
         <div class="chips" id="s5-pick" role="group" aria-label="Show"></div>
         <div class="chips" id="s5-presets" role="group" aria-label="Set the angle to"></div>
@@ -457,7 +462,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
       <li><b>For small angles, sin <span class="v">θ</span> is nearly <span class="v">θ</span>.</b> In radians, sin 0.1 = 0.0998 and tan 0.1 = 0.1003. A short walk round the circle is almost a straight climb, so the height you gain is about the distance you walked. <a href="../exploring-e/">Exploring <span class="v">e</span></a> leans on this in its Station 3: a small sideways push turns you by about its own size, in radians.</li>
       <li><b>The 1 in 4 rule is a cosine.</b> US workplace safety rules ask for a ladder's foot to stand about a quarter of its working length from the wall. That fixes cos <span class="v">θ</span> at 1 ÷ 4, so every ladder set up that way leans at about 75.5°, whatever its length. Going from a ratio back to its angle is the job of the inverse functions, written arccos or cos<sup>−1</sup>.</li>
       <li><b>A point on the circle is a turn.</b> (cos <span class="v">θ</span>, sin <span class="v">θ</span>) is where the point 1 lands when you turn it by <span class="v">θ</span> about <span class="v">O</span>. In <a href="../complex-numbers/">Complex Numbers</a> that's the number cos <span class="v">θ</span> + <span class="v">i</span> sin <span class="v">θ</span>, and its Station 6 turns the axes with a table of cosines and sines. <a href="../exploring-e/">Exploring <span class="v">e</span></a> wraps the number line round this same circle in its Station 6, which is the unrolling of Station 6 here, run backwards.</li>
-      <li><b>sec and csc obey Pythagoras too.</b> In Station 5 the triangle <span class="v">O</span>, <span class="v">P</span>, <span class="v">S</span> has short sides 1 and tan <span class="v">θ</span> and long side sec <span class="v">θ</span>, so 1 + tan² <span class="v">θ</span> = sec² <span class="v">θ</span>. The triangle <span class="v">O</span>, <span class="v">P</span>, <span class="v">C</span> gives 1 + cot² <span class="v">θ</span> = csc² <span class="v">θ</span> the same way.</li>
+      <li><b>sec and csc obey Pythagoras too.</b> In Station 5 the triangle under <span class="v">T</span> has short sides 1 and tan <span class="v">θ</span> and long side sec <span class="v">θ</span>, so 1 + tan² <span class="v">θ</span> = sec² <span class="v">θ</span>. The triangle beside <span class="v">C</span>, with short sides cot <span class="v">θ</span> and 1, gives 1 + cot² <span class="v">θ</span> = csc² <span class="v">θ</span> the same way.</li>
     </ul>
   </section>
 
@@ -862,7 +867,7 @@ b3.base.append(
   b3.seg(-0.2, 0, 1.97, 0, "axis"),
   b3.seg(0, -0.2, 0, 2.48, "axis"),
   b3.arc(1, 0, 90, "circle"),
-  b3.seg(1, -0.2, 1, 2.48, "tline"),
+  b3.seg(1, -0.2, 1, 2.48, "tline ctan"),
   svgEl("text", { class: "lab ctan", transform: `translate(${b3.X(1) + 16} ${b3.Y(2.3)}) rotate(90)` }, "tangent line"),
   svgEl("text", { class: "tick-lab", x: b3.X(0) - 12, y: b3.Y(1), "text-anchor": "end" }, "1"),
   svgEl("text", { class: "tick-lab", x: b3.X(0) - 12, y: b3.Y(2), "text-anchor": "end" }, "2"),
@@ -978,7 +983,7 @@ angleChips($("s4-presets"), ANGLES4, h4.set);
 
 // ---------- Station 5: the other three ----------
 
-const S5 = { deg: 30, pick: "all" };
+const S5 = { deg: 50, pick: "all" };
 const MAX5 = 2.4;
 const b5 = new Board($("board5"), { W: 440, H: 440, cx: 66, cy: 386, R: 150 });
 b5.base.append(
@@ -986,6 +991,11 @@ b5.base.append(
   b5.seg(-0.3, 0, MAX5 + 0.05, 0, "axis"),
   b5.seg(0, -0.3, 0, MAX5 + 0.05, "axis"),
   b5.arc(1, 0, 90, "circle"),
+  // Station 3's upright tangent line, and a second one lying flat along the top
+  b5.seg(1, -0.2, 1, MAX5 + 0.05, "tline ctan"),
+  b5.seg(-0.2, 1, MAX5 + 0.05, 1, "tline ccot"),
+  b5.corner(1, 0, [-1, 0], [0, 1]),
+  b5.corner(0, 1, [0, -1], [1, 0]),
   lab(b5.X(0) - 12, b5.Y(0) + 16, "O", "var cink", "end"),
 );
 b5.clip(b5.X(-0.42), b5.Y(MAX5 + 0.1), (MAX5 + 0.52) * b5.R, (MAX5 + 0.4) * b5.R);
@@ -994,58 +1004,131 @@ const ANGLES5 = [30, 45, 60];
 const FNS = ["sin", "cos", "tan", "sec", "csc", "cot"];
 
 function draw5() {
-  const d = S5.deg, c = cosD(d), s = sinD(d), t = s / c, sec = 1 / c, csc = 1 / s, cot = c / s, groups = {};
-  const fnGroup = (name, ...kids) => { groups[name] = svgEl("g", { class: `fn c${name}${S5.pick === name ? " on" : ""}` }); groups[name].append(...kids); };
-  // a stretch from (x1, y1) to (x2, y2), cut off at the edge of the board with an arrowhead
-  const piece = (x1, y1, x2, y2) => {
-    let k = 1;
-    if (x2 > MAX5) k = Math.min(k, (MAX5 - x1) / (x2 - x1));
-    if (y2 > MAX5) k = Math.min(k, (MAX5 - y1) / (y2 - y1));
-    const ex = x1 + (x2 - x1) * k, ey = y1 + (y2 - y1) * k, out = [b5.seg(x1, y1, ex, ey, "side")];
-    if (k < 1) {
-      const dx = b5.X(ex) - b5.X(x1), dy = b5.Y(ey) - b5.Y(y1), len = Math.hypot(dx, dy);
-      out.push(arrowAt(b5.X(ex) + (dx / len) * 6, b5.Y(ey) + (dy / len) * 6, dx / len, dy / len, ""));
-    }
-    return { out, ex, ey, cut: k < 1 };
-  };
+  const d = S5.deg, c = cosD(d), s = sinD(d), t = s / c, sec = 1 / c, csc = 1 / s, cot = c / s;
   const mid = (a, b) => (a + b) / 2;
+  // how far out along the carried-on radius the board goes
+  const edge = MAX5 / Math.max(c, s), reach = (len) => Math.min(len, edge);
+  // a line, nudged sideways by (ox, oy) pixels, with an arrowhead where the board cuts it off
+  const line = (x1, y1, x2, y2, cut, [ox, oy] = [0, 0]) => {
+    const kx = ox / b5.R, ky = oy / b5.R, out = [b5.seg(x1 + kx, y1 + ky, x2 + kx, y2 + ky, "side")];
+    if (cut) {
+      const dx = x2 - x1, dy = y1 - y2, len = Math.hypot(dx, dy);
+      out.push(arrowAt(b5.X(x2 + kx) + (dx / len) * 6, b5.Y(y2 + ky) + (dy / len) * 6, dx / len, dy / len, ""));
+    }
+    return out;
+  };
+  const te = Math.min(t, MAX5), ce = Math.min(cot, MAX5), se = reach(sec), qe = reach(csc);
+  const cut = { tan: t > MAX5, cot: cot > MAX5, sec: sec > edge, csc: csc > edge };
+  // sec and csc share the carried-on radius, so they're drawn either side of it
+  const lines = {
+    sin: line(c, s, c, 0, false),
+    cos: line(0, 0, c, 0, false),
+    tan: line(1, 0, 1, te, cut.tan),
+    cot: line(0, 1, ce, 1, cut.cot),
+    sec: line(0, 0, se * c, se * s, cut.sec, [s * 9, -c * 9]),
+    csc: line(0, 0, qe * c, qe * s, cut.csc, [-s * 9, c * 9]),
+  };
 
-  const tp = piece(c, s, sec, 0), cp = piece(c, s, 0, csc), sp = piece(0, 0, sec, 0), qp = piece(0, 0, 0, csc);
-  // label a line only when it's long enough to carry one, or when it's the one picked
-  const say = (name, len, el) => (len * b5.R >= 45 || S5.pick === name ? [el] : []);
-  // sin's label goes inside the triangle when there's room, out past the line when it's narrow
-  const sinIn = c >= 0.5;
-  fnGroup("sin", b5.seg(c, s, c, 0, "side"), ...say("sin", s, lab(b5.X(c) + (sinIn ? -8 : 8), b5.Y(s * 0.3), "sin θ", "", sinIn ? "end" : "start")));
-  fnGroup("cos", b5.seg(0, s, c, s, "side"), ...say("cos", c, lab(mid(b5.X(0), b5.X(c)), b5.Y(s) - 14, "cos θ")));
-  fnGroup("tan", ...tp.out, ...say("tan", t, lab(mid(b5.X(c), b5.X(tp.ex)) + c * 30, mid(b5.Y(s), b5.Y(tp.ey)) - s * 30, "tan θ")));
-  fnGroup("cot", ...cp.out, ...say("cot", cot, lab(mid(b5.X(c), b5.X(cp.ex)) + c * 30, mid(b5.Y(s), b5.Y(cp.ey)) - s * 30, "cot θ")));
-  fnGroup("sec", ...sp.out, lab(mid(b5.X(0), b5.X(sp.ex)), b5.Y(0) + 22, sp.cut ? `sec θ = ${fix(sec, 2)}` : "sec θ"));
-  fnGroup("csc", ...qp.out, svgEl("text", { class: "lab", transform: `translate(${b5.X(0) - 18} ${mid(b5.Y(0), b5.Y(qp.ey))}) rotate(-90)`, "text-anchor": "middle" }, qp.cut ? `csc θ = ${fix(csc, 2)}` : "csc θ"));
-
-  // the whole tangent line, faint, with its square corner at P
-  const far = 4;
-  const items = [
-    b5.seg(c + s * far, s - c * far, c - s * far, s + c * far, "tline"),
-    b5.corner(c, s, [-c, -s], [s, -c], 11),
-    b5.arc(0.16, 0, d, "angle"),
+  // ends of every solid line drawn, so labels can keep off them (the dashed guides they may cross)
+  const ends = {
+    sin: [[c, s], [c, 0]], cos: [[0, 0], [c, 0]], tan: [[1, 0], [1, te]], cot: [[0, 1], [ce, 1]],
+    sec: [[s * 9 / b5.R, -c * 9 / b5.R], [se * c + s * 9 / b5.R, se * s - c * 9 / b5.R]],
+    csc: [[-s * 9 / b5.R, c * 9 / b5.R], [qe * c - s * 9 / b5.R, qe * s + c * 9 / b5.R]],
+  };
+  const scr = ([x, y]) => [b5.X(x), b5.Y(y)];
+  const walls = [
+    ...FNS.map((n) => ends[n].map(scr)),
+    [[0, 0], [c, s]].map(scr),
   ];
+  const boxes = [];
+  const clear = (b) => {
+    if (b[0] < 2 || b[2] > b5.W - 2 || b[1] < 2 || b[3] > b5.H - 2) return false;
+    if (boxes.some((o) => b[0] < o[2] && o[0] < b[2] && b[1] < o[3] && o[1] < b[3])) return false;
+    // walk each line in small steps and see if any step lands in the box
+    return !walls.some(([[x1, y1], [x2, y2]]) => {
+      const steps = Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 3);
+      for (let k = 0; k <= steps; k++) {
+        const x = x1 + ((x2 - x1) * k) / steps, y = y1 + ((y2 - y1) * k) / steps;
+        if (x > b[0] && x < b[2] && y > b[1] && y < b[3]) return true;
+      }
+      return false;
+    });
+  };
+  const reserve = (x, y, w, h) => boxes.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]);
+  // try spots beside a line, preferred side first, from its middle outward; the picked line's label is always shown
+  const beside = (n, text, side, force) => {
+    const [[x1, y1], [x2, y2]] = ends[n].map(scr), len = Math.hypot(x2 - x1, y2 - y1) || 1;
+    const w = [...text].length * 10.5 + 6, h = 22, nx = (y1 - y2) / len, ny = (x2 - x1) / len;
+    const away = Math.abs(nx) * (w / 2) + Math.abs(ny) * (h / 2) + 5;
+    let first;
+    // sec and csc share the radius, so each keeps to its own side and away from O
+    const shared = n === "sec" || n === "csc";
+    const sides = shared ? [[side, 0], [side, 14]] : [[side, 0], [-side, 0], [side, 14], [-side, 14]];
+    for (const [sd, gap] of sides) {
+      for (const f of shared ? [0.5, 0.35, 0.65, 0.8, 0.9] : [0.5, 0.35, 0.65, 0.2, 0.8, 0.1, 0.9]) {
+        const x = x1 + (x2 - x1) * f + nx * (away + gap) * sd, y = y1 + (y2 - y1) * f + ny * (away + gap) * sd;
+        const b = [x - w / 2, y - h / 2, x + w / 2, y + h / 2];
+        first = first || [x, y];
+        if (clear(b)) { boxes.push(b); return [lab(x, y, text, "")]; }
+      }
+    }
+    return force ? [lab(first[0], first[1], text, "")] : [];
+  };
+  const point = (spots) => {
+    for (const [x, y, text, anchor] of spots) {
+      const w = 18, x0 = anchor === "start" ? x : x - w, b = [x0, y - 11, x0 + w, y + 11];
+      if (clear(b)) { boxes.push(b); return [lab(x, y, text, "var cink", anchor)]; }
+    }
+    return [];
+  };
+  // P itself, θ, and O are already spoken for
+  reserve(b5.X(0) - 18, b5.Y(0) + 16, 28, 24);
+  reserve(b5.X(c), b5.Y(s), 18, 18);
+  if (d >= 10) reserve(b5.X(0.25 * cosD(d / 2)), b5.Y(0.25 * sinD(d / 2)), 16, 22);
+
+  const named = (n, cutAt, v) => (cutAt ? `${n} θ = ${fix(v, 2)}` : `${n} θ`);
+  // which side of each line its label would rather sit, as a multiple of the line's normal
+  const SIDE = { sin: -1, cos: 1, tan: 1, cot: -1, sec: 1, csc: -1 };
+  const text = { sin: "sin θ", cos: "cos θ", tan: named("tan", cut.tan, t), cot: named("cot", cut.cot, cot), sec: named("sec", cut.sec, sec), csc: named("csc", cut.csc, csc) };
+  const labels = {};
+  const order = S5.pick === "all" ? FNS : [S5.pick, ...FNS.filter((n) => n !== S5.pick)];
+  labels[order[0]] = beside(order[0], text[order[0]], SIDE[order[0]], S5.pick !== "all");
+  const points = [];
+  if (!cut.tan) points.push(...point([[b5.X(1) + 8, b5.Y(t) - 14, "T", "start"], [b5.X(1) - 8, b5.Y(t) - 14, "T", "end"], [b5.X(1) + 8, b5.Y(t) + 14, "T", "start"]]));
+  if (!cut.cot) points.push(...point([[b5.X(cot) + 8, b5.Y(1) + 16, "C", "start"], [b5.X(cot) + 8, b5.Y(1) - 14, "C", "start"], [b5.X(cot) - 8, b5.Y(1) - 14, "C", "end"]]));
+  // P's own label gives way to T and C, taking the first free spot around it
+  const o = outward(d);
+  const pl = [o, { lx: 14, ly: 18 }, { lx: -14, ly: -18 }, { lx: 14, ly: -18 }, { lx: -14, ly: 18 }].find(({ lx, ly }) => {
+    const x = b5.X(c) + lx, y = b5.Y(s) + ly, x0 = Math.abs(lx) < 4 ? x - 9 : lx < 0 ? x - 18 : x, b = [x0, y - 12, x0 + 18, y + 12];
+    if (!clear(b)) return false;
+    boxes.push(b);
+    return true;
+  }) || o;
+  order.slice(1).forEach((n) => { labels[n] = beside(n, text[n], SIDE[n]); });
+
+  const items = [b5.arc(0.16, 0, d, "angle")];
   if (d >= 10) items.push(lab(b5.X(0.25 * cosD(d / 2)), b5.Y(0.25 * sinD(d / 2)), "θ", "var cpen"));
-  items.push(...FNS.map((n) => groups[n]));
-  items.push(b5.seg(0, 0, c, s, "side rad"), lab(b5.X(c / 2) - s * 16, b5.Y(s / 2) - c * 16, "1", "cink"));
-  if (!sp.cut) items.push(lab(b5.X(sec) + 4, b5.Y(0) + 16, "S", "var cink", "start"));
-  if (!qp.cut) items.push(lab(b5.X(0) + 12, b5.Y(csc) - 4, "C", "var cink", "start"));
+  // the radius, carried on past P to both tangent lines
+  items.push(b5.seg(c, s, reach(Math.max(sec, csc)) * c, reach(Math.max(sec, csc)) * s, "ext"));
+  for (const n of FNS) {
+    const g = svgEl("g", { class: `fn c${n}${S5.pick === n ? " on" : ""}` });
+    g.append(...lines[n], ...labels[n]);
+    items.push(g);
+  }
+  items.push(b5.seg(0, 0, c, s, "side rad"), ...points);
   b5.scene.replaceChildren(...items);
   b5.svg.classList.toggle("dim", S5.pick !== "all");
-  h5.h.place(c, s, { ...outward(d), now: d, min: 1, max: 89, valueText: `θ ${dg(d)}: ` + FNS.map((n, j) => `${n} ${fix([s, c, t, sec, csc, cot][j])}`).join(", ") });
+  h5.h.place(c, s, { ...pl, now: d, min: 1, max: 89, valueText: `θ ${dg(d)}: ` + FNS.map((n, j) => `${n} ${fix([s, c, t, sec, csc, cot][j])}`).join(", ") });
 
   const vals = { sin: s, cos: c, tan: t, sec, csc, cot };
+  const T_ = '<span class="v">T</span>', C_ = '<span class="v">C</span>', O_ = '<span class="v">O</span>';
   const how = {
     sin: `the height of <span class="v">P</span>`,
     cos: `the width of <span class="v">P</span>`,
-    tan: `sin ÷ cos: <span class="v">P</span> to <span class="v">S</span>, along the tangent line`,
-    sec: `1 ÷ cos: <span class="v">O</span> to <span class="v">S</span>, along the x-axis`,
-    csc: `1 ÷ sin: <span class="v">O</span> to <span class="v">C</span>, up the y-axis`,
-    cot: `cos ÷ sin: <span class="v">P</span> to <span class="v">C</span>, along the tangent line`,
+    tan: `sin ÷ cos: the height of ${T_}, on the upright tangent line`,
+    sec: `1 ÷ cos: from ${O_} out to ${T_}`,
+    csc: `1 ÷ sin: from ${O_} out to ${C_}`,
+    cot: `cos ÷ sin: how far along the top tangent line ${C_} is`,
   };
   $("s5-out").innerHTML = row("Angle", `${TH} = ${dg(d)}`) + FNS.map((n) => row(`${n} ${TH}`, fix(vals[n]), how[n], `c${n}`)).join("");
   $("s5-work").innerHTML = [
@@ -1057,16 +1140,16 @@ function draw5() {
 
   const other = 90 - d;
   const notes = {
-    all: `They come in pairs. Turn ${TH} into 90° − ${TH} and the picture flips over the diagonal, swapping sin and cos, tan and cot, sec and csc. Right now 90° − ${TH} is ${dg(other)}, and sin ${dg(other)} = ${fix(cosD(other))} = cos ${TH}.`,
+    all: `They come in pairs. Turn ${TH} into 90° − ${TH} and the picture flips over the diagonal, swapping the two tangent lines, and with them sin and cos, tan and cot, sec and csc. Right now 90° − ${TH} is ${dg(other)}, and sin ${dg(other)} = ${fix(cosD(other))} = cos ${TH}.`,
     sin: `sin ${TH} is the height of <span class="v">P</span>, just as in Station 1.`,
-    cos: `cos ${TH} is the width of <span class="v">P</span>, drawn along the top here so it doesn't sit on top of the secant.`,
-    tan: `The tangent line touches the circle at <span class="v">P</span>, square to the radius. So the triangle <span class="v">O</span>, <span class="v">P</span>, <span class="v">S</span> has a right angle at <span class="v">P</span>, a side of 1 along the radius, and ${TH} at <span class="v">O</span>. That's Station 3's triangle turned on its side, so <span class="v">PS</span> is tan ${TH} = ${fix(t)}.`,
-    sec: `<span class="v">OS</span> is the long side of that same triangle. The side next to ${TH} is the radius, 1, so <span class="v">OS</span> × cos ${TH} = 1 and sec ${TH} = 1 ÷ ${fix(c)} = ${fix(sec)}. On its way from <span class="v">O</span> to <span class="v">S</span> it cuts through the circle, and secant comes from the Latin for cutting.`,
-    csc: `Use the y-axis as the base instead. Then the angle at <span class="v">O</span> is 90° − ${TH}, the complement of ${TH}, and <span class="v">OC</span> is that angle's secant: the co-secant. Its cosine is sin ${TH}, so csc ${TH} = 1 ÷ ${fix(s)} = ${fix(csc)}.`,
-    cot: `<span class="v">PC</span> runs along the tangent line from <span class="v">P</span> to the y-axis. It's the tangent of the complement, 90° − ${TH}, so cot ${TH} = cos ${TH} ÷ sin ${TH} = 1 ÷ tan ${TH} = ${fix(cot)}.`,
+    cos: `cos ${TH} is the width of <span class="v">P</span>, just as in Station 1.`,
+    tan: `${T_} is where the carried-on radius meets the upright tangent line, exactly as in Station 3. The triangle under ${T_} is Station 1's triangle scaled up until its width is 1, so its height is tan ${TH} = ${fix(s)} ÷ ${fix(c)} = ${fix(t)}.`,
+    sec: `${O_}${T_} is the long side of the triangle under ${T_}. Scaling Station 1's triangle up until its width is 1 multiplies every side by 1 ÷ cos ${TH}, and the long side started at 1, so sec ${TH} = 1 ÷ ${fix(c)} = ${fix(sec)}. On its way out to ${T_} the line cuts through the circle, and secant comes from the Latin for cutting.`,
+    csc: `${C_} is where the same line meets the tangent line along the top. The triangle beside ${C_} is Station 1's triangle scaled up until its height is 1, which multiplies by 1 ÷ sin ${TH}. So its long side, ${O_}${C_}, is csc ${TH} = 1 ÷ ${fix(s)} = ${fix(csc)}. It's the secant of the complement, 90° − ${TH}: the co-secant.`,
+    cot: `In the triangle beside ${C_}, scaled up until its height is 1, the width cos ${TH} becomes cos ${TH} ÷ sin ${TH} = ${fix(cot)}. That's how far along the top line ${C_} is. It's the tangent of the complement, 90° − ${TH}, and also 1 ÷ tan ${TH}.`,
   };
   let note = notes[S5.pick];
-  if (sp.cut || qp.cut) note += ` Some lines run off the board here: the closer ${TH} gets to ${sp.cut ? "90°" : "0°"}, the longer ${sp.cut ? "sec and tan" : "csc and cot"} get, without end.`;
+  if (cut.tan || cut.cot) note += ` Some lines run off the board here: the closer ${TH} gets to ${cut.tan ? "90°" : "0°"}, the longer ${cut.tan ? "tan and sec" : "cot and csc"} get, without end.`;
   $("s5-note").innerHTML = note;
   pressChips($("s5-pick"), (j) => (j === 0 ? "all" : FNS[j - 1]) === S5.pick);
   pressChips($("s5-presets"), (j) => ANGLES5[j] === d);
@@ -1075,6 +1158,7 @@ chipRow($("s5-pick"), [["All six", "Show all six"], ...FNS.map((n) => [`${n} <sp
   S5.pick = j === 0 ? "all" : FNS[j - 1];
   draw5();
 });
+[...$("s5-pick").children].slice(1).forEach((b, j) => b.classList.add(`c${FNS[j]}`));
 angleChips($("s5-presets"), ANGLES5, h5.set);
 
 // ---------- Station 6: unroll the circle ----------
