@@ -182,6 +182,7 @@ html.terminal-open body { overflow: hidden; }
 /* Filters */
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: .5rem;
   margin-bottom: 1.25rem;
   font-family: var(--mono);
@@ -339,7 +340,7 @@ footer {
   <header>
     <div>
       <h1>The Cabinet of Curios</h1>
-      <p class="sub">Exhibits, toys, guides, and weird things! From <a href="https://strangeleaflet.com">Strange Leaflet</a></p>
+      <p class="sub">Exhibits, toys, guides, gadgets, and weird things! From <a href="https://strangeleaflet.com">Strange Leaflet</a></p>
     </div>
     <button class="toggle" id="toggle" aria-haspopup="dialog" aria-controls="terminal">&gt; Text Adventure Interface</button>
   </header>
@@ -349,6 +350,7 @@ footer {
     <button data-kind="exhibit" aria-pressed="false">Exhibits</button>
     <button data-kind="toy" aria-pressed="false">Toys</button>
     <button data-kind="guide" aria-pressed="false">Guides</button>
+    <button data-kind="gadget" aria-pressed="false">Gadgets</button>
   </nav>
 
   <ul class="shelf" id="shelf"></ul>
@@ -415,6 +417,9 @@ const CURIOS = [
   { id: "circles", name: "Circles and Triangles", kind: "exhibit", href: "circles-and-triangles/",
     blurb: "Turn a triangle inside a circle and watch sine, cosine, and tangent grow and shrink, then unroll the circle into a wave.",
     words: ["circles", "triangles"] },
+  { id: "chyron-wire", name: "Chyron Wire", kind: "gadget", href: "chyron-wire/",
+    blurb: "TV news chyrons from CNN, Fox News, MS NOW and BBC News type themselves out a few minutes after they air.",
+    words: ["chyrons", "chyron", "wire"] },
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -493,7 +498,7 @@ Type HELP for ideas, or QUIT to leave the text adventure.`;
 
 const LEAFLET = `WELCOME TO THE CABINET OF CURIOS!
 
-This room holds the exhibits, toys, guides, and assorted oddments of Strange Leaflet. Each curio hangs from a paper tag. Examine one to read its tag, or get one to try it out.`;
+This room holds the exhibits, toys, guides, gadgets, and assorted oddments of Strange Leaflet. Each curio hangs from a paper tag. Examine one to read its tag, or get one to try it out.`;
 
 const CAN_GO_BACK = history.length > 1 && !(DEMO && SIMULATE_DIRECT_ARRIVAL);
 

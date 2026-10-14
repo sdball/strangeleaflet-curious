@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en" data-style="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chyron Wire — The Cabinet of Curios</title>
+<meta name="description" content="TV news chyrons from CNN, Fox News, MS NOW and BBC News type themselves out a few minutes after they air, read live from the Internet Archive's Third Eye.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700;900&family=UnifrakturMaguntia&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F2ECDD; --ink: #1E1A15; --muted: #6E6457; --rule: #2A241D; --hair: #CDC2AC; --accent: #8E1F1A;
+  --crt: #031008; --phos: #39FF7A; --phos-dim: #1C9A48; --phos-hi: #D6FFE2;
+  --tray: rgba(10, 14, 12, 0.88); --chip: #1B231F; --chip-edge: #34433B; --chip-hover: #5E7568;
+  --chip-on: #39FF7A; --chip-on-ink: #03140A; --tray-ink: #E3EDE6; --tray-muted: #93A399;
+  --ui-font: 'VT323', ui-monospace, Menlo, Consolas, monospace;
+  --tray-space: 180px;
+  color-scheme: light;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #16130F; --ink: #E9E1D0; --muted: #A69A86; --rule: #D9CEB7; --hair: #3B342A; --accent: #E2847A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #16130F; --ink: #E9E1D0; --muted: #A69A86; --rule: #D9CEB7; --hair: #3B342A; --accent: #E2847A;
+  color-scheme: dark;
+}
+[data-style="paper"] { --ui-font: 'Libre Caslon Text', Georgia, serif; --chip-on: #EDE4CF; --chip-on-ink: #1E1A15; }
+[data-style="terminal"] { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: 'Libre Caslon Text', Georgia, serif; -webkit-font-smoothing: antialiased; }
+[data-style="terminal"], [data-style="terminal"] body { background: var(--crt); height: 100%; overflow: hidden; }
+a { color: inherit; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- terminal ---------- */
+#screen { position: fixed; left: 0; top: 0; display: none; }
+.crt { position: fixed; inset: 0; pointer-events: none; display: none;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.22) 2px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.6) 100%); }
+[data-style="terminal"] #screen, [data-style="terminal"] .crt { display: block; }
+/* real links laid over the canvas text, so they click, tab and read like links */
+#links { display: none; }
+[data-style="terminal"] #links { display: block; }
+.tlink { position: fixed; z-index: 1; border-radius: 2px; }
+.tlink:hover { background: rgba(255, 179, 71, 0.18); }
+.tlink:focus-visible { outline: 2px solid #FFB347; outline-offset: 1px; }
+
+/* ---------- head ---------- */
+#head h1 { margin: 0; }
+#head p { margin: 0; }
+.ears { display: none; }
+[data-style="terminal"] #head {
+  position: fixed; z-index: 2; top: max(14px, env(safe-area-inset-top)); left: max(18px, env(safe-area-inset-left));
+  right: max(18px, env(safe-area-inset-right)); font-family: 'VT323', monospace; color: var(--phos);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; pointer-events: none;
+}
+[data-style="terminal"] #head h1 { font-weight: 400; font-size: 30px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 8px rgba(57, 255, 122, 0.6); }
+[data-style="terminal"] #clock { font-size: 20px; color: var(--phos-dim); }
+
+[data-style="paper"] #head { max-width: 1240px; margin: 0 auto; padding: 18px 1.25rem 0; text-align: center; }
+[data-style="paper"] .ears {
+  display: flex; justify-content: space-between; gap: 1rem; font-size: 0.72rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--hair); padding-bottom: 6px;
+}
+[data-style="paper"] #head h1 { font-family: 'UnifrakturMaguntia', 'Playfair Display', serif; font-weight: 400; font-size: clamp(44px, 9vw, 92px); line-height: 1.05; padding: 10px 0 4px; }
+[data-style="paper"] #clock {
+  font-style: italic; font-size: 0.95rem; border-top: 3px double var(--rule); border-bottom: 1px solid var(--rule);
+  padding: 6px 0; margin-bottom: 4px;
+}
+
+/* ---------- newspaper ---------- */
+#paper { display: none; max-width: 1240px; margin: 0 auto; padding: 0 1.25rem var(--tray-space); }
+[data-style="paper"] #paper { display: block; }
+.cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.col { min-width: 0; padding: 0 0.9rem; }
+.col:first-child { padding-left: 0; }
+.col:last-child { padding-right: 0; }
+.col + .col { border-left: 1px solid var(--hair); }
+.col h2 {
+  font: 900 1rem/1.1 'Playfair Display', serif; text-transform: uppercase; letter-spacing: 0.14em; text-align: center;
+  margin: 0 0 0.4rem; padding: 0.7rem 0 0.45rem; border-bottom: 2px solid var(--rule);
+}
+.col[data-off] h2 { color: var(--muted); text-decoration: line-through; }
+.story { padding: 0.65rem 0 0.8rem; border-bottom: 1px solid var(--hair); animation: ink 0.7s ease-out; }
+@keyframes ink { from { opacity: 0; transform: translateY(-4px); } }
+.dateline { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.25rem; }
+.hed { font: 700 1.18rem/1.22 'Playfair Display', serif; margin: 0; overflow-wrap: anywhere; }
+.deck { font-size: 0.93rem; line-height: 1.45; margin: 0.35rem 0 0; overflow-wrap: anywhere; }
+.watch { display: inline-block; margin-top: 0.35rem; font-size: 0.78rem; font-style: italic; color: var(--accent); }
+.live::after { content: ""; display: inline-block; width: 0.5em; height: 0.85em; margin-left: 2px; vertical-align: -0.08em; background: var(--accent); }
+.empty { color: var(--muted); font-style: italic; font-size: 0.9rem; }
+@media (max-width: 760px) {
+  .cols { display: flex; flex-direction: column; }
+  .col { display: contents; }
+  .col h2 { display: none; }
+  .empty { order: -999999999; }
+}
+
+/* ---------- tray ---------- */
+#tray {
+  position: fixed; z-index: 3; left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+  width: min(900px, calc(100% - 16px)); background: var(--tray); color: var(--tray-ink); font-family: var(--ui-font);
+  border: 1px solid #000; box-shadow: inset 0 0 0 1px rgba(227, 237, 230, 0.1), 0 6px 18px rgba(0, 0, 0, 0.3);
+  padding: 10px 12px 8px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+#tray[hidden], #show[hidden] { display: none; }
+.groups { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.group { display: flex; align-items: center; gap: 10px; min-width: 0; max-width: 100%; }
+.lbl { flex: 0 0 auto; min-width: 58px; font-size: 15px; color: var(--tray-muted); }
+[data-style="paper"] .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; min-width: 0; }
+.chips::-webkit-scrollbar { display: none; }
+.chip, #show, .hide, #retry {
+  flex: 0 0 auto; font: inherit; font-size: 18px; line-height: 1; min-height: 40px; color: var(--tray-ink); background: var(--chip);
+  border: 1px solid var(--chip-edge); padding: 0 11px; cursor: pointer; border-radius: 3px;
+}
+[data-style="paper"] .chip, [data-style="paper"] #show, [data-style="paper"] .hide, [data-style="paper"] #retry { font-size: 14px; }
+.chip:hover, #show:hover, .hide:hover, #retry:hover { border-color: var(--chip-hover); }
+.chip[aria-pressed="true"] { background: var(--chip-on); border-color: var(--chip-on); color: var(--chip-on-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#tray :focus-visible, #show:focus-visible { outline-color: var(--chip-on); }
+.foot { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 15px; color: var(--tray-muted); }
+[data-style="paper"] .foot { font-size: 12.5px; }
+.foot .back { color: var(--tray-ink); display: inline-flex; align-items: center; min-height: 40px; }
+.foot .back::before { content: "← "; white-space: pre; }
+#status { flex: 1 1 260px; min-width: 0; }
+.hide { margin-left: auto; }
+#show { position: fixed; z-index: 3; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); background: var(--tray); font-family: var(--ui-font); }
+@media (max-width: 720px) {
+  .groups { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+  .group { width: 100%; }
+  .lbl { min-width: 62px; }
+  [data-style="terminal"] #head h1 { font-size: 24px; }
+  [data-style="terminal"] #clock { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story { animation: none; }
+  * { transition: none !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<canvas id="screen" role="img" aria-label="A green phosphor terminal typing out TV news chyrons. The same chyrons are listed below for screen readers."></canvas>
+<div class="crt" aria-hidden="true"></div>
+<nav id="links" aria-label="Links to the broadcasts on screen"></nav>
+
+<header id="head">
+  <p class="ears"><span id="ear-left">Tuning in…</span><span><a href="https://archive.org/services/third-eye.php">From the Internet Archive's Third Eye</a></span></p>
+  <h1>Chyron Wire</h1>
+  <p id="clock">Threading the tape…</p>
+</header>
+
+<ol id="log" class="sr-only" aria-label="Recent chyrons"></ol>
+
+<main id="paper">
+  <div class="cols">
+    <section class="col" data-ch="CNNW" aria-labelledby="h-cnn"><h2 id="h-cnn">CNN</h2></section>
+    <section class="col" data-ch="FOXNEWSW" aria-labelledby="h-fox"><h2 id="h-fox">Fox News</h2></section>
+    <section class="col" data-ch="MSNOW" aria-labelledby="h-ms"><h2 id="h-ms">MS NOW</h2></section>
+    <section class="col" data-ch="BBCNEWS" aria-labelledby="h-bbc"><h2 id="h-bbc">BBC News</h2></section>
+  </div>
+</main>
+
+<section id="tray" aria-label="Wire controls">
+  <div class="groups">
+    <div class="group" role="group" aria-labelledby="l-style">
+      <span class="lbl" id="l-style">Style</span>
+      <div class="chips">
+        <button class="chip" data-style-to="terminal" aria-pressed="true" aria-keyshortcuts="t">Terminal</button>
+        <button class="chip" data-style-to="paper" aria-pressed="false" aria-keyshortcuts="n">Newspaper</button>
+      </div>
+    </div>
+    <div class="group" role="group" aria-labelledby="l-speed">
+      <span class="lbl" id="l-speed">Speed</span>
+      <div class="chips">
+        <button class="chip" data-speed="0" aria-pressed="false" aria-keyshortcuts="Space">Pause</button>
+        <button class="chip" data-speed="1" aria-pressed="true" aria-keyshortcuts="1">1×</button>
+        <button class="chip" data-speed="10" aria-pressed="false" aria-keyshortcuts="2">10×</button>
+        <button class="chip" data-speed="60" aria-pressed="false" aria-keyshortcuts="3">60×</button>
+        <button class="chip" id="rewind" aria-keyshortcuts="r">Back 1 hour</button>
+        <button class="chip" id="tolive" aria-keyshortcuts="l" hidden>Now</button>
+      </div>
+    </div>
+    <div class="group" role="group" aria-labelledby="l-ch">
+      <span class="lbl" id="l-ch">Channels</span>
+      <div class="chips">
+        <button class="chip" data-ch="CNNW" aria-pressed="true">CNN</button>
+        <button class="chip" data-ch="FOXNEWSW" aria-pressed="true">Fox</button>
+        <button class="chip" data-ch="MSNOW" aria-pressed="true">MS NOW</button>
+        <button class="chip" data-ch="BBCNEWS" aria-pressed="true">BBC</button>
+      </div>
+    </div>
+    <div class="group" role="group" aria-labelledby="l-ocr">
+      <span class="lbl" id="l-ocr">OCR</span>
+      <div class="chips">
+        <button class="chip" id="tidy" aria-pressed="true">Skip repeats and noise</button>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <a class="back" href="/">The Cabinet of Curios</a>
+    <span id="status" aria-live="polite"></span>
+    <button id="retry" hidden>Try again</button>
+    <button class="hide" aria-keyshortcuts="h">Hide controls</button>
+  </div>
+</section>
+<button id="show" hidden aria-keyshortcuts="h">Show controls</button>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const root = document.documentElement;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+const DAY = 86400000;
+const HOUR = 3600000;
+// the live API sends no CORS headers, so pages read it through the Cloudflare Worker in api/
+// (add ?proxy=http://localhost:8787/third-eye to try it under wrangler dev)
+const LIVE = new URLSearchParams(location.search).get("proxy") || "https://curious-api.sdball.workers.dev/third-eye";
+// archive.org/cors/ serves the daily files with CORS headers; used when the live feed is down
+const DAILY = "https://archive.org/cors/third-eye/";
+// each minute shows up in the API about four minutes after it airs
+const LAG = 5 * 60000;
+
+// ---------- channels ----------
+const CHANNELS = {
+  CNNW: { name: "CNN", short: "CNN" },
+  FOXNEWSW: { name: "Fox News", short: "FOX" },
+  MSNOW: { name: "MS NOW", short: "MS NOW" },
+  BBCNEWS: { name: "BBC News", short: "BBC" },
+};
+const ALIAS = { MSNBCW: "MSNOW" };
+
+// ---------- state ----------
+const S = { style: "terminal", speed: 1, resume: 1, tidy: true, on: new Set(Object.keys(CHANNELS)), hidden: false };
+try {
+  const s = localStorage.getItem("chyron-wire-style");
+  if (s === "terminal" || s === "paper") S.style = s;
+} catch (e) {}
+
+let tape = [], next = 0, delay = LAG, live = false;
+let clock = { wall: performance.now(), play: Date.now() - LAG, speed: 1 };
+let ready = false, stalled = false, fetching = false, lastTry = 0, failures = 0;
+const seenRows = new Set();
+const queue = [], history = [];
+const recent = new Map();
+let job = null, carry = 0;
+
+const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+const clockFmt = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" });
+const timeFmtSec = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" });
+const dayFmt = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const fmtTime = (t) => timeFmt.format(t);
+const ymd = (t) => new Date(t).toISOString().slice(0, 10);
+
+function say(msg) { $("status").textContent = msg; }
+
+// ---------- the feed ----------
+async function loadLive(hours) {
+  const res = await fetch(`${LIVE}?hours=${hours}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return parse(await res.text());
+}
+
+async function loadDay(day) {
+  const res = await fetch(`${DAILY}${day}-tweets.tsv`);
+  if (!res.ok) { const err = new Error(`HTTP ${res.status}`); err.status = res.status; throw err; }
+  return parse(await res.text());
+}
+
+// rows: UTC time, channel, seconds on screen, clip path, text with \n escapes
+function parse(txt) {
+  const rows = [];
+  for (const line of txt.split("\n")) {
+    const f = line.split("\t");
+    if (f.length < 5) continue;
+    const t = Date.parse(f[0].replace(" ", "T") + "Z");
+    if (isNaN(t)) continue;
+    const ch = ALIAS[f[1]] || f[1];
+    if (!CHANNELS[ch]) continue;
+    const text = f.slice(4).join(" ").replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+    rows.push({ t, ch, text, path: f[3] });
+  }
+  rows.sort((a, b) => a.t - b.t);
+  return rows;
+}
+
+// each poll overlaps the last, so keep only rows we haven't seen; anything older than what already played is dropped
+function merge(rows) {
+  const floor = next > 0 ? tape[next - 1].t : -Infinity;
+  const fresh = rows.filter((r) => {
+    const k = r.t + r.ch;
+    if (seenRows.has(k) || r.t < floor) return false;
+    seenRows.add(k);
+    return true;
+  });
+  if (fresh.length) tape = tape.slice(0, next).concat(tape.slice(next).concat(fresh).sort((a, b) => a.t - b.t));
+  // keep about four hours behind the playhead
+  const cut = Math.min(next, after(playhead() - 4 * HOUR));
+  if (cut > 500) { tape = tape.slice(cut); next -= cut; }
+  return fresh.length;
+}
+
+function playhead() { return clock.play + (performance.now() - clock.wall) * clock.speed; }
+
+function after(t) {
+  let lo = 0, hi = tape.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (tape[mid].t <= t) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+
+async function start() {
+  $("retry").hidden = true;
+  say("Tuning in to the Internet Archive's Third Eye…");
+  try {
+    merge(await loadLive(3));
+    if (!tape.length) throw new Error("empty");
+    live = true; delay = LAG;
+  } catch (e) {
+    try { await loadTape(); } catch (e2) {
+      say(`Couldn't reach the Internet Archive (${e2.message}).`);
+      $("retry").hidden = false;
+      return;
+    }
+  }
+  lastTry = Date.now();
+  clock = { wall: performance.now(), play: Date.now() - delay, speed: S.speed };
+  next = after(clock.play);
+  backfill();
+  ready = true;
+  paintUI();
+  $("ear-left").textContent = live ? `Live, about ${LAG / 60000} minutes behind` : `Tape-delayed ${delay / HOUR} hours`;
+  say(live
+    ? `Live from the Third Eye, about ${LAG / 60000} minutes behind the broadcast.`
+    : `The live feed isn't answering, so this is the archive's tape from ${delay / HOUR} hours ago.`);
+}
+
+async function loadTape() {
+  const now = Date.now();
+  live = false;
+  try { tape = await loadDay(ymd(now - DAY)); delay = DAY; }
+  catch (e) {
+    // yesterday's file lands a minute or two after midnight UTC; fall back a day until it does
+    if (e.status !== 404) throw e;
+    tape = await loadDay(ymd(now - 2 * DAY)); delay = 2 * DAY;
+  }
+  if (!tape.length) throw new Error("the tape came back empty");
+}
+
+// prime the repeat filter with the last hour and show a few so the screen isn't empty
+function backfill() {
+  const got = [];
+  for (let i = Math.max(0, next - 240); i < next; i++) { const e = process(tape[i]); if (e) got.push(e); }
+  for (const e of got.slice(-5)) { e.fast = true; enqueue(e); }
+}
+
+function enqueue(e) {
+  queue.push(e);
+  while (queue.length > 12) queue.shift();
+}
+
+function advance() {
+  if (!ready) return;
+  const ph = playhead();
+  while (next < tape.length && tape[next].t <= ph) { const e = process(tape[next++]); if (e) enqueue(e); }
+  if (next >= tape.length && !stalled) {
+    // ran out of rows: hold here until more arrive
+    clock = { wall: performance.now(), play: Math.min(ph, tape[tape.length - 1].t + 60000), speed: 0 };
+    stalled = true;
+    if (!live) say("Caught up with the archive. The next reel lands just after midnight UTC, and this page will pick it up.");
+  }
+  if (!fetching && Date.now() - lastTry > 60000) {
+    if (live) poll();
+    else if (stalled) nextReel();
+  }
+}
+
+async function poll() {
+  fetching = true; lastTry = Date.now();
+  try {
+    merge(await loadLive(1));
+    if (failures >= 3) say("Back on the air.");
+    failures = 0;
+    if (stalled && next < tape.length) {
+      stalled = false;
+      clock = { wall: performance.now(), play: Math.max(clock.play, Date.now() - LAG), speed: S.speed };
+    }
+  } catch (e) {
+    if (++failures === 3) say("The live feed has stopped answering. Trying again every minute.");
+  } finally { fetching = false; }
+}
+
+async function nextReel() {
+  fetching = true; lastTry = Date.now();
+  const day = ymd(tape[tape.length - 1].t + DAY);
+  try {
+    const rows = await loadDay(day);
+    const last = tape[tape.length - 1].t;
+    tape = tape.concat(rows.filter((r) => r.t > last));
+    if (next < tape.length) {
+      stalled = false;
+      clock = { wall: performance.now(), play: clock.play, speed: S.speed };
+      say(`Threaded the next reel: ${day}.`);
+    }
+  } catch (e) {} finally { fetching = false; }
+}
+
+function setSpeed(s) {
+  if (s > 0) S.resume = s;
+  S.speed = s;
+  if (!stalled) clock = { wall: performance.now(), play: playhead(), speed: s };
+  paintUI();
+}
+
+function seek(target, note) {
+  stalled = false;
+  clock = { wall: performance.now(), play: target, speed: S.speed };
+  next = after(target);
+  recent.clear();
+  queue.length = 0;
+  if (job) { job.finish(); job = null; }
+  enqueue({ note });
+  backfill();
+}
+
+function rewind() {
+  if (!ready) return;
+  const target = Math.max(tape[0].t, playhead() - HOUR);
+  seek(target, `rewound to ${fmtTime(target)}`);
+  say(target === tape[0].t ? "That's as far back as this page holds." : `Rewound to ${fmtTime(target)}.`);
+}
+
+function toLive() {
+  if (!ready || !live) return;
+  seek(Date.now() - LAG, "back to live");
+  say("Back to live.");
+}
+
+function atLiveEdge() { return live && (stalled || Date.now() - playhead() < LAG + 2 * 60000); }
+
+// ---------- cleaning up OCR ----------
+const PHONE = /[0-9O]{3}[-. ][0-9O]{3}[-. ][0-9O]{4}/;
+const WEB = /\b[\w-]+\.(com|org|net|gov|tv)\b/i;
+const SMALL = /^(A|I|TO|OF|IN|ON|AT|BY|IS|AS|AN|OR|IT|BE|US|UK|DC|UN|NO|SO|UP|WE|HE|MY|DO|GO|IF|ME|VS|AI|EU)$/i;
+
+// the BBC logo, read as something like ". B EE NEWS"
+const BBC_LOGO = /[.\s]+(?:[A-Z\[\]]{1,3}\s+){1,3}NEWS\b/g;
+const TOLLFREE = /\b1-8\d\d-/;
+const ADS = /®|©|¢|€|\bcom\b|ad committee|paid for by|top funder|download on the/i;
+// US channels write headlines in capitals and name captions as "Name | Title"; mixed-case prose there is ad copy
+const CAPS_ONLY = new Set(["CNNW", "FOXNEWSW", "MSNOW"]);
+
+// smooth over the OCR's usual slips before judging a line
+function mend(l, ch) {
+  l = l.replace(/\s@W\w{0,2}\b/g, "");                          // CNN's logo bug read as text
+  while (/\dO|O\d/.test(l)) l = l.replace(/(\d)O/g, "$10").replace(/O(\d)/g, "0$1");   // 2O26 is 2026
+  l = l.replace(/^[a-z]\s+(?=[A-Z\[])/, "").replace(/™$/, '"');
+  return l.replace(/^[\s|»>.,:;•*'"’\[\]—–-]+|[\s|»>,:;•*—–\\-]+$/g, "");
+}
+
+// a word with a capital inside lowercase, or digits glued to letters, is usually misread
+function garbled(w) {
+  const c = w.replace(/^[^\w]+|[^\w]+$/g, "");
+  if (/^(Mc|Mac|De|La|Le|Di|O)[A-Z]/.test(c) || /^\d+(st|nd|rd|th|s|m|bn|am|pm|k)$/i.test(c)) return false;
+  return /[a-z][A-Z]/.test(c) || /[A-Za-z]\d|\d[A-Za-z]/.test(c);
+}
+
+function noisy(l, ch) {
+  if (l.length < 6 || PHONE.test(l) || TOLLFREE.test(l) || WEB.test(l) || ADS.test(l)) return true;
+  const letters = (l.match(/[A-Za-z]/g) || []).length;
+  if (letters / l.length < 0.65) return true;
+  if (CAPS_ONLY.has(ch) && !l.includes(" | ")) {
+    const lower = (l.match(/[a-z]/g) || []).length;
+    if (lower / letters > 0.4) return true;
+  }
+  const words = l.split(" ");
+  // a lone word on a US channel is nearly always a logo or a sponsor
+  if (CAPS_ONLY.has(ch) && words.length < 2) return true;
+  const odd = words.filter((w) => { const c = w.replace(/[^A-Za-z]/g, ""); return c.length <= 2 && !SMALL.test(c); }).length;
+  if (odd / words.length > 0.4) return true;
+  return words.filter(garbled).length / words.length > 0.2;
+}
+
+const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+function bigrams(s) {
+  const m = new Map();
+  for (let i = 0; i < s.length - 1; i++) { const b = s.slice(i, i + 2); m.set(b, (m.get(b) || 0) + 1); }
+  return m;
+}
+
+// chyrons repeat minute after minute, with fresh OCR typos each time
+function similar(a, b) {
+  if (a === b) return true;
+  const short = Math.min(a.length, b.length), long = Math.max(a.length, b.length);
+  if (short >= 12 && (a.includes(b) || b.includes(a))) return true;
+  if (short < 0.7 * long) return false;
+  const A = bigrams(a), B = bigrams(b);
+  let hit = 0;
+  for (const [k, v] of A) hit += Math.min(v, B.get(k) || 0);
+  return (2 * hit) / (a.length + b.length - 2) >= 0.8;
+}
+
+function process(row) {
+  if (!S.on.has(row.ch)) return null;
+  // the OCR joins separate boxes on screen with ". . "
+  const text = row.ch === "BBCNEWS" && S.tidy ? row.text.replace(BBC_LOGO, "\n") : row.text;
+  let lines = text.split(/\n|\s*\.\s+\.\s*/).map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean);
+  if (S.tidy) {
+    const seen = recent.get(row.ch) || [];
+    const fresh = [];
+    for (let l of lines) {
+      l = mend(l, row.ch);
+      if (noisy(l, row.ch)) continue;
+      const k = norm(l);
+      if (seen.some((s) => similar(s, k)) || fresh.some((f) => similar(norm(f), k))) continue;
+      fresh.push(l);
+    }
+    recent.set(row.ch, seen.concat(fresh.map(norm)).slice(-120));
+    lines = fresh;
+  }
+  if (!lines.length) return null;
+  return { t: row.t, ch: row.ch, lines, path: row.path };
+}
+
+// ---------- typing ----------
+function begin(e) {
+  if (!e.note) {
+    history.push(e);
+    if (history.length > 80) history.shift();
+    logEntry(e);
+  }
+  return S.style === "terminal" ? termBegin(e) : paperBegin(e);
+}
+
+function type(dt) {
+  if (!job && queue.length) { const e = queue.shift(); job = begin(e); if (job) job.fast = e.fast; }
+  if (!job) return;
+  if (reduce.matches) { job.finish(); job = null; return; }
+  const cps = 34 * (1 + queue.length * 0.8) * (job.fast ? 5 : 1);
+  carry += cps * dt;
+  const n = Math.floor(carry);
+  carry -= n;
+  if (n > 0 && job.put(n)) job = null;
+}
+
+function logEntry(e) {
+  const li = document.createElement("li");
+  li.textContent = `${fmtTime(e.t)}, ${CHANNELS[e.ch].name}: ${e.lines.join(". ")}`;
+  $("log").append(li);
+  while ($("log").children.length > 30) $("log").firstElementChild.remove();
+}
+
+function rebuild() {
+  if (job) { job.finish(); job = null; }
+  if (S.style === "terminal") termRebuild(); else paperRebuild();
+}
+
+// ---------- terminal ----------
+const cvs = $("screen"), ctx = cvs.getContext("2d");
+const term = { w: 0, h: 0, cw: 10, lh: 20, size: 22, cols: 80, rows: 24, x0: 18, y0: 60, lines: [], ghosts: [], quiet: false, linksDirty: true };
+// l is a link: amber on the green screen, the one place the terminal breaks character
+const INK = { d: "#1C9A48", b: "#D6FFE2", n: "#39FF7A", l: "#FFB347" };
+
+function termLayout() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = innerWidth, H = innerHeight;
+  cvs.width = Math.round(W * dpr); cvs.height = Math.round(H * dpr);
+  cvs.style.width = W + "px"; cvs.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  term.w = W; term.h = H;
+  term.size = W < 520 ? 19 : W < 900 ? 22 : 24;
+  ctx.font = `${term.size}px VT323, ui-monospace, monospace`;
+  ctx.textBaseline = "top";
+  term.cw = ctx.measureText("M").width;
+  term.lh = Math.round(term.size * 1.08);
+  const head = $("head").getBoundingClientRect();
+  term.x0 = Math.round(head.left);
+  term.y0 = Math.round(head.bottom + 14);
+  term.cols = Math.max(20, Math.floor((W - term.x0 * 2) / term.cw));
+  term.rows = Math.max(4, Math.floor((H - term.y0 - trayClearance()) / term.lh));
+}
+
+function wrap(text, width) {
+  const out = [];
+  let line = "";
+  for (let w of text.split(" ")) {
+    while (w.length > width) { if (line) { out.push(line); line = ""; } out.push(w.slice(0, width)); w = w.slice(width); }
+    if (!line) line = w;
+    else if (line.length + 1 + w.length <= width) line += " " + w;
+    else { out.push(line); line = w; }
+  }
+  if (line) out.push(line);
+  return out;
+}
+
+// each line is text plus a same-length style string: d dim, b bright, n normal
+function termFormat(e) {
+  if (e.note) { const t = `---- ${e.note.toUpperCase()} ----`; return [{ t, s: "d".repeat(t.length) }]; }
+  const time = fmtTime(e.t), name = CHANNELS[e.ch].short;
+  const out = [];
+  if (term.cols >= 56) {
+    const ind = 18, width = term.cols - ind - 1;
+    const head = time.padEnd(10) + name.padEnd(8);
+    let first = true;
+    for (const l of e.lines) for (const w of wrap(l, width)) {
+      if (first) out.push({ t: head + w, s: "d".repeat(10) + "b".repeat(8) + "n".repeat(w.length) });
+      else out.push({ t: " ".repeat(ind) + w, s: " ".repeat(ind) + "n".repeat(w.length) });
+      first = false;
+    }
+  } else {
+    out.push({ t: `${time}  ${name}`, s: "d".repeat(time.length + 2) + "b".repeat(name.length) });
+    for (const l of e.lines) for (const w of wrap(l, term.cols - 3)) out.push({ t: "  " + w, s: "  " + "n".repeat(w.length) });
+  }
+  const tag = "[WATCH]";
+  const link = {
+    len: tag.length, key: e.t + e.ch, href: "https://archive.org/details/" + e.path,
+    label: `Watch ${CHANNELS[e.ch].name} at ${time} on the Internet Archive`,
+  };
+  const end = out[out.length - 1];
+  if (end.t.length + 2 + tag.length <= term.cols) {
+    link.col = end.t.length + 2;
+    end.t += "  " + tag; end.s += "  " + "l".repeat(tag.length); end.link = link;
+  } else {
+    const ind = term.cols >= 56 ? 18 : 2;
+    link.col = ind;
+    out.push({ t: " ".repeat(ind) + tag, s: " ".repeat(ind) + "l".repeat(tag.length), link });
+  }
+  return out;
+}
+
+function termNewline() {
+  if (term.lines.length >= term.rows) {
+    // the old screen lingers where it was and fades, like slow phosphor
+    if (!term.quiet && !reduce.matches) {
+      term.ghosts.push({ lines: term.lines.map((l) => l.t), a: 1 });
+      if (term.ghosts.length > 6) term.ghosts.shift();
+    }
+    term.lines.shift();
+  }
+  term.lines.push({ t: "", s: "" });
+  term.linksDirty = true;
+}
+
+function termBegin(e) {
+  const out = termFormat(e);
+  if (term.lines.length) termNewline();
+  let li = 0, ci = 0;
+  const job = {
+    put(k) {
+      while (k-- > 0 && li < out.length) {
+        if (ci === 0) {
+          termNewline();
+          // indentation arrives at once; only the words are typed
+          const pad = out[li].t.length - out[li].t.trimStart().length;
+          const L = term.lines[term.lines.length - 1];
+          L.t = out[li].t.slice(0, pad); L.s = out[li].s.slice(0, pad); ci = pad;
+          L.link = out[li].link;
+        }
+        const L = term.lines[term.lines.length - 1];
+        L.t += out[li].t[ci]; L.s += out[li].s[ci]; ci++;
+        if (L.link && L.t.length === L.link.col + L.link.len) term.linksDirty = true;
+        if (ci >= out[li].t.length) { li++; ci = 0; }
+      }
+      return li >= out.length;
+    },
+    finish() { job.put(Infinity); },
+  };
+  return job;
+}
+
+function termRebuild() {
+  term.lines = []; term.ghosts = []; term.quiet = true;
+  for (const e of history.filter((e) => S.on.has(e.ch)).slice(-24)) termBegin(e).finish();
+  term.quiet = false;
+  term.linksDirty = true;
+}
+
+function drawRuns(l, x, y) {
+  let i = 0;
+  while (i < l.t.length) {
+    const k = l.s[i];
+    let j = i + 1;
+    while (j < l.t.length && l.s[j] === k) j++;
+    if (k !== " ") {
+      ctx.fillStyle = INK[k] || INK.n;
+      ctx.fillText(l.t.slice(i, j), x + i * term.cw, y);
+      if (k === "l") ctx.fillRect(x + i * term.cw, y + term.lh - 4, (j - i) * term.cw, 1.5);
+    }
+    i = j;
+  }
+}
+
+function termDraw(now, dt) {
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  ctx.fillStyle = "#031008";
+  ctx.fillRect(0, 0, term.w, term.h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, term.y0 - 2, term.w, term.rows * term.lh + 4);
+  ctx.clip();
+  ctx.fillStyle = INK.n;
+  for (const g of term.ghosts) {
+    ctx.globalAlpha = g.a * g.a * 0.45;
+    g.lines.forEach((t, i) => ctx.fillText(t, term.x0, term.y0 + i * term.lh));
+    g.a -= dt * 1.3;
+  }
+  term.ghosts = term.ghosts.filter((g) => g.a > 0);
+  ctx.globalAlpha = 1;
+  ctx.shadowColor = "rgba(57, 255, 122, 0.55)";
+  ctx.shadowBlur = 6;
+  term.lines.forEach((l, i) => drawRuns(l, term.x0, term.y0 + i * term.lh));
+  const row = Math.max(0, term.lines.length - 1);
+  const col = term.lines.length ? term.lines[row].t.length : 0;
+  if (job || reduce.matches || Math.floor(now / 530) % 2 === 0) {
+    ctx.fillStyle = INK.n;
+    ctx.fillRect(term.x0 + col * term.cw, term.y0 + row * term.lh + 2, term.cw, term.lh - 5);
+  }
+  ctx.restore();
+  if (term.linksDirty) syncLinks();
+}
+
+// one <a> per finished [WATCH] on screen, kept across scrolls so keyboard focus stays put
+const linkEls = new Map();
+function syncLinks() {
+  term.linksDirty = false;
+  const keep = new Set();
+  if (S.style === "terminal") term.lines.forEach((L, row) => {
+    if (!L.link || L.t.length < L.link.col + L.link.len) return;
+    keep.add(L.link.key);
+    let a = linkEls.get(L.link.key);
+    if (!a) {
+      a = el("a", "tlink");
+      a.href = L.link.href;
+      a.setAttribute("aria-label", L.link.label);
+      linkEls.set(L.link.key, a);
+      $("links").append(a);
+    }
+    a.style.left = term.x0 + L.link.col * term.cw - 3 + "px";
+    // at least 40px tall to tap, centred on the line
+    const h = Math.max(40, term.lh);
+    a.style.top = term.y0 + row * term.lh - (h - term.lh) / 2 + "px";
+    a.style.width = L.link.len * term.cw + 6 + "px";
+    a.style.height = h + "px";
+  });
+  for (const [k, a] of linkEls) if (!keep.has(k)) { a.remove(); linkEls.delete(k); }
+}
+
+// ---------- newspaper ----------
+const cols = {};
+document.querySelectorAll(".col").forEach((c) => { cols[c.dataset.ch] = c; });
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function paperBegin(e) {
+  if (e.note) return null;
+  const col = cols[e.ch];
+  if (!col) return null;
+  col.querySelector(".empty")?.remove();
+  const art = el("article", "story");
+  // on a phone the columns merge into one feed, newest first
+  art.style.order = String(-Math.round(e.t / 60000));
+  art.append(el("p", "dateline", `${fmtTime(e.t)} · ${CHANNELS[e.ch].name}`));
+  const parts = e.lines.map((text, i) => {
+    const p = el("p", i === 0 ? "hed" : "deck");
+    const node = document.createTextNode("");
+    p.append(node);
+    art.append(p);
+    return { p, node, text };
+  });
+  const watch = el("a", "watch", "Watch the broadcast");
+  watch.href = "https://archive.org/details/" + e.path;
+  watch.hidden = true;
+  art.append(watch);
+  col.querySelector("h2").after(art);
+  const stories = col.querySelectorAll(".story");
+  for (let i = 14; i < stories.length; i++) stories[i].remove();
+  let pi = 0, ci = 0;
+  parts[0].p.classList.add("live");
+  const job = {
+    put(k) {
+      while (k-- > 0 && pi < parts.length) {
+        const part = parts[pi];
+        ci++;
+        part.node.data = part.text.slice(0, ci);
+        if (ci >= part.text.length) {
+          part.p.classList.remove("live");
+          pi++; ci = 0;
+          if (pi < parts.length) parts[pi].p.classList.add("live");
+        }
+      }
+      if (pi >= parts.length) { watch.hidden = false; return true; }
+      return false;
+    },
+    finish() { job.put(Infinity); },
+  };
+  return job;
+}
+
+function paperRebuild() {
+  document.querySelectorAll(".story, .empty").forEach((n) => n.remove());
+  for (const [ch, col] of Object.entries(cols)) {
+    if (S.on.has(ch)) col.removeAttribute("data-off"); else col.setAttribute("data-off", "");
+  }
+  for (const e of history.filter((e) => S.on.has(e.ch)).slice(-56)) paperBegin(e).finish();
+  for (const [ch, col] of Object.entries(cols)) {
+    if (!col.querySelector(".story")) col.append(el("p", "empty", S.on.has(ch) ? "Waiting on the wire…" : "Switched off."));
+  }
+}
+
+// ---------- controls ----------
+const tray = $("tray"), showBtn = $("show");
+
+function trayClearance() {
+  return (S.hidden ? showBtn : tray).getBoundingClientRect().height + 24;
+}
+
+function paintUI() {
+  document.querySelectorAll("[data-style-to]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.styleTo === S.style)));
+  document.querySelectorAll("[data-speed]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.speed) === S.speed)));
+  document.querySelectorAll("button[data-ch]").forEach((b) => b.setAttribute("aria-pressed", String(S.on.has(b.dataset.ch))));
+  $("tidy").setAttribute("aria-pressed", String(S.tidy));
+  $("tolive").hidden = !live;
+}
+
+function setStyle(s) {
+  if (job) { job.finish(); job = null; }
+  S.style = s;
+  root.dataset.style = s;
+  $("log").hidden = s !== "terminal";
+  try { localStorage.setItem("chyron-wire-style", s); } catch (e) {}
+  paintUI();
+  layout();
+}
+
+function setHidden(h) {
+  S.hidden = h;
+  tray.hidden = h;
+  showBtn.hidden = !h;
+  layout();
+  (h ? showBtn : tray.querySelector(".hide")).focus({ preventScroll: true });
+}
+
+function layout() {
+  root.style.setProperty("--tray-space", trayClearance() + 12 + "px");
+  if (S.style === "terminal") termLayout();
+  rebuild();
+}
+
+document.querySelectorAll("[data-style-to]").forEach((b) => b.addEventListener("click", () => setStyle(b.dataset.styleTo)));
+document.querySelectorAll("[data-speed]").forEach((b) => b.addEventListener("click", () => setSpeed(Number(b.dataset.speed))));
+document.querySelectorAll("button[data-ch]").forEach((b) => b.addEventListener("click", () => {
+  const ch = b.dataset.ch;
+  if (S.on.has(ch)) S.on.delete(ch); else S.on.add(ch);
+  paintUI();
+  rebuild();
+}));
+$("tidy").addEventListener("click", () => { S.tidy = !S.tidy; recent.clear(); paintUI(); });
+$("rewind").addEventListener("click", rewind);
+$("tolive").addEventListener("click", toLive);
+$("retry").addEventListener("click", start);
+tray.querySelector(".hide").addEventListener("click", () => setHidden(true));
+showBtn.addEventListener("click", () => setHidden(false));
+
+let resizeQueued = false;
+addEventListener("resize", () => {
+  if (resizeQueued) return;
+  resizeQueued = true;
+  requestAnimationFrame(() => { resizeQueued = false; layout(); });
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if (k === "t") setStyle("terminal");
+  else if (k === "n") setStyle("paper");
+  else if (k === "h") setHidden(!S.hidden);
+  else if (k === "r") rewind();
+  else if (k === "l") toLive();
+  else if (k === "1") setSpeed(1);
+  else if (k === "2") setSpeed(10);
+  else if (k === "3") setSpeed(60);
+  else if (k === " " && !e.target.closest("button, a")) { e.preventDefault(); setSpeed(S.speed ? 0 : S.resume); }
+  else return;
+});
+
+// ---------- clock ----------
+let lastClock = 0;
+function paintClock(now) {
+  if (!ready || now - lastClock < 250) return;
+  lastClock = now;
+  const ph = playhead();
+  let s = `${atLiveEdge() ? "Live · as aired" : "As aired"} ${S.style === "paper" ? timeFmtSec.format(ph) : clockFmt.format(ph)}`;
+  if (S.speed === 0) s += " · paused";
+  else if (S.speed !== 1) s += ` · ${S.speed}×`;
+  $("clock").textContent = S.style === "paper" ? `${dayFmt.format(ph)} · ${s}` : s;
+}
+
+// ---------- go ----------
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  advance();
+  type(dt);
+  if (S.style === "terminal") termDraw(now, dt);
+  paintClock(now);
+  requestAnimationFrame(tick);
+}
+
+(async () => {
+  root.dataset.style = S.style;
+  $("log").hidden = S.style !== "terminal";
+  paintUI();
+  try { await document.fonts.load("20px VT323"); } catch (e) {}
+  layout();
+  requestAnimationFrame(tick);
+  start();
+})();
+</script>
+</body>
+</html>

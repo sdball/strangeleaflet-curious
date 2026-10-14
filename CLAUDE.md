@@ -1,6 +1,6 @@
 # The Cabinet of Curios
 
-Static site served at curious.strangeleaflet.com: interactive exhibits, toys, and guides from Strange Leaflet. There is no build step, no package manager, no framework, and no test suite. Every page is one hand-written, self-contained `index.html`.
+Static site served at curious.strangeleaflet.com: interactive exhibits, toys, guides, and gadgets from Strange Leaflet. There is no build step, no package manager, no framework, and no test suite. Every page is one hand-written, self-contained `index.html`.
 
 ## Layout
 
@@ -103,7 +103,7 @@ cd api && npx wrangler deploy       # publishes it to https://curious-api.sdball
      words: ["odometers", "odometer"] },
    ```
 
-   - `kind` is `exhibit` (learn something by playing with it), `toy` (just for fun), or `guide` (a walkthrough). These drive the hub's filter buttons.
+   - `kind` is `exhibit` (learn something by playing with it), `toy` (just for fun), `guide` (a walkthrough), or `gadget` (a working instrument, often fed by outside data, like `chyron-wire`). These drive the hub's filter buttons.
    - The tag's "No. N" comes from array position, so reordering renumbers every tag.
    - `href` is relative with a trailing slash.
    - `words` are the nouns the text interface answers to (`get morse`, `examine odometer`). `words[0]` appears in the "Try get …" hint, so make it the most obvious one. A curio matches if any typed word is in its `words`, so avoid generic words another curio might also claim.
