@@ -10,6 +10,7 @@ public/<slug>/index.html   one curio per directory, served at /<slug>/
 scripts/serve              serves public/ locally (python3 http.server)
 .githooks/pre-commit       refuses staged pages without the GoatCounter snippet, or with tic-check findings
 .github/workflows/static.yml  checks GoatCounter again, then deploys public/ to GitHub Pages
+api/                       a Cloudflare Worker that proxies outside data for curios (not published with the site)
 ```
 
 Pushing to `main` deploys. Only `public/` is published.
@@ -25,6 +26,16 @@ Use a server, not `file://`. Each page's back link points at `/`, which only wor
 
 After cloning, turn on the hook once: `git config core.hooksPath .githooks`.
 
+## The API Worker
+
+`api/` is one plain JS file run by Cloudflare Workers, with tests that need nothing but Node. It deploys by hand, separately from the site.
+
+```sh
+node --test api/worker.test.mjs     # tests, with the outside sources stubbed
+cd api && npx wrangler dev          # serves it at http://localhost:8787/
+cd api && npx wrangler deploy       # publishes it to https://curious-api.sdball.workers.dev
+```
+
 ## Rules for every page
 
 - **GoatCounter goes just before `</head>`**, exactly this. The hook and the deploy both grep for the `data-goatcounter` URL, and the deploy fails without it.
@@ -39,7 +50,8 @@ After cloning, turn on the hook once: `git config core.hooksPath .githooks`.
           async src="//gc.zgo.at/count.js"></script>
   ```
 
-- **Self-contained.** CSS in one `<style>` in the head, JS in one `<script>` at the end of the body. No shared stylesheets or scripts between pages, no JS libraries, no CDNs. The only external requests are Google Fonts and GoatCounter.
+- **Self-contained.** CSS in one `<style>` in the head, JS in one `<script>` at the end of the body. No shared stylesheets or scripts between pages, no JS libraries, no CDNs. Every page may load Google Fonts and GoatCounter. A curio built around outside data (a live feed, an RSS reader) may also fetch that data, but only data, never code, and it should say on the page where the data comes from and still render something useful when the source is down.
+- **Outside data that needs a proxy.** Sources that send no CORS headers go through the Cloudflare Worker in `api/`, not a public CORS proxy. Add a route to `api/worker.js` that fetches through its `cached()` helper and answers with `access-control-allow-origin: *`, add tests to `api/worker.test.mjs`, and keep a `?proxy=` override in the page so it can be tried against `wrangler dev`. `chyron-wire` reads `/third-eye` that way.
 - **Its own look.** Each curio has its own palette and fonts suited to its subject (garage-wall odometers, telegraph-office Morse, pixel-art Pocket Places). Share structure and conventions with the other pages, not styles. Don't extract common CSS.
 - **Light and dark.** Define colors as custom properties on `:root`, then redefine them under both `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` and `:root[data-theme="dark"] { … }`. Set `color-scheme` to match.
 - **Works on a phone.** `viewport-fit=cover`, safe-area padding on `:root`, tap targets of 40–44px, text inputs at 16px or larger (stops iOS zooming on focus), no horizontal page scroll. Wrap wide tables in `.table-wrap { overflow-x: auto; }`.
