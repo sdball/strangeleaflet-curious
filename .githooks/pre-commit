@@ -18,9 +18,8 @@ if [ -n "$missing" ]; then
 fi
 
 # Refuse LLM writing tics in page prose, using tic-check from ~/local_bin
-# when it's installed. behringer-wave predates the house style (its em dashes
-# are its own), so it's left out.
-pages=$(git diff --cached --name-only --diff-filter=ACMR -- 'public/*.html' | grep -v '^public/behringer-wave/')
+# when it's installed.
+pages=$(git diff --cached --name-only --diff-filter=ACMR -- 'public/*.html')
 if [ -n "$pages" ]; then
   if ! command -v tic-check >/dev/null 2>&1; then
     echo "tic-check isn't on PATH, so page prose wasn't checked for LLM tics." >&2

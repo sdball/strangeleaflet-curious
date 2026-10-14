@@ -81,6 +81,8 @@ After cloning, turn on the hook once: `git config core.hooksPath .githooks`.
    ```
 
    `.wrap` is `max-width: 960px; margin: 0 auto;` with about 1.25rem side padding.
+
+   Guides use the two-column frame described under **Guide structure** instead.
 4. Register it in the `CURIOS` array in `public/index.html`, at the end unless asked otherwise:
 
    ```js
@@ -109,7 +111,18 @@ The newer exhibits (`complex-numbers`, `exploring-e`, `morse-code`, `odometers`,
 - `<section class="sources">` listing every source the history leans on, in citation form, linked where a stable URL exists. Don't add a historical claim without a source for it.
 - Every section uses `aria-labelledby` pointing at its `h2` id.
 
-`behringer-wave` predates these conventions (its own long-form frame, a theme switch, no back link). Don't use it as a template, and don't bring it in line unless asked.
+## Guide structure
+
+Guides are long, hands-on walkthroughs you work through over several sittings. `behringer-wave` is the model for them, and it swaps the exhibit frame for a two-column one:
+
+- `.wrap` is a flex row up to 1360px wide: a sticky `<nav class="rail">` on the left and `<main class="main">` beside it. Below 960px the rail stacks above the content.
+- The rail holds the `.back` link, a light/dark switch (`aria-pressed`, choice saved in `localStorage`), the guide's name, a **Continue** card pointing at the first unfinished lesson, and a link per section grouped under `.rail-part` headings. The current section's link is highlighted as you scroll.
+- A `<header class="hero">` with an `.eyebrow` line, the `h1`, and a `.standfirst` saying what the guide covers and how to use it.
+- Each lesson is a `<section>` with a `.sec-head` (a `.sec-num`, the `h2`, and optionally a button), then a `.goal` line saying what you'll get out of it. Orientation and reference sections use `·` in place of a number.
+- Lessons give exact values to enter and say what you should hear or see. Callouts are `.note` blocks with a `.lbl`: `listen` (you should hear), `verify` (check it on your own unit), `warn` (a trap), `restore` (what to put back before the next lesson).
+- Each lesson ends with a `.done` checkbox. Progress is saved in `localStorage`, wrapped in `try/catch`.
+- Reference material (abbreviations, full tables, troubleshooting) sits at the end, then a `.foot` naming the sources the guide is built from.
+- Every section uses `aria-labelledby` pointing at its `h2` id, as in exhibits.
 
 `pocket-places` is a full-screen toy, not a document page, and is the model for that kind of curio: a fixed canvas filling the viewport, the title overlaid in a corner, controls in a floating tray that can be hidden, and its own day/night/storm palettes instead of light and dark tokens. It has no `.wrap` and no back link.
 
@@ -139,7 +152,7 @@ The newer exhibits (`complex-numbers`, `exploring-e`, `morse-code`, `odometers`,
 - No em dashes in body prose; use a period, colon, or comma. (Em dashes are fine in `<title>`.)
 - Explain from what the visitor already knows, one idea at a time. Prefer turns, hops, and wheels to jargon, and define a term the first time it appears.
 - In math, use the real minus sign `−` and `×`, and wrap variables in `<span class="v">` where the page styles them.
-- `tic-check` (in `~/local_bin`, outside the repo) enforces the above plus a list of LLM tics (em dashes, "it's not X, it's Y", "let's dive in", "genuinely", "delve", and so on) on visible text and script strings. Rewrite the sentence rather than dodging the pattern. For a deliberate use, put `tic-ok` on that source line. `behringer-wave` is exempt. The pre-commit hook runs it when it's on PATH and says so when it isn't.
+- `tic-check` (in `~/local_bin`, outside the repo) enforces the above plus a list of LLM tics (em dashes, "it's not X, it's Y", "let's dive in", "genuinely", "delve", and so on) on visible text and script strings. Rewrite the sentence rather than dodging the pattern. For a deliberate use, put `tic-ok` on that source line. The pre-commit hook runs it when it's on PATH and says so when it isn't.
 - The hub's text interface is a Zork-style parser with in-jokes (leaflet, frotz, xyzzy). Keep new responses in that voice.
 - The text interface opens as a full-screen Infocom-on-an-Atari-800 screen: VT323 with ligatures off, white on Atari blue, an inverse status line, nothing but the prompt. Like `pocket-places`, it keeps its own fixed palette instead of light and dark tokens. `quit` (confirmed with Y) or Esc closes it.
 
