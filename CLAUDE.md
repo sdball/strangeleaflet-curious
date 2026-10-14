@@ -8,7 +8,7 @@ Static site served at curious.strangeleaflet.com: interactive exhibits, toys, an
 public/index.html          the hub: the shelf of curio tags plus a text-adventure interface
 public/<slug>/index.html   one curio per directory, served at /<slug>/
 scripts/serve              serves public/ locally (python3 http.server)
-.githooks/pre-commit       refuses staged pages without the GoatCounter snippet
+.githooks/pre-commit       refuses staged pages without the GoatCounter snippet, or with tic-check findings
 .github/workflows/static.yml  checks GoatCounter again, then deploys public/ to GitHub Pages
 ```
 
@@ -139,6 +139,7 @@ The newer exhibits (`complex-numbers`, `exploring-e`, `morse-code`, `odometers`,
 - No em dashes in body prose; use a period, colon, or comma. (Em dashes are fine in `<title>`.)
 - Explain from what the visitor already knows, one idea at a time. Prefer turns, hops, and wheels to jargon, and define a term the first time it appears.
 - In math, use the real minus sign `−` and `×`, and wrap variables in `<span class="v">` where the page styles them.
+- `tic-check` (in `~/local_bin`, outside the repo) enforces the above plus a list of LLM tics (em dashes, "it's not X, it's Y", "let's dive in", "genuinely", "delve", and so on) on visible text and script strings. Rewrite the sentence rather than dodging the pattern. For a deliberate use, put `tic-ok` on that source line. `behringer-wave` is exempt. The pre-commit hook runs it when it's on PATH and says so when it isn't.
 - The hub's text interface is a Zork-style parser with in-jokes (leaflet, frotz, xyzzy). Keep new responses in that voice.
 - The text interface opens as a full-screen Infocom-on-an-Atari-800 screen: VT323 with ligatures off, white on Atari blue, an inverse status line, nothing but the prompt. Like `pocket-places`, it keeps its own fixed palette instead of light and dark tokens. `quit` (confirmed with Y) or Esc closes it.
 
@@ -146,6 +147,7 @@ The newer exhibits (`complex-numbers`, `exploring-e`, `morse-code`, `odometers`,
 
 - Serve locally and check the page in light and dark, at phone width (~375px), by keyboard alone, and with reduced motion on.
 - Confirm the browser console is clean.
+- `tic-check public/<slug>/index.html` should print nothing (the hook runs it too).
 - `grep -L 'data-goatcounter="https://sdball.goatcounter.com/count"' public/*.html public/*/*.html` should print nothing.
 
 Commit messages are imperative, sentence case, and name the curio: "Add a Morse code exhibit", "Let m reach the end of the line in complex numbers' station 1". For anything bigger than a small fix, add a body that explains what changed for the visitor and why. Keep one curio per commit where possible.

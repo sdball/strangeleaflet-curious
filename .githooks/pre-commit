@@ -16,3 +16,17 @@ if [ -n "$missing" ]; then
   echo "Add it before </head>, or commit with --no-verify to skip this check." >&2
   exit 1
 fi
+
+# Refuse LLM writing tics in page prose, using tic-check from ~/local_bin
+# when it's installed. behringer-wave predates the house style (its em dashes
+# are its own), so it's left out.
+pages=$(git diff --cached --name-only --diff-filter=ACMR -- 'public/*.html' | grep -v '^public/behringer-wave/')
+if [ -n "$pages" ]; then
+  if ! command -v tic-check >/dev/null 2>&1; then
+    echo "tic-check isn't on PATH, so page prose wasn't checked for LLM tics." >&2
+  elif ! tic-check --staged $pages >&2; then
+    echo "Rewrite these plainly, add tic-ok to the source line for a deliberate use," >&2
+    echo "or commit with --no-verify to skip this check." >&2
+    exit 1
+  fi
+fi
