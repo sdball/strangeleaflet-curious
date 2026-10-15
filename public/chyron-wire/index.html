@@ -53,6 +53,18 @@ a { color: inherit; }
 .tlink { position: fixed; z-index: 1; border-radius: 2px; }
 .tlink:hover { background: rgba(255, 179, 71, 0.18); }
 .tlink:focus-visible { outline: 2px solid #FFB347; outline-offset: 1px; }
+/* fingers drag the scrollback, so the browser shouldn't claim the gesture */
+#screen, .tlink, #more { touch-action: none; }
+/* scrolled back, the bottom row turns into an inverse status line, like less */
+#more {
+  display: none; position: fixed; z-index: 1; padding: 0 0.5ch; border: 0; border-radius: 0; cursor: pointer;
+  background: var(--phos); color: var(--crt); font-family: 'VT323', monospace; text-transform: uppercase;
+  text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-style="terminal"] #more:not([hidden]) { display: block; }
+#more::before { content: ""; position: absolute; inset: -10px 0; }
+#more:hover { background: var(--phos-hi); }
+#more:focus-visible { outline: 2px solid var(--phos-hi); outline-offset: 2px; }
 
 /* ---------- head ---------- */
 #head h1 { margin: 0; }
@@ -167,6 +179,7 @@ a { color: inherit; }
 <canvas id="screen" role="img" aria-label="A green phosphor terminal typing out TV news chyrons. The same chyrons are listed below for screen readers."></canvas>
 <div class="crt" aria-hidden="true"></div>
 <nav id="links" aria-label="Links to the broadcasts on screen"></nav>
+<button id="more" hidden aria-keyshortcuts="End"></button>
 
 <header id="head">
   <p class="ears"><span id="ear-left">Tuning in…</span><span><a href="https://archive.org/services/third-eye.php">From the Internet Archive's Third Eye</a></span></p>
@@ -442,6 +455,7 @@ function seek(target, note) {
   recent.clear();
   queue.length = 0;
   if (job) { job.finish(); job = null; }
+  termScroll(-Infinity);
   enqueue({ note });
   backfill();
 }
@@ -581,7 +595,7 @@ function process(row) {
 function begin(e) {
   if (!e.note) {
     history.push(e);
-    if (history.length > 80) history.shift();
+    if (history.length > 200) history.shift();
     logEntry(e);
   }
   return S.style === "terminal" ? termBegin(e) : paperBegin(e);
@@ -612,7 +626,9 @@ function rebuild() {
 
 // ---------- terminal ----------
 const cvs = $("screen"), ctx = cvs.getContext("2d");
-const term = { w: 0, h: 0, cw: 10, lh: 20, size: 22, cols: 80, rows: 24, x0: 18, y0: 60, lines: [], ghosts: [], quiet: false, linksDirty: true };
+// back counts how many lines the view sits above the bottom; 0 follows the wire as it types
+const term = { w: 0, h: 0, cw: 10, lh: 20, size: 22, cols: 80, rows: 24, x0: 18, y0: 60, lines: [], ghosts: [], back: 0, quiet: false, linksDirty: true };
+const KEEP = 600;   // lines of scrollback
 // l is a link: amber on the green screen, the one place the terminal breaks character
 const INK = { d: "#1C9A48", b: "#D6FFE2", n: "#39FF7A", l: "#FFB347" };
 
@@ -685,17 +701,55 @@ function termFormat(e) {
   return out;
 }
 
+// the top line on screen when following the wire, and the one actually shown
+function liveTop() { return Math.max(0, term.lines.length - term.rows); }
+function termTop() { return Math.max(0, liveTop() - term.back); }
+
+// scrolled back, the last row is the status line
+function termView() {
+  const top = termTop();
+  return term.lines.slice(top, top + (term.back ? term.rows - 1 : term.rows));
+}
+
 function termNewline() {
-  if (term.lines.length >= term.rows) {
-    // the old screen lingers where it was and fades, like slow phosphor
-    if (!term.quiet && !reduce.matches) {
-      term.ghosts.push({ lines: term.lines.map((l) => l.t), a: 1 });
-      if (term.ghosts.length > 6) term.ghosts.shift();
-    }
-    term.lines.shift();
+  const top = termTop();
+  // the old screen lingers where it was and fades, like slow phosphor
+  if (!term.back && term.lines.length >= term.rows && !term.quiet && !reduce.matches) {
+    term.ghosts.push({ lines: termView().map((l) => l.t), a: 1 });
+    if (term.ghosts.length > 6) term.ghosts.shift();
   }
+  const drop = term.lines.length >= KEEP ? 1 : 0;
+  if (drop) term.lines.shift();
   term.lines.push({ t: "", s: "" });
+  // scrolled back, the view holds still while the wire types on below it
+  if (term.back) { term.back = liveTop() - Math.max(0, top - drop); paintMore(); }
   term.linksDirty = true;
+}
+
+// n > 0 scrolls back toward older lines, n < 0 toward the latest
+function termScroll(n) {
+  if (S.style !== "terminal") return;
+  const b = Math.max(0, Math.min(liveTop(), term.back + n));
+  if (b === term.back) return;
+  term.back = b;
+  term.ghosts = [];
+  term.linksDirty = true;
+  paintMore();
+}
+
+const more = $("more");
+function paintMore() {
+  more.hidden = !term.back;
+  if (!term.back) return;
+  const below = term.lines.length - termTop() - (term.rows - 1);
+  const lines = below === 1 ? "line" : "lines";
+  more.textContent = term.cols >= 48 ? `${below} newer ${lines} below. Jump to the latest [End]` : `${below} newer ${lines}. Latest [End]`;
+  more.setAttribute("aria-label", `${below} newer ${lines} below. Jump to the latest`);
+  more.style.left = term.x0 + "px";
+  more.style.top = term.y0 + (term.rows - 1) * term.lh + "px";
+  more.style.height = term.lh + "px";
+  more.style.maxWidth = term.w - term.x0 * 2 + "px";
+  more.style.fontSize = term.size + "px";
 }
 
 function termBegin(e) {
@@ -726,10 +780,11 @@ function termBegin(e) {
 }
 
 function termRebuild() {
-  term.lines = []; term.ghosts = []; term.quiet = true;
-  for (const e of history.filter((e) => S.on.has(e.ch)).slice(-24)) termBegin(e).finish();
+  term.lines = []; term.ghosts = []; term.back = 0; term.quiet = true;
+  for (const e of history.filter((e) => S.on.has(e.ch))) termBegin(e).finish();
   term.quiet = false;
   term.linksDirty = true;
+  paintMore();
 }
 
 function drawRuns(l, x, y) {
@@ -765,10 +820,10 @@ function termDraw(now, dt) {
   ctx.globalAlpha = 1;
   ctx.shadowColor = "rgba(57, 255, 122, 0.55)";
   ctx.shadowBlur = 6;
-  term.lines.forEach((l, i) => drawRuns(l, term.x0, term.y0 + i * term.lh));
-  const row = Math.max(0, term.lines.length - 1);
-  const col = term.lines.length ? term.lines[row].t.length : 0;
-  if (job || reduce.matches || Math.floor(now / 530) % 2 === 0) {
+  termView().forEach((l, i) => drawRuns(l, term.x0, term.y0 + i * term.lh));
+  const row = Math.max(0, term.lines.length - 1 - termTop());
+  const col = term.lines.length ? term.lines[term.lines.length - 1].t.length : 0;
+  if (!term.back && (job || reduce.matches || Math.floor(now / 530) % 2 === 0)) {
     ctx.fillStyle = INK.n;
     ctx.fillRect(term.x0 + col * term.cw, term.y0 + row * term.lh + 2, term.cw, term.lh - 5);
   }
@@ -781,7 +836,7 @@ const linkEls = new Map();
 function syncLinks() {
   term.linksDirty = false;
   const keep = new Set();
-  if (S.style === "terminal") term.lines.forEach((L, row) => {
+  if (S.style === "terminal") termView().forEach((L, row) => {
     if (!L.link || L.t.length < L.link.col + L.link.len) return;
     if (L.link.wait) {
       if (!posted.get(L.link.id)) return;
@@ -934,6 +989,7 @@ $("tidy").addEventListener("click", () => { S.tidy = !S.tidy; recent.clear(); pa
 $("rewind").addEventListener("click", rewind);
 $("tolive").addEventListener("click", toLive);
 $("retry").addEventListener("click", start);
+more.addEventListener("click", () => termScroll(-Infinity));
 tray.querySelector(".hide").addEventListener("click", () => setHidden(true));
 showBtn.addEventListener("click", () => setHidden(false));
 
@@ -943,6 +999,46 @@ addEventListener("resize", () => {
   resizeQueued = true;
   requestAnimationFrame(() => { resizeQueued = false; layout(); });
 });
+
+// ---------- scrollback ----------
+let wheelCarry = 0;
+addEventListener("wheel", (e) => {
+  if (S.style !== "terminal" || e.ctrlKey || tray.contains(e.target)) return;
+  const px = e.deltaMode === 1 ? e.deltaY * term.lh : e.deltaMode === 2 ? e.deltaY * term.rows * term.lh : e.deltaY;
+  wheelCarry -= px / term.lh;
+  const n = Math.trunc(wheelCarry);
+  wheelCarry -= n;
+  if (n) termScroll(n);
+}, { passive: true });
+
+// a finger or pen drags the lines along with it; a mouse has the wheel
+let drag = null, dragged = false;
+document.addEventListener("pointerdown", (e) => {
+  dragged = false;
+  if (S.style !== "terminal" || e.pointerType === "mouse" || tray.contains(e.target) || e.target === showBtn) return;
+  drag = { id: e.pointerId, y: e.clientY, carry: 0, moved: 0 };
+});
+document.addEventListener("pointermove", (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dy = e.clientY - drag.y;
+  drag.y = e.clientY;
+  drag.moved += Math.abs(dy);
+  if (drag.moved > 8) dragged = true;
+  drag.carry += dy / term.lh;
+  const n = Math.trunc(drag.carry);
+  drag.carry -= n;
+  if (n) termScroll(n);
+});
+const endDrag = (e) => { if (drag && e.pointerId === drag.id) drag = null; };
+document.addEventListener("pointerup", endDrag);
+document.addEventListener("pointercancel", endDrag);
+// a drag that ends on a [WATCH] link shouldn't open it
+document.addEventListener("click", (e) => {
+  if (!dragged) return;
+  dragged = false;
+  e.preventDefault();
+  e.stopPropagation();
+}, true);
 
 document.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -957,7 +1053,16 @@ document.addEventListener("keydown", (e) => {
   else if (k === "2") setSpeed(10);
   else if (k === "3") setSpeed(60);
   else if (k === " " && !e.target.closest("button, a")) { e.preventDefault(); setSpeed(S.speed ? 0 : S.resume); }
+  else if (S.style !== "terminal") return;
+  else if (k === "arrowup") termScroll(e.shiftKey ? 5 : 1);
+  else if (k === "arrowdown") termScroll(e.shiftKey ? -5 : -1);
+  else if (k === "pageup") termScroll(term.rows - 2);
+  else if (k === "pagedown") termScroll(2 - term.rows);
+  else if (k === "home") termScroll(Infinity);
+  else if (k === "end") termScroll(-Infinity);
   else return;
+  // arrows and page keys mean the terminal here, not the page
+  if (k.startsWith("arrow") || k.startsWith("page") || k === "home" || k === "end") e.preventDefault();
 });
 
 // ---------- clock ----------
