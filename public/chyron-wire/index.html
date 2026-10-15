@@ -593,11 +593,10 @@ function process(row) {
 
 // ---------- typing ----------
 function begin(e) {
-  if (!e.note) {
-    history.push(e);
-    if (history.length > 200) history.shift();
-    logEntry(e);
-  }
+  // notes stay in history so a redraw keeps the "rewound to" line where it fell
+  history.push(e);
+  if (history.length > 200) history.shift();
+  if (!e.note) logEntry(e);
   return S.style === "terminal" ? termBegin(e) : paperBegin(e);
 }
 
@@ -781,7 +780,7 @@ function termBegin(e) {
 
 function termRebuild() {
   term.lines = []; term.ghosts = []; term.back = 0; term.quiet = true;
-  for (const e of history.filter((e) => S.on.has(e.ch))) termBegin(e).finish();
+  for (const e of history.filter((e) => e.note || S.on.has(e.ch))) termBegin(e).finish();
   term.quiet = false;
   term.linksDirty = true;
   paintMore();
