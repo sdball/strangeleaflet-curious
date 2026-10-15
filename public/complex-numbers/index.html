@@ -331,6 +331,36 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
 .sources h2 { color: var(--ink); }
 .sources li { margin-bottom: .45rem; }
 
+/* ---------- Bigger boards ---------- */
+/* the board and, on a wide screen, a button under it that hides the controls and gives the board the whole panel */
+.board-box { display: grid; gap: .4rem; min-width: 0; }
+.grow { display: none; }
+@media (min-width: 801px) {
+  .grow {
+    display: grid;
+    place-items: center;
+    justify-self: end;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--board-muted);
+    background: transparent;
+    border: 1px solid var(--board-edge);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .grow:hover { color: var(--board-ink); border-color: var(--board-muted); }
+  .grow[aria-pressed="true"] { color: var(--board-ink); background: var(--board-edge); }
+  .grow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .grow .in, .grow[aria-pressed="true"] .out { display: none; }
+  .grow[aria-pressed="true"] .in { display: inline; }
+  .split.big { grid-template-columns: minmax(0, 1fr); }
+  .split.big > .side { display: none; }
+  /* as wide as the panel, but short enough that the board and its button fit in the window */
+  .split.big .board-box { width: min(100%, calc((100dvh - 5.5rem) * var(--ar))); justify-self: center; }
+  .split.big .board-box > svg { max-width: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .handle .halo { transition: none; }
 }
@@ -348,7 +378,7 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Complex Numbers</h1>
   <p class="lede">You know numbers as points on a line. Complex numbers are points on a plane, and multiplying by one turns and stretches the whole plane around zero. Start on the number line, meet <span class="v">i</span>, the square root of −1, and then watch arithmetic turn into rotation.</p>
-  <p class="howto">Points you can drag can also be clicked or reached with <kbd>Tab</kbd>, then nudged with the arrow keys. Hold <kbd>Shift</kbd> for bigger steps.</p>
+  <p class="howto">Points you can drag can also be clicked or reached with <kbd>Tab</kbd>, then nudged with the arrow keys. Hold <kbd>Shift</kbd> for bigger steps. On a wide screen, the button under each board hides the controls and enlarges the board.</p>
 
   <!-- 1. The number line -->
   <section class="panel" aria-labelledby="l-h">
@@ -1642,6 +1672,34 @@ function draw4() {
 
 $("e-th").addEventListener("input", (e) => { E.deg = +e.target.value; draw4(); });
 $("e-n").addEventListener("input", (e) => { E.n = +e.target.value; draw4(); });
+
+// ---------- Bigger boards ----------
+
+// a button under each board that hides the controls beside it and lets the board fill the panel
+const GROW_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="out" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="in" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>`;
+document.querySelectorAll(".split").forEach((split) => {
+  const board = split.querySelector(":scope > svg");
+  if (!board || !split.querySelector(":scope > .side")) return;
+  const box = document.createElement("div");
+  box.className = "board-box";
+  board.before(box);
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "grow";
+  b.innerHTML = GROW_ICON;
+  b.title = "Enlarge the board";
+  b.setAttribute("aria-label", "Enlarge the board and hide the controls");
+  b.setAttribute("aria-pressed", "false");
+  b.addEventListener("click", () => {
+    // the box takes the board's shape, so the button stays at the board's corner
+    const { width, height } = board.viewBox.baseVal;
+    box.style.setProperty("--ar", width / height);
+    const on = split.classList.toggle("big");
+    b.setAttribute("aria-pressed", on);
+    if (on) box.scrollIntoView({ block: "nearest", behavior: motionOK() ? "smooth" : "auto" });
+  });
+  box.append(board, b);
+});
 
 // ---------- Start ----------
 
