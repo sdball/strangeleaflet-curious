@@ -848,7 +848,9 @@ function syncLinks() {
     if (!a) {
       a = el("a", "tlink");
       a.href = L.link.href;
-      a.setAttribute("aria-label", L.link.label);
+      // a new tab, so the wire keeps typing behind it
+      a.target = "_blank"; a.rel = "noopener";
+      a.setAttribute("aria-label", L.link.label + " (opens in a new tab)");
       linkEls.set(L.link.key, a);
       $("links").append(a);
     }
@@ -892,6 +894,7 @@ function paperBegin(e) {
   const watch = el("a", "watch");
   watch.dataset.show = showId(e.path);
   watch.dataset.href = "https://archive.org/details/" + e.path;
+  watch.target = "_blank"; watch.rel = "noopener";
   markWatch(watch);
   watch.hidden = true;
   art.append(watch);
@@ -922,8 +925,10 @@ function paperBegin(e) {
 
 // without an href the line is plain text: no tab stop, nothing to click through to a missing page
 function markWatch(a) {
-  if (posted.get(a.dataset.show)) { a.href = a.dataset.href; a.textContent = "Watch the broadcast"; }
-  else { a.removeAttribute("href"); a.textContent = "Still taping. The recording posts after the show."; }
+  if (posted.get(a.dataset.show)) {
+    a.href = a.dataset.href; a.textContent = "Watch the broadcast";
+    a.setAttribute("aria-label", "Watch the broadcast (opens in a new tab)");
+  } else { a.removeAttribute("href"); a.textContent = "Still taping. The recording posts after the show."; }
 }
 
 function paperRebuild() {
