@@ -198,7 +198,7 @@ a { color: inherit; }
   </div>
 </main>
 
-<section id="tray" aria-label="Wire controls">
+<section id="tray" aria-label="Wire controls" hidden>
   <div class="groups">
     <div class="group" role="group" aria-labelledby="l-style">
       <span class="lbl" id="l-style">Style</span>
@@ -241,7 +241,7 @@ a { color: inherit; }
     <button class="hide" aria-keyshortcuts="h">Hide controls</button>
   </div>
 </section>
-<button id="show" hidden aria-keyshortcuts="h">Show controls</button>
+<button id="show" aria-keyshortcuts="h">Show controls</button>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -267,7 +267,7 @@ const CHANNELS = {
 const ALIAS = { MSNBCW: "MSNOW" };
 
 // ---------- state ----------
-const S = { style: "terminal", speed: 1, resume: 1, tidy: true, on: new Set(Object.keys(CHANNELS)), hidden: false };
+const S = { style: "terminal", speed: 1, resume: 1, tidy: true, on: new Set(Object.keys(CHANNELS)), hidden: true };
 try {
   const s = localStorage.getItem("chyron-wire-style");
   if (s === "terminal" || s === "paper") S.style = s;
@@ -355,6 +355,8 @@ async function start() {
     try { await loadTape(); } catch (e2) {
       say(`Couldn't reach the Internet Archive (${e2.message}).`);
       $("retry").hidden = false;
+      // the error and its retry button live in the tray
+      if (S.hidden) setHidden(false, false);
       return;
     }
   }
@@ -967,12 +969,12 @@ function setStyle(s) {
   layout();
 }
 
-function setHidden(h) {
+function setHidden(h, focus = true) {
   S.hidden = h;
   tray.hidden = h;
   showBtn.hidden = !h;
   layout();
-  (h ? showBtn : tray.querySelector(".hide")).focus({ preventScroll: true });
+  if (focus) (h ? showBtn : tray.querySelector(".hide")).focus({ preventScroll: true });
 }
 
 function layout() {
