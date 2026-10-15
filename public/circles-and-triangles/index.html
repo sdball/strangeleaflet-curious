@@ -474,10 +474,10 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
       <p class="station">Station 6</p>
       <h2 id="s6-h">Unroll the circle</h2>
       <p>Back to sine. Walk <span class="v">P</span> round the circle and carry its height across to a graph. The graph uses the same scale as the circle, so when <span class="v">P</span> has walked some distance round, the graph has moved that same distance to the right: the circle is unrolled flat. The height traces a wave, the <b>sine wave</b>.</p>
-      <p>That walk is a better way to measure an angle than degrees. <b>An angle in radians is how far you walk round a circle of radius 1.</b> A whole turn is the whole way round, 2π ≈ 6.283, so 360° is 2π radians, 180° is π, and 90° is π/2. Press <b>Radians</b> to switch. Then pick any of the six functions to graph it. cos <span class="v">θ</span> is the same wave a quarter turn ahead, and the other four shoot off wherever the number they divide by, cos <span class="v">θ</span> or sin <span class="v">θ</span>, is 0.</p>
+      <p>That walk is a better way to measure an angle than degrees. <b>An angle in radians is how far you walk round a circle of radius 1.</b> A whole turn is the whole way round, 2π ≈ 6.283, so 360° is 2π radians, 180° is π, and 90° is π/2. Press <b>Radians</b> to switch. Then pick any of the six functions to graph it, and the circle shows its line as Station 5 drew it. cos <span class="v">θ</span> is the same wave a quarter turn ahead, and the other four shoot off wherever the number they divide by, cos <span class="v">θ</span> or sin <span class="v">θ</span>, is 0.</p>
     </div>
     <div class="full">
-      <svg class="board" id="board6" role="group" aria-label="A circle beside a graph. P's height is carried across to the graph, where it traces the sine wave, the walk round the circle is laid out along the graph's axis, and any of the six functions can be graphed"></svg>
+      <svg class="board" id="board6" role="group" aria-label="A circle beside a graph. P's height is carried across to the graph, where it traces the sine wave, the walk round the circle is laid out along the graph's axis, and any of the six functions can be graphed, with its line drawn on the circle"></svg>
     </div>
     <div class="split wide">
       <div class="side">
@@ -1409,6 +1409,46 @@ function pieces(n, upTo, cls) {
   return out;
 }
 
+// tan, sec, csc, and cot on the circle, as Station 5 draws them, cut off before the graph
+function lines6(c, s) {
+  const has = (n) => S6.show.has(n), wantT = has("tan") || has("sec"), wantC = has("csc") || has("cot");
+  const noT = Math.abs(c) < 1e-9, noC = Math.abs(s) < 1e-9, sx = c < 0 ? -1 : 1, sy = s < 0 ? -1 : 1;
+  // with room past each edge for an arrowhead
+  const x0 = -(L6.cx - 12) / L6.R, x1 = (L6.x0 - 14 - L6.cx) / L6.R, y1 = TOP6 - 0.1;
+  // a line from a toward b, cut off at the edge of the circle's side of the board
+  const cut = (a, b) => {
+    let k = 1;
+    if (b[0] > x1) k = Math.min(k, (x1 - a[0]) / (b[0] - a[0]));
+    if (b[0] < x0) k = Math.min(k, (x0 - a[0]) / (b[0] - a[0]));
+    if (Math.abs(b[1]) > y1) k = Math.min(k, (Math.sign(b[1]) * y1 - a[1]) / (b[1] - a[1]));
+    return { a, end: [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k], cut: k < 1 };
+  };
+  const T = wantT && !noT ? [sx, s / Math.abs(c)] : null, C = wantC && !noC ? [c / Math.abs(s), sy] : null;
+  const segs = {};
+  if (T) Object.assign(segs, { tan: cut([sx, 0], T), sec: cut([0, 0], T) });
+  if (C) Object.assign(segs, { cot: cut([0, sy], C), csc: cut([0, 0], C) });
+  const lenOf = (n) => Math.hypot(segs[n].end[0] - segs[n].a[0], segs[n].end[1] - segs[n].a[1]);
+  const items = [];
+  if (T) items.push(b6.seg(sx, -TOP6, sx, TOP6, "tline ctan"));
+  if (C) items.push(b6.seg(x0 - 0.05, sy, x1 + 0.05, sy, "tline ccot"));
+  if (T || C) { const e = cut([0, 0], [6 * c, 6 * s]).end; items.push(b6.seg(0, 0, e[0], e[1], "ext")); }
+  // sec and csc both run out along the line through P, so the longer one goes underneath, wider
+  const both = has("sec") && has("csc") && segs.sec && segs.csc;
+  const outer = both && (lenOf("sec") >= lenOf("csc") ? "sec" : "csc");
+  const order = ["tan", "cot", ...(outer === "csc" ? ["csc", "sec"] : ["sec", "csc"])];
+  for (const n of order) {
+    if (!has(n) || !segs[n]) continue;
+    const { a: [ax, ay], end: [ex, ey], cut: off } = segs[n], line = b6.seg(ax, ay, ex, ey, `side c${n}`);
+    if (n === outer) line.style.strokeWidth = "8px";
+    items.push(line);
+    if (off) {
+      const dx = ex - ax, dy = ay - ey, len = Math.hypot(dx, dy);
+      items.push(arrowAt(b6.X(ex) + (dx / len) * 6, b6.Y(ey) + (dy / len) * 6, dx / len, dy / len, `c${n}`));
+    }
+  }
+  return items;
+}
+
 function draw6() {
   const d = S6.deg, rad = d * RAD, c = cosD(d), s = sinD(d), X = gx(rad), items = [], show = FNS.filter((n) => S6.show.has(n));
   const noT = Math.abs(c) < 1e-9, noC = Math.abs(s) < 1e-9;
@@ -1417,6 +1457,7 @@ function draw6() {
   if (d > 0.5) items.push(b6.arc(1, 0, d, "walk"));
   if (S6.show.has("cos")) items.push(b6.seg(0, 0, c, 0, "side ccos"));
   if (S6.show.has("sin")) items.push(b6.seg(c, 0, c, s, "side csin"));
+  items.push(...lines6(c, s));
   items.push(b6.seg(0, 0, c, s, "side rad"));
   if (S6.show.has("sin")) items.push(svgEl("line", { class: "carry csin", x1: b6.X(c), y1: b6.Y(s), x2: X, y2: b6.Y(s) }));
   // the graph: where each function has no value, then its curve, faint ahead and solid behind
