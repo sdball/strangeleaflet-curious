@@ -65,6 +65,13 @@ a { color: inherit; }
 }
 [data-style="terminal"] #head h1 { font-weight: 400; font-size: 30px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 8px rgba(57, 255, 122, 0.6); }
 [data-style="terminal"] #clock { font-size: 20px; color: var(--phos-dim); }
+/* the source credit rides at the end of the head line, amber like the [WATCH] links */
+[data-style="terminal"] .ears { display: block; order: 1; font-size: 20px; text-transform: uppercase; }
+[data-style="terminal"] #ear-left { display: none; }
+[data-style="terminal"] .ears a { position: relative; color: #FFB347; pointer-events: auto; }
+/* a 40px tap target without the focus outline swallowing the title above */
+[data-style="terminal"] .ears a::before { content: ""; position: absolute; inset: -10px 0; }
+[data-style="terminal"] .ears a:focus-visible { outline-color: #FFB347; }
 
 [data-style="paper"] #head { max-width: 1240px; margin: 0 auto; padding: 18px 1.25rem 0; text-align: center; }
 [data-style="paper"] .ears {
@@ -96,6 +103,7 @@ a { color: inherit; }
 .hed { font: 700 1.18rem/1.22 'Playfair Display', serif; margin: 0; overflow-wrap: anywhere; }
 .deck { font-size: 0.93rem; line-height: 1.45; margin: 0.35rem 0 0; overflow-wrap: anywhere; }
 .watch { display: inline-block; margin-top: 0.35rem; font-size: 0.78rem; font-style: italic; color: var(--accent); }
+.watch:not([href]) { color: var(--muted); }
 .live::after { content: ""; display: inline-block; width: 0.5em; height: 0.85em; margin-left: 2px; vertical-align: -0.08em; background: var(--accent); }
 .empty { color: var(--muted); font-style: italic; font-size: 0.9rem; }
 @media (max-width: 760px) {
@@ -369,6 +377,7 @@ function backfill() {
 }
 
 function enqueue(e) {
+  if (e.path) ask(e);
   queue.push(e);
   while (queue.length > 12) queue.shift();
 }
@@ -451,6 +460,37 @@ function toLive() {
 }
 
 function atLiveEdge() { return live && (stalled || Date.now() - playhead() < LAG + 2 * 60000); }
+
+// ---------- recordings ----------
+// the archive posts a show's recording about an hour after it ends, so a show still on the air
+// has no page yet. ask its metadata API (which sends CORS headers) before linking to one
+const META = "https://archive.org/metadata/";
+const posted = new Map();   // show id -> true once its page exists
+const showId = (path) => path.split("/")[0];
+
+function ask(e) {
+  const id = showId(e.path);
+  if (posted.has(id)) return;
+  // half a day on, the show has long since been posted
+  if (Date.now() - e.t > 12 * HOUR) { posted.set(id, true); return; }
+  posted.set(id, false);
+  check(id);
+}
+
+async function check(id) {
+  try {
+    const res = await fetch(`${META}${id}/metadata/identifier`);
+    // a show with no page yet answers {"error": "Couldn't locate item …"}
+    if (res.ok && !("result" in await res.json())) return;
+  } catch (err) {
+    // can't tell, so link it anyway, as before
+  }
+  posted.set(id, true);
+  term.linksDirty = true;
+  document.querySelectorAll(`.watch[data-show="${id}"]`).forEach(markWatch);
+}
+
+setInterval(() => { for (const [id, ok] of posted) if (!ok) check(id); }, 5 * 60000);
 
 // ---------- cleaning up OCR ----------
 const PHONE = /[0-9O]{3}[-. ][0-9O]{3}[-. ][0-9O]{4}/;
@@ -626,19 +666,21 @@ function termFormat(e) {
     out.push({ t: `${time}  ${name}`, s: "d".repeat(time.length + 2) + "b".repeat(name.length) });
     for (const l of e.lines) for (const w of wrap(l, term.cols - 3)) out.push({ t: "  " + w, s: "  " + "n".repeat(w.length) });
   }
-  const tag = "[WATCH]";
+  // a show whose recording isn't posted yet gets a dim [TAPING], swapped for [WATCH] once it is
+  const id = showId(e.path), wait = !posted.get(id);
+  const tag = wait ? "[TAPING]" : "[WATCH]", ink = (wait ? "d" : "l").repeat(tag.length);
   const link = {
-    len: tag.length, key: e.t + e.ch, href: "https://archive.org/details/" + e.path,
+    len: tag.length, key: e.t + e.ch, id, wait, href: "https://archive.org/details/" + e.path,
     label: `Watch ${CHANNELS[e.ch].name} at ${time} on the Internet Archive`,
   };
   const end = out[out.length - 1];
-  if (end.t.length + 2 + tag.length <= term.cols) {
+  if (end.t.length + 2 + "[TAPING]".length <= term.cols) {
     link.col = end.t.length + 2;
-    end.t += "  " + tag; end.s += "  " + "l".repeat(tag.length); end.link = link;
+    end.t += "  " + tag; end.s += "  " + ink; end.link = link;
   } else {
     const ind = term.cols >= 56 ? 18 : 2;
     link.col = ind;
-    out.push({ t: " ".repeat(ind) + tag, s: " ".repeat(ind) + "l".repeat(tag.length), link });
+    out.push({ t: " ".repeat(ind) + tag, s: " ".repeat(ind) + ink, link });
   }
   return out;
 }
@@ -741,6 +783,12 @@ function syncLinks() {
   const keep = new Set();
   if (S.style === "terminal") term.lines.forEach((L, row) => {
     if (!L.link || L.t.length < L.link.col + L.link.len) return;
+    if (L.link.wait) {
+      if (!posted.get(L.link.id)) return;
+      // the tag is always last on its line, so the swap only touches the tail
+      L.t = L.t.slice(0, L.link.col) + "[WATCH]"; L.s = L.s.slice(0, L.link.col) + "l".repeat(7);
+      L.link.wait = false; L.link.len = 7;
+    }
     keep.add(L.link.key);
     let a = linkEls.get(L.link.key);
     if (!a) {
@@ -787,8 +835,10 @@ function paperBegin(e) {
     art.append(p);
     return { p, node, text };
   });
-  const watch = el("a", "watch", "Watch the broadcast");
-  watch.href = "https://archive.org/details/" + e.path;
+  const watch = el("a", "watch");
+  watch.dataset.show = showId(e.path);
+  watch.dataset.href = "https://archive.org/details/" + e.path;
+  markWatch(watch);
   watch.hidden = true;
   art.append(watch);
   col.querySelector("h2").after(art);
@@ -814,6 +864,12 @@ function paperBegin(e) {
     finish() { job.put(Infinity); },
   };
   return job;
+}
+
+// without an href the line is plain text: no tab stop, nothing to click through to a missing page
+function markWatch(a) {
+  if (posted.get(a.dataset.show)) { a.href = a.dataset.href; a.textContent = "Watch the broadcast"; }
+  else { a.removeAttribute("href"); a.textContent = "Still taping. The recording posts after the show."; }
 }
 
 function paperRebuild() {
