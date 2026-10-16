@@ -10,27 +10,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* Like pocket-places, a full-screen game keeps one fixed palette:
+   a tactical display, dark whatever the system theme. */
 :root {
-  /* Page: a printed mission briefing */
-  --bg: #E6E3DA;
-  --ink: #1D2125;
-  --muted: #5A6066;
-  --line: #C9C4B6;
-  --plate: #F3F1EA;
-  --accent: #B8441A;
-  --focus: #B8441A;
-
-  /* Board: a tactical display, dark in either theme */
-  --board: #111A20;
-  --board-deep: #0C1418;
-  --board-edge: #27353E;
-  --board-ink: #DCE6EA;
-  --board-muted: #8FA2AC;
-  --btn: #1A262E;
+  --bg: #091015;
+  --panel: #0F181E;
+  --panel-deep: #0B1317;
+  --edge: #24323B;
+  --ink: #DCE6EA;
+  --muted: #8FA2AC;
+  --btn: #16222A;
   --btn-edge: #33444F;
   --btn-hover: #4C6170;
 
-  /* What things are on the board */
   --hex: #16222A;
   --hex-line: #24323B;
   --rough: #262A22;
@@ -46,145 +38,154 @@
   --foe: #FF6B4A;
   --amber: #FFB547;
   --good: #7BD88F;
+  --hazard: #F07A4A;
 
   --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
   --sans: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  box-sizing: border-box;
-  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #121619; --ink: #E2E6E8; --muted: #9AA3A9; --line: #2B3338; --plate: #1A2024;
-    --accent: #F07A4A; --focus: #F07A4A;
-    --board: #0E161B; --board-deep: #091014; --board-edge: #24323A;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #121619; --ink: #E2E6E8; --muted: #9AA3A9; --line: #2B3338; --plate: #1A2024;
-  --accent: #F07A4A; --focus: #F07A4A;
-  --board: #0E161B; --board-deep: #091014; --board-edge: #24323A;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
   color-scheme: dark;
 }
-
-*, *::before, *::after { box-sizing: inherit; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
 body {
-  margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 400 1.0625rem/1.55 var(--sans);
+  font: 400 1rem/1.5 var(--sans);
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-kbd { font: 500 .8em var(--mono); }
-
-.back {
-  display: inline-block;
-  color: var(--muted);
-  font-size: .95rem;
-  text-underline-offset: 3px;
-  margin-bottom: 1rem;
-}
-h1 {
-  font: 700 clamp(2.3rem, 7vw, 3.4rem)/1 var(--display);
-  letter-spacing: .02em;
-  text-transform: uppercase;
-  margin: 0 0 .5rem;
-}
-h1::after {
-  content: "";
-  display: block;
-  width: 4.5rem;
-  height: 6px;
-  margin-top: .45rem;
-  background: repeating-linear-gradient(-45deg, var(--accent) 0 8px, transparent 8px 14px);
-}
-.lede { margin: 0 0 .6rem; color: var(--muted); max-width: 62ch; }
-.howto { margin: 0 0 1.4rem; color: var(--muted); font-size: .95rem; max-width: 62ch; }
-h2 { font: 600 1.5rem/1.2 var(--display); letter-spacing: .02em; margin: 0 0 .75rem; }
-
-/* ---------- The battle panel ---------- */
-.panel {
-  background: var(--board);
-  color: var(--board-ink);
-  border: 1px solid var(--board-edge);
-  border-radius: 10px;
-  padding: 1rem 1rem 1.1rem;
-  margin-bottom: 1.5rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 32px -24px rgba(0,0,0,.8);
-}
-.panel :focus-visible { outline-color: var(--amber); }
-.panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .6rem 1rem; }
-.panel-head h2 { margin: 0; }
-.eyebrow { font: 600 .72rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--board-muted); margin: 0 0 .1rem; }
-.brief { margin: .3rem 0 0; color: var(--board-muted); font-size: .95rem; }
-.brief b { color: var(--board-ink); font-weight: 600; }
-.controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-.seg { display: inline-flex; border: 1px solid var(--btn-edge); border-radius: 6px; overflow: hidden; }
-.seg button { border: 0; border-radius: 0; border-right: 1px solid var(--btn-edge); }
-.seg button:last-child { border-right: 0; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+kbd { font: 500 .78em var(--mono); color: var(--muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 button {
   font: 600 .9rem/1.1 var(--display);
   letter-spacing: .03em;
-  color: var(--board-ink);
+  color: var(--ink);
   background: var(--btn);
   border: 1px solid var(--btn-edge);
   border-radius: 6px;
   min-height: 42px;
-  padding: .45rem .75rem;
+  padding: .45rem .8rem;
   cursor: pointer;
   touch-action: manipulation;
 }
 button:hover:not(:disabled) { border-color: var(--btn-hover); }
-button[aria-pressed="true"] { background: var(--amber); color: #1B1406; border-color: var(--amber); }
+button[aria-pressed="true"], button[aria-selected="true"] { background: var(--amber); color: #1B1406; border-color: var(--amber); }
 button:disabled { opacity: .38; cursor: default; }
 button.go { background: var(--you); color: #06191E; border-color: var(--you); }
 button.warn { background: var(--foe); color: #210803; border-color: var(--foe); }
+button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit; opacity: .7; }
 
-.field {
+/* ---------- The game screen ---------- */
+/* phone: map on top, the prompt bar, then one tabbed panel */
+.game {
+  position: fixed;
+  inset: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 330px);
-  gap: 1rem 1.25rem;
-  margin-top: 1rem;
-  align-items: start;
+  gap: 8px;
+  padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: max-content max-content max-content max-content minmax(170px, 1fr);
+  grid-template-areas: "top" "map" "bar" "tabs" "panel";
+  /* a short phone can't fit it all, so let it scroll a little */
+  overflow-y: auto;
 }
-.turnline .vitals { display: none; }
-@media (max-width: 820px) {
-  .field { grid-template-columns: minmax(0, 1fr); }
-  /* keep the buttons near the map; the full mech card can wait below */
-  #mechcard { order: 5; }
-  .prefs { order: 6; }
-  .turnline .vitals { display: inline; }
+.top { grid-area: top; }
+.mapwrap { grid-area: map; }
+.bar { grid-area: bar; }
+.tabs { grid-area: tabs; display: flex; }
+.pane { grid-area: panel; min-height: 0; overflow-y: auto; display: flex; }
+.game[data-tab="info"] #mechpane, .game[data-tab="info"] #logpane,
+.game[data-tab="mech"] #infopane, .game[data-tab="mech"] #logpane,
+.game[data-tab="log"] #infopane, .game[data-tab="log"] #mechpane { display: none; }
+
+/* tablet and small laptop: map left, tabbed panel right */
+@media (min-width: 700px) {
+  .game {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "top top" "map tabs" "map panel" "bar panel";
+    overflow: hidden;
+  }
+}
+/* wide: everything at once, like a console game's HUD */
+@media (min-width: 1150px) {
+  .game {
+    grid-template-columns: 280px minmax(0, 1fr) 330px;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "top top top" "mech map info" "mech map log" "mech bar log";
+  }
+  .tabs { display: none; }
+  .game[data-tab] #mechpane, .game[data-tab] #infopane, .game[data-tab] #logpane { display: flex; }
+  #mechpane { grid-area: mech; }
+  #infopane { grid-area: info; max-height: 52vh; }
+  #logpane { grid-area: log; }
 }
 
-.board { min-width: 0; }
+.top { display: flex; align-items: center; gap: .4rem .9rem; flex-wrap: wrap; min-width: 0; }
+.brand {
+  font: 700 1.25rem/1 var(--display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin: 0;
+  padding-left: 14px;
+  background: repeating-linear-gradient(-45deg, var(--hazard) 0 3px, transparent 3px 6px) left center / 8px 70% no-repeat;
+}
+.sitename { font: 500 .78rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0; flex: 1 1 auto; min-width: 0; }
+.top button { min-height: 40px; padding: .35rem .7rem; font-size: .82rem; }
+@media (max-width: 699px) {
+  .top { flex-wrap: nowrap; }
+  .brand { flex: 1 1 auto; }
+  .sitename { display: none; }
+  .budget .extra { display: none; }
+  /* the map's row sizes from this height; an SVG alone reports a guess */
+  .mapwrap { height: min(calc((100vw - 16px) * 1.03), 46vh); height: min(calc((100vw - 16px) * 1.03), 46dvh); }
+  .mapwrap #map { height: 100%; max-height: none; }
+}
+
+.mapwrap { position: relative; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
 #map {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 80vh;
-  background: var(--board-deep);
-  border: 1px solid var(--board-edge);
-  border-radius: 8px;
+  max-height: 50vh;
+  max-height: 50dvh;
   -webkit-user-select: none;
   user-select: none;
   touch-action: manipulation;
 }
+@media (min-width: 700px) { #map { height: 100%; max-height: none; } }
 #map:focus { outline: none; }
-#map:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.ticker {
-  margin: .5rem 0 0;
-  min-height: 2.6em;
-  font: 400 .85rem/1.35 var(--mono);
-  color: var(--board-muted);
+#map:focus-visible .board-bg { stroke: var(--amber); stroke-width: 2; }
+.board-bg { fill: var(--panel-deep); stroke: var(--edge); stroke-width: 1; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
 }
-.cursor-info { margin: .25rem 0 0; font: 400 .82rem/1.35 var(--mono); color: var(--board-muted); min-height: 1.35em; }
+.bar { padding: .5rem .65rem; display: grid; gap: .35rem; min-width: 0; min-height: 98px; align-content: start; }
+.budget { margin: 0; font: 500 .74rem/1.4 var(--mono); color: var(--muted); }
+.budget b { color: var(--ink); font-weight: 600; }
+.budget .on { color: var(--you); }
+.budget .foeturn { color: var(--foe); }
+@media (min-width: 1150px) { .budget .vitals { display: none; } }
+.prompt-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; }
+.prompt { margin: 0; flex: 1 1 14rem; font-size: .9rem; line-height: 1.35; min-width: 0; }
+.prompt .big { font: 700 1.25rem var(--display); color: var(--amber); margin-right: .35rem; }
+.barbtns { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+.tabs { gap: 4px; }
+.tabs button { flex: 1; min-height: 40px; font-size: .82rem; }
+.pane { flex-direction: column; padding: .7rem .8rem; }
+.pane > h2 { font: 600 .72rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 .45rem; }
 
 /* hexes and what's on them */
 .hx { stroke: var(--hex-line); stroke-width: 1; cursor: pointer; }
@@ -200,7 +201,6 @@ button.warn { background: var(--foe); color: #210803; border-color: var(--foe); 
 .wall-top { fill: var(--wall-top); pointer-events: none; }
 .wall-edge { fill: none; stroke: #0007; stroke-width: 1.2; pointer-events: none; }
 .sandbag { fill: var(--sandbag); stroke: var(--sandbag-edge); stroke-width: 1; pointer-events: none; }
-.coord { fill: var(--board-muted); opacity: .35; font: 500 7px var(--mono); pointer-events: none; }
 
 #over, #units, #fx { pointer-events: none; }
 .reach { fill: var(--you); fill-opacity: .14; stroke: var(--you); stroke-opacity: .35; stroke-width: 1; }
@@ -213,122 +213,185 @@ button.warn { background: var(--foe); color: #210803; border-color: var(--foe); 
 .smoke-puff { fill: var(--smoke); fill-opacity: .22; }
 .smoke-pre { fill: var(--smoke); fill-opacity: .22; stroke: var(--smoke); stroke-width: 1.5; stroke-dasharray: 3 3; }
 .cursor { fill: none; stroke: #fff; stroke-width: 2; stroke-dasharray: 3 3; }
-.inspect { fill: none; stroke: var(--foe); stroke-width: 2; stroke-dasharray: 2 3; }
+.picked { fill: #fff; fill-opacity: .06; stroke: #fff; stroke-opacity: .75; stroke-width: 1.6; }
+.youring { fill: none; stroke: var(--you); stroke-width: 1.5; stroke-dasharray: 2 4; }
 
 .tok-body { stroke-width: 2.5; }
 .tok.you .tok-body { fill: #0B2A33; stroke: var(--you); }
 .tok.you .glyph { fill: var(--you); }
 .tok.foe .tok-body { fill: #36140D; stroke: var(--foe); }
 .tok.foe.active .tok-body { stroke: var(--amber); }
-.tok text { font: 700 15px var(--display); text-anchor: middle; dominant-baseline: central; fill: var(--board-ink); }
+.tok text { font: 700 15px var(--display); text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
 .tok .num { font: 600 8px var(--mono); fill: var(--foe); }
 .tok .tag { font: 600 7.5px var(--mono); fill: var(--amber); letter-spacing: .04em; }
 .hpbar-bg { fill: #000a; }
 .hpbar { fill: var(--foe); }
 .tok.you .hpbar { fill: var(--you); }
 .lockring { fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-dasharray: 3 3; }
-.wreck { stroke: var(--board-muted); stroke-width: 2.2; stroke-linecap: round; opacity: .55; }
+.wreck { stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; opacity: .55; }
 .tracer { stroke: var(--amber); stroke-width: 2.2; stroke-linecap: round; opacity: .9; }
 .tracer.foe { stroke: var(--foe); }
 .pop { font: 700 15px var(--display); text-anchor: middle; paint-order: stroke; stroke: #000; stroke-width: 3px; }
 .pop.hurt { fill: var(--foe); }
 .pop.dealt { fill: var(--amber); }
-.pop.miss { fill: var(--board-muted); }
+.pop.miss { fill: var(--muted); }
 @keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-18px); opacity: 0; } }
 .pop { animation: rise .9s ease-out forwards; }
 
-/* the side column */
-.side { display: grid; gap: .85rem; align-content: start; min-width: 0; }
-.card {
-  background: var(--board-deep);
-  border: 1px solid var(--board-edge);
+/* ---------- Orders: the menu that opens on your mech ---------- */
+.orders {
+  position: absolute;
+  z-index: 5;
+  width: min(330px, calc(100% - 8px));
+  background: rgba(11, 19, 23, .97);
+  border: 1px solid var(--you);
   border-radius: 8px;
-  padding: .7rem .8rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .6);
+  padding: .5rem;
 }
+.orders[hidden] { display: none; }
+.orders-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: 0 0 .4rem; }
+.orders-head p { margin: 0; font: 600 .72rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--you); }
+.orders-head button { min-height: 32px; padding: .2rem .55rem; font-size: .75rem; }
+.orders-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem; }
+.orders-grid.one { grid-template-columns: minmax(0, 1fr); }
+.orders-grid button { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; text-align: left; padding: .35rem .5rem; min-height: 44px; }
+.orders-grid button small { font: 500 .64rem/1.3 var(--mono); color: var(--muted); letter-spacing: .02em; }
+.orders-grid .wide { grid-column: 1 / -1; }
+
+/* ---------- Dialogs over the map ---------- */
+.dialog {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(400px, calc(100% - 16px));
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+  background: rgba(11, 19, 23, .97);
+  border: 1px solid var(--amber);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .7);
+  padding: .9rem 1rem 1rem;
+}
+.dialog[hidden] { display: none; }
+.dialog.low { top: auto; bottom: 8px; transform: translateX(-50%); }
+.dialog h2 { font: 700 1.4rem/1.1 var(--display); letter-spacing: .04em; margin: 0 0 .4rem; }
+.dialog .eyebrow { font: 600 .7rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 .15rem; }
+.dialog p { margin: 0 0 .6rem; font-size: .92rem; }
+.dialog .row { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .3rem; }
+.dialog .row button { flex: 1 1 8rem; }
+.dialog .seg { display: flex; border: 1px solid var(--btn-edge); border-radius: 6px; overflow: hidden; margin: 0 0 .6rem; }
+.dialog .seg button { flex: 1; border: 0; border-radius: 0; border-right: 1px solid var(--btn-edge); }
+.dialog .seg button:last-child { border-right: 0; }
+.dialog.over-won { border-color: var(--good); }
+.dialog.over-lost { border-color: var(--foe); }
+.dialog.over-won h2 { color: var(--good); }
+.dialog.over-lost h2 { color: var(--foe); }
+
+/* ---------- Panels ---------- */
 .card h3 { font: 700 1.05rem/1.1 var(--display); letter-spacing: .04em; margin: 0; }
-.card .sub { font-size: .85rem; color: var(--board-muted); margin: .1rem 0 .5rem; }
-.meter { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) auto; align-items: center; gap: .5rem; font: 500 .8rem var(--mono); margin: .3rem 0; }
-.meter .k { color: var(--board-muted); text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; }
-.bar { height: 10px; background: #0008; border: 1px solid var(--board-edge); border-radius: 3px; overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--you); }
-.bar.heat i { background: var(--amber); }
+.card .sub { font-size: .8rem; color: var(--muted); margin: .1rem 0 .5rem; }
+.meter { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) auto; align-items: center; gap: .5rem; font: 500 .78rem var(--mono); margin: .3rem 0; }
+.meter .k { color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: .7rem; }
+.bar-meter { height: 10px; background: #0008; border: 1px solid var(--edge); border-radius: 3px; overflow: hidden; }
+.bar-meter i { display: block; height: 100%; background: var(--you); }
+.bar-meter.heat i { background: var(--amber); }
 .pips { display: flex; gap: 4px; }
 .pips i { width: 14px; height: 10px; border: 1px solid var(--you); border-radius: 2px; background: var(--you); }
 .pips i.gone { background: transparent; border-color: var(--btn-edge); }
 .pips.stress i { border-color: var(--amber); background: var(--amber); }
 .pips.stress i.gone { background: transparent; border-color: var(--btn-edge); }
-.stats { font: 400 .8rem/1.5 var(--mono); color: var(--board-muted); margin: .4rem 0 0; }
-.stats b { color: var(--board-ink); font-weight: 600; }
+.stats { font: 400 .78rem/1.5 var(--mono); color: var(--muted); margin: .4rem 0 0; }
+.stats b { color: var(--ink); font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: .3rem; margin: .45rem 0 0; }
-.chip { font: 600 .68rem var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--btn-edge); color: var(--board-muted); border-radius: 3px; padding: .1rem .35rem; }
+.chip { font: 600 .66rem var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--btn-edge); color: var(--muted); border-radius: 3px; padding: .1rem .35rem; }
 .chip.bad { color: var(--foe); border-color: var(--foe); }
 .chip.good { color: var(--good); border-color: var(--good); }
 .chip.amb { color: var(--amber); border-color: var(--amber); }
 .gear { list-style: none; margin: .5rem 0 0; padding: 0; font-size: .82rem; }
-.gear li { padding: .2rem 0; border-top: 1px dashed var(--board-edge); }
+.gear li { padding: .25rem 0; border-top: 1px dashed var(--edge); }
 .gear b { font-family: var(--display); font-weight: 600; letter-spacing: .03em; }
-.gear .d { color: var(--board-muted); font: 400 .74rem var(--mono); display: block; }
+.gear .d { color: var(--muted); font: 400 .72rem/1.4 var(--mono); display: block; }
 .gear li.broken b, .gear li.broken .d { text-decoration: line-through; opacity: .55; }
 
-.turnline { font: 500 .8rem/1.45 var(--mono); color: var(--board-muted); margin: 0; }
-.turnline b { color: var(--board-ink); font-weight: 600; }
-.turnline .on { color: var(--you); }
-.turnline .foeturn { color: var(--foe); }
-.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
-.actions button { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: .1rem; text-align: left; padding: .4rem .55rem; min-height: 46px; }
-.actions button small { font: 500 .62rem var(--mono); letter-spacing: .04em; color: var(--board-muted); text-transform: uppercase; }
-.actions button[aria-pressed="true"] small { color: #3B2A0A; }
-.actions button kbd { color: var(--board-muted); font-size: .66rem; }
-.actions button[aria-pressed="true"] kbd { color: #3B2A0A; }
-.actions .end { grid-column: span 3; align-items: center; flex-direction: row; justify-content: center; gap: .5rem; }
+.info { font-size: .88rem; }
+.info h3 { font: 700 1.1rem/1.15 var(--display); letter-spacing: .03em; margin: 0 0 .2rem; }
+.info h3.foe { color: var(--foe); }
+.info h3.you { color: var(--you); }
+.info .kind { font: 600 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.info p { margin: .2rem 0 .5rem; }
+.info ul { margin: .1rem 0 .6rem; padding-left: 1.05rem; font: 400 .78rem/1.5 var(--mono); color: var(--muted); }
+.info ul b { color: var(--ink); font-weight: 600; }
+.info .chance { font: 700 1.5rem/1 var(--display); color: var(--amber); }
+.info hr { border: 0; border-top: 1px dashed var(--edge); margin: .6rem 0; }
+.legend { list-style: none; padding: 0 !important; margin: .3rem 0 0 !important; display: grid; gap: .35rem; font-family: var(--sans) !important; font-size: .82rem !important; color: var(--ink) !important; }
+.legend li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: .5rem; align-items: start; }
+.legend svg { width: 26px; height: 26px; }
+.legend span { color: var(--muted); }
+.legend b { color: var(--ink); }
 
-.context { font-size: .9rem; }
-.context p { margin: 0 0 .5rem; }
-.context .big { font: 700 1.6rem/1 var(--display); color: var(--amber); }
-.context ul { margin: .2rem 0 .6rem; padding-left: 1.1rem; font: 400 .8rem/1.45 var(--mono); color: var(--board-muted); }
-.context .row { display: flex; flex-wrap: wrap; gap: .4rem; }
-.context .row button { flex: 1 1 8rem; }
-.choices { display: grid; gap: .4rem; }
-.choices button { text-align: left; display: block; }
-.choices button small { display: block; font: 400 .72rem var(--mono); color: var(--board-muted); margin-top: .15rem; letter-spacing: 0; }
-.choices button.go small, .choices button.warn small { color: inherit; opacity: .8; }
-
-.prefs { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .82rem; color: var(--board-muted); }
-
-.logbox { margin-top: 1rem; }
-.logbox h3 { font: 600 .78rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--board-muted); margin: 0 0 .35rem; }
 #log {
   list-style: none;
   margin: 0;
-  padding: .5rem .7rem;
-  max-height: 15rem;
+  padding: 0;
+  font: 400 .76rem/1.5 var(--mono);
   overflow-y: auto;
-  background: var(--board-deep);
-  border: 1px solid var(--board-edge);
-  border-radius: 8px;
-  font: 400 .8rem/1.5 var(--mono);
+  min-height: 0;
+  flex: 1;
 }
 #log li { padding: .15rem 0; border-bottom: 1px solid #ffffff08; }
 #log li.you { color: var(--you); }
 #log li.foe { color: #FFB3A3; }
 #log li.bad { color: var(--foe); font-weight: 600; }
-#log li.sys { color: var(--board-muted); }
+#log li.sys { color: var(--muted); }
 #log li.round { color: var(--amber); font-weight: 600; letter-spacing: .06em; padding-top: .4rem; }
 
-.notes { max-width: 66ch; margin-top: 2.25rem; }
-.notes li { margin-bottom: .6rem; }
-.sources { max-width: 66ch; margin-top: 2.25rem; color: var(--muted); font-size: .92rem; }
-.sources h2 { color: var(--ink); }
-.foot { margin-top: 2rem; color: var(--muted); font-size: .9rem; }
-
-@media (max-width: 420px) {
-  .wrap { padding-left: 1rem; padding-right: 1rem; }
-  .panel { padding: .75rem .6rem .9rem; }
-  .actions { gap: .3rem; }
-  .actions button { padding: .35rem .4rem; }
+/* ---------- Title and instruction screens ---------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  background: rgba(6, 11, 14, .94);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  padding: max(16px, var(--safe-t)) max(16px, var(--safe-r)) max(16px, var(--safe-b)) max(16px, var(--safe-l));
 }
+.screen[hidden] { display: none; }
+.sheet { max-width: 640px; margin: 0 auto; padding: 1rem 0 3rem; }
+.sheet[hidden] { display: none; }
+.back { display: inline-block; color: var(--muted); font-size: .95rem; text-underline-offset: 3px; margin-bottom: 1.5rem; }
+.sheet .logo {
+  font: 700 clamp(2.8rem, 12vw, 4.6rem)/.95 var(--display);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.logo::after {
+  content: "";
+  display: block;
+  width: 6rem;
+  height: 8px;
+  margin-top: .6rem;
+  background: repeating-linear-gradient(-45deg, var(--hazard) 0 9px, transparent 9px 16px);
+}
+.tagline { color: var(--muted); margin: .9rem 0 1.6rem; max-width: 46ch; font-size: 1.05rem; }
+.menu { display: grid; gap: .5rem; max-width: 360px; }
+.menu button { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-height: 52px; font-size: 1.1rem; padding: .55rem 1rem; }
+.menu button small { font: 400 .72rem var(--mono); color: var(--muted); letter-spacing: 0; margin-top: .15rem; }
+.menu button.go small { color: inherit; opacity: .75; }
+.legal { margin-top: 2.2rem; font-size: .78rem; color: var(--muted); max-width: 60ch; }
+.sheet h2 { font: 600 1.3rem/1.2 var(--display); letter-spacing: .03em; margin: 2rem 0 .6rem; }
+.sheet h1 { font: 700 2.2rem/1 var(--display); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 .6rem; }
+.sheet ul { padding-left: 1.2rem; }
+.sheet li { margin-bottom: .6rem; }
+.sheet .lede { color: var(--muted); }
+.sheet .stick { position: sticky; top: 0; padding: .5rem 0; background: rgba(6, 11, 14, .92); z-index: 1; }
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 </style>
 <script>
@@ -340,100 +403,120 @@ button.warn { background: var(--foe); color: #210803; border-color: var(--foe); 
         async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <a class="back" href="/">The Cabinet of Curios</a>
-  <h1>Hardpoint</h1>
-  <p class="lede">You pilot one mech, the Halberd, against a squad of hostiles on a battlefield built at random. Use walls and barricades for cover, keep an eye on your heat, and decide when it's worth pushing your reactor past what's safe. The rules are inspired by the LANCER tabletop game.</p>
-  <p class="howto">Pick an action, then tap a lit hex or a ringed hostile. Tap it again, or press the button that appears, to commit. On a keyboard, the arrow keys move a cursor over the map, <kbd>Enter</kbd> picks, and <kbd>Esc</kbd> backs out. Each action button shows its key.</p>
+<div class="game" id="game" data-tab="info">
+  <header class="top">
+    <h1 class="brand">Hardpoint</h1>
+    <p class="sitename" id="sitename"></p>
+    <button type="button" id="helpbtn">Help</button>
+    <button type="button" id="menubtn">Menu</button>
+  </header>
 
-  <section class="panel" aria-labelledby="battle-h">
-    <div class="panel-head">
-      <div>
-        <p class="eyebrow" id="sitecode">Site</p>
-        <h2 id="battle-h">Battlefield</h2>
-        <p class="brief" id="brief"></p>
-      </div>
-      <div class="controls">
-        <div class="seg" role="group" aria-label="Threat level">
-          <button type="button" data-threat="light" aria-pressed="false">Light</button>
-          <button type="button" data-threat="standard" aria-pressed="true">Standard</button>
-          <button type="button" data-threat="heavy" aria-pressed="false">Heavy</button>
-        </div>
-        <button type="button" id="restart">Restart</button>
-        <button type="button" id="newmap">New battlefield</button>
-      </div>
+  <div class="mapwrap" id="mapwrap">
+    <svg id="map" tabindex="0" role="application" aria-roledescription="hex map"
+         aria-label="Battlefield map. Arrow keys move the cursor, Shift moves it three hexes, Enter picks the hex under it, and Enter on your mech opens its orders. Escape backs out."
+         aria-describedby="cursorinfo"></svg>
+    <div class="orders" id="orders" hidden></div>
+    <div class="dialog" id="dialog" role="alertdialog" aria-labelledby="dialog-h" hidden></div>
+  </div>
+  <p class="sr-only" id="cursorinfo" aria-live="polite"></p>
+
+  <div class="bar panel" id="bar">
+    <p class="budget" id="budget"></p>
+    <div class="prompt-row">
+      <p class="prompt" id="prompt" aria-live="polite"></p>
+      <div class="barbtns" id="barbtns"></div>
     </div>
+  </div>
 
-    <div class="field">
-      <div class="board">
-        <svg id="map" tabindex="0" role="application" aria-roledescription="hex map"
-             aria-label="Battlefield map. Arrow keys move the cursor, Shift moves it three hexes, Enter picks the hex under it, Escape backs out."
-             aria-describedby="cursorinfo"></svg>
-        <p class="cursor-info" id="cursorinfo" aria-live="polite"></p>
-        <p class="ticker" id="ticker" aria-hidden="true"></p>
-      </div>
+  <div class="tabs" role="tablist" aria-label="Panels">
+    <button type="button" role="tab" id="tab-info" aria-controls="infopane" aria-selected="true" data-tab="info">Info</button>
+    <button type="button" role="tab" id="tab-mech" aria-controls="mechpane" aria-selected="false" data-tab="mech">Mech</button>
+    <button type="button" role="tab" id="tab-log" aria-controls="logpane" aria-selected="false" data-tab="log">Log</button>
+  </div>
+  <section class="pane panel card" id="mechpane" role="tabpanel" aria-labelledby="tab-mech"></section>
+  <section class="pane panel info" id="infopane" role="tabpanel" aria-labelledby="tab-info"></section>
+  <section class="pane panel" id="logpane" role="tabpanel" aria-labelledby="tab-log">
+    <h2 id="log-h">Combat log</h2>
+    <ol id="log" aria-labelledby="log-h" aria-live="polite"></ol>
+  </section>
+</div>
 
-      <div class="side">
-        <div class="card" id="mechcard"></div>
-        <p class="turnline" id="turnline" aria-live="polite"></p>
-        <div class="actions" id="actions" role="group" aria-label="Actions">
-          <button type="button" data-act="move" aria-keyshortcuts="M"><span>Move <kbd>M</kbd></span><small>standard</small></button>
-          <button type="button" data-act="boost" aria-keyshortcuts="B"><span>Boost <kbd>B</kbd></span><small>quick</small></button>
-          <button type="button" data-act="skirmish" aria-keyshortcuts="S"><span>Skirmish <kbd>S</kbd></span><small>quick</small></button>
-          <button type="button" data-act="barrage" aria-keyshortcuts="R"><span>Barrage <kbd>R</kbd></span><small>full</small></button>
-          <button type="button" data-act="lock" aria-keyshortcuts="L"><span>Lock On <kbd>L</kbd></span><small>quick</small></button>
-          <button type="button" data-act="smoke" aria-keyshortcuts="G"><span>Smoke <kbd>G</kbd></span><small>quick</small></button>
-          <button type="button" data-act="stabilize" aria-keyshortcuts="T"><span>Stabilize <kbd>T</kbd></span><small>full</small></button>
-          <button type="button" data-act="overcharge" aria-keyshortcuts="O"><span>Overcharge <kbd>O</kbd></span><small id="occost">free, +1 heat</small></button>
-          <button type="button" data-act="core" aria-keyshortcuts="C"><span>Core <kbd>C</kbd></span><small>free, once</small></button>
-          <button type="button" class="end" data-act="end" aria-keyshortcuts="E">End turn <kbd>E</kbd></button>
-        </div>
-        <div class="card context" id="context" aria-live="polite"></div>
-        <div class="prefs">
-          <button type="button" id="askbrace" aria-pressed="true">Ask before bracing</button>
-        </div>
-      </div>
+<div class="screen" id="screen" role="dialog" aria-modal="true" hidden>
+  <section class="sheet" id="title" aria-labelledby="title-h" hidden>
+    <a class="back" href="/">The Cabinet of Curios</a>
+    <h2 class="logo" id="title-h">Hardpoint</h2>
+    <p class="tagline">You pilot one mech against a squad of hostiles on a battlefield built at random. Find cover, watch your heat, and pick the moment to push your reactor past what's safe.</p>
+    <div class="menu" role="group" aria-label="Main menu">
+      <button type="button" data-menu="continue" id="continuebtn">Continue<small id="continuenote"></small></button>
+      <button type="button" class="go" data-menu="new">New Game<small>Get a briefing on a fresh battlefield</small></button>
+      <button type="button" data-menu="pilot" disabled>Create Pilot<small>Opens with the hangar, coming next</small></button>
+      <button type="button" data-menu="mech" disabled>Create Mech<small>Opens with the hangar, coming next</small></button>
+      <button type="button" data-menu="help">Instructions<small>How turns, cover, heat, and damage work</small></button>
     </div>
-
-    <div class="logbox">
-      <h3 id="log-h">Combat log</h3>
-      <ol id="log" aria-labelledby="log-h" aria-live="polite"></ol>
-    </div>
+    <p class="legal">Hardpoint is inspired by LANCER. LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</p><!-- tic-ok -->
   </section>
 
-  <section class="notes" aria-labelledby="turn-h">
-    <h2 id="turn-h">How a turn works</h2>
+  <section class="sheet" id="help" aria-labelledby="help-h" hidden>
+    <div class="stick"><button type="button" data-menu="back">Back</button></div>
+    <h1 id="help-h">How to play</h1>
+    <p class="lede">Tap your mech to give it orders. Tap anything else on the map to see what it is and what it does. On a keyboard, the arrow keys move a cursor over the map, <kbd>Enter</kbd> picks a hex or opens your orders, <kbd>Esc</kbd> backs out, and each order has a letter key shown beside it.</p>
+
+    <h2 id="turn-h">A turn</h2>
     <ul>
-      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes, and rough ground costs 2. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Smoke. Or spend both on one full action: Barrage (fire two different weapons) or Stabilize.</li>
-      <li><b>Attacks roll a d20 against Evasion.</b> You add your pilot's grit. Accuracy and difficulty cancel one for one, and whatever is left becomes d6s: roll them all, keep the highest, and add it for accuracy or subtract it for difficulty. A total of 20 or more is a critical hit, and every damage die rolls twice and keeps the higher.</li>
-      <li><b>Cover only stops ranged attacks.</b> Scrub and smoke give soft cover, +1 difficulty. A barricade beside the target, or a wall edge that half hides it, gives hard cover, +2. Walls block sight completely, but you can shoot over barricades. Melee attacks ignore cover.</li>
-      <li><b>Getting close has a cost.</b> Moving next to a hostile engages you both. Your movement stops there, and ranged attacks made while engaged take +1 difficulty. If you start moving while inside a hostile's threat, it gets a free swing at you first (overwatch), and your cleaver does the same to them.</li>
-      <li><b>HP is only the first layer.</b> At 0 HP the Halberd loses a point of structure and its HP refills. Then you roll a structure check: a d6 for each point lost so far, keeping the lowest. A 5 or 6 leaves you impaired for a turn, 2 to 4 wrecks a weapon or system, and a 1 can stun or destroy you. Lose all four points and the mech is done.</li>
-      <li><b>Heat is the price of pushing.</b> Overcharge buys an extra quick action for 1 heat, then 1d3, 1d6, and 1d6+4 for each later use in the same battle. The Arc Lance adds 2 heat per shot. Go past your heat cap and you lose a point of stress and roll an overheat check the same way as a structure check. Stabilize clears all heat.</li>
-      <li><b>Brace when a hit would cost structure.</b> It's a reaction: you take half damage, and attacks against you take +1 difficulty until the end of your next turn. The cost is that next turn you get only one quick action, though the Halberd's Steady Footing still lets you move.</li>
+      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Smoke. Or spend both on one full action: Barrage (fire two different weapons) or Stabilize.</li>
+      <li><b>Overcharge and your core power are free.</b> Overcharge buys an extra quick action for heat. Your core power works once per battle.</li>
+      <li><b>Ending your turn early asks first.</b> If you still have movement or actions left, you'll be asked to confirm.</li>
+      <li><b>Then every hostile takes a turn.</b> Watch the log, or the bar under the map, to see what they did.</li>
+    </ul>
+
+    <h2 id="attack-h">Attacks</h2>
+    <ul>
+      <li><b>Attacks roll a d20 against Evasion.</b> You add your pilot's grit. Accuracy and difficulty cancel one for one, and whatever is left becomes d6s: roll them all, keep the highest, and add it for accuracy or subtract it for difficulty.</li>
+      <li><b>A total of 20 or more is a critical hit.</b> Every damage die rolls twice and keeps the higher.</li>
+      <li><b>Armor comes off each hit.</b> Reliable weapons deal their Reliable damage even on a miss.</li>
       <li><b>Lock On sets up a shot.</b> It costs a quick action and makes no roll. The next attack against that hostile gains +1 accuracy.</li>
     </ul>
-  </section>
 
-  <section class="notes" aria-labelledby="hostile-h">
-    <h2 id="hostile-h">Know the hostiles</h2>
+    <h2 id="ground-h">The ground</h2>
+    <ul>
+      <li><b>Open ground</b> costs 1 movement per hex and gives no cover.</li>
+      <li><b>Rough ground</b> costs 2 movement per hex. It gives no cover and doesn't block sight.</li>
+      <li><b>Scrub</b> costs 1 movement per hex, like open ground. It gives soft cover, +1 difficulty against ranged attacks, to anything standing in it or seen through it.</li>
+      <li><b>Smoke</b> works like scrub until the end of the next round.</li>
+      <li><b>Barricades</b> can't be entered, but you can see and shoot over them. A target right behind one, from the shooter's side, has hard cover: +2 difficulty.</li>
+      <li><b>Walls</b> can't be entered and block sight completely. A target whose wall only half hides it has hard cover.</li>
+      <li><b>Cover only stops ranged attacks.</b> Melee attacks and arcing mortars ignore it.</li>
+    </ul>
+
+    <h2 id="close-h">Getting close</h2>
+    <ul>
+      <li><b>Moving next to a hostile engages you both.</b> Your movement stops there, and ranged attacks made while engaged take +1 difficulty.</li>
+      <li><b>Leaving costs a swing.</b> If you start moving while inside a hostile's threat, it gets a free attack first (overwatch). Your cleaver does the same to them.</li>
+    </ul>
+
+    <h2 id="damage-h">Damage and heat</h2>
+    <ul>
+      <li><b>HP is only the first layer.</b> At 0 HP the Halberd loses a point of structure and its HP refills. Then you roll a structure check: a d6 for each point lost so far, keeping the lowest. A 5 or 6 leaves you impaired for a turn, 2 to 4 wrecks a weapon or system, and a 1 can stun or destroy you. Lose all four points and the mech is done.</li>
+      <li><b>Heat is the price of pushing.</b> Overcharge costs 1 heat, then 1d3, 1d6, and 1d6+4 for each later use in the same battle. The Arc Lance adds 2 heat per shot. Go past your heat cap and you lose a point of stress and roll an overheat check the same way.</li>
+      <li><b>Stabilize to recover.</b> It's a full action: spend a repair to refill your HP, or vent all your heat.</li>
+      <li><b>Brace when a hit would cost structure.</b> It's a reaction: you take half damage, and attacks against you take +1 difficulty until the end of your next turn. The cost is that next turn you get only one quick action, though the Halberd's Steady Footing still lets you move.</li>
+    </ul>
+
+    <h2 id="hostile-h">The hostiles</h2>
     <ul>
       <li><b>Pickets are grunts.</b> Any damage destroys one, even a miss with Reliable damage. They hang back behind cover and plink at you with carbines.</li>
       <li><b>Hounds are fast and fragile.</b> They run you down with Speed 5 and are hard to hit, but six damage drops one.</li>
       <li><b>Brutes hit hard and slowly.</b> A Brute's maul knocks lighter mechs back a hex. Stepping away from one gives it a free swing, so pick your moment.</li>
       <li><b>Lobbers shoot over walls.</b> Their mortars arc over anything, so cover doesn't help against them. A Lobber has to spend a turn reloading after each shot, and it can't fire at a target right next to it.</li>
     </ul>
-  </section>
 
-  <section class="sources" aria-labelledby="credit-h">
     <h2 id="credit-h">Credits</h2>
     <ul>
-      <li>Hardpoint is inspired by <i>LANCER</i>, the mech roleplaying game by Tom Parkinson-Morgan and Miguel Lopez, published by <a href="https://massifpress.com/">Massif Press</a>. Thanks to Massif Press for the Lancer system. The rules here are a small, simplified slice of it: pilot stats and grit, structure and stress checks, heat, accuracy and difficulty dice, cover, overwatch, and bracing. The frame, weapons, hostiles, and all of the text on this page are written for Hardpoint.</li>
+      <li>Hardpoint is inspired by <i>LANCER</i>, the mech roleplaying game by Tom Parkinson-Morgan and Miguel Lopez, published by <a href="https://massifpress.com/">Massif Press</a>. Thanks to Massif Press for the Lancer system. The rules here are a small, simplified slice of it: pilot stats and grit, structure and stress checks, heat, accuracy and difficulty dice, cover, overwatch, and bracing. The frame, weapons, hostiles, and all of the text here are written for Hardpoint.</li>
       <li>LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</li><!-- tic-ok -->
+      <li>A battlefield's link names its site and threat level, so you can send someone the same fight.</li>
     </ul>
   </section>
-
-  <p class="foot">The link in your address bar names this battlefield and threat level, so you can send someone the same fight.</p>
 </div>
 
 <script>
@@ -713,7 +796,7 @@ function makeFoe(kind, n, pos) {
 }
 
 // ---------- Prefs ----------
-const prefs = { askBrace: true };
+const prefs = { askBrace: true, threat: "standard" };
 try { Object.assign(prefs, JSON.parse(localStorage.getItem("hardpoint:prefs") || "{}")); } catch (e) { /* storage blocked */ }
 function savePrefs() {
   try { localStorage.setItem("hardpoint:prefs", JSON.stringify(prefs)); } catch (e) { /* storage blocked */ }
@@ -724,7 +807,7 @@ let B = null;
 let busy = false;
 const ui = {
   mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null,
-  inspect: null, cursor: 0, showCursor: false, hover: null, braceAsk: null,
+  inspect: null, cursor: 0, showCursor: false, hover: null, dialog: null,
 };
 
 // ---------- Board queries ----------
@@ -900,7 +983,6 @@ function destroy(u, msg) {
   u.hp = 0;
   if (u.side === "foe") u.status.locked = false;
   log(msg, "bad");
-  if (ui.inspect === u) ui.inspect = null;
   if (ui.target === u) ui.target = null;
 }
 
@@ -1053,19 +1135,18 @@ async function attack(att, w, tgt, opts = {}) {
 function askBrace(dmg) {
   if (!prefs.askBrace) return Promise.resolve(false);
   return new Promise((resolve) => {
-    ui.braceAsk = { dmg, resolve };
+    ui.dialog = { kind: "brace", dmg, resolve };
     paint();
-    const btn = document.querySelector('#context [data-key="brace"]');
-    if (!btn) return;
-    if (document.activeElement && $("battle-h").closest("section").contains(document.activeElement)) btn.focus({ preventScroll: true });
-    btn.closest(".card").scrollIntoView({ block: "nearest", behavior: reduceMotion.matches ? "auto" : "smooth" });
+    focusDialog();
   });
 }
 function answerBrace(yes) {
-  const ask = ui.braceAsk;
-  if (!ask) return;
-  ui.braceAsk = null;
-  ask.resolve(yes);
+  const dg = ui.dialog;
+  if (!dg || dg.kind !== "brace") return;
+  ui.dialog = null;
+  paint();
+  map.focus({ preventScroll: true });
+  dg.resolve(yes);
 }
 
 // ---------- Turn flow ----------
@@ -1139,7 +1220,10 @@ function checkOver() {
     B.over = "won";
     log(`Area clear in ${plural(B.round, "round")}, with ${B.you.structure} of ${B.you.maxStructure} structure left.`, "you");
   } else return false;
+  clearSave();
+  ui.dialog = { kind: "over" };
   setMode("idle");
+  focusDialog();
   return true;
 }
 
@@ -1209,7 +1293,20 @@ async function foeAct(e) {
 const T = () => B.turn;
 function spendQuick() { T().quick--; T().fullOk = false; }
 function spendFull() { T().quick -= 2; T().fullOk = false; }
-const yourTurn = () => B && !B.over && B.phase === "you" && !busy && B.you.alive;
+const yourTurn = () => B && !B.over && B.phase === "you" && !busy && B.you.alive && !ui.dialog;
+
+const ORDERS = [
+  { act: "move", name: "Move", key: "M", cost: "standard" },
+  { act: "boost", name: "Boost", key: "B", cost: "quick" },
+  { act: "skirmish", name: "Skirmish", key: "S", cost: "quick" },
+  { act: "barrage", name: "Barrage", key: "R", cost: "full" },
+  { act: "lock", name: "Lock On", key: "L", cost: "quick" },
+  { act: "smoke", name: "Smoke", key: "G", cost: "quick" },
+  { act: "stabilize", name: "Stabilize", key: "T", cost: "full" },
+  { act: "overcharge", name: "Overcharge", key: "O", cost: "free" },
+  { act: "core", name: "Core power", key: "C", cost: "free" },
+  { act: "end", name: "End turn", key: "E", cost: "", wide: true },
+];
 
 function canDo(act) {
   if (!yourTurn()) return false;
@@ -1230,6 +1327,33 @@ function canDo(act) {
   return false;
 }
 
+// a word or two under each order saying what it'll do, or why it can't
+function orderNote(act) {
+  const t = T(), you = B.you;
+  if (you.status.stunned && act !== "end") return "stunned";
+  const quickLeft = t.quick >= 1, fullLeft = t.fullOk && t.quick >= 2;
+  switch (act) {
+    case "move": return t.mp > 0 ? `${t.mp} movement left` : "no movement left";
+    case "boost": return quickLeft ? `quick · +${you.speed} movement` : "no quick actions left";
+    case "skirmish": {
+      if (!quickLeft) return "no quick actions left";
+      const n = foes().filter((f) => weaponsOf(you).some((w) => attackProfile(you, w, f).ok)).length;
+      return n ? `quick · ${plural(n, "target")} in reach` : "nothing in range";
+    }
+    case "barrage":
+      if (!fullLeft) return "needs both quick actions";
+      if (weaponsOf(you).length < 2) return "needs two weapons";
+      return canDo("barrage") ? "full · fire two weapons" : "nothing in range";
+    case "lock": return !quickLeft ? "no quick actions left" : lockTargets().length ? "quick · +1 accuracy next shot" : "no hostile in sight";
+    case "smoke": return you.broken.has("smoke") ? "launcher wrecked" : !you.smokeLeft ? "out of charges" : quickLeft ? `quick · ${plural(you.smokeLeft, "charge")}` : "no quick actions left";
+    case "stabilize": return fullLeft ? "full · repair or vent" : "needs both quick actions";
+    case "overcharge": return t.limited ? "not after bracing" : t.ocUsed ? "used this turn" : `+1 quick action · ${OC_COST[Math.min(B.ocCount, 3)]} heat`;
+    case "core": return B.coreUsed ? "spent" : t.limited ? "not after bracing" : "Hunting Pattern, once";
+    case "end": return "";
+  }
+  return "";
+}
+
 function setMode(mode, extra = {}) {
   ui.mode = mode;
   ui.dest = null;
@@ -1239,20 +1363,14 @@ function setMode(mode, extra = {}) {
   Object.assign(ui, extra);
   if (mode === "move") ui.reach = reachWithPrev(B.you, T().mp);
   paint();
-  if (["move", "target", "lock", "smoke"].includes(mode)) showMap();
 }
-// on a narrow screen the buttons sit below the map, so scroll it back into view
-function showMap() {
-  const r = map.getBoundingClientRect();
-  if (r.top < 0 || r.bottom > innerHeight) {
-    map.scrollIntoView({ block: r.height > innerHeight ? "start" : "nearest", behavior: reduceMotion.matches ? "auto" : "smooth" });
-  }
-}
+
+const MENU_MODES = ["orders", "weapon", "stabilize"];
+const PICK_MODES = ["move", "target", "lock", "smoke"];
 
 function doAction(act, viaKey) {
   if (!canDo(act)) return;
   const you = B.you;
-  if (ui.mode !== "idle" && actFor(ui.mode) === act) { setMode("idle"); return; }
   switch (act) {
     case "move": setMode("move"); break;
     case "boost":
@@ -1268,12 +1386,31 @@ function doAction(act, viaKey) {
     case "stabilize": setMode("stabilize"); break;
     case "overcharge": overcharge(); break;
     case "core": core(); break;
-    case "end": endPlayerTurn(); return;
+    case "end": askEnd(); return;
   }
-  if (viaKey && ["move", "boost", "lock", "smoke"].includes(act)) focusMap(act === "lock" ? lockTargets()[0]?.pos : you.pos);
+  if (MENU_MODES.includes(ui.mode)) focusOrders();
+  else if (PICK_MODES.includes(ui.mode)) {
+    if (viaKey) focusMap(ui.mode === "lock" ? lockTargets()[0]?.pos : you.pos);
+    else map.focus({ preventScroll: true });
+  } else if (viaKey) focusMap(you.pos);
 }
-function actFor(mode) {
-  return { move: "move", weapon: ui.barrage ? "barrage" : "skirmish", target: ui.barrage ? "barrage" : "skirmish", lock: "lock", smoke: "smoke", stabilize: "stabilize" }[mode];
+
+function askEnd() {
+  const t = T(), left = [];
+  if (!B.you.status.stunned) {
+    if (t.quick > 0) left.push(plural(t.quick, "quick action"));
+    if (t.mp > 0) left.push(`${t.mp} movement`);
+  }
+  if (!left.length) { endPlayerTurn(); return; }
+  ui.mode = "idle";
+  ui.dialog = { kind: "end", left };
+  paint();
+  focusDialog();
+}
+function closeDialog() {
+  ui.dialog = null;
+  paint();
+  map.focus({ preventScroll: true });
 }
 
 function overcharge() {
@@ -1305,7 +1442,7 @@ async function commitMove(dest) {
   busy = false;
   if (B.over) { paint(); return; }
   if (you.status.stunned && you.pos !== dest) {
-    T().mp = 0; T().quick = 0; T().fullOk = false;
+    T().mp = 0;
   } else {
     T().mp = Math.max(0, T().mp - cost);
     if (!was && isEngaged(you)) {
@@ -1313,7 +1450,7 @@ async function commitMove(dest) {
       T().mp = 0;
     }
   }
-  if (you.status.stunned) { T().quick = 0; T().fullOk = false; T().limited = true; }
+  if (you.status.stunned) { T().mp = 0; T().quick = 0; T().fullOk = false; T().limited = true; }
   paint();
 }
 
@@ -1332,7 +1469,15 @@ async function fire(w, tgt) {
   if (B.over) { paint(); return; }
   if (barrage && barrage.used.length < 2 && weaponsOf(you).some((x) => !barrage.used.includes(x.key) && validTargets(x).length)) {
     setMode("weapon", { barrage });
+    focusOrders();
   } else setMode("idle");
+}
+
+function lockOn(f) {
+  f.status.locked = true;
+  spendQuick();
+  log(`You lock on to ${f.name}. The next attack against it gains +1 accuracy.`, "you");
+  setMode("idle");
 }
 
 function placeSmoke(i) {
@@ -1363,51 +1508,48 @@ function stabilize(choice) {
 
 // ---------- Input on the map ----------
 function onHex(i, viaKey) {
-  ui.cursor = i;
   if (!B) return;
-  const occ = occupant(i);
-  if (!yourTurn()) {
-    ui.inspect = occ && occ.side === "foe" ? occ : null;
-    paint();
-    return;
+  ui.cursor = i;
+  ui.inspect = i;
+  const occ = occupant(i), you = B.you;
+  if (yourTurn()) {
+    // your own hex opens orders, except when it's a place smoke can go
+    if (i === you.pos && !(ui.mode === "smoke" && smokeCells().includes(i))) {
+      setMode(ui.mode === "orders" ? "idle" : "orders");
+      if (ui.mode === "orders") focusOrders(); else map.focus({ preventScroll: true });
+      announce();
+      return;
+    }
+    if (MENU_MODES.includes(ui.mode)) {
+      setMode("idle");
+      map.focus({ preventScroll: true });
+    } else switch (ui.mode) {
+      case "move": {
+        const info = ui.reach.get(i);
+        if (info && !occ) {
+          if (ui.dest === i) { commitMove(i); return; }
+          ui.dest = i;
+        }
+        break;
+      }
+      case "target":
+        if (occ && occ.side === "foe" && attackProfile(you, ui.weapon, occ).ok) {
+          if (ui.target === occ) { fire(ui.weapon, occ); return; }
+          ui.target = occ;
+        }
+        break;
+      case "lock":
+        if (occ && lockTargets().includes(occ)) { lockOn(occ); return; }
+        break;
+      case "smoke":
+        if (smokeCells().includes(i)) {
+          if (ui.dest === i) { placeSmoke(i); return; }
+          ui.dest = i;
+        }
+        break;
+    }
   }
-  switch (ui.mode) {
-    case "move": {
-      const info = ui.reach.get(i);
-      if (info && i !== B.you.pos && !occ) {
-        if (ui.dest === i) { commitMove(i); return; }
-        ui.dest = i;
-      } else if (i === B.you.pos) { setMode("idle"); return; }
-      break;
-    }
-    case "target": {
-      if (occ && occ.side === "foe" && attackProfile(B.you, ui.weapon, occ).ok) {
-        if (ui.target === occ) { fire(ui.weapon, occ); return; }
-        ui.target = occ;
-        ui.inspect = occ;
-      }
-      break;
-    }
-    case "lock": {
-      if (occ && lockTargets().includes(occ)) {
-        occ.status.locked = true;
-        spendQuick();
-        log(`You lock on to ${occ.name}. The next attack against it gains +1 accuracy.`, "you");
-        setMode("idle");
-        return;
-      }
-      break;
-    }
-    case "smoke": {
-      if (smokeCells().includes(i)) {
-        if (ui.dest === i) { placeSmoke(i); return; }
-        ui.dest = i;
-      }
-      break;
-    }
-    default:
-      ui.inspect = occ && occ.side === "foe" ? (ui.inspect === occ ? null : occ) : null;
-  }
+  showTab("info");
   announce();
   paint();
 }
@@ -1415,15 +1557,24 @@ function onHex(i, viaKey) {
 function focusMap(at) {
   if (at != null) ui.cursor = at;
   ui.showCursor = true;
-  $("map").focus();
+  map.focus({ preventScroll: true });
   announce();
   paint();
+}
+function focusOrders() {
+  const b = $("orders").querySelector(".orders-grid button:not(:disabled)") || $("orders").querySelector("button");
+  if (b) b.focus({ preventScroll: true });
+}
+function focusDialog() {
+  const dlg = $("dialog");
+  const b = dlg.querySelector("[data-autofocus]") || dlg.querySelector("button:not(:disabled)");
+  if (b) b.focus({ preventScroll: true });
 }
 
 function describeHex(i) {
   const bits = [`Row ${rowOf(i) + 1}, column ${colOf(i) + 1}: ${TERRAIN_NAME[B.terrain[i]]}${smokeAt(i) ? " in smoke" : ""}.`];
   const occ = occupant(i);
-  if (occ && occ.side === "you") bits.push("Your Halberd.");
+  if (occ && occ.side === "you") bits.push(yourTurn() ? "Your Halberd. Press Enter for orders." : "Your Halberd.");
   else if (occ) {
     bits.push(`${occ.name}, ${occ.grunt ? "grunt" : `${occ.hp} of ${occ.maxHp} HP`}, ${plural(dist(B.you.pos, i), "hex")} away.`);
     const cv = coverAt(B.you.pos, i);
@@ -1435,9 +1586,9 @@ function describeHex(i) {
   } else if (i !== B.you.pos) {
     bits.push(`${plural(dist(B.you.pos, i), "hex")} from you.`);
   }
-  if (ui.mode === "move" && ui.reach) {
+  if (ui.mode === "move" && ui.reach && i !== B.you.pos) {
     const info = ui.reach.get(i);
-    if (i !== B.you.pos) bits.push(info && !occ ? `Move here for ${info.cost}.` : "Out of reach.");
+    bits.push(info && !occ ? `Move here for ${info.cost}.` : "Out of reach.");
   }
   return bits.join(" ");
 }
@@ -1450,8 +1601,14 @@ const map = $("map");
 map.setAttribute("viewBox", `0 0 ${VBW.toFixed(1)} ${VBH.toFixed(1)}`);
 const layers = {};
 
+function sandbags(g, x, y, s = 1) {
+  for (const [dx, dy] of [[-9, 4], [0, 4], [9, 4], [-4.5, -3], [4.5, -3]]) {
+    g.append(svgEl("rect", { x: x + (dx - 5) * s, y: y + (dy - 3.2) * s, width: 10 * s, height: 6.4 * s, rx: 2.5 * s, class: "sandbag" }));
+  }
+}
+
 function drawTerrain() {
-  map.innerHTML = "";
+  map.replaceChildren();
   const defs = svgEl("defs");
   const pr = svgEl("pattern", { id: "p-rough", width: 12, height: 12, patternUnits: "userSpaceOnUse" });
   pr.append(svgEl("rect", { width: 12, height: 12, class: "pr-bg" }),
@@ -1461,7 +1618,7 @@ function drawTerrain() {
     svgEl("circle", { cx: 2.5, cy: 3, r: 1.5, class: "ps-dot" }),
     svgEl("circle", { cx: 7.5, cy: 7.5, r: 1.3, class: "ps-dot" }));
   defs.append(pr, ps);
-  map.append(defs);
+  map.append(defs, svgEl("rect", { x: 0.5, y: 0.5, width: VBW - 1, height: VBH - 1, rx: 8, class: "board-bg" }));
   const g = svgEl("g", { id: "terrain" });
   for (let i = 0; i < COLS * ROWS; i++) {
     const t = B.terrain[i];
@@ -1470,11 +1627,7 @@ function drawTerrain() {
     if (t === T_WALL) {
       g.append(svgEl("polygon", { points: corners(i, 0.8, 0, -3), class: "wall-top" }));
       g.append(svgEl("polygon", { points: corners(i, 0.8, 0, -3), class: "wall-edge" }));
-    } else if (t === T_BARRICADE) {
-      for (const [dx, dy] of [[-9, 4], [0, 4], [9, 4], [-4.5, -3], [4.5, -3]]) {
-        g.append(svgEl("rect", { x: x + dx - 5, y: y + dy - 3.2, width: 10, height: 6.4, rx: 2.5, class: "sandbag" }));
-      }
-    }
+    } else if (t === T_BARRICADE) sandbags(g, x, y);
   }
   layers.over = svgEl("g", { id: "over" });
   layers.units = svgEl("g", { id: "units" });
@@ -1492,7 +1645,11 @@ function drawOverlay() {
     const [x, y] = center(i);
     o.append(svgEl("circle", { cx: x - 7, cy: y + 2, r: 9, class: "smoke-puff" }), svgEl("circle", { cx: x + 6, cy: y - 4, r: 8, class: "smoke-puff" }));
   }
-  if (ui.inspect && ui.inspect.alive) o.append(hexPoly(ui.inspect.pos, "inspect", 0.93));
+  if (ui.inspect != null && ui.mode !== "target") o.append(hexPoly(ui.inspect, "picked", 0.94));
+  if (yourTurn() && ui.mode === "idle") {
+    const [x, y] = center(B.you.pos);
+    o.append(svgEl("circle", { cx: x, cy: y, r: R * 0.86, class: "youring" }));
+  }
   if (ui.mode === "move" && ui.reach) {
     for (const i of ui.reach.keys()) if (i !== B.you.pos && !occupant(i)) o.append(hexPoly(i, i === ui.dest ? "dest" : "reach", 0.9));
     const end = ui.dest ?? (ui.hover != null && ui.reach.has(ui.hover) && !occupant(ui.hover) ? ui.hover : null);
@@ -1510,8 +1667,9 @@ function drawOverlay() {
   }
   if (ui.mode === "lock") for (const f of lockTargets()) o.append(hexPoly(f.pos, "valid", 0.9));
   if (ui.mode === "smoke") {
-    for (const i of smokeCells()) o.append(hexPoly(i, "reach", 0.9));
-    const at = ui.dest ?? (ui.hover != null && smokeCells().includes(ui.hover) ? ui.hover : null);
+    const cells = smokeCells();
+    for (const i of cells) o.append(hexPoly(i, "reach", 0.9));
+    const at = ui.dest ?? (ui.hover != null && cells.includes(ui.hover) ? ui.hover : null);
     if (at != null) for (const j of [at, ...neighbors(at)]) if (B.terrain[j] !== T_WALL) o.append(hexPoly(j, "smoke-pre", 0.85));
   }
   if (ui.showCursor && document.activeElement === map) o.append(hexPoly(ui.cursor, "cursor", 0.97));
@@ -1562,7 +1720,93 @@ function pop(i, text, cls) {
   setTimeout(() => t.remove(), 900);
 }
 
-// ---------- Drawing the side panel ----------
+// ---------- Panels ----------
+const TERRAIN_INFO = [
+  "Costs 1 movement to enter. No cover, and nothing blocks sight.",
+  "Broken rubble and craters. Costs 2 movement to enter. It gives no cover and doesn't block sight.",
+  "Low brush. Costs 1 movement, like open ground. Anything standing in it, or seen through it, has soft cover: +1 difficulty against ranged attacks.",
+  "Sandbags and plating. Nothing can enter it, but you can see and shoot over it. A target right behind it, on the far side from the shooter, has hard cover: +2 difficulty against ranged attacks.",
+  "Nothing can enter it, and it blocks sight completely. A target whose wall only half hides it from the shooter has hard cover: +2 difficulty against ranged attacks.",
+];
+const TERRAIN_TITLE = ["Open ground", "Rough ground", "Scrub", "Barricade", "Wall"];
+const SMOKE_INFO = "Smoke hangs here until the end of next round. Like scrub, it gives soft cover to anything in it or seen through it.";
+
+function miniHex(t, extra = "") {
+  const pts = [];
+  for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); pts.push(`${(14 * Math.cos(a)).toFixed(1)},${(14 * Math.sin(a)).toFixed(1)}`); }
+  let inner = `<polygon points="${pts.join(" ")}" class="hx t${t}" />`;
+  if (t === T_WALL) inner += `<polygon points="${pts.map((p) => p.split(",").map((v, k) => (v * 0.8 - (k ? 1.5 : 0)).toFixed(1)).join(",")).join(" ")}" class="wall-top" />`;
+  if (t === T_BARRICADE) inner += [[-4.5, 2], [0, 2], [4.5, 2], [-2.25, -1.5], [2.25, -1.5]].map(([x, y]) => `<rect x="${x - 2.5}" y="${y - 1.6}" width="5" height="3.2" rx="1.2" class="sandbag" />`).join("");
+  return `<svg viewBox="-16 -16 32 32" aria-hidden="true">${inner}${extra}</svg>`;
+}
+
+function legendHtml() {
+  const rows = [0, 1, 2, 3, 4].map((t) => `<li>${miniHex(t)}<div><b>${TERRAIN_TITLE[t]}.</b> <span>${TERRAIN_INFO[t]}</span></div></li>`);
+  rows.push(`<li>${miniHex(0, `<circle r="8" fill="#0B2A33" stroke="var(--you)" stroke-width="1.6" />`)}<div><b>Your Halberd.</b> <span>Tap it for orders.</span></div></li>`);
+  rows.push(`<li>${miniHex(0, `<polygon points="8,0 4,6.9 -4,6.9 -8,0 -4,-6.9 4,-6.9" fill="#36140D" stroke="var(--foe)" stroke-width="1.6" />`)}<div><b>Hostiles.</b> <span>Tap one to see its stats and your odds of hitting it.</span></div></li>`);
+  return `<p class="kind">Map key</p><h3>Reading the ground</h3><p>Tap any hex to see what's there.</p><ul class="legend">${rows.join("")}</ul>`;
+}
+
+function foeInfo(f) {
+  const h = HOSTILES[f.kind], you = B.you;
+  const st = [];
+  if (f.status.locked) st.push("locked on");
+  if (f.weapon.reloads && !f.loaded) st.push("reloading");
+  if (f.status.stunned) st.push("stunned");
+  let top = "";
+  if (ui.mode === "target" && ui.weapon && ui.target === f) {
+    const p = attackProfile(you, ui.weapon, f);
+    if (p.ok) top = `<p><span class="chance">${pct(p.chance)}</span> to hit with your ${ui.weapon.name}</p>`;
+  }
+  const odds = weaponsOf(you).map((w) => {
+    const p = attackProfile(you, w, f);
+    return `<li><b>${w.name}</b>: ${p.ok ? `${pct(p.chance)} to hit${p.notes.length ? `. ${p.notes.join("; ")}` : ""}` : p.reason}</li>`;
+  }).join("");
+  return `<p class="kind">Hostile · ${h.role}</p><h3 class="foe">${f.name}</h3>${top}
+    <p>${h.blurb}</p>
+    <ul>
+      <li>${f.grunt ? "<b>Grunt</b>" : `HP <b>${f.hp}/${f.maxHp}</b>`} · Evasion <b>${f.evasion}</b> · Armor <b>${f.armor}</b> · Speed <b>${f.speed}</b></li>
+      <li>${f.weapon.name}: ${weaponLine(f.weapon)}</li>
+      <li>${plural(dist(you.pos, f.pos), "hex")} from you${st.length ? " · " + st.join(", ") : ""}</li>
+    </ul>
+    <p class="kind">Your odds</p>
+    <ul>${odds || "<li>You have no working weapons.</li>"}</ul>`;
+}
+
+function tileInfo(i) {
+  const t = B.terrain[i], you = B.you, occ = occupant(i);
+  const facts = [];
+  if (i !== you.pos) {
+    facts.push(`${plural(dist(you.pos, i), "hex")} from you`);
+    if (t !== T_WALL) {
+      const cv = coverAt(you.pos, i);
+      facts.push(!cv ? "You can't see it from where you stand" : cv.level ? `From you: ${cv.why}` : "From you: clear line of sight, no cover");
+    }
+  }
+  if (ui.mode === "move" && ui.reach && i !== you.pos && passable(t)) {
+    const info = ui.reach.get(i);
+    facts.push(info && !occ ? `Moving here costs ${info.cost}` : "Out of reach this move");
+  }
+  return `<p class="kind">Row ${rowOf(i) + 1}, column ${colOf(i) + 1}</p>
+    <h3>${TERRAIN_TITLE[t]}${smokeAt(i) ? ", in smoke" : ""}</h3>
+    <p>${TERRAIN_INFO[t]}</p>
+    ${smokeAt(i) ? `<p>${SMOKE_INFO}</p>` : ""}
+    ${facts.length ? `<ul>${facts.map((f) => `<li>${f}</li>`).join("")}</ul>` : ""}`;
+}
+
+function infoHtml() {
+  const i = ui.inspect;
+  if (i == null) return legendHtml();
+  const occ = occupant(i);
+  let h = "";
+  if (occ && occ.side === "foe") h += foeInfo(occ) + "<hr>";
+  else if (occ) h += `<p class="kind">Your mech</p><h3 class="you">Halberd</h3><p>${B.phase === "you" && !B.over ? "Tap it to open its orders. " : ""}Its full readout is ${matchMedia("(min-width: 1150px)").matches ? "on the left" : "under Mech"}.</p><hr>`;
+  else if (B.units.some((u) => !u.alive && u.pos === i)) h += `<p class="kind">Wreck</p><p>What's left of a hostile. It doesn't block anything.</p><hr>`;
+  h += tileInfo(i);
+  h += `<p><button type="button" data-key="legend">Map key</button></p>`;
+  return h;
+}
+
 function mechCard() {
   const u = B.you;
   const chips = [];
@@ -1582,143 +1826,194 @@ function mechCard() {
   return `
     <h3>${FRAME.name.toUpperCase()}</h3>
     <p class="sub">Pilot callsign ${PILOT.callsign} · grit +${PILOT.grit} · H${PILOT.hull} A${PILOT.agility} S${PILOT.systems} E${PILOT.engineering}</p>
-    <div class="meter"><span class="k">HP</span><span class="bar"><i style="width:${(100 * u.hp / u.maxHp).toFixed(0)}%"></i></span><span>${u.hp}/${u.maxHp}</span></div>
+    <div class="meter"><span class="k">HP</span><span class="bar-meter"><i style="width:${(100 * u.hp / u.maxHp).toFixed(0)}%"></i></span><span>${u.hp}/${u.maxHp}</span></div>
     <div class="meter"><span class="k">Structure</span>${pipRow(u.structure, u.maxStructure, "")}<span>${u.structure}/${u.maxStructure}</span></div>
-    <div class="meter"><span class="k">Heat</span><span class="bar heat"><i style="width:${(100 * u.heat / u.heatCap).toFixed(0)}%"></i></span><span>${u.heat}/${u.heatCap}</span></div>
+    <div class="meter"><span class="k">Heat</span><span class="bar-meter heat"><i style="width:${(100 * u.heat / u.heatCap).toFixed(0)}%"></i></span><span>${u.heat}/${u.heatCap}</span></div>
     <div class="meter"><span class="k">Stress</span>${pipRow(u.stress, u.maxStress, "stress")}<span>${u.stress}/${u.maxStress}</span></div>
     <p class="stats">Evasion <b>${u.evasion}</b> · Armor <b>${u.armor}</b> · Speed <b>${u.speed}</b> · Repairs <b>${u.repairs}</b></p>
     ${chips.length ? `<div class="chips">${chips.map(([t, c]) => `<span class="chip ${c}">${t}</span>`).join("")}</div>` : ""}
     <ul class="gear">${gear}
       <li><b>Steady Footing</b> <span class="d">Trait · You can't be knocked back, and you can still move after bracing.</span></li>
       <li class="${B.coreUsed ? "broken" : ""}"><b>Hunting Pattern</b> <span class="d">Core power, once per battle · +1 accuracy and +2 damage until the end of your next turn</span></li>
-    </ul>`;
+    </ul>
+    <p class="stats"><button type="button" data-key="askbrace" aria-pressed="${prefs.askBrace}">Ask before bracing</button></p>`;
 }
 
-function turnLine() {
-  if (B.over) return `<b>Battle over.</b>`;
-  if (B.phase === "foe") return `<b>Round ${B.round}</b> · <span class="foeturn">Hostiles are moving${B.active ? `: ${B.active.name}` : ""}</span>`;
+function budgetHtml() {
+  if (B.phase === "brief") return `<b>Briefing</b> · ${B.name}`;
+  if (B.over) return `<b>Round ${B.round}</b> · Battle over`;
+  if (B.phase === "foe") return `<b>Round ${B.round}</b> · <span class="foeturn">Hostiles moving${B.active && B.active.side === "foe" ? `: ${B.active.name}` : ""}</span>`;
   const t = T(), you = B.you;
   const parts = [`<b>Round ${B.round}</b> · <span class="on">Your turn</span>`];
-  parts.push(`<span class="vitals">HP <b>${you.hp}/${you.maxHp}</b> · Structure <b>${you.structure}</b> · Heat <b>${you.heat}/${you.heatCap}</b> · </span>Movement <b>${t.mp}</b>`);
-  parts.push(`Quick actions <b>${t.quick}</b>${t.fullOk && t.quick >= 2 ? " (or a full action)" : ""}`);
-  parts.push(`Overcharge ${t.limited ? "not this turn" : t.ocUsed ? "used" : "ready"}`);
-  parts.push(`Reaction ${you.reaction ? "ready" : "spent"}`);
-  return parts.join(" · ");
+  parts.push(`<span class="vitals">HP <b>${you.hp}/${you.maxHp}</b> · Structure <b>${you.structure}</b> · Heat <b>${you.heat}/${you.heatCap}</b> · </span>Move <b>${t.mp}</b>`);
+  parts.push(`Quick <b>${t.quick}</b>${t.fullOk && t.quick >= 2 ? " (or 1 full)" : ""}`);
+  return parts.join(" · ") + `<span class="extra"> · Overcharge ${t.limited ? "not this turn" : t.ocUsed ? "used" : "ready"} · Reaction ${you.reaction ? "ready" : "spent"}</span>`;
 }
 
-function foeCard(f) {
-  const h = HOSTILES[f.kind];
-  const lines = weaponsOf(B.you).map((w) => {
-    const p = attackProfile(B.you, w, f);
-    return `<li>${w.name}: ${p.ok ? `${pct(p.chance)} to hit${p.notes.length ? ` (${p.notes.join("; ")})` : ""}` : p.reason}</li>`;
-  }).join("");
-  const st = [];
-  if (f.status.locked) st.push("locked on");
-  if (f.weapon.reloads && !f.loaded) st.push("reloading");
-  return `<p><b>${f.name}</b> · ${h.blurb}</p>
-    <ul>
-      <li>${f.grunt ? "Grunt" : `HP ${f.hp}/${f.maxHp}`} · Evasion ${f.evasion} · Armor ${f.armor} · Speed ${f.speed}</li>
-      <li>${f.weapon.name}: ${weaponLine(f.weapon)}</li>
-      <li>${plural(dist(B.you.pos, f.pos), "hex")} away${st.length ? " · " + st.join(", ") : ""}</li>
-      ${lines}
-    </ul>`;
-}
-
-function contextHtml() {
+function promptParts() {
   const you = B.you;
-  if (ui.braceAsk) {
-    return `<p><b>Brace?</b> You're about to take ${ui.braceAsk.dmg} damage, enough to cost structure.</p>
-      <p>Bracing halves it to ${Math.ceil(ui.braceAsk.dmg / 2)} and makes attacks against you harder until the end of your next turn, but next turn you get only one quick action.</p>
-      <div class="row"><button type="button" class="go" data-key="brace">Brace</button><button type="button" data-key="nobrace">Take the hit</button></div>`;
-  }
-  if (B.over === "won") {
-    return `<p class="big">AREA CLEAR</p><p>You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.</p>
-      <div class="row"><button type="button" class="go" data-key="again">Fight here again</button><button type="button" data-key="next">New battlefield</button></div>`;
-  }
-  if (B.over === "lost") {
-    return `<p class="big" style="color:var(--foe)">HALBERD DOWN</p><p>${plural(foes().length, "hostile")} still standing after ${plural(B.round, "round")}.</p>
-      <div class="row"><button type="button" class="go" data-key="again">Try this fight again</button><button type="button" data-key="next">New battlefield</button></div>`;
-  }
-  if (B.phase === "foe") return ui.inspect ? foeCard(ui.inspect) : `<p>The hostiles take their turns. Tap one to size it up.</p>`;
-  const cancel = `<button type="button" data-key="cancel">Cancel <kbd>Esc</kbd></button>`;
+  const btn = (key, label, cls = "", kbd = "") => `<button type="button" data-key="${key}" class="${cls}">${label}${kbd ? ` <kbd>${kbd}</kbd>` : ""}</button>`;
+  const cancel = btn("cancel", "Cancel", "", "Esc");
+  if (B.phase === "brief") return ["Read the briefing, then deploy. You can tap the map to look it over first.", ""];
+  if (B.over) return [B.over === "won" ? "Area clear." : "The Halberd is down.", btn("over", "Options")];
+  if (B.phase === "foe" || busy) return [B.lastLine || "…", ""];
+  if (ui.dialog) return ["", ""];
   switch (ui.mode) {
-    case "move": {
+    case "orders": case "weapon": case "stabilize":
+      return ["Pick from the orders beside your mech.", btn("close", "Close", "", "Esc")];
+    case "move":
       if (ui.dest != null) {
         const info = ui.reach.get(ui.dest);
         const engage = hostilesOf(you).some((h) => dist(h.pos, ui.dest) === 1);
-        return `<p>Move ${plural(info.cost, "hex")} to here${engage ? ". You'll be engaged when you arrive" : ""}.</p>
-          ${foes().some((f) => f.reaction && dist(f.pos, you.pos) <= (threatWeapon(f)?.threat ?? 0)) ? `<p>A hostile next to you will take an overwatch swing as you leave.</p>` : ""}
-          <div class="row"><button type="button" class="go" data-key="confirm-move">Move here</button>${cancel}</div>`;
+        const ow = foes().some((f) => f.reaction && dist(f.pos, you.pos) <= (threatWeapon(f)?.threat ?? 0));
+        return [`Move ${plural(info.cost, "hex")} here?${engage ? " You'll be engaged when you arrive." : ""}${ow ? " A hostile next to you gets an overwatch swing as you leave." : ""}`,
+          btn("confirm-move", "Move here", "go") + cancel];
       }
-      return `<p><b>Move.</b> Tap a lit hex. You have ${plural(T().mp, "hex")} of movement, and rough ground costs 2.</p><div class="row">${cancel}</div>`;
-    }
-    case "weapon": {
-      const used = ui.barrage ? ui.barrage.used : [];
-      const ws = weaponsOf(you).filter((w) => !used.includes(w.key));
-      const head = ui.barrage ? (used.length ? "<b>Barrage, second weapon.</b>" : "<b>Barrage.</b> Fire two different weapons, one after the other.") : "<b>Skirmish.</b> Pick a weapon.";
-      const buttons = ws.map((w) => {
-        const n = validTargets(w).length;
-        return `<button type="button" data-key="w-${w.key}" ${n ? "" : "disabled"}>${w.name}<small>${weaponLine(w)} · ${n ? plural(n, "target") : "no targets"}</small></button>`;
-      }).join("");
-      const skip = ui.barrage && ui.barrage.committed ? `<button type="button" data-key="skip">Skip the second shot</button>` : cancel;
-      return `<p>${head}</p><div class="choices">${buttons}${skip}</div>`;
-    }
+      return [`<b>Move.</b> Tap a lit hex, then tap it again to go. ${plural(T().mp, "hex")} of movement left. Rough ground costs 2.`, cancel];
     case "target": {
       const w = ui.weapon;
       if (ui.target) {
         const p = attackProfile(you, w, ui.target);
-        return `<p>${w.name} at <b>${ui.target.name}</b>, ${plural(p.dist, "hex")} away</p>
-          <p class="big">${pct(p.chance)}</p>
-          <ul><li>d20 +${p.bonus} grit vs Evasion ${ui.target.evasion}</li>${p.notes.map((n) => `<li>${n}</li>`).join("")}
-          <li>${dmgText(w.dmg)}${you.status.surge ? "+2" : ""} ${w.type}${w.reliable ? `, Reliable ${w.reliable}` : ""}${w.heat ? `, +${w.heat} heat` : ""}</li></ul>
-          <div class="row"><button type="button" class="warn" data-key="fire">Fire</button><button type="button" data-key="back">Back</button></div>`;
+        return [`<span class="big">${pct(p.chance)}</span>${w.name} at ${ui.target.name}. Tap it again to fire.`, btn("fire", "Fire", "warn") + btn("back", "Back")];
       }
-      return `<p><b>${w.name}.</b> Tap a hostile ringed in amber.</p><div class="row"><button type="button" data-key="back">Back</button></div>`;
+      return [`<b>${w.name}.</b> Tap a hostile ringed in amber.`, btn("back", "Back")];
     }
     case "lock":
-      return `<p><b>Lock On.</b> Tap a hostile you can see within ${you.sensors} hexes. The next attack against it gains +1 accuracy.</p><div class="row">${cancel}</div>`;
+      return [`<b>Lock On.</b> Tap a ringed hostile within ${you.sensors} hexes.`, cancel];
     case "smoke":
-      if (ui.dest != null) return `<p>Smoke this spot and the hexes around it.</p><div class="row"><button type="button" class="go" data-key="confirm-smoke">Fire smoke</button>${cancel}</div>`;
-      return `<p><b>Smoke.</b> Tap a lit hex within 5. The cloud covers it and the six hexes around it until the end of next round.</p><div class="row">${cancel}</div>`;
-    case "stabilize": {
-      const canRepair = you.repairs > 0 && you.hp < you.maxHp;
-      return `<p><b>Stabilize.</b> Spend your full action on one of these.</p>
-        <div class="choices">
-          <button type="button" data-key="st-repair" ${canRepair ? "" : "disabled"}>Patch up<small>Spend 1 repair (${you.repairs} left) to refill HP</small></button>
-          <button type="button" data-key="st-cool">Vent<small>Clear all heat${you.status.exposed ? ", end Exposed" : ""}${you.status.meltdown ? ", stop the meltdown" : ""}</small></button>
-          ${cancel}
-        </div>`;
-    }
+      if (ui.dest != null) return ["Smoke this hex and the six around it?", btn("confirm-smoke", "Fire smoke", "go") + cancel];
+      return ["<b>Smoke.</b> Tap a lit hex within 5, then tap it again to fire.", cancel];
   }
-  if (ui.inspect) return foeCard(ui.inspect);
-  if (you.status.stunned) return `<p>You're stunned. End your turn and hope it holds.</p>`;
-  return `<p>Pick an action. Tap a hostile to size it up.</p>`;
+  if (you.status.stunned) return ["You're stunned and can't act this turn.", btn("end", "End turn", "", "E")];
+  return ["Tap your Halberd for orders. Tap anything else to look it over.", btn("orders", "Orders") + btn("end", "End turn", "", "E")];
+}
+
+function ordersHtml() {
+  const you = B.you;
+  const head = (title, back) => `<div class="orders-head"><p>${title}</p>${back}</div>`;
+  if (ui.mode === "orders") {
+    const items = ORDERS.map((o) => {
+      const ok = canDo(o.act);
+      const note = orderNote(o.act);
+      return `<button type="button" role="menuitem" data-key="act-${o.act}" class="${o.wide ? "wide" : ""}" ${ok ? "" : "disabled"} aria-keyshortcuts="${o.key}">
+        <span>${o.name} <kbd>${o.key}</kbd></span>${note ? `<small>${note}</small>` : ""}</button>`;
+    }).join("");
+    return head("Orders", `<button type="button" data-key="close">Close <kbd>Esc</kbd></button>`) + `<div class="orders-grid" role="menu" aria-label="Orders">${items}</div>`;
+  }
+  if (ui.mode === "weapon") {
+    const used = ui.barrage ? ui.barrage.used : [];
+    const title = ui.barrage ? (used.length ? "Barrage: second weapon" : "Barrage: first weapon") : "Skirmish: pick a weapon";
+    const back = ui.barrage && ui.barrage.committed
+      ? `<button type="button" data-key="skip">Skip</button>`
+      : `<button type="button" data-key="to-orders">Back</button>`;
+    const items = weaponsOf(you).filter((w) => !used.includes(w.key)).map((w) => {
+      const n = validTargets(w).length;
+      return `<button type="button" role="menuitem" data-key="w-${w.key}" ${n ? "" : "disabled"}><span>${w.name}</span><small>${weaponLine(w)} · ${n ? plural(n, "target") : "no targets"}</small></button>`;
+    }).join("");
+    return head(title, back) + `<div class="orders-grid one" role="menu" aria-label="${title}">${items}</div>`;
+  }
+  if (ui.mode === "stabilize") {
+    const canRepair = you.repairs > 0 && you.hp < you.maxHp;
+    return head("Stabilize", `<button type="button" data-key="to-orders">Back</button>`) + `<div class="orders-grid one" role="menu" aria-label="Stabilize">
+      <button type="button" role="menuitem" data-key="st-repair" ${canRepair ? "" : "disabled"}><span>Patch up</span><small>Spend 1 repair (${you.repairs} left) to refill HP</small></button>
+      <button type="button" role="menuitem" data-key="st-cool"><span>Vent</span><small>Clear all heat${you.status.exposed ? ", end Exposed" : ""}${you.status.meltdown ? ", stop the meltdown" : ""}</small></button>
+    </div>`;
+  }
+  return "";
+}
+
+function dialogHtml() {
+  const dg = ui.dialog, you = B.you;
+  if (!dg) return "";
+  if (dg.kind === "brief") {
+    const seg = ["light", "standard", "heavy"].map((k) => `<button type="button" data-key="threat-${k}" aria-pressed="${B.threat === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("");
+    return `<p class="eyebrow">Site ${String(B.seed).padStart(5, "0")} · Briefing</p>
+      <h2 id="dialog-h">${B.name}</h2>
+      <p>Objective: <b>destroy every hostile.</b></p>
+      <p>Hostiles: ${rosterText()}.</p>
+      <p class="eyebrow">Threat</p>
+      <div class="seg" role="group" aria-label="Threat level">${seg}</div>
+      <div class="row"><button type="button" class="go" data-key="deploy" data-autofocus>Deploy</button><button type="button" data-key="reroll">Another site</button></div>
+      <div class="row"><button type="button" data-key="menu">Main menu</button></div>`;
+  }
+  if (dg.kind === "end") {
+    return `<p class="eyebrow">Round ${B.round}</p><h2 id="dialog-h">End your turn?</h2>
+      <p>You still have ${dg.left.join(" and ")}.</p>
+      <div class="row"><button type="button" class="warn" data-key="end-yes">End turn <kbd>E</kbd></button><button type="button" data-key="end-no" data-autofocus>Keep going <kbd>Esc</kbd></button></div>`;
+  }
+  if (dg.kind === "brace") {
+    return `<p class="eyebrow">Reaction</p><h2 id="dialog-h">Brace?</h2>
+      <p>You're about to take ${dg.dmg} damage, enough to cost structure. Bracing halves it to ${Math.ceil(dg.dmg / 2)} and makes attacks against you harder until the end of your next turn, but next turn you get only one quick action.</p>
+      <div class="row"><button type="button" class="go" data-key="brace" data-autofocus>Brace <kbd>Y</kbd></button><button type="button" data-key="nobrace">Take the hit <kbd>N</kbd></button></div>`;
+  }
+  if (dg.kind === "over") {
+    const won = B.over === "won";
+    return `<p class="eyebrow">${B.name} · Round ${B.round}</p>
+      <h2 id="dialog-h">${won ? "Area clear" : "Halberd down"}</h2>
+      <p>${won
+        ? `You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.`
+        : `${plural(foes().length, "hostile")} still standing after ${plural(B.round, "round")}.`}</p>
+      <div class="row"><button type="button" class="go" data-key="again" data-autofocus>${won ? "Fight here again" : "Try this fight again"}</button><button type="button" data-key="next">New battlefield</button></div>
+      <div class="row"><button type="button" data-key="menu">Main menu</button><button type="button" data-key="close-over">Look at the field</button></div>`;
+  }
+  return "";
+}
+
+// re-render only what changed, and keep keyboard focus on the same control
+function render(el, html) {
+  if (el._html === html) return;
+  const a = document.activeElement;
+  const key = a && el.contains(a) ? a.dataset.key : null;
+  el.innerHTML = html;
+  el._html = html;
+  if (key) {
+    const again = el.querySelector(`[data-key="${key}"]:not(:disabled)`) || el.querySelector("button:not(:disabled)");
+    (again || map).focus({ preventScroll: true });
+  }
+}
+
+function placeOrders() {
+  const el = $("orders");
+  if (el.hidden) return;
+  const wrap = $("mapwrap").getBoundingClientRect();
+  const ctm = map.getScreenCTM();
+  if (!ctm) return;
+  const [cx, cy] = center(B.you.pos);
+  const sx = ctm.a * cx + ctm.e - wrap.left, sy = ctm.d * cy + ctm.f - wrap.top;
+  const w = el.offsetWidth, h = el.offsetHeight, gap = R * ctm.a * 0.8;
+  let left = sx + gap;
+  if (left + w > wrap.width - 4) left = sx - gap - w;
+  if (left < 4) left = Math.max(4, Math.min(wrap.width - w - 4, sx - w / 2));
+  const top = Math.max(4, Math.min(wrap.height - h - 4, sy - h / 2));
+  el.style.left = left + "px";
+  el.style.top = top + "px";
 }
 
 function paint() {
   if (!B) return;
   drawOverlay();
   drawUnits();
-  $("mechcard").innerHTML = mechCard();
-  $("turnline").innerHTML = turnLine();
-  for (const b of document.querySelectorAll("#actions button")) {
-    const act = b.dataset.act;
-    b.disabled = !canDo(act) && !(ui.mode !== "idle" && actFor(ui.mode) === act && yourTurn());
-    b.setAttribute("aria-pressed", String(ui.mode !== "idle" && actFor(ui.mode) === act));
-  }
-  $("occost").textContent = `free, +${OC_COST[Math.min(B.ocCount, 3)]} heat`;
-  const ctx = $("context");
-  const keep = document.activeElement && ctx.contains(document.activeElement) ? document.activeElement.dataset.key : null;
-  const html = contextHtml();
-  if (ctx.dataset.html !== html) {
-    ctx.innerHTML = html;
-    ctx.dataset.html = html;
-    if (keep) {
-      const again = ctx.querySelector(`[data-key="${keep}"]`) || ctx.querySelector("button:not(:disabled)");
-      if (again) again.focus(); else map.focus();
-    }
-  }
-  $("askbrace").setAttribute("aria-pressed", String(prefs.askBrace));
+  render($("mechpane"), mechCard());
+  render($("infopane"), infoHtml());
+  render($("budget"), budgetHtml());
+  const [prompt, btns] = promptParts();
+  render($("prompt"), prompt);
+  render($("barbtns"), btns);
+  const orders = $("orders");
+  const showOrders = yourTurn() && MENU_MODES.includes(ui.mode);
+  render(orders, showOrders ? ordersHtml() : "");
+  orders.hidden = !showOrders;
+  placeOrders();
+  const dlg = $("dialog");
+  render(dlg, dialogHtml());
+  dlg.hidden = !ui.dialog;
+  dlg.className = "dialog" + (ui.dialog && ui.dialog.kind === "brace" ? " low" : "") + (ui.dialog && ui.dialog.kind === "over" ? ` over-${B.over}` : "");
+  saveBattle();
+}
+
+function showTab(name) {
+  $("game").dataset.tab = name;
+  for (const b of document.querySelectorAll(".tabs [role=tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === name));
 }
 
 // ---------- Log ----------
@@ -1728,9 +2023,137 @@ function log(text, cls = "sys") {
   li.className = cls;
   li.textContent = text;
   ol.append(li);
-  while (ol.children.length > 120) ol.firstChild.remove();
+  while (ol.children.length > 150) ol.firstChild.remove();
   ol.scrollTop = ol.scrollHeight;
-  if (cls !== "round") $("ticker").textContent = text;
+  if (B) {
+    B.logLines.push({ t: text, c: cls });
+    if (B.logLines.length > 150) B.logLines.shift();
+    if (cls !== "round") B.lastLine = text;
+  }
+  if (cls !== "round" && B && B.phase !== "you") render($("prompt"), escapeHtml(text));
+}
+const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- Saving ----------
+const SAVE_KEY = "hardpoint:battle";
+const UNIT_FIELDS = ["pos", "hp", "alive", "structure", "stress", "heat", "repairs", "smokeLeft", "status", "reaction", "braceLimit", "loaded"];
+function saveBattle() {
+  if (!B || B.phase !== "you" || B.over || busy) return;
+  const data = {
+    v: 1, seed: B.seed, threat: B.threat, name: B.name, round: B.round,
+    ocCount: B.ocCount, coreUsed: B.coreUsed, turn: B.turn, smoke: [...B.smoke],
+    units: B.units.map((u) => {
+      const o = { id: u.id };
+      for (const k of UNIT_FIELDS) if (k in u) o[k] = u[k];
+      if (u.broken) o.broken = [...u.broken];
+      return o;
+    }),
+    log: B.logLines.slice(-80),
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { /* storage blocked */ }
+}
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+    return s && s.v === 1 ? s : null;
+  } catch (e) { return null; }
+}
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage blocked */ }
+}
+
+// ---------- Battles ----------
+const randomSeed = () => 1 + Math.floor(Math.random() * 99998);
+const liveBattle = () => B && !B.over && B.phase !== "brief";
+
+function rosterText() {
+  const counts = {};
+  for (const f of B.units) if (f.side === "foe") counts[f.kind] = (counts[f.kind] || 0) + 1;
+  return Object.entries(counts).map(([k, n]) => plural(n, HOSTILES[k].name)).join(", ");
+}
+function resetUi() {
+  Object.assign(ui, { mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null, inspect: null, hover: null, dialog: null, cursor: B.you.pos, showCursor: false });
+}
+function setHeader() {
+  $("sitename").textContent = `Site ${String(B.seed).padStart(5, "0")} · ${B.name} · ${B.threat}`;
+}
+
+function newBattle(seed, threat, deployNow) {
+  if (ui.dialog && ui.dialog.kind === "brace") ui.dialog.resolve(false);
+  busy = false;
+  B = buildBattle(seed, threat);
+  B.phase = "brief";
+  B.logLines = [];
+  prefs.threat = threat;
+  savePrefs();
+  resetUi();
+  drawTerrain();
+  $("log").replaceChildren();
+  setHeader();
+  if (deployNow) { deploy(); return; }
+  ui.dialog = { kind: "brief" };
+  paint();
+  focusDialog();
+}
+
+function deploy() {
+  ui.dialog = null;
+  B.phase = "you";
+  history.replaceState(null, "", "#" + new URLSearchParams({ site: String(B.seed), threat: B.threat }).toString());
+  log(`Dropping into ${B.name}. Hostiles: ${rosterText()}.`, "sys");
+  startPlayerTurn();
+  map.focus({ preventScroll: true });
+}
+
+function restoreBattle(s) {
+  busy = false;
+  B = buildBattle(s.seed, s.threat);
+  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, turn: s.turn, smoke: new Map(s.smoke), phase: "you", logLines: [] });
+  for (const su of s.units) {
+    const u = B.units.find((x) => x.id === su.id);
+    if (!u) continue;
+    const { broken, ...rest } = su;
+    Object.assign(u, rest);
+    if (broken) u.broken = new Set(broken);
+  }
+  B.active = B.you;
+  resetUi();
+  drawTerrain();
+  $("log").replaceChildren();
+  for (const l of s.log || []) log(l.t, l.c);
+  setHeader();
+  history.replaceState(null, "", "#" + new URLSearchParams({ site: String(B.seed), threat: B.threat }).toString());
+  setMode("idle");
+}
+
+// ---------- Screens ----------
+let screenKind = null, helpFrom = "title";
+function openScreen(kind) {
+  screenKind = kind;
+  const scr = $("screen");
+  scr.hidden = false;
+  $("title").hidden = kind !== "title";
+  $("help").hidden = kind !== "help";
+  scr.setAttribute("aria-labelledby", kind === "title" ? "title-h" : "help-h");
+  $("game").inert = true;
+  if (kind === "title") updateTitle();
+  scr.scrollTop = 0;
+  const first = kind === "title" ? $("title").querySelector(".menu button:not(:disabled)") : $("help").querySelector("button");
+  if (first) first.focus({ preventScroll: true });
+}
+function closeScreen() {
+  screenKind = null;
+  $("screen").hidden = true;
+  $("game").inert = false;
+  paint();
+  if (ui.dialog) focusDialog(); else map.focus({ preventScroll: true });
+}
+function updateTitle() {
+  const saved = loadSave();
+  const btn = $("continuebtn"), note = $("continuenote");
+  if (liveBattle()) { btn.disabled = false; note.textContent = `Back to ${B.name}, round ${B.round}`; }
+  else if (saved) { btn.disabled = false; note.textContent = `${saved.name}, round ${saved.round}`; }
+  else { btn.disabled = true; note.textContent = "No battle in progress"; }
 }
 
 // ---------- Wiring ----------
@@ -1741,7 +2164,7 @@ map.addEventListener("click", (e) => {
   onHex(Number(hx.dataset.i), false);
 });
 map.addEventListener("pointermove", (e) => {
-  if (e.pointerType !== "mouse") return;
+  if (e.pointerType !== "mouse" || !B) return;
   const hx = e.target.closest("[data-i]");
   const i = hx ? Number(hx.dataset.i) : null;
   if (i === ui.hover) return;
@@ -1752,111 +2175,154 @@ map.addEventListener("pointerleave", () => { ui.hover = null; if (B) drawOverlay
 map.addEventListener("focus", () => { if (B) drawOverlay(); });
 map.addEventListener("blur", () => { if (B) drawOverlay(); });
 map.addEventListener("keydown", (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.metaKey || e.ctrlKey || e.altKey || !B) return;
   const step = e.shiftKey ? 3 : 1;
   let c = colOf(ui.cursor), r = rowOf(ui.cursor);
   if (e.key === "ArrowLeft") c -= step;
   else if (e.key === "ArrowRight") c += step;
   else if (e.key === "ArrowUp") r -= step;
   else if (e.key === "ArrowDown") r += step;
-  else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onHex(ui.cursor, true); return; }
+  else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ui.showCursor = true; onHex(ui.cursor, true); return; }
   else return;
   e.preventDefault();
   c = Math.max(0, Math.min(COLS - 1, c));
   r = Math.max(0, Math.min(ROWS - 1, r));
   ui.cursor = idxOf(c, r);
+  ui.inspect = ui.cursor;
   ui.showCursor = true;
   ui.hover = ui.cursor;
   announce();
-  drawOverlay();
+  paint();
 });
 
-$("actions").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-act]");
-  if (b) doAction(b.dataset.act, e.detail === 0);
+// arrow keys walk the orders grid; Escape steps back out
+$("orders").addEventListener("keydown", (e) => {
+  const items = [...$("orders").querySelectorAll(".orders-grid button:not(:disabled)")];
+  const at = items.indexOf(document.activeElement);
+  const cols = $("orders").querySelector(".orders-grid.one") ? 1 : 2;
+  let next = null;
+  if (e.key === "ArrowDown") next = at < 0 ? 0 : Math.min(items.length - 1, at + cols);
+  else if (e.key === "ArrowUp") next = at < 0 ? 0 : Math.max(0, at - cols);
+  else if (e.key === "ArrowRight") next = Math.min(items.length - 1, at + 1);
+  else if (e.key === "ArrowLeft") next = Math.max(0, at - 1);
+  if (next != null && items[next]) { e.preventDefault(); items[next].focus(); }
 });
 
-$("context").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-key]");
-  if (!b) return;
-  const k = b.dataset.key;
-  const viaKey = e.detail === 0;
+function onKeyButton(k, viaKey) {
+  const you = B.you;
+  // these work whatever the phase
+  if (k === "legend") { ui.inspect = null; paint(); return; }
+  if (k === "askbrace") { prefs.askBrace = !prefs.askBrace; savePrefs(); paint(); return; }
   if (k === "brace") return answerBrace(true);
   if (k === "nobrace") return answerBrace(false);
-  if (k === "again") return newBattle(B.seed, B.threat);
+  if (k === "menu") return openScreen("title");
+  if (k === "deploy") return deploy();
+  if (k === "reroll") return newBattle(randomSeed(), B.threat);
+  if (k.startsWith("threat-")) return newBattle(B.seed, k.slice(7));
+  if (k === "again") return newBattle(B.seed, B.threat, true);
   if (k === "next") return newBattle(randomSeed(), B.threat);
+  if (k === "close-over") return closeDialog();
+  if (k === "over") { ui.dialog = { kind: "over" }; paint(); focusDialog(); return; }
+  if (k === "end-yes") { ui.dialog = null; endPlayerTurn(); return; }
+  if (k === "end-no") return closeDialog();
   if (!yourTurn()) return;
-  if (k === "cancel") return setMode("idle");
+  if (k === "orders") { setMode("orders"); focusOrders(); return; }
+  if (k === "end") return askEnd();
+  if (k === "close" || k === "cancel") { setMode("idle"); map.focus({ preventScroll: true }); return; }
+  if (k === "to-orders") { setMode("orders"); focusOrders(); return; }
+  if (k.startsWith("act-")) return doAction(k.slice(4), viaKey);
   if (k === "confirm-move" && ui.dest != null) return commitMove(ui.dest);
   if (k === "confirm-smoke" && ui.dest != null) return placeSmoke(ui.dest);
   if (k === "fire" && ui.target) return fire(ui.weapon, ui.target);
-  if (k === "skip") { log("You hold the second shot.", "sys"); return setMode("idle"); }
-  if (k === "back") return setMode("weapon", { barrage: ui.barrage });
+  if (k === "skip") { log("You hold the second shot.", "sys"); setMode("idle"); map.focus({ preventScroll: true }); return; }
+  if (k === "back") { setMode("weapon", { barrage: ui.barrage }); focusOrders(); return; }
   if (k === "st-repair") return stabilize("repair");
   if (k === "st-cool") return stabilize("cool");
   if (k.startsWith("w-")) {
-    const w = weaponsOf(B.you).find((x) => x.key === k.slice(2));
+    const w = weaponsOf(you).find((x) => x.key === k.slice(2));
     if (!w) return;
     const targets = validTargets(w);
     setMode("target", { weapon: w, barrage: ui.barrage });
-    if (targets.length === 1) { ui.target = targets[0]; ui.inspect = targets[0]; paint(); }
-    if (viaKey) focusMap(targets[0]?.pos);
+    if (targets.length === 1) { ui.target = targets[0]; ui.inspect = targets[0].pos; paint(); }
+    if (viaKey) focusMap(targets[0]?.pos); else map.focus({ preventScroll: true });
+  }
+}
+$("game").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-key]");
+  if (b && B) onKeyButton(b.dataset.key, e.detail === 0);
+});
+for (const b of document.querySelectorAll(".tabs [role=tab]")) b.addEventListener("click", () => showTab(b.dataset.tab));
+$("menubtn").addEventListener("click", () => openScreen("title"));
+$("helpbtn").addEventListener("click", () => { helpFrom = "game"; openScreen("help"); });
+
+$("screen").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-menu]");
+  if (!b) return;
+  const m = b.dataset.menu;
+  if (m === "continue") {
+    if (liveBattle()) { closeScreen(); return; }
+    const saved = loadSave();
+    if (saved) { closeScreen(); restoreBattle(saved); map.focus({ preventScroll: true }); }
+  } else if (m === "new") {
+    closeScreen();
+    newBattle(randomSeed(), prefs.threat || "standard");
+  } else if (m === "help") {
+    helpFrom = "title";
+    openScreen("help");
+  } else if (m === "back") {
+    if (helpFrom === "game") closeScreen(); else openScreen("title");
   }
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.metaKey || e.ctrlKey || e.altKey || !B) return;
   if (e.target.matches("input:not([type=range]), textarea, select")) return;
-  if (e.key === "Escape") {
-    if (ui.braceAsk) return answerBrace(false);
-    if (B && ui.mode !== "idle" && yourTurn()) { e.preventDefault(); setMode("idle"); }
+  if (screenKind) {
+    if (e.key === "Escape") {
+      if (screenKind === "help") { if (helpFrom === "game") closeScreen(); else openScreen("title"); }
+      else if (liveBattle()) closeScreen();
+    }
     return;
   }
-  if (ui.braceAsk) {
-    if (e.key === "y" || e.key === "Y") answerBrace(true);
-    else if (e.key === "n" || e.key === "N") answerBrace(false);
+  const dg = ui.dialog;
+  if (dg) {
+    if (dg.kind === "brace") {
+      if (e.key === "y" || e.key === "Y") answerBrace(true);
+      else if (e.key === "n" || e.key === "N" || e.key === "Escape") answerBrace(false);
+    } else if (dg.kind === "end") {
+      if (e.key === "e" || e.key === "E") { e.preventDefault(); ui.dialog = null; endPlayerTurn(); }
+      else if (e.key === "Escape") closeDialog();
+    }
+    return;
+  }
+  if (e.key === "Escape") {
+    if (!yourTurn() || ui.mode === "idle") return;
+    e.preventDefault();
+    if (ui.mode === "weapon" && !(ui.barrage && ui.barrage.committed)) { setMode("orders"); focusOrders(); }
+    else if (ui.mode === "target") { setMode("weapon", { barrage: ui.barrage }); focusOrders(); }
+    else { setMode("idle"); focusMap(B.you.pos); }
     return;
   }
   const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "smoke", t: "stabilize", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
   if (act && canDo(act)) { e.preventDefault(); doAction(act, true); }
 });
 
-for (const b of document.querySelectorAll("[data-threat]")) {
-  b.addEventListener("click", () => newBattle(B.seed, b.dataset.threat));
-}
-$("restart").addEventListener("click", () => newBattle(B.seed, B.threat));
-$("newmap").addEventListener("click", () => newBattle(randomSeed(), B.threat));
-$("askbrace").addEventListener("click", () => { prefs.askBrace = !prefs.askBrace; savePrefs(); paint(); });
+addEventListener("resize", () => placeOrders());
 
 // ---------- Start ----------
-const randomSeed = () => 1 + Math.floor(Math.random() * 99998);
-
-function newBattle(seed, threat) {
-  if (ui.braceAsk) answerBrace(false);
-  busy = false;
-  B = buildBattle(seed, threat);
-  Object.assign(ui, { mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null, inspect: null, hover: null, cursor: B.you.pos });
-  $("log").replaceChildren();
-  drawTerrain();
-  $("sitecode").textContent = `Site ${String(seed).padStart(5, "0")}`;
-  $("battle-h").textContent = B.name;
-  const counts = {};
-  for (const f of foes()) counts[f.kind] = (counts[f.kind] || 0) + 1;
-  const roster = Object.entries(counts).map(([k, n]) => plural(n, HOSTILES[k].name)).join(", ");
-  $("brief").innerHTML = `Objective: <b>destroy every hostile.</b> Hostiles: ${roster}.`;
-  for (const b of document.querySelectorAll("[data-threat]")) b.setAttribute("aria-pressed", String(b.dataset.threat === threat));
-  const params = new URLSearchParams({ site: String(seed), threat });
-  history.replaceState(null, "", "#" + params.toString());
-  log(`Dropping into ${B.name}. ${roster} ahead.`, "sys");
-  startPlayerTurn();
-  announce();
-}
-
 (function boot() {
   const params = new URLSearchParams(location.hash.slice(1));
   const seed = parseInt(params.get("site"), 10);
-  const threat = THREATS[params.get("threat")] ? params.get("threat") : "standard";
-  newBattle(seed > 0 && seed < 100000 ? seed : randomSeed(), threat);
+  const threat = THREATS[params.get("threat")] ? params.get("threat") : (THREATS[prefs.threat] ? prefs.threat : "standard");
+  const saved = loadSave();
+  if (seed > 0 && seed < 100000) {
+    // a shared link opens its briefing, unless it's the battle you were already fighting
+    if (saved && saved.seed === seed && saved.threat === threat) restoreBattle(saved);
+    else newBattle(seed, threat);
+    return;
+  }
+  newBattle(randomSeed(), threat);
+  openScreen("title");
 })();
 </script>
 </body>
