@@ -1,0 +1,1863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hardpoint — The Cabinet of Curios</title>
+<meta name="description" content="Pilot one mech against a squad of hostiles on a randomly built hex battlefield. Take cover, watch your heat, and decide when to push. Inspired by the LANCER tabletop game.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: a printed mission briefing */
+  --bg: #E6E3DA;
+  --ink: #1D2125;
+  --muted: #5A6066;
+  --line: #C9C4B6;
+  --plate: #F3F1EA;
+  --accent: #B8441A;
+  --focus: #B8441A;
+
+  /* Board: a tactical display, dark in either theme */
+  --board: #111A20;
+  --board-deep: #0C1418;
+  --board-edge: #27353E;
+  --board-ink: #DCE6EA;
+  --board-muted: #8FA2AC;
+  --btn: #1A262E;
+  --btn-edge: #33444F;
+  --btn-hover: #4C6170;
+
+  /* What things are on the board */
+  --hex: #16222A;
+  --hex-line: #24323B;
+  --rough: #262A22;
+  --rough-mark: #4D5440;
+  --scrub: #16301F;
+  --scrub-dot: #3F7D50;
+  --sandbag: #A58D5C;
+  --sandbag-edge: #6E5D3B;
+  --wall: #2E3A42;
+  --wall-top: #52626D;
+  --smoke: #C8D1D5;
+  --you: #4FD1E8;
+  --foe: #FF6B4A;
+  --amber: #FFB547;
+  --good: #7BD88F;
+
+  --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121619; --ink: #E2E6E8; --muted: #9AA3A9; --line: #2B3338; --plate: #1A2024;
+    --accent: #F07A4A; --focus: #F07A4A;
+    --board: #0E161B; --board-deep: #091014; --board-edge: #24323A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121619; --ink: #E2E6E8; --muted: #9AA3A9; --line: #2B3338; --plate: #1A2024;
+  --accent: #F07A4A; --focus: #F07A4A;
+  --board: #0E161B; --board-deep: #091014; --board-edge: #24323A;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 500 .8em var(--mono); }
+
+.back {
+  display: inline-block;
+  color: var(--muted);
+  font-size: .95rem;
+  text-underline-offset: 3px;
+  margin-bottom: 1rem;
+}
+h1 {
+  font: 700 clamp(2.3rem, 7vw, 3.4rem)/1 var(--display);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  margin: 0 0 .5rem;
+}
+h1::after {
+  content: "";
+  display: block;
+  width: 4.5rem;
+  height: 6px;
+  margin-top: .45rem;
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 8px, transparent 8px 14px);
+}
+.lede { margin: 0 0 .6rem; color: var(--muted); max-width: 62ch; }
+.howto { margin: 0 0 1.4rem; color: var(--muted); font-size: .95rem; max-width: 62ch; }
+h2 { font: 600 1.5rem/1.2 var(--display); letter-spacing: .02em; margin: 0 0 .75rem; }
+
+/* ---------- The battle panel ---------- */
+.panel {
+  background: var(--board);
+  color: var(--board-ink);
+  border: 1px solid var(--board-edge);
+  border-radius: 10px;
+  padding: 1rem 1rem 1.1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 32px -24px rgba(0,0,0,.8);
+}
+.panel :focus-visible { outline-color: var(--amber); }
+.panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .6rem 1rem; }
+.panel-head h2 { margin: 0; }
+.eyebrow { font: 600 .72rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--board-muted); margin: 0 0 .1rem; }
+.brief { margin: .3rem 0 0; color: var(--board-muted); font-size: .95rem; }
+.brief b { color: var(--board-ink); font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--btn-edge); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; border-right: 1px solid var(--btn-edge); }
+.seg button:last-child { border-right: 0; }
+
+button {
+  font: 600 .9rem/1.1 var(--display);
+  letter-spacing: .03em;
+  color: var(--board-ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 6px;
+  min-height: 42px;
+  padding: .45rem .75rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:hover:not(:disabled) { border-color: var(--btn-hover); }
+button[aria-pressed="true"] { background: var(--amber); color: #1B1406; border-color: var(--amber); }
+button:disabled { opacity: .38; cursor: default; }
+button.go { background: var(--you); color: #06191E; border-color: var(--you); }
+button.warn { background: var(--foe); color: #210803; border-color: var(--foe); }
+
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 330px);
+  gap: 1rem 1.25rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+.turnline .vitals { display: none; }
+@media (max-width: 820px) {
+  .field { grid-template-columns: minmax(0, 1fr); }
+  /* keep the buttons near the map; the full mech card can wait below */
+  #mechcard { order: 5; }
+  .prefs { order: 6; }
+  .turnline .vitals { display: inline; }
+}
+
+.board { min-width: 0; }
+#map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  background: var(--board-deep);
+  border: 1px solid var(--board-edge);
+  border-radius: 8px;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+#map:focus { outline: none; }
+#map:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.ticker {
+  margin: .5rem 0 0;
+  min-height: 2.6em;
+  font: 400 .85rem/1.35 var(--mono);
+  color: var(--board-muted);
+}
+.cursor-info { margin: .25rem 0 0; font: 400 .82rem/1.35 var(--mono); color: var(--board-muted); min-height: 1.35em; }
+
+/* hexes and what's on them */
+.hx { stroke: var(--hex-line); stroke-width: 1; cursor: pointer; }
+.t0 { fill: var(--hex); }
+.t1 { fill: url(#p-rough); }
+.t2 { fill: url(#p-scrub); }
+.t3 { fill: var(--hex); }
+.t4 { fill: var(--wall); }
+.pr-bg { fill: var(--rough); }
+.pr-mk { stroke: var(--rough-mark); stroke-width: 1.4; stroke-linecap: round; }
+.ps-bg { fill: var(--scrub); }
+.ps-dot { fill: var(--scrub-dot); }
+.wall-top { fill: var(--wall-top); pointer-events: none; }
+.wall-edge { fill: none; stroke: #0007; stroke-width: 1.2; pointer-events: none; }
+.sandbag { fill: var(--sandbag); stroke: var(--sandbag-edge); stroke-width: 1; pointer-events: none; }
+.coord { fill: var(--board-muted); opacity: .35; font: 500 7px var(--mono); pointer-events: none; }
+
+#over, #units, #fx { pointer-events: none; }
+.reach { fill: var(--you); fill-opacity: .14; stroke: var(--you); stroke-opacity: .35; stroke-width: 1; }
+.dest { fill: var(--you); fill-opacity: .3; stroke: var(--you); stroke-width: 2.2; }
+.path { fill: none; stroke: var(--you); stroke-width: 2.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
+.valid { fill: var(--amber); fill-opacity: .08; stroke: var(--amber); stroke-width: 1.8; stroke-dasharray: 4 3; }
+.chosen { fill: var(--amber); fill-opacity: .2; stroke: var(--amber); stroke-width: 3; }
+.fireline { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 6 5; }
+.smoke { fill: var(--smoke); fill-opacity: .28; }
+.smoke-puff { fill: var(--smoke); fill-opacity: .22; }
+.smoke-pre { fill: var(--smoke); fill-opacity: .22; stroke: var(--smoke); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.cursor { fill: none; stroke: #fff; stroke-width: 2; stroke-dasharray: 3 3; }
+.inspect { fill: none; stroke: var(--foe); stroke-width: 2; stroke-dasharray: 2 3; }
+
+.tok-body { stroke-width: 2.5; }
+.tok.you .tok-body { fill: #0B2A33; stroke: var(--you); }
+.tok.you .glyph { fill: var(--you); }
+.tok.foe .tok-body { fill: #36140D; stroke: var(--foe); }
+.tok.foe.active .tok-body { stroke: var(--amber); }
+.tok text { font: 700 15px var(--display); text-anchor: middle; dominant-baseline: central; fill: var(--board-ink); }
+.tok .num { font: 600 8px var(--mono); fill: var(--foe); }
+.tok .tag { font: 600 7.5px var(--mono); fill: var(--amber); letter-spacing: .04em; }
+.hpbar-bg { fill: #000a; }
+.hpbar { fill: var(--foe); }
+.tok.you .hpbar { fill: var(--you); }
+.lockring { fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-dasharray: 3 3; }
+.wreck { stroke: var(--board-muted); stroke-width: 2.2; stroke-linecap: round; opacity: .55; }
+.tracer { stroke: var(--amber); stroke-width: 2.2; stroke-linecap: round; opacity: .9; }
+.tracer.foe { stroke: var(--foe); }
+.pop { font: 700 15px var(--display); text-anchor: middle; paint-order: stroke; stroke: #000; stroke-width: 3px; }
+.pop.hurt { fill: var(--foe); }
+.pop.dealt { fill: var(--amber); }
+.pop.miss { fill: var(--board-muted); }
+@keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-18px); opacity: 0; } }
+.pop { animation: rise .9s ease-out forwards; }
+
+/* the side column */
+.side { display: grid; gap: .85rem; align-content: start; min-width: 0; }
+.card {
+  background: var(--board-deep);
+  border: 1px solid var(--board-edge);
+  border-radius: 8px;
+  padding: .7rem .8rem;
+}
+.card h3 { font: 700 1.05rem/1.1 var(--display); letter-spacing: .04em; margin: 0; }
+.card .sub { font-size: .85rem; color: var(--board-muted); margin: .1rem 0 .5rem; }
+.meter { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) auto; align-items: center; gap: .5rem; font: 500 .8rem var(--mono); margin: .3rem 0; }
+.meter .k { color: var(--board-muted); text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; }
+.bar { height: 10px; background: #0008; border: 1px solid var(--board-edge); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--you); }
+.bar.heat i { background: var(--amber); }
+.pips { display: flex; gap: 4px; }
+.pips i { width: 14px; height: 10px; border: 1px solid var(--you); border-radius: 2px; background: var(--you); }
+.pips i.gone { background: transparent; border-color: var(--btn-edge); }
+.pips.stress i { border-color: var(--amber); background: var(--amber); }
+.pips.stress i.gone { background: transparent; border-color: var(--btn-edge); }
+.stats { font: 400 .8rem/1.5 var(--mono); color: var(--board-muted); margin: .4rem 0 0; }
+.stats b { color: var(--board-ink); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: .3rem; margin: .45rem 0 0; }
+.chip { font: 600 .68rem var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--btn-edge); color: var(--board-muted); border-radius: 3px; padding: .1rem .35rem; }
+.chip.bad { color: var(--foe); border-color: var(--foe); }
+.chip.good { color: var(--good); border-color: var(--good); }
+.chip.amb { color: var(--amber); border-color: var(--amber); }
+.gear { list-style: none; margin: .5rem 0 0; padding: 0; font-size: .82rem; }
+.gear li { padding: .2rem 0; border-top: 1px dashed var(--board-edge); }
+.gear b { font-family: var(--display); font-weight: 600; letter-spacing: .03em; }
+.gear .d { color: var(--board-muted); font: 400 .74rem var(--mono); display: block; }
+.gear li.broken b, .gear li.broken .d { text-decoration: line-through; opacity: .55; }
+
+.turnline { font: 500 .8rem/1.45 var(--mono); color: var(--board-muted); margin: 0; }
+.turnline b { color: var(--board-ink); font-weight: 600; }
+.turnline .on { color: var(--you); }
+.turnline .foeturn { color: var(--foe); }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+.actions button { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: .1rem; text-align: left; padding: .4rem .55rem; min-height: 46px; }
+.actions button small { font: 500 .62rem var(--mono); letter-spacing: .04em; color: var(--board-muted); text-transform: uppercase; }
+.actions button[aria-pressed="true"] small { color: #3B2A0A; }
+.actions button kbd { color: var(--board-muted); font-size: .66rem; }
+.actions button[aria-pressed="true"] kbd { color: #3B2A0A; }
+.actions .end { grid-column: span 3; align-items: center; flex-direction: row; justify-content: center; gap: .5rem; }
+
+.context { font-size: .9rem; }
+.context p { margin: 0 0 .5rem; }
+.context .big { font: 700 1.6rem/1 var(--display); color: var(--amber); }
+.context ul { margin: .2rem 0 .6rem; padding-left: 1.1rem; font: 400 .8rem/1.45 var(--mono); color: var(--board-muted); }
+.context .row { display: flex; flex-wrap: wrap; gap: .4rem; }
+.context .row button { flex: 1 1 8rem; }
+.choices { display: grid; gap: .4rem; }
+.choices button { text-align: left; display: block; }
+.choices button small { display: block; font: 400 .72rem var(--mono); color: var(--board-muted); margin-top: .15rem; letter-spacing: 0; }
+.choices button.go small, .choices button.warn small { color: inherit; opacity: .8; }
+
+.prefs { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .82rem; color: var(--board-muted); }
+
+.logbox { margin-top: 1rem; }
+.logbox h3 { font: 600 .78rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--board-muted); margin: 0 0 .35rem; }
+#log {
+  list-style: none;
+  margin: 0;
+  padding: .5rem .7rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  background: var(--board-deep);
+  border: 1px solid var(--board-edge);
+  border-radius: 8px;
+  font: 400 .8rem/1.5 var(--mono);
+}
+#log li { padding: .15rem 0; border-bottom: 1px solid #ffffff08; }
+#log li.you { color: var(--you); }
+#log li.foe { color: #FFB3A3; }
+#log li.bad { color: var(--foe); font-weight: 600; }
+#log li.sys { color: var(--board-muted); }
+#log li.round { color: var(--amber); font-weight: 600; letter-spacing: .06em; padding-top: .4rem; }
+
+.notes { max-width: 66ch; margin-top: 2.25rem; }
+.notes li { margin-bottom: .6rem; }
+.sources { max-width: 66ch; margin-top: 2.25rem; color: var(--muted); font-size: .92rem; }
+.sources h2 { color: var(--ink); }
+.foot { margin-top: 2rem; color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 420px) {
+  .wrap { padding-left: 1rem; padding-right: 1rem; }
+  .panel { padding: .75rem .6rem .9rem; }
+  .actions { gap: .3rem; }
+  .actions button { padding: .35rem .4rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Hardpoint</h1>
+  <p class="lede">You pilot one mech, the Halberd, against a squad of hostiles on a battlefield built at random. Use walls and barricades for cover, keep an eye on your heat, and decide when it's worth pushing your reactor past what's safe. The rules are inspired by the LANCER tabletop game.</p>
+  <p class="howto">Pick an action, then tap a lit hex or a ringed hostile. Tap it again, or press the button that appears, to commit. On a keyboard, the arrow keys move a cursor over the map, <kbd>Enter</kbd> picks, and <kbd>Esc</kbd> backs out. Each action button shows its key.</p>
+
+  <section class="panel" aria-labelledby="battle-h">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow" id="sitecode">Site</p>
+        <h2 id="battle-h">Battlefield</h2>
+        <p class="brief" id="brief"></p>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Threat level">
+          <button type="button" data-threat="light" aria-pressed="false">Light</button>
+          <button type="button" data-threat="standard" aria-pressed="true">Standard</button>
+          <button type="button" data-threat="heavy" aria-pressed="false">Heavy</button>
+        </div>
+        <button type="button" id="restart">Restart</button>
+        <button type="button" id="newmap">New battlefield</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="board">
+        <svg id="map" tabindex="0" role="application" aria-roledescription="hex map"
+             aria-label="Battlefield map. Arrow keys move the cursor, Shift moves it three hexes, Enter picks the hex under it, Escape backs out."
+             aria-describedby="cursorinfo"></svg>
+        <p class="cursor-info" id="cursorinfo" aria-live="polite"></p>
+        <p class="ticker" id="ticker" aria-hidden="true"></p>
+      </div>
+
+      <div class="side">
+        <div class="card" id="mechcard"></div>
+        <p class="turnline" id="turnline" aria-live="polite"></p>
+        <div class="actions" id="actions" role="group" aria-label="Actions">
+          <button type="button" data-act="move" aria-keyshortcuts="M"><span>Move <kbd>M</kbd></span><small>standard</small></button>
+          <button type="button" data-act="boost" aria-keyshortcuts="B"><span>Boost <kbd>B</kbd></span><small>quick</small></button>
+          <button type="button" data-act="skirmish" aria-keyshortcuts="S"><span>Skirmish <kbd>S</kbd></span><small>quick</small></button>
+          <button type="button" data-act="barrage" aria-keyshortcuts="R"><span>Barrage <kbd>R</kbd></span><small>full</small></button>
+          <button type="button" data-act="lock" aria-keyshortcuts="L"><span>Lock On <kbd>L</kbd></span><small>quick</small></button>
+          <button type="button" data-act="smoke" aria-keyshortcuts="G"><span>Smoke <kbd>G</kbd></span><small>quick</small></button>
+          <button type="button" data-act="stabilize" aria-keyshortcuts="T"><span>Stabilize <kbd>T</kbd></span><small>full</small></button>
+          <button type="button" data-act="overcharge" aria-keyshortcuts="O"><span>Overcharge <kbd>O</kbd></span><small id="occost">free, +1 heat</small></button>
+          <button type="button" data-act="core" aria-keyshortcuts="C"><span>Core <kbd>C</kbd></span><small>free, once</small></button>
+          <button type="button" class="end" data-act="end" aria-keyshortcuts="E">End turn <kbd>E</kbd></button>
+        </div>
+        <div class="card context" id="context" aria-live="polite"></div>
+        <div class="prefs">
+          <button type="button" id="askbrace" aria-pressed="true">Ask before bracing</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="logbox">
+      <h3 id="log-h">Combat log</h3>
+      <ol id="log" aria-labelledby="log-h" aria-live="polite"></ol>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="turn-h">
+    <h2 id="turn-h">How a turn works</h2>
+    <ul>
+      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes, and rough ground costs 2. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Smoke. Or spend both on one full action: Barrage (fire two different weapons) or Stabilize.</li>
+      <li><b>Attacks roll a d20 against Evasion.</b> You add your pilot's grit. Accuracy and difficulty cancel one for one, and whatever is left becomes d6s: roll them all, keep the highest, and add it for accuracy or subtract it for difficulty. A total of 20 or more is a critical hit, and every damage die rolls twice and keeps the higher.</li>
+      <li><b>Cover only stops ranged attacks.</b> Scrub and smoke give soft cover, +1 difficulty. A barricade beside the target, or a wall edge that half hides it, gives hard cover, +2. Walls block sight completely, but you can shoot over barricades. Melee attacks ignore cover.</li>
+      <li><b>Getting close has a cost.</b> Moving next to a hostile engages you both. Your movement stops there, and ranged attacks made while engaged take +1 difficulty. If you start moving while inside a hostile's threat, it gets a free swing at you first (overwatch), and your cleaver does the same to them.</li>
+      <li><b>HP is only the first layer.</b> At 0 HP the Halberd loses a point of structure and its HP refills. Then you roll a structure check: a d6 for each point lost so far, keeping the lowest. A 5 or 6 leaves you impaired for a turn, 2 to 4 wrecks a weapon or system, and a 1 can stun or destroy you. Lose all four points and the mech is done.</li>
+      <li><b>Heat is the price of pushing.</b> Overcharge buys an extra quick action for 1 heat, then 1d3, 1d6, and 1d6+4 for each later use in the same battle. The Arc Lance adds 2 heat per shot. Go past your heat cap and you lose a point of stress and roll an overheat check the same way as a structure check. Stabilize clears all heat.</li>
+      <li><b>Brace when a hit would cost structure.</b> It's a reaction: you take half damage, and attacks against you take +1 difficulty until the end of your next turn. The cost is that next turn you get only one quick action, though the Halberd's Steady Footing still lets you move.</li>
+      <li><b>Lock On sets up a shot.</b> It costs a quick action and makes no roll. The next attack against that hostile gains +1 accuracy.</li>
+    </ul>
+  </section>
+
+  <section class="notes" aria-labelledby="hostile-h">
+    <h2 id="hostile-h">Know the hostiles</h2>
+    <ul>
+      <li><b>Pickets are grunts.</b> Any damage destroys one, even a miss with Reliable damage. They hang back behind cover and plink at you with carbines.</li>
+      <li><b>Hounds are fast and fragile.</b> They run you down with Speed 5 and are hard to hit, but six damage drops one.</li>
+      <li><b>Brutes hit hard and slowly.</b> A Brute's maul knocks lighter mechs back a hex. Stepping away from one gives it a free swing, so pick your moment.</li>
+      <li><b>Lobbers shoot over walls.</b> Their mortars arc over anything, so cover doesn't help against them. A Lobber has to spend a turn reloading after each shot, and it can't fire at a target right next to it.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="credit-h">
+    <h2 id="credit-h">Credits</h2>
+    <ul>
+      <li>Hardpoint is inspired by <i>LANCER</i>, the mech roleplaying game by Tom Parkinson-Morgan and Miguel Lopez, published by <a href="https://massifpress.com/">Massif Press</a>. Thanks to Massif Press for the Lancer system. The rules here are a small, simplified slice of it: pilot stats and grit, structure and stress checks, heat, accuracy and difficulty dice, cover, overwatch, and bracing. The frame, weapons, hostiles, and all of the text on this page are written for Hardpoint.</li>
+      <li>LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</li><!-- tic-ok -->
+    </ul>
+  </section>
+
+  <p class="foot">The link in your address bar names this battlefield and threat level, so you can send someone the same fight.</p>
+</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const d = (n) => 1 + Math.floor(Math.random() * n);
+const rollMany = (n, s) => Array.from({ length: n }, () => d(s));
+const plural = (n, w) => `${n} ${n === 1 ? w : w.endsWith("x") ? w + "es" : w + "s"}`;
+
+// ---------- Seeded randomness ----------
+// the map and the roster come from the seed; dice stay truly random
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ---------- Hex grid ----------
+// pointy-top hexes in rows, odd rows pushed half a hex right
+const COLS = 9, ROWS = 11, R = 30, SQ3 = Math.sqrt(3), PAD = 8;
+const VBW = PAD * 2 + R * SQ3 * (COLS + 0.5);
+const VBH = PAD * 2 + R * (1.5 * (ROWS - 1) + 2);
+const idxOf = (c, r) => r * COLS + c;
+const colOf = (i) => i % COLS;
+const rowOf = (i) => Math.floor(i / COLS);
+const inBounds = (c, r) => c >= 0 && c < COLS && r >= 0 && r < ROWS;
+function cube(i) {
+  const c = colOf(i), r = rowOf(i);
+  const q = c - (r - (r & 1)) / 2;
+  return [q, r, -q - r];
+}
+function fromCube(q, r) {
+  const c = q + (r - (r & 1)) / 2;
+  return inBounds(c, r) ? idxOf(c, r) : -1;
+}
+function dist(a, b) {
+  const A = cube(a), B = cube(b);
+  return (Math.abs(A[0] - B[0]) + Math.abs(A[1] - B[1]) + Math.abs(A[2] - B[2])) / 2;
+}
+const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+function neighbors(i) {
+  const [q, r] = cube(i), out = [];
+  for (const [dq, dr] of DIRS) { const j = fromCube(q + dq, r + dr); if (j >= 0) out.push(j); }
+  return out;
+}
+function center(i) {
+  const c = colOf(i), r = rowOf(i);
+  return [PAD + R * SQ3 * (c + 0.5 + 0.5 * (r & 1)), PAD + R + R * 1.5 * r];
+}
+function corners(i, scale = 1, dx = 0, dy = 0) {
+  const [x, y] = center(i), pts = [];
+  for (let k = 0; k < 6; k++) {
+    const a = Math.PI / 180 * (60 * k - 30);
+    pts.push((x + dx + R * scale * Math.cos(a)).toFixed(1) + "," + (y + dy + R * scale * Math.sin(a)).toFixed(1));
+  }
+  return pts.join(" ");
+}
+function cubeRound(q, r, s) {
+  let rq = Math.round(q), rr = Math.round(r), rs = Math.round(s);
+  const dq = Math.abs(rq - q), dr = Math.abs(rr - r), ds = Math.abs(rs - s);
+  if (dq > dr && dq > ds) rq = -rr - rs; else if (dr > ds) rr = -rq - rs;
+  return [rq, rr];
+}
+// nudged one way or the other so a line along a hex edge picks a side
+function lineHexes(a, b, sign) {
+  const n = dist(a, b), A = cube(a), B = cube(b), out = [];
+  const e = 1e-6 * sign;
+  for (let k = 0; k <= n; k++) {
+    const t = n === 0 ? 0 : k / n;
+    const [q, r] = cubeRound(A[0] + (B[0] - A[0]) * t + e, A[1] + (B[1] - A[1]) * t + 2 * e, A[2] + (B[2] - A[2]) * t - 3 * e);
+    out.push(fromCube(q, r));
+  }
+  return out;
+}
+
+// ---------- Rules data ----------
+const T_OPEN = 0, T_ROUGH = 1, T_SCRUB = 2, T_BARRICADE = 3, T_WALL = 4;
+const TERRAIN_NAME = ["open ground", "rough ground", "scrub", "barricade", "wall"];
+const passable = (t) => t <= T_SCRUB;
+
+const PILOT = { callsign: "Wren", grit: 1, hull: 1, agility: 1, systems: 0, engineering: 0 };
+const FRAME = {
+  name: "Halberd", line: "line frame, striker",
+  hp: 12, armor: 1, evasion: 8, speed: 4, heatCap: 6, repairs: 4, sensors: 10, structure: 4, stress: 4,
+  gear: ["rifle", "cleaver", "lance", "smoke"],
+};
+const GEAR = {
+  rifle: { name: "Lanyard Rifle", mount: "Main rifle", kind: "ranged", range: 8, dmg: [1, 6, 1], type: "kinetic", reliable: 1 },
+  cleaver: { name: "Breach Cleaver", mount: "Main melee", kind: "melee", threat: 1, dmg: [1, 6, 3], type: "kinetic", knockback: 1 },
+  lance: { name: "Arc Lance", mount: "Heavy cannon", kind: "ranged", range: 6, dmg: [2, 6, 0], type: "energy", heat: 2 },
+  smoke: { name: "Smoke Launcher", mount: "System", kind: "system", charges: 2 },
+};
+const OC_COST = ["1", "1d3", "1d6", "1d6+4"];
+
+const HOSTILES = {
+  picket: {
+    name: "Picket", letter: "P", cost: 1, grunt: true, hp: 1, armor: 0, evasion: 10, speed: 4, role: "ranged",
+    blurb: "Grunt. Any damage destroys it.",
+    weapon: { name: "carbine", kind: "ranged", range: 6, bonus: 1, dmg: [0, 0, 3], type: "kinetic" },
+  },
+  hound: {
+    name: "Hound", letter: "H", cost: 2, hp: 6, armor: 0, evasion: 11, speed: 5, role: "melee",
+    blurb: "Fast and hard to hit, with little to spare.",
+    weapon: { name: "shear claws", kind: "melee", threat: 1, bonus: 2, dmg: [0, 0, 3], type: "kinetic" },
+  },
+  brute: {
+    name: "Brute", letter: "B", cost: 3, hp: 10, armor: 1, evasion: 6, speed: 3, role: "melee",
+    blurb: "Slow, armored, and its maul knocks targets back.",
+    weapon: { name: "maul", kind: "melee", threat: 1, bonus: 2, dmg: [1, 6, 2], type: "kinetic", knockback: 1 },
+  },
+  lobber: {
+    name: "Lobber", letter: "L", cost: 2, hp: 8, armor: 0, evasion: 7, speed: 3, role: "artillery",
+    blurb: "Arcing mortar ignores cover. Reloads after each shot.",
+    weapon: { name: "mortar", kind: "ranged", arcing: true, range: 10, minRange: 2, bonus: 1, dmg: [0, 0, 4], type: "explosive", reloads: true },
+  },
+};
+const THREATS = { light: 5, standard: 8, heavy: 11 };
+
+function dmgText(spec) {
+  const [n, s, p] = spec;
+  return n ? `${n}d${s}${p ? "+" + p : ""}` : String(p);
+}
+function weaponLine(w) {
+  const bits = [];
+  if (w.kind === "melee") bits.push(`Threat ${w.threat}`);
+  else bits.push(`Range ${w.range}` + (w.minRange ? ` (not adjacent)` : ""));
+  if (w.arcing) bits.push("Arcing");
+  if (w.bonus != null) bits.push(`+${w.bonus} to hit`);
+  bits.push(`${dmgText(w.dmg)} ${w.type}`);
+  if (w.reliable) bits.push(`Reliable ${w.reliable}`);
+  if (w.knockback) bits.push(`Knockback ${w.knockback}`);
+  if (w.heat) bits.push(`Heat ${w.heat}`);
+  return bits.join(" · ");
+}
+
+// ---------- Battlefield generation ----------
+const SITE_A = ["Cinder", "Halcyon", "Tessera", "Morrow", "Vantage", "Kiln", "Lattice", "Ossuary", "Saltreach", "Gantry", "Meridian", "Hollow"];
+const SITE_B = ["Flats", "Yards", "Ridge", "Causeway", "Terraces", "Spillway", "Quarry", "Depot", "Crossing", "Basin", "Works", "Cut"];
+
+function genTerrain(rnd) {
+  const t = new Uint8Array(COLS * ROWS);
+  const anyIn = (r0, r1) => idxOf(Math.floor(rnd() * COLS), r0 + Math.floor(rnd() * (r1 - r0 + 1)));
+  const walls = 3 + Math.floor(rnd() * 3);
+  for (let k = 0; k < walls; k++) {
+    let i = anyIn(2, ROWS - 4);
+    const len = 2 + Math.floor(rnd() * 3);
+    for (let s = 0; s < len; s++) {
+      t[i] = T_WALL;
+      const nb = neighbors(i);
+      i = nb[Math.floor(rnd() * nb.length)];
+    }
+  }
+  const bars = 5 + Math.floor(rnd() * 4);
+  for (let k = 0; k < bars; k++) {
+    const i = anyIn(1, ROWS - 2);
+    if (t[i] === T_OPEN) t[i] = T_BARRICADE;
+  }
+  const patch = (type, n) => {
+    for (let k = 0; k < n; k++) {
+      const c = anyIn(0, ROWS - 1);
+      for (const i of [c, ...neighbors(c)]) if (t[i] === T_OPEN && (i === c || rnd() < 0.55)) t[i] = type;
+    }
+  };
+  patch(T_SCRUB, 2 + Math.floor(rnd() * 2));
+  patch(T_ROUGH, 2 + Math.floor(rnd() * 2));
+  return t;
+}
+
+function floodFrom(t, start) {
+  const seen = new Set([start]), queue = [start];
+  while (queue.length) {
+    const i = queue.shift();
+    for (const j of neighbors(i)) if (!seen.has(j) && passable(t[j])) { seen.add(j); queue.push(j); }
+  }
+  return seen;
+}
+
+function rollRoster(rnd, threat) {
+  let budget = THREATS[threat];
+  const roster = [rnd() < 0.55 ? "brute" : "hound"];
+  budget -= HOSTILES[roster[0]].cost;
+  const maxLobbers = threat === "heavy" ? 2 : 1;
+  while (budget > 0) {
+    const options = [];
+    for (const k in HOSTILES) {
+      if (HOSTILES[k].cost > budget) continue;
+      if (k === "lobber" && roster.filter((x) => x === "lobber").length >= maxLobbers) continue;
+      if (k === "picket" && roster.filter((x) => x === "picket").length >= 4) continue;
+      // pickets turn up more often than the rest
+      options.push(k);
+      if (k === "picket") options.push(k, k);
+    }
+    if (!options.length) break;
+    const k = options[Math.floor(rnd() * options.length)];
+    roster.push(k);
+    budget -= HOSTILES[k].cost;
+  }
+  const order = { brute: 0, hound: 1, picket: 2, lobber: 3 };
+  return roster.sort((a, b) => order[a] - order[b]);
+}
+
+function buildBattle(seed, threat) {
+  const rnd = mulberry32(seed);
+  const name = SITE_A[Math.floor(rnd() * SITE_A.length)] + " " + SITE_B[Math.floor(rnd() * SITE_B.length)];
+  let terrain, start, reach;
+  for (let tries = 0; tries < 60; tries++) {
+    terrain = genTerrain(rnd);
+    start = idxOf(2 + Math.floor(rnd() * (COLS - 4)), ROWS - 1);
+    for (const i of [start, ...neighbors(start)]) terrain[i] = T_OPEN;
+    reach = floodFrom(terrain, start);
+    let open = 0;
+    for (let i = 0; i < terrain.length; i++) if (passable(terrain[i])) open++;
+    const spawns = [...reach].filter((i) => rowOf(i) <= 2).length;
+    if (reach.size >= open * 0.9 && spawns >= 10) break;
+  }
+  const roster = rollRoster(rnd, threat);
+  const units = [makeYou(start)];
+  const taken = new Set([start]);
+  const counts = {};
+  for (const kind of roster) {
+    const rows = kind === "lobber" ? [0, 1] : kind === "picket" ? [0, 2] : [1, 2];
+    const spots = [...reach].filter((i) => rowOf(i) >= rows[0] && rowOf(i) <= rows[1] && !taken.has(i)
+      && ![...taken].some((j) => j !== start && dist(i, j) < 2));
+    const pool = spots.length ? spots : [...reach].filter((i) => rowOf(i) <= 3 && !taken.has(i));
+    const pos = pool[Math.floor(rnd() * pool.length)];
+    taken.add(pos);
+    counts[kind] = (counts[kind] || 0) + 1;
+    units.push(makeFoe(kind, counts[kind], pos));
+  }
+  return {
+    seed, threat, name, terrain, units, you: units[0],
+    smoke: new Map(), round: 1, phase: "you", active: null,
+    turn: null, ocCount: 0, coreUsed: false, over: null,
+  };
+}
+
+function freshStatus() {
+  return { impaired: 0, stunned: 0, braced: 0, surge: 0, meltdown: 0, exposed: false, locked: false };
+}
+function makeYou(pos) {
+  const p = PILOT, f = FRAME;
+  const hp = f.hp + 2 * p.hull;
+  return {
+    id: "you", side: "you", name: f.name, pos, alive: true,
+    maxHp: hp, hp, armor: f.armor,
+    evasion: f.evasion + p.agility,
+    speed: f.speed + Math.floor(p.agility / 2),
+    heatCap: f.heatCap + p.engineering, heat: 0,
+    maxStructure: f.structure, structure: f.structure,
+    maxStress: f.stress, stress: f.stress,
+    repairs: f.repairs + Math.floor(p.hull / 2),
+    sensors: f.sensors,
+    gear: f.gear.slice(), broken: new Set(), smokeLeft: GEAR.smoke.charges,
+    status: freshStatus(), reaction: true, braceLimit: false,
+  };
+}
+function makeFoe(kind, n, pos) {
+  const h = HOSTILES[kind];
+  return {
+    id: kind + n, side: "foe", kind, name: `${h.name} ${n}`, letter: h.letter, num: n, pos, alive: true,
+    maxHp: h.hp, hp: h.hp, armor: h.armor, evasion: h.evasion, speed: h.speed,
+    grunt: !!h.grunt, role: h.role, weapon: h.weapon, loaded: true,
+    status: freshStatus(), reaction: true,
+  };
+}
+
+// ---------- Prefs ----------
+const prefs = { askBrace: true };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem("hardpoint:prefs") || "{}")); } catch (e) { /* storage blocked */ }
+function savePrefs() {
+  try { localStorage.setItem("hardpoint:prefs", JSON.stringify(prefs)); } catch (e) { /* storage blocked */ }
+}
+
+// ---------- State ----------
+let B = null;
+let busy = false;
+const ui = {
+  mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null,
+  inspect: null, cursor: 0, showCursor: false, hover: null, braceAsk: null,
+};
+
+// ---------- Board queries ----------
+const occupant = (i) => B.units.find((u) => u.alive && u.pos === i);
+const hostilesOf = (u) => B.units.filter((v) => v.alive && v.side !== u.side);
+const foes = () => B.units.filter((u) => u.side === "foe" && u.alive);
+const isEngaged = (u) => hostilesOf(u).some((h) => dist(h.pos, u.pos) === 1);
+const smokeAt = (i) => B.smoke.has(i);
+const isSoft = (i) => B.terrain[i] === T_SCRUB || smokeAt(i);
+const who = (u) => (u.side === "you" ? "you" : u.name);
+const Who = (u) => (u.side === "you" ? "You" : u.name);
+
+function sight(a, b) {
+  const lines = [lineHexes(a, b, 1), lineHexes(a, b, -1)];
+  const clear = lines.map((L) => L.slice(1, -1).every((i) => B.terrain[i] !== T_WALL));
+  return { los: clear[0] || clear[1], partial: clear[0] !== clear[1], lines: lines.filter((_, k) => clear[k]) };
+}
+// cover a target at b has against a ranged attack from a
+function coverAt(a, b) {
+  const s = sight(a, b);
+  if (!s.los) return null;
+  if (s.partial) return { level: 2, why: "hard cover from a wall edge" };
+  for (const L of s.lines) {
+    for (const i of L.slice(1, -1)) if (B.terrain[i] === T_BARRICADE && dist(i, b) === 1) return { level: 2, why: "hard cover from a barricade" };
+  }
+  const mid = s.lines.flatMap((L) => L.slice(1, -1));
+  if (smokeAt(b) || mid.some(smokeAt)) return { level: 1, why: "soft cover from smoke" };
+  if (B.terrain[b] === T_SCRUB || mid.some((i) => B.terrain[i] === T_SCRUB)) return { level: 1, why: "soft cover from scrub" };
+  return { level: 0, why: "" };
+}
+
+function weaponsOf(u) {
+  if (u.side === "foe") return [u.weapon];
+  return u.gear.filter((k) => GEAR[k].kind !== "system" && !u.broken.has(k)).map((k) => ({ key: k, ...GEAR[k] }));
+}
+const threatWeapon = (u) => weaponsOf(u).find((w) => w.kind === "melee");
+const canSmoke = () => !B.you.broken.has("smoke") && B.you.smokeLeft > 0;
+
+function attackProfile(att, w, tgt, from = att.pos) {
+  const dd = dist(from, tgt.pos);
+  if (w.kind === "melee") {
+    if (dd > w.threat) return { ok: false, reason: "out of reach" };
+  } else {
+    if (dd > w.range) return { ok: false, reason: "out of range" };
+    if (w.minRange && dd < w.minRange) return { ok: false, reason: "too close" };
+  }
+  let acc = 0, diff = 0, usedLock = false;
+  const notes = [];
+  if (w.kind === "ranged" && !w.arcing) {
+    const cv = coverAt(from, tgt.pos);
+    if (!cv) return { ok: false, reason: "no line of sight" };
+    if (cv.level) { diff += cv.level; notes.push(`+${cv.level} difficulty: ${cv.why}`); }
+  } else if (w.kind === "melee" && !sight(from, tgt.pos).los) {
+    return { ok: false, reason: "no line of sight" };
+  }
+  const engagedNow = hostilesOf(att).some((h) => dist(h.pos, from) === 1);
+  if (w.kind === "ranged" && engagedNow) { diff++; notes.push(`+1 difficulty: ${att.side === "you" ? "you're" : "it's"} engaged`); }
+  if (att.status.impaired) { diff++; notes.push(`+1 difficulty: ${att.side === "you" ? "you're" : "it's"} impaired`); }
+  if (tgt.status.braced) { diff++; notes.push("+1 difficulty: target is braced"); }
+  if (tgt.status.locked && att.side === "you") { acc++; usedLock = true; notes.push("+1 accuracy: locked on"); }
+  if (att.status.surge) { acc++; notes.push("+1 accuracy: Hunting Pattern"); }
+  const bonus = att.side === "you" ? PILOT.grit : w.bonus;
+  const net = acc - diff;
+  return { ok: true, dist: dd, bonus, net, notes, usedLock, chance: hitChance(bonus, net, tgt.evasion) };
+}
+
+function hitChance(bonus, net, evasion) {
+  const n = Math.abs(net), sg = Math.sign(net);
+  const accDist = n === 0 ? [[0, 1]] : [1, 2, 3, 4, 5, 6].map((k) => [k * sg, (k ** n - (k - 1) ** n) / 6 ** n]);
+  let p = 0;
+  for (let r = 1; r <= 20; r++) for (const [a, pa] of accDist) if (r + bonus + a >= evasion) p += pa / 20;
+  return p;
+}
+const pct = (p) => Math.round(p * 100) + "%";
+
+function validTargets(w) {
+  return foes().filter((f) => attackProfile(B.you, w, f).ok);
+}
+function lockTargets() {
+  return foes().filter((f) => !f.status.locked && dist(B.you.pos, f.pos) <= B.you.sensors && sight(B.you.pos, f.pos).los);
+}
+function smokeCells() {
+  const out = [];
+  for (let i = 0; i < COLS * ROWS; i++) {
+    if (B.terrain[i] === T_WALL) continue;
+    if (dist(B.you.pos, i) <= 5 && sight(B.you.pos, i).los) out.push(i);
+  }
+  return out;
+}
+
+// ---------- Movement ----------
+// hexes next to a hostile end a move: you become engaged and stop.
+// occupied hexes stay in the map so paths can pass through allies
+function reachWithPrev(u, mp) {
+  const full = new Map([[u.pos, { cost: 0, prev: -1 }]]);
+  const open = [u.pos];
+  const enemies = hostilesOf(u);
+  const hostileAt = new Set(enemies.map((h) => h.pos));
+  const stopAt = (i) => enemies.some((h) => dist(h.pos, i) === 1);
+  while (open.length) {
+    open.sort((a, b) => full.get(a).cost - full.get(b).cost);
+    const i = open.shift();
+    if (i !== u.pos && stopAt(i)) continue;
+    for (const j of neighbors(i)) {
+      if (!passable(B.terrain[j]) || hostileAt.has(j)) continue;
+      const c = full.get(i).cost + (B.terrain[j] === T_ROUGH ? 2 : 1);
+      if (c > mp) continue;
+      if (!full.has(j) || full.get(j).cost > c) { full.set(j, { cost: c, prev: i }); open.push(j); }
+    }
+  }
+  return full;
+}
+function pathTo(full, dest) {
+  const out = [];
+  for (let i = dest; i !== -1 && full.has(i); i = full.get(i).prev) out.unshift(i);
+  return out.slice(1);
+}
+function stepDistances(from) {
+  const seen = new Map([[from, 0]]), queue = [from];
+  while (queue.length) {
+    const i = queue.shift();
+    for (const j of neighbors(i)) {
+      if (seen.has(j) || !passable(B.terrain[j])) continue;
+      seen.set(j, seen.get(i) + (B.terrain[j] === T_ROUGH ? 2 : 1));
+      queue.push(j);
+    }
+  }
+  return seen;
+}
+
+async function overwatch(mover) {
+  for (const h of hostilesOf(mover)) {
+    if (!mover.alive || !h.alive) break;
+    if (!h.reaction || h.status.stunned) continue;
+    const w = threatWeapon(h);
+    if (!w || dist(h.pos, mover.pos) > w.threat) continue;
+    h.reaction = false;
+    log(`Overwatch! ${Who(h)} ${h.side === "you" ? "take" : "takes"} a swing as ${who(mover)} ${mover.side === "you" ? "start" : "starts"} to move.`, h.side === "you" ? "you" : "foe");
+    await attack(h, w, mover, { overwatch: true });
+  }
+}
+
+async function moveUnit(u, path) {
+  if (!path.length) return;
+  await overwatch(u);
+  if (!u.alive || u.status.stunned || B.over) return;
+  for (const step of path) {
+    u.pos = step;
+    if (!reduceMotion.matches) { paint(); await sleep(120); }
+  }
+  paint();
+}
+
+function knockback(att, tgt, n) {
+  for (let k = 0; k < n; k++) {
+    const A = cube(att.pos), T = cube(tgt.pos);
+    const dd = dist(att.pos, tgt.pos);
+    const [q, r] = cubeRound(T[0] + (T[0] - A[0]) / dd, T[1] + (T[1] - A[1]) / dd, T[2] + (T[2] - A[2]) / dd);
+    const j = fromCube(q, r);
+    if (j < 0 || !passable(B.terrain[j]) || occupant(j)) return false;
+    tgt.pos = j;
+  }
+  return true;
+}
+
+// ---------- Damage, structure, heat ----------
+function setTimed(u, key) {
+  // "until the end of its next turn" lasts one more turn-end when it lands mid-turn
+  u.status[key] = Math.max(u.status[key], B.active === u ? 2 : 1);
+}
+function destroy(u, msg) {
+  u.alive = false;
+  u.hp = 0;
+  if (u.side === "foe") u.status.locked = false;
+  log(msg, "bad");
+  if (ui.inspect === u) ui.inspect = null;
+  if (ui.target === u) ui.target = null;
+}
+
+function rollDamage(spec, crit) {
+  const [n, s, p] = spec;
+  let total = p;
+  for (let k = 0; k < n; k++) total += crit ? Math.max(d(s), d(s)) : d(s);
+  return total;
+}
+
+function applyDamage(u, n) {
+  if (n <= 0 || !u.alive) return;
+  if (u.grunt) { destroy(u, `${u.name} is destroyed.`); return; }
+  u.hp -= n;
+  if (u.hp > 0) return;
+  if (u.side === "foe") { destroy(u, `${u.name} is destroyed.`); return; }
+  u.structure--;
+  if (u.structure <= 0) { destroy(u, "The Halberd's last point of structure is gone. It falls and doesn't get up."); return; }
+  u.hp = u.maxHp;
+  log(`Structure damage! The Halberd loses a point of structure (${u.structure} left) and its HP refills.`, "bad");
+  structureCheck(u);
+}
+
+function structureCheck(u) {
+  const lost = u.maxStructure - u.structure;
+  const rolls = rollMany(lost, 6), low = Math.min(...rolls), ones = rolls.filter((r) => r === 1).length;
+  const head = `Structure check: rolled ${rolls.join(", ")}, keep ${low}. `;
+  if (ones >= 2) { destroy(u, head + "Crushing hit. The Halberd is torn apart."); return; }
+  if (low === 1) {
+    if (u.structure >= 3) {
+      setTimed(u, "stunned");
+      log(head + "Direct hit: stunned until the end of your next turn.", "bad");
+    } else if (u.structure === 2) {
+      const h = d(20) + PILOT.hull;
+      if (h >= 10) { setTimed(u, "stunned"); log(head + `Direct hit. Your hull check of ${h} beats 10, so you're only stunned.`, "bad"); }
+      else destroy(u, head + `Direct hit. Your hull check of ${h} misses 10, and the Halberd is destroyed.`);
+    } else destroy(u, head + "Direct hit to a frame with nothing left. The Halberd is destroyed.");
+  } else if (low <= 4) {
+    const intact = u.gear.filter((k) => !u.broken.has(k));
+    if (!intact.length) { setTimed(u, "stunned"); log(head + "System trauma with nothing left to break: stunned instead.", "bad"); return; }
+    const k = intact[Math.floor(Math.random() * intact.length)];
+    u.broken.add(k);
+    log(head + `System trauma: your ${GEAR[k].name} is wrecked.`, "bad");
+  } else {
+    setTimed(u, "impaired");
+    log(head + "Glancing blow: impaired (+1 difficulty) until the end of your next turn.", "bad");
+  }
+}
+
+function gainHeat(u, n, why) {
+  if (u.side !== "you" || !u.alive || n <= 0) return;
+  u.heat += n;
+  if (u.heat <= u.heatCap) { log(`+${n} heat from ${why} (${u.heat}/${u.heatCap}).`, "sys"); return; }
+  const extra = u.heat - u.heatCap;
+  u.heat = Math.min(extra, u.heatCap);
+  u.stress--;
+  log(`+${n} heat from ${why} pushes you past your heat cap. You lose a point of stress (${u.stress} left).`, "bad");
+  if (u.stress <= 0) { destroy(u, "No stress left to give. The Halberd's reactor melts down."); return; }
+  overheatCheck(u);
+}
+
+function overheatCheck(u) {
+  const lost = u.maxStress - u.stress;
+  const rolls = rollMany(lost, 6), low = Math.min(...rolls), ones = rolls.filter((r) => r === 1).length;
+  const head = `Overheat check: rolled ${rolls.join(", ")}, keep ${low}. `;
+  if (ones >= 2) { destroy(u, head + "Runaway reactor. The Halberd melts down."); return; }
+  if (low === 1 && u.stress <= 2) {
+    setTimed(u, "meltdown");
+    log(head + "Meltdown! The reactor blows at the end of your next turn unless you Stabilize and cool down first.", "bad");
+  } else if (low <= 4) {
+    u.status.exposed = true;
+    log(head + "Unstable core: exposed (you take double damage) until you Stabilize.", "bad");
+  } else {
+    setTimed(u, "impaired");
+    log(head + "Emergency vent: impaired (+1 difficulty) until the end of your next turn.", "bad");
+  }
+}
+
+// ---------- Attacks ----------
+function rollText(d20, bonus, accRoll, net) {
+  let s = `d20 ${d20}`;
+  if (bonus) s += ` +${bonus}`;
+  if (accRoll) s += ` ${accRoll > 0 ? "+" : "−"}${Math.abs(accRoll)} (${net > 0 ? "accuracy" : "difficulty"})`;
+  return s;
+}
+
+async function attack(att, w, tgt, opts = {}) {
+  const p = attackProfile(att, w, tgt);
+  if (!p.ok || !att.alive || !tgt.alive) return;
+  const d20 = d(20);
+  let accRoll = 0;
+  if (p.net) accRoll = Math.max(...rollMany(Math.abs(p.net), 6)) * Math.sign(p.net);
+  const total = d20 + p.bonus + accRoll;
+  const hit = total >= tgt.evasion;
+  const crit = hit && att.side === "you" && total >= 20;
+  if (p.usedLock) tgt.status.locked = false;
+
+  const verb = att.side === "you"
+    ? (w.kind === "melee" ? `You swing your ${w.name} at ${tgt.name}` : `You fire your ${w.name} at ${tgt.name}`)
+    : (w.kind === "melee" ? `${att.name} swings its ${w.name} at you` : `${att.name} fires its ${w.name} at you`);
+  let line = `${verb}: ${rollText(d20, p.bonus, accRoll, p.net)} = ${total} vs Evasion ${tgt.evasion}. `;
+  let raw = 0;
+  if (hit) {
+    raw = rollDamage(w.dmg, crit) + (att.status.surge ? 2 : 0);
+    line += crit ? "Critical hit! " : "Hit. ";
+  } else if (w.reliable) {
+    raw = w.reliable;
+    line += "Miss, but it's Reliable. ";
+  } else {
+    line += "Miss.";
+  }
+  tracer(att, tgt);
+
+  if (raw > 0) {
+    let dmg = Math.max(0, raw - tgt.armor);
+    const bits = [`${raw} ${w.type}`];
+    if (tgt.armor) bits.push(`−${Math.min(raw, tgt.armor)} armor`);
+    if (tgt.status.exposed && dmg) { dmg *= 2; bits.push("doubled, exposed"); }
+    if (tgt.side === "you" && hit && dmg >= tgt.hp && tgt.reaction && !tgt.status.stunned && tgt.alive) {
+      log(line + `${dmg} damage is coming.`, att.side);
+      line = "";
+      if (await askBrace(dmg)) {
+        dmg = Math.ceil(dmg / 2);
+        bits.push("halved, braced");
+        tgt.reaction = false;
+        tgt.braceLimit = true;
+        setTimed(tgt, "braced");
+        log("You brace. Attacks against you take +1 difficulty until the end of your next turn.", "you");
+      }
+    }
+    log(line + bits.join(", ") + `: ${dmg} damage${tgt.grunt ? "" : " to " + who(tgt)}.`, att.side);
+    pop(tgt.pos, dmg ? `−${dmg}` : "0", tgt.side === "you" ? "hurt" : "dealt");
+    applyDamage(tgt, dmg);
+  } else {
+    log(line, att.side);
+    pop(tgt.pos, "miss", "miss");
+  }
+
+  if (hit && w.knockback && tgt.alive) {
+    if (tgt.side === "you") log("Steady Footing: the Halberd doesn't budge.", "sys");
+    else if (knockback(att, tgt, w.knockback)) log(`${tgt.name} is knocked back a hex.`, att.side);
+  }
+  if (w.heat) gainHeat(att, w.heat, `the ${w.name}`);
+  if (w.reloads) att.loaded = false;
+  paint();
+  await sleep(reduceMotion.matches ? 250 : 420);
+  checkOver();
+}
+
+function askBrace(dmg) {
+  if (!prefs.askBrace) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    ui.braceAsk = { dmg, resolve };
+    paint();
+    const btn = document.querySelector('#context [data-key="brace"]');
+    if (!btn) return;
+    if (document.activeElement && $("battle-h").closest("section").contains(document.activeElement)) btn.focus({ preventScroll: true });
+    btn.closest(".card").scrollIntoView({ block: "nearest", behavior: reduceMotion.matches ? "auto" : "smooth" });
+  });
+}
+function answerBrace(yes) {
+  const ask = ui.braceAsk;
+  if (!ask) return;
+  ui.braceAsk = null;
+  ask.resolve(yes);
+}
+
+// ---------- Turn flow ----------
+function startPlayerTurn() {
+  const u = B.you;
+  B.phase = "you";
+  B.active = u;
+  for (const [i, until] of B.smoke) if (until <= B.round) B.smoke.delete(i);
+  log(`Round ${B.round}`, "round");
+  B.turn = { mp: u.speed, quick: 2, fullOk: true, ocUsed: false, limited: false };
+  if (u.braceLimit) {
+    u.braceLimit = false;
+    u.reaction = false;
+    B.turn.quick = 1;
+    B.turn.fullOk = false;
+    B.turn.limited = true;
+    log("Still recovering from bracing: one quick action this turn, no full actions, no overcharge.", "sys");
+  } else {
+    u.reaction = true;
+  }
+  if (u.status.stunned) {
+    B.turn.mp = 0; B.turn.quick = 0; B.turn.fullOk = false; B.turn.limited = true;
+    log("You're stunned and can't act this turn.", "bad");
+  }
+  setMode("idle");
+}
+
+function endTurnTicks(u) {
+  for (const key of ["impaired", "stunned", "braced", "surge", "meltdown"]) {
+    if (u.status[key] > 0) {
+      u.status[key]--;
+      if (key === "meltdown" && u.status.meltdown === 0 && u.alive) destroy(u, "The reactor goes critical. The Halberd is destroyed.");
+    }
+  }
+}
+
+async function endPlayerTurn() {
+  if (B.over || B.phase !== "you" || busy) return;
+  setMode("idle");
+  endTurnTicks(B.you);
+  if (checkOver()) return;
+  busy = true;
+  B.phase = "foe";
+  paint();
+  for (const e of B.units) {
+    if (e.side !== "foe" || !e.alive) continue;
+    if (B.over) break;
+    B.active = e;
+    e.reaction = true;
+    paint();
+    await sleep(reduceMotion.matches ? 200 : 380);
+    if (e.status.stunned) log(`${e.name} is stunned.`, "foe");
+    else await foeAct(e);
+    endTurnTicks(e);
+    if (checkOver()) break;
+  }
+  B.active = null;
+  busy = false;
+  if (B.over) { paint(); return; }
+  B.round++;
+  startPlayerTurn();
+}
+
+function checkOver() {
+  if (B.over) return true;
+  if (!B.you.alive) {
+    B.over = "lost";
+    const left = foes().length;
+    log(`The Halberd is down in round ${B.round}, with ${plural(left, "hostile")} still standing.`, "bad");
+  } else if (!foes().length) {
+    B.over = "won";
+    log(`Area clear in ${plural(B.round, "round")}, with ${B.you.structure} of ${B.you.maxStructure} structure left.`, "you");
+  } else return false;
+  setMode("idle");
+  return true;
+}
+
+// ---------- Hostile behavior ----------
+function scoreHex(e, i, cost, field) {
+  const you = B.you, w = e.weapon;
+  const dd = dist(i, you.pos);
+  const jitter = Math.random() * 2;
+  if (e.role === "melee") {
+    if (dd <= w.threat) return 1000 - cost + jitter;
+    return -(field.get(i) ?? 99) * 10 - cost * 0.1 + jitter;
+  }
+  const cover = coverAt(you.pos, i);
+  const coverLevel = cover ? cover.level : 3;
+  const adjacent = dd === 1 ? 1 : 0;
+  if (e.role === "artillery") {
+    const inRange = dd <= w.range && dd >= w.minRange;
+    return (e.loaded && inRange ? 500 : 0) + dd * 8 + coverLevel * 25 - adjacent * 80 + jitter;
+  }
+  const canShoot = dd <= w.range && sight(i, you.pos).los;
+  let s = canShoot ? 500 : -(field.get(i) ?? 99) * 5;
+  s += coverLevel * 35 - adjacent * 70;
+  if (dd >= 3 && dd <= 5) s += 15;
+  return s + jitter;
+}
+
+function bestMove(e) {
+  const full = reachWithPrev(e, e.speed);
+  const field = stepDistances(B.you.pos);
+  const threatened = B.you.reaction && threatWeapon(B.you) && dist(e.pos, B.you.pos) <= threatWeapon(B.you).threat;
+  let best = e.pos, bestScore = -Infinity;
+  for (const [i, info] of full) {
+    if (i !== e.pos && occupant(i)) continue;
+    let s = scoreHex(e, i, info.cost, field);
+    // leaving your cleaver's reach means eating overwatch
+    if (threatened && i !== e.pos) s -= 40;
+    if (s > bestScore) { bestScore = s; best = i; }
+  }
+  return best === e.pos ? [] : pathTo(full, best);
+}
+
+async function foeAct(e) {
+  const you = B.you, w = e.weapon;
+  if (w.reloads && !e.loaded) {
+    const path = bestMove(e);
+    if (path.length) await moveUnit(e, path);
+    if (e.alive) { e.loaded = true; log(`${e.name} reloads its ${w.name}.`, "foe"); }
+    return;
+  }
+  const path = bestMove(e);
+  if (path.length) await moveUnit(e, path);
+  if (!e.alive || !you.alive || B.over) return;
+  if (e.status.stunned) return;
+  if (attackProfile(e, w, you).ok) {
+    await attack(e, w, you);
+  } else {
+    // nothing to hit yet, so boost closer
+    const more = bestMove(e);
+    if (more.length) {
+      log(`${e.name} boosts.`, "foe");
+      await moveUnit(e, more);
+    }
+  }
+}
+
+// ---------- Your actions ----------
+const T = () => B.turn;
+function spendQuick() { T().quick--; T().fullOk = false; }
+function spendFull() { T().quick -= 2; T().fullOk = false; }
+const yourTurn = () => B && !B.over && B.phase === "you" && !busy && B.you.alive;
+
+function canDo(act) {
+  if (!yourTurn()) return false;
+  const t = T(), you = B.you;
+  if (you.status.stunned) return act === "end";
+  switch (act) {
+    case "move": return t.mp > 0;
+    case "boost": return t.quick >= 1;
+    case "skirmish": return t.quick >= 1 && weaponsOf(you).some((w) => validTargets(w).length);
+    case "barrage": return t.fullOk && t.quick >= 2 && weaponsOf(you).length >= 2 && weaponsOf(you).some((w) => validTargets(w).length);
+    case "lock": return t.quick >= 1 && lockTargets().length > 0;
+    case "smoke": return t.quick >= 1 && canSmoke();
+    case "stabilize": return t.fullOk && t.quick >= 2;
+    case "overcharge": return !t.ocUsed && !t.limited;
+    case "core": return !B.coreUsed && !t.limited;
+    case "end": return true;
+  }
+  return false;
+}
+
+function setMode(mode, extra = {}) {
+  ui.mode = mode;
+  ui.dest = null;
+  ui.target = null;
+  ui.reach = null;
+  if (mode !== "weapon" && mode !== "target") { ui.weapon = null; ui.barrage = null; }
+  Object.assign(ui, extra);
+  if (mode === "move") ui.reach = reachWithPrev(B.you, T().mp);
+  paint();
+  if (["move", "target", "lock", "smoke"].includes(mode)) showMap();
+}
+// on a narrow screen the buttons sit below the map, so scroll it back into view
+function showMap() {
+  const r = map.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > innerHeight) {
+    map.scrollIntoView({ block: r.height > innerHeight ? "start" : "nearest", behavior: reduceMotion.matches ? "auto" : "smooth" });
+  }
+}
+
+function doAction(act, viaKey) {
+  if (!canDo(act)) return;
+  const you = B.you;
+  if (ui.mode !== "idle" && actFor(ui.mode) === act) { setMode("idle"); return; }
+  switch (act) {
+    case "move": setMode("move"); break;
+    case "boost":
+      spendQuick();
+      T().mp += you.speed;
+      log(`You boost: +${you.speed} movement.`, "you");
+      setMode("move");
+      break;
+    case "skirmish": setMode("weapon", { barrage: null }); break;
+    case "barrage": setMode("weapon", { barrage: { used: [], committed: false } }); break;
+    case "lock": setMode("lock"); break;
+    case "smoke": setMode("smoke"); break;
+    case "stabilize": setMode("stabilize"); break;
+    case "overcharge": overcharge(); break;
+    case "core": core(); break;
+    case "end": endPlayerTurn(); return;
+  }
+  if (viaKey && ["move", "boost", "lock", "smoke"].includes(act)) focusMap(act === "lock" ? lockTargets()[0]?.pos : you.pos);
+}
+function actFor(mode) {
+  return { move: "move", weapon: ui.barrage ? "barrage" : "skirmish", target: ui.barrage ? "barrage" : "skirmish", lock: "lock", smoke: "smoke", stabilize: "stabilize" }[mode];
+}
+
+function overcharge() {
+  const you = B.you;
+  const k = Math.min(B.ocCount, 3);
+  const heat = [1, d(3), d(6), d(6) + 4][k];
+  B.ocCount++;
+  T().ocUsed = true;
+  T().quick++;
+  log(`You overcharge (${OC_COST[k]} heat, rolled ${heat}) for an extra quick action.`, "you");
+  gainHeat(you, heat, "overcharging");
+  checkOver();
+  setMode("idle");
+}
+function core() {
+  B.coreUsed = true;
+  B.you.status.surge = 2;
+  log("Core power: Hunting Pattern. Until the end of your next turn, your attacks gain +1 accuracy and deal +2 damage on a hit.", "you");
+  setMode("idle");
+}
+
+async function commitMove(dest) {
+  const you = B.you, full = ui.reach;
+  const cost = full.get(dest).cost, path = pathTo(full, dest);
+  const was = isEngaged(you);
+  busy = true;
+  setMode("idle");
+  await moveUnit(you, path);
+  busy = false;
+  if (B.over) { paint(); return; }
+  if (you.status.stunned && you.pos !== dest) {
+    T().mp = 0; T().quick = 0; T().fullOk = false;
+  } else {
+    T().mp = Math.max(0, T().mp - cost);
+    if (!was && isEngaged(you)) {
+      if (T().mp > 0) log("You're engaged, so your movement stops here.", "sys");
+      T().mp = 0;
+    }
+  }
+  if (you.status.stunned) { T().quick = 0; T().fullOk = false; T().limited = true; }
+  paint();
+}
+
+async function fire(w, tgt) {
+  const you = B.you;
+  if (ui.barrage) {
+    if (!ui.barrage.committed) { spendFull(); ui.barrage.committed = true; }
+    ui.barrage.used.push(w.key);
+  } else spendQuick();
+  const barrage = ui.barrage;
+  busy = true;
+  ui.mode = "idle"; ui.target = null; ui.weapon = null;
+  paint();
+  await attack(you, w, tgt);
+  busy = false;
+  if (B.over) { paint(); return; }
+  if (barrage && barrage.used.length < 2 && weaponsOf(you).some((x) => !barrage.used.includes(x.key) && validTargets(x).length)) {
+    setMode("weapon", { barrage });
+  } else setMode("idle");
+}
+
+function placeSmoke(i) {
+  const cells = [i, ...neighbors(i)].filter((j) => B.terrain[j] !== T_WALL);
+  for (const j of cells) B.smoke.set(j, B.round + 2);
+  B.you.smokeLeft--;
+  spendQuick();
+  log(`You fire a smoke canister. The cloud gives soft cover until the end of next round (${plural(B.you.smokeLeft, "charge")} left).`, "you");
+  setMode("idle");
+}
+
+function stabilize(choice) {
+  const you = B.you;
+  spendFull();
+  if (choice === "repair") {
+    you.repairs--;
+    you.hp = you.maxHp;
+    log(`You stabilize and patch up: HP back to ${you.maxHp} (${plural(you.repairs, "repair")} left).`, "you");
+  } else {
+    you.heat = 0;
+    you.status.exposed = false;
+    const melt = you.status.meltdown > 0;
+    you.status.meltdown = 0;
+    log("You stabilize and vent: heat cleared" + (melt ? ", meltdown stopped." : ", and you're no longer exposed."), "you");
+  }
+  setMode("idle");
+}
+
+// ---------- Input on the map ----------
+function onHex(i, viaKey) {
+  ui.cursor = i;
+  if (!B) return;
+  const occ = occupant(i);
+  if (!yourTurn()) {
+    ui.inspect = occ && occ.side === "foe" ? occ : null;
+    paint();
+    return;
+  }
+  switch (ui.mode) {
+    case "move": {
+      const info = ui.reach.get(i);
+      if (info && i !== B.you.pos && !occ) {
+        if (ui.dest === i) { commitMove(i); return; }
+        ui.dest = i;
+      } else if (i === B.you.pos) { setMode("idle"); return; }
+      break;
+    }
+    case "target": {
+      if (occ && occ.side === "foe" && attackProfile(B.you, ui.weapon, occ).ok) {
+        if (ui.target === occ) { fire(ui.weapon, occ); return; }
+        ui.target = occ;
+        ui.inspect = occ;
+      }
+      break;
+    }
+    case "lock": {
+      if (occ && lockTargets().includes(occ)) {
+        occ.status.locked = true;
+        spendQuick();
+        log(`You lock on to ${occ.name}. The next attack against it gains +1 accuracy.`, "you");
+        setMode("idle");
+        return;
+      }
+      break;
+    }
+    case "smoke": {
+      if (smokeCells().includes(i)) {
+        if (ui.dest === i) { placeSmoke(i); return; }
+        ui.dest = i;
+      }
+      break;
+    }
+    default:
+      ui.inspect = occ && occ.side === "foe" ? (ui.inspect === occ ? null : occ) : null;
+  }
+  announce();
+  paint();
+}
+
+function focusMap(at) {
+  if (at != null) ui.cursor = at;
+  ui.showCursor = true;
+  $("map").focus();
+  announce();
+  paint();
+}
+
+function describeHex(i) {
+  const bits = [`Row ${rowOf(i) + 1}, column ${colOf(i) + 1}: ${TERRAIN_NAME[B.terrain[i]]}${smokeAt(i) ? " in smoke" : ""}.`];
+  const occ = occupant(i);
+  if (occ && occ.side === "you") bits.push("Your Halberd.");
+  else if (occ) {
+    bits.push(`${occ.name}, ${occ.grunt ? "grunt" : `${occ.hp} of ${occ.maxHp} HP`}, ${plural(dist(B.you.pos, i), "hex")} away.`);
+    const cv = coverAt(B.you.pos, i);
+    bits.push(!cv ? "You have no line of sight." : cv.level ? `It has ${cv.why}.` : "It has no cover from you.");
+    if (ui.mode === "target" && ui.weapon) {
+      const p = attackProfile(B.you, ui.weapon, occ);
+      bits.push(p.ok ? `${pct(p.chance)} to hit with your ${ui.weapon.name}.` : `Your ${ui.weapon.name}: ${p.reason}.`);
+    }
+  } else if (i !== B.you.pos) {
+    bits.push(`${plural(dist(B.you.pos, i), "hex")} from you.`);
+  }
+  if (ui.mode === "move" && ui.reach) {
+    const info = ui.reach.get(i);
+    if (i !== B.you.pos) bits.push(info && !occ ? `Move here for ${info.cost}.` : "Out of reach.");
+  }
+  return bits.join(" ");
+}
+function announce() {
+  $("cursorinfo").textContent = B ? describeHex(ui.cursor) : "";
+}
+
+// ---------- Drawing the map ----------
+const map = $("map");
+map.setAttribute("viewBox", `0 0 ${VBW.toFixed(1)} ${VBH.toFixed(1)}`);
+const layers = {};
+
+function drawTerrain() {
+  map.innerHTML = "";
+  const defs = svgEl("defs");
+  const pr = svgEl("pattern", { id: "p-rough", width: 12, height: 12, patternUnits: "userSpaceOnUse" });
+  pr.append(svgEl("rect", { width: 12, height: 12, class: "pr-bg" }),
+    svgEl("path", { d: "M2 9 L5 6 M8 11 L11 8 M7 3 L9 1", class: "pr-mk" }));
+  const ps = svgEl("pattern", { id: "p-scrub", width: 10, height: 10, patternUnits: "userSpaceOnUse" });
+  ps.append(svgEl("rect", { width: 10, height: 10, class: "ps-bg" }),
+    svgEl("circle", { cx: 2.5, cy: 3, r: 1.5, class: "ps-dot" }),
+    svgEl("circle", { cx: 7.5, cy: 7.5, r: 1.3, class: "ps-dot" }));
+  defs.append(pr, ps);
+  map.append(defs);
+  const g = svgEl("g", { id: "terrain" });
+  for (let i = 0; i < COLS * ROWS; i++) {
+    const t = B.terrain[i];
+    g.append(svgEl("polygon", { points: corners(i), class: `hx t${t}`, "data-i": i }));
+    const [x, y] = center(i);
+    if (t === T_WALL) {
+      g.append(svgEl("polygon", { points: corners(i, 0.8, 0, -3), class: "wall-top" }));
+      g.append(svgEl("polygon", { points: corners(i, 0.8, 0, -3), class: "wall-edge" }));
+    } else if (t === T_BARRICADE) {
+      for (const [dx, dy] of [[-9, 4], [0, 4], [9, 4], [-4.5, -3], [4.5, -3]]) {
+        g.append(svgEl("rect", { x: x + dx - 5, y: y + dy - 3.2, width: 10, height: 6.4, rx: 2.5, class: "sandbag" }));
+      }
+    }
+  }
+  layers.over = svgEl("g", { id: "over" });
+  layers.units = svgEl("g", { id: "units" });
+  layers.fx = svgEl("g", { id: "fx" });
+  map.append(g, layers.over, layers.units, layers.fx);
+}
+
+function hexPoly(i, cls, scale = 1) { return svgEl("polygon", { points: corners(i, scale), class: cls }); }
+
+function drawOverlay() {
+  const o = layers.over;
+  o.replaceChildren();
+  for (const i of B.smoke.keys()) {
+    o.append(hexPoly(i, "smoke"));
+    const [x, y] = center(i);
+    o.append(svgEl("circle", { cx: x - 7, cy: y + 2, r: 9, class: "smoke-puff" }), svgEl("circle", { cx: x + 6, cy: y - 4, r: 8, class: "smoke-puff" }));
+  }
+  if (ui.inspect && ui.inspect.alive) o.append(hexPoly(ui.inspect.pos, "inspect", 0.93));
+  if (ui.mode === "move" && ui.reach) {
+    for (const i of ui.reach.keys()) if (i !== B.you.pos && !occupant(i)) o.append(hexPoly(i, i === ui.dest ? "dest" : "reach", 0.9));
+    const end = ui.dest ?? (ui.hover != null && ui.reach.has(ui.hover) && !occupant(ui.hover) ? ui.hover : null);
+    if (end != null && end !== B.you.pos) {
+      const pts = [B.you.pos, ...pathTo(ui.reach, end)].map((i) => center(i).map((v) => v.toFixed(1)).join(",")).join(" ");
+      o.append(svgEl("polyline", { points: pts, class: "path" }));
+    }
+  }
+  if (ui.mode === "target" && ui.weapon) {
+    for (const f of validTargets(ui.weapon)) o.append(hexPoly(f.pos, f === ui.target ? "chosen" : "valid", 0.9));
+    if (ui.target) {
+      const [x1, y1] = center(B.you.pos), [x2, y2] = center(ui.target.pos);
+      o.append(svgEl("line", { x1, y1, x2, y2, class: "fireline" }));
+    }
+  }
+  if (ui.mode === "lock") for (const f of lockTargets()) o.append(hexPoly(f.pos, "valid", 0.9));
+  if (ui.mode === "smoke") {
+    for (const i of smokeCells()) o.append(hexPoly(i, "reach", 0.9));
+    const at = ui.dest ?? (ui.hover != null && smokeCells().includes(ui.hover) ? ui.hover : null);
+    if (at != null) for (const j of [at, ...neighbors(at)]) if (B.terrain[j] !== T_WALL) o.append(hexPoly(j, "smoke-pre", 0.85));
+  }
+  if (ui.showCursor && document.activeElement === map) o.append(hexPoly(ui.cursor, "cursor", 0.97));
+}
+
+function drawUnits() {
+  const g = layers.units;
+  g.replaceChildren();
+  for (const u of B.units) {
+    const [x, y] = center(u.pos);
+    if (!u.alive) {
+      if (u.side === "foe") g.append(svgEl("path", { d: `M${x - 8} ${y - 8} L${x + 8} ${y + 8} M${x + 8} ${y - 8} L${x - 8} ${y + 8}`, class: "wreck" }));
+      continue;
+    }
+    const t = svgEl("g", { class: `tok ${u.side}${B.active === u && u.side === "foe" ? " active" : ""}`, transform: `translate(${x.toFixed(1)},${y.toFixed(1)})` });
+    if (u.side === "you") {
+      t.append(svgEl("circle", { r: R * 0.62, class: "tok-body" }));
+      t.append(svgEl("path", { d: "M0 -11 L10 7 L0 2 L-10 7 Z", class: "glyph" }));
+    } else {
+      const pts = [];
+      for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k; pts.push(`${(R * 0.6 * Math.cos(a)).toFixed(1)},${(R * 0.6 * Math.sin(a)).toFixed(1)}`); }
+      t.append(svgEl("polygon", { points: pts.join(" "), class: "tok-body" }));
+      t.append(svgEl("text", { x: -1.5, y: 0 }, u.letter));
+      t.append(svgEl("text", { x: 9, y: 7, class: "num" }, String(u.num)));
+    }
+    if (!u.grunt) {
+      const w = R * 1.0;
+      t.append(svgEl("rect", { x: -w / 2, y: R * 0.66, width: w, height: 4, class: "hpbar-bg" }));
+      t.append(svgEl("rect", { x: -w / 2, y: R * 0.66, width: (w * Math.max(0, u.hp) / u.maxHp).toFixed(1), height: 4, class: "hpbar" }));
+    }
+    if (u.status.locked) t.append(svgEl("circle", { r: R * 0.82, class: "lockring" }));
+    const tag = u.status.stunned ? "STUN" : u.weapon && u.weapon.reloads && !u.loaded ? "RELOAD" : u.status.braced ? "BRACED" : u.status.exposed ? "EXPOSED" : "";
+    if (tag) t.append(svgEl("text", { y: -R * 0.82, class: "tag" }, tag));
+    g.append(t);
+  }
+}
+
+function tracer(att, tgt) {
+  const [x1, y1] = center(att.pos), [x2, y2] = center(tgt.pos);
+  const l = svgEl("line", { x1, y1, x2, y2, class: `tracer ${att.side}` });
+  layers.fx.append(l);
+  setTimeout(() => l.remove(), reduceMotion.matches ? 500 : 350);
+}
+function pop(i, text, cls) {
+  const [x, y] = center(i);
+  const t = svgEl("text", { x, y: y - 14, class: `pop ${cls}` }, text);
+  layers.fx.append(t);
+  setTimeout(() => t.remove(), 900);
+}
+
+// ---------- Drawing the side panel ----------
+function mechCard() {
+  const u = B.you;
+  const chips = [];
+  if (isEngaged(u) && u.alive) chips.push(["Engaged", "amb"]);
+  if (u.status.impaired) chips.push(["Impaired", "bad"]);
+  if (u.status.stunned) chips.push(["Stunned", "bad"]);
+  if (u.status.exposed) chips.push(["Exposed", "bad"]);
+  if (u.status.meltdown) chips.push(["Meltdown!", "bad"]);
+  if (u.status.braced) chips.push(["Braced", "good"]);
+  if (u.status.surge) chips.push(["Hunting Pattern", "good"]);
+  const pipRow = (n, max, cls) => `<span class="pips ${cls}">${Array.from({ length: max }, (_, k) => `<i class="${k < n ? "" : "gone"}"></i>`).join("")}</span>`;
+  const gear = u.gear.map((k) => {
+    const g = GEAR[k];
+    const desc = g.kind === "system" ? `Quick action · Range 5 · soft cover in a 1-hex blast · ${plural(u.smokeLeft, "charge")}` : weaponLine(g);
+    return `<li class="${u.broken.has(k) ? "broken" : ""}"><b>${g.name}</b> <span class="d">${g.mount} · ${desc}</span></li>`;
+  }).join("");
+  return `
+    <h3>${FRAME.name.toUpperCase()}</h3>
+    <p class="sub">Pilot callsign ${PILOT.callsign} · grit +${PILOT.grit} · H${PILOT.hull} A${PILOT.agility} S${PILOT.systems} E${PILOT.engineering}</p>
+    <div class="meter"><span class="k">HP</span><span class="bar"><i style="width:${(100 * u.hp / u.maxHp).toFixed(0)}%"></i></span><span>${u.hp}/${u.maxHp}</span></div>
+    <div class="meter"><span class="k">Structure</span>${pipRow(u.structure, u.maxStructure, "")}<span>${u.structure}/${u.maxStructure}</span></div>
+    <div class="meter"><span class="k">Heat</span><span class="bar heat"><i style="width:${(100 * u.heat / u.heatCap).toFixed(0)}%"></i></span><span>${u.heat}/${u.heatCap}</span></div>
+    <div class="meter"><span class="k">Stress</span>${pipRow(u.stress, u.maxStress, "stress")}<span>${u.stress}/${u.maxStress}</span></div>
+    <p class="stats">Evasion <b>${u.evasion}</b> · Armor <b>${u.armor}</b> · Speed <b>${u.speed}</b> · Repairs <b>${u.repairs}</b></p>
+    ${chips.length ? `<div class="chips">${chips.map(([t, c]) => `<span class="chip ${c}">${t}</span>`).join("")}</div>` : ""}
+    <ul class="gear">${gear}
+      <li><b>Steady Footing</b> <span class="d">Trait · You can't be knocked back, and you can still move after bracing.</span></li>
+      <li class="${B.coreUsed ? "broken" : ""}"><b>Hunting Pattern</b> <span class="d">Core power, once per battle · +1 accuracy and +2 damage until the end of your next turn</span></li>
+    </ul>`;
+}
+
+function turnLine() {
+  if (B.over) return `<b>Battle over.</b>`;
+  if (B.phase === "foe") return `<b>Round ${B.round}</b> · <span class="foeturn">Hostiles are moving${B.active ? `: ${B.active.name}` : ""}</span>`;
+  const t = T(), you = B.you;
+  const parts = [`<b>Round ${B.round}</b> · <span class="on">Your turn</span>`];
+  parts.push(`<span class="vitals">HP <b>${you.hp}/${you.maxHp}</b> · Structure <b>${you.structure}</b> · Heat <b>${you.heat}/${you.heatCap}</b> · </span>Movement <b>${t.mp}</b>`);
+  parts.push(`Quick actions <b>${t.quick}</b>${t.fullOk && t.quick >= 2 ? " (or a full action)" : ""}`);
+  parts.push(`Overcharge ${t.limited ? "not this turn" : t.ocUsed ? "used" : "ready"}`);
+  parts.push(`Reaction ${you.reaction ? "ready" : "spent"}`);
+  return parts.join(" · ");
+}
+
+function foeCard(f) {
+  const h = HOSTILES[f.kind];
+  const lines = weaponsOf(B.you).map((w) => {
+    const p = attackProfile(B.you, w, f);
+    return `<li>${w.name}: ${p.ok ? `${pct(p.chance)} to hit${p.notes.length ? ` (${p.notes.join("; ")})` : ""}` : p.reason}</li>`;
+  }).join("");
+  const st = [];
+  if (f.status.locked) st.push("locked on");
+  if (f.weapon.reloads && !f.loaded) st.push("reloading");
+  return `<p><b>${f.name}</b> · ${h.blurb}</p>
+    <ul>
+      <li>${f.grunt ? "Grunt" : `HP ${f.hp}/${f.maxHp}`} · Evasion ${f.evasion} · Armor ${f.armor} · Speed ${f.speed}</li>
+      <li>${f.weapon.name}: ${weaponLine(f.weapon)}</li>
+      <li>${plural(dist(B.you.pos, f.pos), "hex")} away${st.length ? " · " + st.join(", ") : ""}</li>
+      ${lines}
+    </ul>`;
+}
+
+function contextHtml() {
+  const you = B.you;
+  if (ui.braceAsk) {
+    return `<p><b>Brace?</b> You're about to take ${ui.braceAsk.dmg} damage, enough to cost structure.</p>
+      <p>Bracing halves it to ${Math.ceil(ui.braceAsk.dmg / 2)} and makes attacks against you harder until the end of your next turn, but next turn you get only one quick action.</p>
+      <div class="row"><button type="button" class="go" data-key="brace">Brace</button><button type="button" data-key="nobrace">Take the hit</button></div>`;
+  }
+  if (B.over === "won") {
+    return `<p class="big">AREA CLEAR</p><p>You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.</p>
+      <div class="row"><button type="button" class="go" data-key="again">Fight here again</button><button type="button" data-key="next">New battlefield</button></div>`;
+  }
+  if (B.over === "lost") {
+    return `<p class="big" style="color:var(--foe)">HALBERD DOWN</p><p>${plural(foes().length, "hostile")} still standing after ${plural(B.round, "round")}.</p>
+      <div class="row"><button type="button" class="go" data-key="again">Try this fight again</button><button type="button" data-key="next">New battlefield</button></div>`;
+  }
+  if (B.phase === "foe") return ui.inspect ? foeCard(ui.inspect) : `<p>The hostiles take their turns. Tap one to size it up.</p>`;
+  const cancel = `<button type="button" data-key="cancel">Cancel <kbd>Esc</kbd></button>`;
+  switch (ui.mode) {
+    case "move": {
+      if (ui.dest != null) {
+        const info = ui.reach.get(ui.dest);
+        const engage = hostilesOf(you).some((h) => dist(h.pos, ui.dest) === 1);
+        return `<p>Move ${plural(info.cost, "hex")} to here${engage ? ". You'll be engaged when you arrive" : ""}.</p>
+          ${foes().some((f) => f.reaction && dist(f.pos, you.pos) <= (threatWeapon(f)?.threat ?? 0)) ? `<p>A hostile next to you will take an overwatch swing as you leave.</p>` : ""}
+          <div class="row"><button type="button" class="go" data-key="confirm-move">Move here</button>${cancel}</div>`;
+      }
+      return `<p><b>Move.</b> Tap a lit hex. You have ${plural(T().mp, "hex")} of movement, and rough ground costs 2.</p><div class="row">${cancel}</div>`;
+    }
+    case "weapon": {
+      const used = ui.barrage ? ui.barrage.used : [];
+      const ws = weaponsOf(you).filter((w) => !used.includes(w.key));
+      const head = ui.barrage ? (used.length ? "<b>Barrage, second weapon.</b>" : "<b>Barrage.</b> Fire two different weapons, one after the other.") : "<b>Skirmish.</b> Pick a weapon.";
+      const buttons = ws.map((w) => {
+        const n = validTargets(w).length;
+        return `<button type="button" data-key="w-${w.key}" ${n ? "" : "disabled"}>${w.name}<small>${weaponLine(w)} · ${n ? plural(n, "target") : "no targets"}</small></button>`;
+      }).join("");
+      const skip = ui.barrage && ui.barrage.committed ? `<button type="button" data-key="skip">Skip the second shot</button>` : cancel;
+      return `<p>${head}</p><div class="choices">${buttons}${skip}</div>`;
+    }
+    case "target": {
+      const w = ui.weapon;
+      if (ui.target) {
+        const p = attackProfile(you, w, ui.target);
+        return `<p>${w.name} at <b>${ui.target.name}</b>, ${plural(p.dist, "hex")} away</p>
+          <p class="big">${pct(p.chance)}</p>
+          <ul><li>d20 +${p.bonus} grit vs Evasion ${ui.target.evasion}</li>${p.notes.map((n) => `<li>${n}</li>`).join("")}
+          <li>${dmgText(w.dmg)}${you.status.surge ? "+2" : ""} ${w.type}${w.reliable ? `, Reliable ${w.reliable}` : ""}${w.heat ? `, +${w.heat} heat` : ""}</li></ul>
+          <div class="row"><button type="button" class="warn" data-key="fire">Fire</button><button type="button" data-key="back">Back</button></div>`;
+      }
+      return `<p><b>${w.name}.</b> Tap a hostile ringed in amber.</p><div class="row"><button type="button" data-key="back">Back</button></div>`;
+    }
+    case "lock":
+      return `<p><b>Lock On.</b> Tap a hostile you can see within ${you.sensors} hexes. The next attack against it gains +1 accuracy.</p><div class="row">${cancel}</div>`;
+    case "smoke":
+      if (ui.dest != null) return `<p>Smoke this spot and the hexes around it.</p><div class="row"><button type="button" class="go" data-key="confirm-smoke">Fire smoke</button>${cancel}</div>`;
+      return `<p><b>Smoke.</b> Tap a lit hex within 5. The cloud covers it and the six hexes around it until the end of next round.</p><div class="row">${cancel}</div>`;
+    case "stabilize": {
+      const canRepair = you.repairs > 0 && you.hp < you.maxHp;
+      return `<p><b>Stabilize.</b> Spend your full action on one of these.</p>
+        <div class="choices">
+          <button type="button" data-key="st-repair" ${canRepair ? "" : "disabled"}>Patch up<small>Spend 1 repair (${you.repairs} left) to refill HP</small></button>
+          <button type="button" data-key="st-cool">Vent<small>Clear all heat${you.status.exposed ? ", end Exposed" : ""}${you.status.meltdown ? ", stop the meltdown" : ""}</small></button>
+          ${cancel}
+        </div>`;
+    }
+  }
+  if (ui.inspect) return foeCard(ui.inspect);
+  if (you.status.stunned) return `<p>You're stunned. End your turn and hope it holds.</p>`;
+  return `<p>Pick an action. Tap a hostile to size it up.</p>`;
+}
+
+function paint() {
+  if (!B) return;
+  drawOverlay();
+  drawUnits();
+  $("mechcard").innerHTML = mechCard();
+  $("turnline").innerHTML = turnLine();
+  for (const b of document.querySelectorAll("#actions button")) {
+    const act = b.dataset.act;
+    b.disabled = !canDo(act) && !(ui.mode !== "idle" && actFor(ui.mode) === act && yourTurn());
+    b.setAttribute("aria-pressed", String(ui.mode !== "idle" && actFor(ui.mode) === act));
+  }
+  $("occost").textContent = `free, +${OC_COST[Math.min(B.ocCount, 3)]} heat`;
+  const ctx = $("context");
+  const keep = document.activeElement && ctx.contains(document.activeElement) ? document.activeElement.dataset.key : null;
+  const html = contextHtml();
+  if (ctx.dataset.html !== html) {
+    ctx.innerHTML = html;
+    ctx.dataset.html = html;
+    if (keep) {
+      const again = ctx.querySelector(`[data-key="${keep}"]`) || ctx.querySelector("button:not(:disabled)");
+      if (again) again.focus(); else map.focus();
+    }
+  }
+  $("askbrace").setAttribute("aria-pressed", String(prefs.askBrace));
+}
+
+// ---------- Log ----------
+function log(text, cls = "sys") {
+  const ol = $("log");
+  const li = document.createElement("li");
+  li.className = cls;
+  li.textContent = text;
+  ol.append(li);
+  while (ol.children.length > 120) ol.firstChild.remove();
+  ol.scrollTop = ol.scrollHeight;
+  if (cls !== "round") $("ticker").textContent = text;
+}
+
+// ---------- Wiring ----------
+map.addEventListener("click", (e) => {
+  const hx = e.target.closest("[data-i]");
+  if (!hx) return;
+  ui.showCursor = false;
+  onHex(Number(hx.dataset.i), false);
+});
+map.addEventListener("pointermove", (e) => {
+  if (e.pointerType !== "mouse") return;
+  const hx = e.target.closest("[data-i]");
+  const i = hx ? Number(hx.dataset.i) : null;
+  if (i === ui.hover) return;
+  ui.hover = i;
+  if (ui.mode === "move" || ui.mode === "smoke") drawOverlay();
+});
+map.addEventListener("pointerleave", () => { ui.hover = null; if (B) drawOverlay(); });
+map.addEventListener("focus", () => { if (B) drawOverlay(); });
+map.addEventListener("blur", () => { if (B) drawOverlay(); });
+map.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const step = e.shiftKey ? 3 : 1;
+  let c = colOf(ui.cursor), r = rowOf(ui.cursor);
+  if (e.key === "ArrowLeft") c -= step;
+  else if (e.key === "ArrowRight") c += step;
+  else if (e.key === "ArrowUp") r -= step;
+  else if (e.key === "ArrowDown") r += step;
+  else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onHex(ui.cursor, true); return; }
+  else return;
+  e.preventDefault();
+  c = Math.max(0, Math.min(COLS - 1, c));
+  r = Math.max(0, Math.min(ROWS - 1, r));
+  ui.cursor = idxOf(c, r);
+  ui.showCursor = true;
+  ui.hover = ui.cursor;
+  announce();
+  drawOverlay();
+});
+
+$("actions").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-act]");
+  if (b) doAction(b.dataset.act, e.detail === 0);
+});
+
+$("context").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-key]");
+  if (!b) return;
+  const k = b.dataset.key;
+  const viaKey = e.detail === 0;
+  if (k === "brace") return answerBrace(true);
+  if (k === "nobrace") return answerBrace(false);
+  if (k === "again") return newBattle(B.seed, B.threat);
+  if (k === "next") return newBattle(randomSeed(), B.threat);
+  if (!yourTurn()) return;
+  if (k === "cancel") return setMode("idle");
+  if (k === "confirm-move" && ui.dest != null) return commitMove(ui.dest);
+  if (k === "confirm-smoke" && ui.dest != null) return placeSmoke(ui.dest);
+  if (k === "fire" && ui.target) return fire(ui.weapon, ui.target);
+  if (k === "skip") { log("You hold the second shot.", "sys"); return setMode("idle"); }
+  if (k === "back") return setMode("weapon", { barrage: ui.barrage });
+  if (k === "st-repair") return stabilize("repair");
+  if (k === "st-cool") return stabilize("cool");
+  if (k.startsWith("w-")) {
+    const w = weaponsOf(B.you).find((x) => x.key === k.slice(2));
+    if (!w) return;
+    const targets = validTargets(w);
+    setMode("target", { weapon: w, barrage: ui.barrage });
+    if (targets.length === 1) { ui.target = targets[0]; ui.inspect = targets[0]; paint(); }
+    if (viaKey) focusMap(targets[0]?.pos);
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  if (e.key === "Escape") {
+    if (ui.braceAsk) return answerBrace(false);
+    if (B && ui.mode !== "idle" && yourTurn()) { e.preventDefault(); setMode("idle"); }
+    return;
+  }
+  if (ui.braceAsk) {
+    if (e.key === "y" || e.key === "Y") answerBrace(true);
+    else if (e.key === "n" || e.key === "N") answerBrace(false);
+    return;
+  }
+  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "smoke", t: "stabilize", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
+  if (act && canDo(act)) { e.preventDefault(); doAction(act, true); }
+});
+
+for (const b of document.querySelectorAll("[data-threat]")) {
+  b.addEventListener("click", () => newBattle(B.seed, b.dataset.threat));
+}
+$("restart").addEventListener("click", () => newBattle(B.seed, B.threat));
+$("newmap").addEventListener("click", () => newBattle(randomSeed(), B.threat));
+$("askbrace").addEventListener("click", () => { prefs.askBrace = !prefs.askBrace; savePrefs(); paint(); });
+
+// ---------- Start ----------
+const randomSeed = () => 1 + Math.floor(Math.random() * 99998);
+
+function newBattle(seed, threat) {
+  if (ui.braceAsk) answerBrace(false);
+  busy = false;
+  B = buildBattle(seed, threat);
+  Object.assign(ui, { mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null, inspect: null, hover: null, cursor: B.you.pos });
+  $("log").replaceChildren();
+  drawTerrain();
+  $("sitecode").textContent = `Site ${String(seed).padStart(5, "0")}`;
+  $("battle-h").textContent = B.name;
+  const counts = {};
+  for (const f of foes()) counts[f.kind] = (counts[f.kind] || 0) + 1;
+  const roster = Object.entries(counts).map(([k, n]) => plural(n, HOSTILES[k].name)).join(", ");
+  $("brief").innerHTML = `Objective: <b>destroy every hostile.</b> Hostiles: ${roster}.`;
+  for (const b of document.querySelectorAll("[data-threat]")) b.setAttribute("aria-pressed", String(b.dataset.threat === threat));
+  const params = new URLSearchParams({ site: String(seed), threat });
+  history.replaceState(null, "", "#" + params.toString());
+  log(`Dropping into ${B.name}. ${roster} ahead.`, "sys");
+  startPlayerTurn();
+  announce();
+}
+
+(function boot() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  const seed = parseInt(params.get("site"), 10);
+  const threat = THREATS[params.get("threat")] ? params.get("threat") : "standard";
+  newBattle(seed > 0 && seed < 100000 ? seed : randomSeed(), threat);
+})();
+</script>
+</body>
+</html>
