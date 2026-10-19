@@ -494,7 +494,7 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
     <div class="stick"><button type="button" data-menu="back">Back</button></div>
     <h1 id="help-h">How to play</h1>
     <p class="lede">Tap your mech to give it orders. Tap anything else on the map to see what it is and what it does. On a keyboard, the arrow keys move a cursor over the map, <kbd>Enter</kbd> picks a hex or opens your orders, <kbd>Esc</kbd> backs out, and each order has a letter key shown beside it.</p>
-    <p>Every shot makes a sound, built on the spot by your browser. Sound starts on. The Sound button at the top, or <kbd>V</kbd>, turns it off and back on. On an iPhone, the silent switch mutes it too.</p>
+    <p>Every shot makes a sound, built on the spot by your browser. Sound starts on. The Sound button at the top, or <kbd>V</kbd>, turns it off and back on. On an iPhone, the silent switch mutes it too. See how each sound is built, and change it, on the <a href="../sound-bench/">Sound Bench</a>.</p>
 
     <h2 id="turn-h">A turn</h2>
     <ul>
@@ -1797,7 +1797,7 @@ function setSound(on) {
   prefs.sound = on;
   savePrefs();
   $("soundbtn").setAttribute("aria-pressed", on);
-  if (on && ac()) audio.resume().then(() => SFX.ping());
+  if (on && ac()) audio.resume().then(() => play("ping"));
 }
 
 // a gain that jumps up over attack seconds, then dies away by dur
@@ -1809,83 +1809,120 @@ function env(a, t, peak, attack, dur) {
   g.connect(master);
   return g;
 }
-function noise({ at = 0, dur, filter = "bandpass", freq, to, q = 1, gain, attack = 0.003 }) {
-  const a = live();
-  if (!a) return;
-  const t = a.currentTime + at;
-  const src = a.createBufferSource(), f = a.createBiquadFilter();
-  src.buffer = noiseBuf;
-  src.loop = true;
-  f.type = filter;
-  f.Q.value = q;
-  f.frequency.setValueAtTime(freq, t);
-  if (to) f.frequency.exponentialRampToValueAtTime(to, t + dur);
-  src.connect(f).connect(env(a, t, gain, attack, dur));
-  src.start(t, Math.random() * 0.8);
+
+// ---------- Sound data ----------
+// each sound is layers of tones and noise. a tone is an oscillator gliding from freq to to; noise
+// runs through a filter whose cutoff glides from freq to to. every layer rises to gain over attack
+// seconds and dies away by dur. at starts a layer late, vary nudges its pitch each time it plays,
+// and repeat scatters that many copies across spread seconds. the Sound Bench (../sound-bench/)
+// has an identical copy to play and edit, so a change here goes there too, and the other way round.
+const SOUNDS = {
+  "crack-you": { "name": "Rifle crack", "use": "Each round from your Lanyard Rifle", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 1800, "q": 0.7, "gain": 0.7, "attack": 0.003, "dur": 0.08 },
+    { "kind": "tone", "wave": "square", "freq": 150, "to": 60, "gain": 0.12, "attack": 0.003, "dur": 0.06 }
+  ] },
+  "crack-foe": { "name": "Carbine crack", "use": "Each round from a Picket's carbine", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 2600, "q": 0.7, "gain": 0.7, "attack": 0.003, "dur": 0.08 },
+    { "kind": "tone", "wave": "square", "freq": 210, "to": 60, "gain": 0.12, "attack": 0.003, "dur": 0.06 }
+  ] },
+  "ping": { "name": "Ricochet ping", "use": "A round hitting, and turning sound on", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 2700, "to": 1700, "gain": 0.1, "attack": 0.003, "dur": 0.07, "vary": 0.11 }
+  ] },
+  "charge": { "name": "Lance charge", "use": "The Arc Lance charging", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 160, "to": 900, "gain": 0.08, "attack": 0.208, "dur": 0.26 },
+    { "kind": "tone", "wave": "sine", "freq": 320, "to": 1800, "gain": 0.1, "attack": 0.208, "dur": 0.26 }
+  ] },
+  "beam": { "name": "Lance beam", "use": "The Arc Lance's beam, buzzing and crackling", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 92, "gain": 0.06, "attack": 0.01, "dur": 0.32 },
+    { "kind": "tone", "wave": "square", "freq": 95.5, "gain": 0.03, "attack": 0.01, "dur": 0.32 },
+    { "kind": "noise", "filter": "highpass", "freq": 3500, "q": 1, "gain": 0.25, "attack": 0.003, "dur": 0.03, "repeat": 7, "spread": 0.32 }
+  ] },
+  "zap": { "name": "Lance zap", "use": "The Arc Lance's beam hitting", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1400, "to": 250, "gain": 0.12, "attack": 0.003, "dur": 0.15 }
+  ] },
+  "thump": { "name": "Mortar thump", "use": "A Lobber firing its mortar", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 150, "to": 45, "gain": 0.5, "attack": 0.003, "dur": 0.28 },
+    { "kind": "noise", "filter": "lowpass", "freq": 500, "q": 1, "gain": 0.3, "attack": 0.003, "dur": 0.18 }
+  ] },
+  "whistle": { "name": "Shell whistle", "use": "A mortar shell in flight, stretched to its flight time", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1500, "to": 700, "gain": 0.04, "attack": 0.4, "dur": 0.72, "at": 0.08 }
+  ] },
+  "boom": { "name": "Shell boom", "use": "A mortar shell landing on its target", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 1.1, "attack": 0.005, "dur": 0.9 },
+    { "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.9, "attack": 0.003, "dur": 0.5 }
+  ] },
+  "boom-small": { "name": "Shell boom, wide", "use": "A mortar shell landing wide of its target", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 0.7, "attack": 0.005, "dur": 0.9 },
+    { "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.6, "attack": 0.003, "dur": 0.5 }
+  ] },
+  "pop": { "name": "Canister pop", "use": "Your Smoke Launcher firing", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 420, "to": 130, "gain": 0.3, "attack": 0.003, "dur": 0.09 },
+    { "kind": "noise", "filter": "bandpass", "freq": 900, "q": 1, "gain": 0.2, "attack": 0.003, "dur": 0.06 }
+  ] },
+  "hiss": { "name": "Smoke hiss", "use": "A smoke cloud spreading", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 2500, "q": 1, "gain": 0.12, "attack": 0.06, "dur": 1.1 }
+  ] },
+  "whoosh": { "name": "Swing", "use": "A cleaver or claw swing", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 450, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
+  ] },
+  "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul swing", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 250, "to": 900, "q": 1.4, "gain": 1.6, "attack": 0.07, "dur": 0.22 }
+  ] },
+  "clang": { "name": "Cleaver clang", "use": "Your Breach Cleaver hitting", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 523, "gain": 0.09, "attack": 0.003, "dur": 0.5 },
+    { "kind": "tone", "wave": "triangle", "freq": 1247, "gain": 0.06, "attack": 0.003, "dur": 0.38 },
+    { "kind": "tone", "wave": "triangle", "freq": 1813, "gain": 0.05, "attack": 0.003, "dur": 0.3 },
+    { "kind": "tone", "wave": "triangle", "freq": 2639, "gain": 0.03, "attack": 0.003, "dur": 0.22 },
+    { "kind": "noise", "filter": "highpass", "freq": 2000, "q": 1, "gain": 0.3, "attack": 0.003, "dur": 0.05 }
+  ] },
+  "scratch": { "name": "Claw scratch", "use": "Each rake of a Hound's claws", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 3800, "to": 1600, "q": 5, "gain": 0.9, "attack": 0.003, "dur": 0.09 }
+  ] },
+  "thud": { "name": "Maul thud", "use": "A Brute's maul hitting", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 120, "to": 38, "gain": 0.75, "attack": 0.003, "dur": 0.32 },
+    { "kind": "noise", "filter": "lowpass", "freq": 700, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.22 }
+  ] },
+  "scrape": { "name": "Knockback scrape", "use": "A hostile knocked back a hex", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 600, "to": 300, "q": 1, "gain": 1.2, "attack": 0.02, "dur": 0.18 }
+  ] }
+};
+
+const soundLength = (s) => Math.max(...s.layers.map((L) => (L.at || 0) + (L.spread || 0) + L.dur));
+// play a sound at seconds from now; len stretches it to last that long
+function play(id, at = 0, len) {
+  const a = live(), s = SOUNDS[id];
+  if (!a || !s) return;
+  const k = len ? len / soundLength(s) : 1;
+  for (const L of s.layers) {
+    for (let n = 0; n < (L.repeat || 1); n++) {
+      const v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+      const late = (L.at || 0) + (L.repeat ? Math.random() * (L.spread || 0) : 0);
+      voice(a, L, a.currentTime + at + late * k, L.dur * k, (L.attack || 0.003) * k, v);
+    }
+  }
+}
+function voice(a, L, t, dur, attack, v) {
+  const tone = L.kind === "tone";
+  const src = tone ? a.createOscillator() : a.createBufferSource();
+  let out = src, glide;
+  if (tone) {
+    src.type = L.wave || "sine";
+    glide = src.frequency;
+  } else {
+    src.buffer = noiseBuf;
+    src.loop = true;
+    out = a.createBiquadFilter();
+    out.type = L.filter || "bandpass";
+    out.Q.value = L.q ?? 1;
+    src.connect(out);
+    glide = out.frequency;
+  }
+  glide.setValueAtTime(L.freq * v, t);
+  if (L.to) glide.exponentialRampToValueAtTime(L.to * v, t + dur);
+  out.connect(env(a, t, L.gain, Math.min(attack, dur * 0.95), dur));
+  if (tone) src.start(t); else src.start(t, Math.random() * 0.8);
   src.stop(t + dur + 0.05);
 }
-function tone({ at = 0, dur, wave = "sine", freq, to, gain, attack = 0.003 }) {
-  const a = live();
-  if (!a) return;
-  const t = a.currentTime + at;
-  const o = a.createOscillator();
-  o.type = wave;
-  o.frequency.setValueAtTime(freq, t);
-  if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
-  o.connect(env(a, t, gain, attack, dur));
-  o.start(t);
-  o.stop(t + dur + 0.05);
-}
-
-// times are in seconds; at delays a sound so a still drawing can play a shot's sounds in order
-const SFX = {
-  // a sharp crack per round, thinner from a Picket's carbine
-  shot(side, at = 0) {
-    noise({ at, dur: 0.08, freq: side === "you" ? 1800 : 2600, q: 0.7, gain: 0.7 });
-    tone({ at, dur: 0.06, wave: "square", freq: side === "you" ? 150 : 210, to: 60, gain: 0.12 });
-  },
-  ping(at = 0) { tone({ at, dur: 0.07, wave: "triangle", freq: 2400 + Math.random() * 600, to: 1700, gain: 0.1 }); },
-  // the lance whines up while it charges, then buzzes and crackles
-  charge(dur) {
-    tone({ dur, wave: "sawtooth", freq: 160, to: 900, gain: 0.08, attack: dur * 0.8 });
-    tone({ dur, freq: 320, to: 1800, gain: 0.1, attack: dur * 0.8 });
-  },
-  beam(dur, at = 0) {
-    tone({ at, dur, wave: "sawtooth", freq: 92, gain: 0.06, attack: 0.01 });
-    tone({ at, dur, wave: "square", freq: 95.5, gain: 0.03, attack: 0.01 });
-    for (let k = 0; k < 7; k++) noise({ at: at + Math.random() * dur, dur: 0.03, filter: "highpass", freq: 3500, gain: 0.25 });
-  },
-  zap(at = 0) { tone({ at, dur: 0.15, freq: 1400, to: 250, gain: 0.12 }); },
-  // a mortar's thoomp, its faint falling whistle, and the boom where it lands
-  thump() {
-    tone({ dur: 0.28, freq: 150, to: 45, gain: 0.5 });
-    noise({ dur: 0.18, filter: "lowpass", freq: 500, gain: 0.3 });
-  },
-  whistle(dur) { tone({ at: 0.08, dur: Math.max(0.1, dur - 0.08), freq: 1500, to: 700, gain: 0.04, attack: dur * 0.5 }); },
-  boom(big, at = 0) {
-    noise({ at, dur: 0.9, filter: "lowpass", freq: 1200, to: 120, gain: big ? 1.1 : 0.7, attack: 0.005 });
-    tone({ at, dur: 0.5, freq: 80, to: 30, gain: big ? 0.9 : 0.6 });
-  },
-  // the smoke launcher's hollow pop, then the cloud's hiss
-  pop() {
-    tone({ dur: 0.09, freq: 420, to: 130, gain: 0.3 });
-    noise({ dur: 0.06, freq: 900, gain: 0.2 });
-  },
-  hiss(at = 0) { noise({ at, dur: 1.1, filter: "highpass", freq: 2500, gain: 0.12, attack: 0.06 }); },
-  // melee: a whoosh for the swing, then what it hits with
-  whoosh(heavy) { noise({ dur: heavy ? 0.22 : 0.16, freq: heavy ? 250 : 450, to: heavy ? 900 : 2200, q: 1.4, gain: heavy ? 1.6 : 0.9, attack: 0.07 }); },
-  clang(at = 0) {
-    // inharmonic partials are what make it ring like struck metal
-    for (const [f, g, dd] of [[523, 0.09, 0.5], [1247, 0.06, 0.38], [1813, 0.05, 0.3], [2639, 0.03, 0.22]]) tone({ at, dur: dd, wave: "triangle", freq: f, gain: g });
-    noise({ at, dur: 0.05, filter: "highpass", freq: 2000, gain: 0.3 });
-  },
-  scratch(at = 0) { noise({ at, dur: 0.09, freq: 3800, to: 1600, q: 5, gain: 0.9 }); },
-  thud(at = 0) {
-    tone({ at, dur: 0.32, freq: 120, to: 38, gain: 0.75 });
-    noise({ at, dur: 0.22, filter: "lowpass", freq: 700, gain: 0.5 });
-  },
-  scrape() { noise({ dur: 0.18, filter: "lowpass", freq: 600, to: 300, gain: 1.2, attack: 0.02 }); },
-};
 
 // ---------- Weapon effects ----------
 // each weapon names the look of its shot (fx); the shot plays out before its result shows
@@ -1994,14 +2031,14 @@ async function burstFx(att, tgt, hit, shots) {
   if (reduceMotion.matches) {
     const els = ends.map((e) => fxAdd("line", { x1: muzzle.x, y1: muzzle.y, x2: e.x, y2: e.y, class: `slug ${att.side} still` }));
     if (hit) els.push(...sparks(t, d, att.side));
-    ends.forEach((_, k) => SFX.shot(att.side, k * 0.08));
-    if (hit) SFX.ping(0.2);
+    ends.forEach((_, k) => play(`crack-${att.side}`, k * 0.08));
+    if (hit) play("ping", 0.2);
     return hold(els);
   }
   const travel = Math.max(110, d.len * 0.5);
   await Promise.all(ends.map(async (end, k) => {
     await sleep(k * 80);
-    SFX.shot(att.side);
+    play(`crack-${att.side}`);
     const e = aim(muzzle, end);
     const flash = fxAdd("circle", { cx: muzzle.x, cy: muzzle.y, r: 4.5, class: `muzzle ${att.side}` });
     const slug = fxAdd("line", { class: `slug ${att.side}` });
@@ -2013,7 +2050,7 @@ async function burstFx(att, tgt, hit, shots) {
     });
     flash.remove();
     slug.remove();
-    if (hit) { sparks(end, d, att.side); SFX.ping(); }
+    if (hit) { sparks(end, d, att.side); play("ping"); }
   }));
 }
 
@@ -2034,15 +2071,15 @@ async function beamFx(att, tgt, hit) {
     glow.setAttribute("r", 8);
     const els = [glow, ...draw()];
     if (hit) els.push(fxAdd("circle", { cx: t.x, cy: t.y, r: R * 0.5, class: `zap ${att.side}` }));
-    SFX.charge(0.26);
-    SFX.beam(0.32, 0.26);
-    if (hit) SFX.zap(0.3);
+    play("charge");
+    play("beam", 0.26);
+    if (hit) play("zap", 0.3);
     return hold(els);
   }
-  SFX.charge(0.26);
+  play("charge");
   await tween(260, (q) => glow.setAttribute("r", (2 + 7 * easeOut(q)).toFixed(1)));
-  SFX.beam(0.32);
-  if (hit) SFX.zap(0.04);
+  play("beam");
+  if (hit) play("zap", 0.04);
   const [halo, core] = draw();
   const zap = hit ? fxAdd("circle", { cx: t.x, cy: t.y, r: 4, class: `zap ${att.side}` }) : null;
   let last = 0;
@@ -2107,14 +2144,14 @@ async function shellFx(att, tgt, hit) {
   const land = hit ? t : missPoint(a, t, 0.3);
   if (reduceMotion.matches) {
     const els = [fxAdd("path", { d: `M${pt(a)} Q${pt(arcCtrl(a, land))} ${pt(land)}`, class: "shell-trail still" }), ...blast(land)];
-    SFX.thump();
-    SFX.boom(hit, 0.3);
+    play("thump");
+    play(hit ? "boom" : "boom-small", 0.3);
     return hold(els);
   }
-  SFX.thump();
-  SFX.whistle(flightMs(a, land) / 1000);
+  play("thump");
+  play("whistle", 0, flightMs(a, land) / 1000);
   await lob(a, land, "shell");
-  SFX.boom(hit);
+  play(hit ? "boom" : "boom-small");
   shake(hit ? 3 : 1.5);
   await blast(land);
 }
@@ -2124,13 +2161,13 @@ async function canisterFx(from, to, cells) {
   if (reduceMotion.matches) {
     const els = [fxAdd("path", { d: arcD(from, to), class: "can-trail still" })];
     for (const j of cells) { const p = xy(j); els.push(fxAdd("circle", { cx: p.x, cy: p.y, r: 14, class: "bloom" })); }
-    SFX.pop();
-    SFX.hiss(0.2);
+    play("pop");
+    play("hiss", 0.2);
     return hold(els);
   }
-  SFX.pop();
+  play("pop");
   await lob(a, b, "can");
-  SFX.hiss();
+  play("hiss");
   const blooms = cells.map((j) => { const p = xy(j); return fxAdd("circle", { cx: p.x, cy: p.y, r: 2, class: "bloom" }); });
   await tween(380, (q) => {
     for (const [k, el] of blooms.entries()) {
@@ -2145,7 +2182,7 @@ async function canisterFx(from, to, cells) {
 async function meleeFx(att, tgt, hit, mark) {
   const a = xy(att.pos), t = xy(tgt.pos), d = aim(a, t);
   const at = hit ? t : missPoint(a, t, -0.25);
-  SFX.whoosh(mark === maulMark);
+  play(mark === maulMark ? "whoosh-heavy" : "whoosh");
   if (reduceMotion.matches) return hold(mark(at, d, hit, att.side));
   const el = tokEl.get(att);
   const place = (k) => el && el.setAttribute("transform", `translate(${pt(offset(a, d, R * 0.4 * k, 0))})`);
@@ -2169,7 +2206,7 @@ function slashPair(dPath, side, hit) {
 function cleaveMark(at, d, hit, side) {
   const p1 = offset(at, d, -R * 0.15, R * 0.7), p2 = offset(at, d, -R * 0.15, -R * 0.7), c = offset(at, d, R * 0.55, 0);
   const els = slashPair(`M${pt(p1)} Q${pt(c)} ${pt(p2)}`, side, hit);
-  if (hit) SFX.clang(0.06);
+  if (hit) play("clang", 0.06);
   return reduceMotion.matches ? els : swipe(els, 130);
 }
 // three raking scratches, slanted across the line of attack
@@ -2177,7 +2214,7 @@ function clawMarks(at, d, hit, side) {
   const s = { ux: d.ux * 0.5 - d.nx * 0.87, uy: d.uy * 0.5 - d.ny * 0.87 };
   const sd = { ux: s.ux, uy: s.uy, nx: -s.uy, ny: s.ux };
   const groups = [-7, 0, 7].map((k) => slashPair(`M${pt(offset(at, sd, -R * 0.42, k))} L${pt(offset(at, sd, R * 0.42, k))}`, side, hit));
-  if (hit) groups.forEach((_, k) => SFX.scratch(k * 0.045));
+  if (hit) groups.forEach((_, k) => play("scratch", k * 0.045));
   if (reduceMotion.matches) return groups.flat();
   return Promise.all(groups.map((g, k) => swipe(g, 90, k * 45)));
 }
@@ -2188,7 +2225,7 @@ function maulMark(at, d, hit, side) {
     const ang = Math.PI * 2 * k / 5 + jitter(0.4), r1 = R * 0.2, r2 = R * (0.5 + Math.random() * 0.2);
     return fxAdd("line", { x1: at.x + Math.cos(ang) * r1, y1: at.y + Math.sin(ang) * r1, x2: at.x + Math.cos(ang) * r2, y2: at.y + Math.sin(ang) * r2, class: "crack" });
   }) : [];
-  if (hit) SFX.thud();
+  if (hit) play("thud");
   if (reduceMotion.matches) { ring.setAttribute("r", R * 0.8); return [ring, ...cracks]; }
   if (hit) shake(3.5);
   return tween(280, (q) => {
@@ -2199,7 +2236,7 @@ function maulMark(at, d, hit, side) {
 
 // knockback slides the token instead of jumping it
 async function slideFx(u, fromPos) {
-  SFX.scrape();
+  play("scrape");
   const el = tokEl.get(u);
   if (!el || reduceMotion.matches) return;
   const a = xy(fromPos), b = xy(u.pos);
