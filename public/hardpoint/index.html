@@ -208,7 +208,7 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .path { fill: none; stroke: var(--you); stroke-width: 2.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
 .valid { fill: var(--amber); fill-opacity: .08; stroke: var(--amber); stroke-width: 1.8; stroke-dasharray: 4 3; }
 .chosen { fill: var(--amber); fill-opacity: .2; stroke: var(--amber); stroke-width: 3; }
-.fireline { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 6 5; }
+.fireline { fill: none; stroke: var(--amber); stroke-width: 2; stroke-dasharray: 6 5; }
 .smoke { fill: var(--smoke); fill-opacity: .28; }
 .smoke-puff { fill: var(--smoke); fill-opacity: .22; }
 .smoke-pre { fill: var(--smoke); fill-opacity: .22; stroke: var(--smoke); stroke-width: 1.5; stroke-dasharray: 3 3; }
@@ -229,8 +229,37 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .tok.you .hpbar { fill: var(--you); }
 .lockring { fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-dasharray: 3 3; }
 .wreck { stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; opacity: .55; }
-.tracer { stroke: var(--amber); stroke-width: 2.2; stroke-linecap: round; opacity: .9; }
-.tracer.foe { stroke: var(--foe); }
+/* weapon effects: kinetic slugs, an energy beam, lobbed shells, and melee strikes */
+.slug { stroke: var(--amber); stroke-width: 3; stroke-linecap: round; }
+.slug.foe, .spark.foe { stroke: var(--foe); }
+.slug.still { stroke-width: 1.4; stroke-dasharray: 4 5; opacity: .85; }
+.muzzle { fill: #FFF3D6; }
+.muzzle.foe { fill: #FFD2C4; }
+.spark { stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; }
+.charge { fill: var(--you); fill-opacity: .55; stroke: #fff; stroke-width: 1.2; }
+.charge.foe { fill: var(--foe); }
+.beam-halo.foe, .zap.foe { stroke: var(--foe); }
+.beam-halo { fill: none; stroke: var(--you); stroke-width: 7; stroke-opacity: .4; stroke-linejoin: round; stroke-linecap: round; }
+.beam-core { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.zap { fill: none; stroke: var(--you); stroke-width: 2; }
+.shell-trail, .can-trail { fill: none; stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 1; stroke-linecap: round; }
+.shell-trail { stroke: var(--foe); stroke-opacity: .55; }
+.can-trail { stroke: var(--smoke); stroke-opacity: .5; }
+.shell-trail.still, .can-trail.still { stroke-dasharray: 4 4; stroke-dashoffset: 0; }
+.shell-shell { fill: #1A0C08; stroke: var(--foe); stroke-width: 2; }
+.can-shell { fill: var(--smoke); stroke: #fff; stroke-width: 1.2; }
+.shadow { fill: #000; }
+.blast-fire { fill: var(--amber); }
+.blast-ring { fill: none; stroke: var(--hazard); stroke-width: 3; }
+.puff { fill: #6B7378; }
+.bloom { fill: var(--smoke); fill-opacity: .35; }
+.slash-halo { fill: none; stroke: var(--you); stroke-width: 7; stroke-opacity: .45; stroke-linecap: round; }
+.slash-halo.foe { stroke: var(--foe); }
+.slash-core { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
+.whiff { opacity: .4; }
+.shock { fill: none; stroke: var(--you); stroke-width: 3.5; }
+.shock.foe { stroke: var(--foe); }
+.crack { stroke: #fff; stroke-width: 1.6; stroke-linecap: round; opacity: .8; }
 .pop { font: 700 15px var(--display); text-anchor: middle; paint-order: stroke; stroke: #000; stroke-width: 3px; }
 .pop.hurt { fill: var(--foe); }
 .pop.dealt { fill: var(--amber); }
@@ -616,9 +645,9 @@ const FRAME = {
   gear: ["rifle", "cleaver", "lance", "smoke"],
 };
 const GEAR = {
-  rifle: { name: "Lanyard Rifle", mount: "Main rifle", kind: "ranged", range: 8, dmg: [1, 6, 1], type: "kinetic", reliable: 1 },
-  cleaver: { name: "Breach Cleaver", mount: "Main melee", kind: "melee", threat: 1, dmg: [1, 6, 3], type: "kinetic", knockback: 1 },
-  lance: { name: "Arc Lance", mount: "Heavy cannon", kind: "ranged", range: 6, dmg: [2, 6, 0], type: "energy", heat: 2 },
+  rifle: { name: "Lanyard Rifle", mount: "Main rifle", kind: "ranged", range: 8, dmg: [1, 6, 1], type: "kinetic", reliable: 1, fx: "burst", shots: 3 },
+  cleaver: { name: "Breach Cleaver", mount: "Main melee", kind: "melee", threat: 1, dmg: [1, 6, 3], type: "kinetic", knockback: 1, fx: "cleave" },
+  lance: { name: "Arc Lance", mount: "Heavy cannon", kind: "ranged", range: 6, dmg: [2, 6, 0], type: "energy", heat: 2, fx: "beam" },
   smoke: { name: "Smoke Launcher", mount: "System", kind: "system", charges: 2 },
 };
 const OC_COST = ["1", "1d3", "1d6", "1d6+4"];
@@ -627,22 +656,22 @@ const HOSTILES = {
   picket: {
     name: "Picket", letter: "P", cost: 1, grunt: true, hp: 1, armor: 0, evasion: 10, speed: 4, role: "ranged",
     blurb: "Grunt. Any damage destroys it.",
-    weapon: { name: "carbine", kind: "ranged", range: 6, bonus: 1, dmg: [0, 0, 3], type: "kinetic" },
+    weapon: { name: "carbine", kind: "ranged", range: 6, bonus: 1, dmg: [0, 0, 3], type: "kinetic", fx: "burst", shots: 2 },
   },
   hound: {
     name: "Hound", letter: "H", cost: 2, hp: 6, armor: 0, evasion: 11, speed: 5, role: "melee",
     blurb: "Fast and hard to hit, with little to spare.",
-    weapon: { name: "shear claws", kind: "melee", threat: 1, bonus: 2, dmg: [0, 0, 3], type: "kinetic" },
+    weapon: { name: "shear claws", kind: "melee", threat: 1, bonus: 2, dmg: [0, 0, 3], type: "kinetic", fx: "claws" },
   },
   brute: {
     name: "Brute", letter: "B", cost: 3, hp: 10, armor: 1, evasion: 6, speed: 3, role: "melee",
     blurb: "Slow, armored, and its maul knocks targets back.",
-    weapon: { name: "maul", kind: "melee", threat: 1, bonus: 2, dmg: [1, 6, 2], type: "kinetic", knockback: 1 },
+    weapon: { name: "maul", kind: "melee", threat: 1, bonus: 2, dmg: [1, 6, 2], type: "kinetic", knockback: 1, fx: "maul" },
   },
   lobber: {
     name: "Lobber", letter: "L", cost: 2, hp: 8, armor: 0, evasion: 7, speed: 3, role: "artillery",
     blurb: "Arcing mortar ignores cover. Reloads after each shot.",
-    weapon: { name: "mortar", kind: "ranged", arcing: true, range: 10, minRange: 2, bonus: 1, dmg: [0, 0, 4], type: "explosive", reloads: true },
+    weapon: { name: "mortar", kind: "ranged", arcing: true, range: 10, minRange: 2, bonus: 1, dmg: [0, 0, 4], type: "explosive", reloads: true, fx: "shell" },
   },
 };
 const THREATS = { light: 5, standard: 8, heavy: 11 };
@@ -1094,7 +1123,7 @@ async function attack(att, w, tgt, opts = {}) {
   } else {
     line += "Miss.";
   }
-  tracer(att, tgt);
+  await shotFx(att, w, tgt, hit);
 
   if (raw > 0) {
     let dmg = Math.max(0, raw - tgt.armor);
@@ -1123,7 +1152,13 @@ async function attack(att, w, tgt, opts = {}) {
 
   if (hit && w.knockback && tgt.alive) {
     if (tgt.side === "you") log("Steady Footing: the Halberd doesn't budge.", "sys");
-    else if (knockback(att, tgt, w.knockback)) log(`${tgt.name} is knocked back a hex.`, att.side);
+    else {
+      const from = tgt.pos;
+      if (knockback(att, tgt, w.knockback)) {
+        await slideFx(tgt, from);
+        log(`${tgt.name} is knocked back a hex.`, att.side);
+      }
+    }
   }
   if (w.heat) gainHeat(att, w.heat, `the ${w.name}`);
   if (w.reloads) att.loaded = false;
@@ -1480,11 +1515,16 @@ function lockOn(f) {
   setMode("idle");
 }
 
-function placeSmoke(i) {
+async function placeSmoke(i) {
   const cells = [i, ...neighbors(i)].filter((j) => B.terrain[j] !== T_WALL);
-  for (const j of cells) B.smoke.set(j, B.round + 2);
   B.you.smokeLeft--;
   spendQuick();
+  busy = true;
+  ui.mode = "idle"; ui.dest = null;
+  paint();
+  await canisterFx(B.you.pos, i, cells);
+  busy = false;
+  for (const j of cells) B.smoke.set(j, B.round + 2);
   log(`You fire a smoke canister. The cloud gives soft cover until the end of next round (${plural(B.you.smokeLeft, "charge")} left).`, "you");
   setMode("idle");
 }
@@ -1661,8 +1701,11 @@ function drawOverlay() {
   if (ui.mode === "target" && ui.weapon) {
     for (const f of validTargets(ui.weapon)) o.append(hexPoly(f.pos, f === ui.target ? "chosen" : "valid", 0.9));
     if (ui.target) {
-      const [x1, y1] = center(B.you.pos), [x2, y2] = center(ui.target.pos);
-      o.append(svgEl("line", { x1, y1, x2, y2, class: "fireline" }));
+      if (ui.weapon.arcing) o.append(svgEl("path", { d: arcD(B.you.pos, ui.target.pos), class: "fireline" }));
+      else {
+        const [x1, y1] = center(B.you.pos), [x2, y2] = center(ui.target.pos);
+        o.append(svgEl("line", { x1, y1, x2, y2, class: "fireline" }));
+      }
     }
   }
   if (ui.mode === "lock") for (const f of lockTargets()) o.append(hexPoly(f.pos, "valid", 0.9));
@@ -1670,7 +1713,10 @@ function drawOverlay() {
     const cells = smokeCells();
     for (const i of cells) o.append(hexPoly(i, "reach", 0.9));
     const at = ui.dest ?? (ui.hover != null && cells.includes(ui.hover) ? ui.hover : null);
-    if (at != null) for (const j of [at, ...neighbors(at)]) if (B.terrain[j] !== T_WALL) o.append(hexPoly(j, "smoke-pre", 0.85));
+    if (at != null) {
+      for (const j of [at, ...neighbors(at)]) if (B.terrain[j] !== T_WALL) o.append(hexPoly(j, "smoke-pre", 0.85));
+      o.append(svgEl("path", { d: arcD(B.you.pos, at), class: "fireline" }));
+    }
   }
   if (ui.showCursor && document.activeElement === map) o.append(hexPoly(ui.cursor, "cursor", 0.97));
 }
@@ -1704,15 +1750,305 @@ function drawUnits() {
     const tag = u.status.stunned ? "STUN" : u.weapon && u.weapon.reloads && !u.loaded ? "RELOAD" : u.status.braced ? "BRACED" : u.status.exposed ? "EXPOSED" : "";
     if (tag) t.append(svgEl("text", { y: -R * 0.82, class: "tag" }, tag));
     g.append(t);
+    tokEl.set(u, t);
   }
 }
 
-function tracer(att, tgt) {
-  const [x1, y1] = center(att.pos), [x2, y2] = center(tgt.pos);
-  const l = svgEl("line", { x1, y1, x2, y2, class: `tracer ${att.side}` });
-  layers.fx.append(l);
-  setTimeout(() => l.remove(), reduceMotion.matches ? 500 : 350);
+// ---------- Weapon effects ----------
+// each weapon names the look of its shot (fx); the shot plays out before its result shows
+const tokEl = new WeakMap();
+const xy = (i) => { const [x, y] = center(i); return { x, y }; };
+const lerp = (a, b, q) => ({ x: a.x + (b.x - a.x) * q, y: a.y + (b.y - a.y) * q });
+const pt = (p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+const jitter = (n) => (Math.random() * 2 - 1) * n;
+const easeOut = (q) => 1 - (1 - q) ** 2;
+const offset = (p, d, along, across) => ({ x: p.x + d.ux * along + d.nx * across, y: p.y + d.uy * along + d.ny * across });
+
+function aim(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  return { ux: dx / len, uy: dy / len, nx: -dy / len, ny: dx / len, len };
 }
+function fxAdd(tag, attrs, text) {
+  const el = svgEl(tag, attrs, text);
+  layers.fx.append(el);
+  return el;
+}
+// requestAnimationFrame pauses in a background tab, so a fight waits for you to come back
+function tween(ms, step) {
+  return new Promise((done) => {
+    const t0 = performance.now();
+    const frame = (now) => {
+      const q = Math.min(1, (now - t0) / ms);
+      step(q);
+      if (q < 1) requestAnimationFrame(frame); else done();
+    };
+    requestAnimationFrame(frame);
+  });
+}
+async function fadeOut(els, ms) {
+  if (!reduceMotion.matches) await tween(ms, (q) => { for (const el of els) el.style.opacity = 1 - q; });
+  for (const el of els) el.remove();
+}
+// with reduced motion each shot is drawn whole, held a moment, then cleared
+async function hold(els) {
+  await sleep(450);
+  for (const el of els) el.remove();
+}
+function shake(px) {
+  if (reduceMotion.matches) return;
+  tween(200, (q) => {
+    const k = px * (1 - q);
+    map.style.transform = q < 1 ? `translate(${jitter(k).toFixed(1)}px, ${jitter(k).toFixed(1)}px)` : "";
+  });
+}
+
+// a lobbed shot bows out to the side of its line of fire, the upward side when there is one,
+// so it reads as an arc even when fired straight down the board. its peak stays on the board.
+function arcCtrl(a, b) {
+  const d = aim(a, b), mid = lerp(a, b, 0.5);
+  let n = { x: d.nx, y: d.ny };
+  if (Math.abs(n.y) < 0.2) n = { x: Math.sign(VBW / 2 - mid.x) * Math.abs(n.x) || 1, y: n.y };
+  else if (n.y > 0) n = { x: -n.x, y: -n.y };
+  let h = d.len * 0.25 + 22;
+  for (const [p, c, max] of [[mid.x, n.x, VBW], [mid.y, n.y, VBH]]) {
+    if (c < 0) h = Math.min(h, (p - 6) / -c);
+    else if (c > 0) h = Math.min(h, (max - 6 - p) / c);
+  }
+  return { x: mid.x + n.x * 2 * h, y: mid.y + n.y * 2 * h };
+}
+function arcAt(a, c, b, q) {
+  const p = 1 - q;
+  return { x: p * p * a.x + 2 * p * q * c.x + q * q * b.x, y: p * p * a.y + 2 * p * q * c.y + q * q * b.y };
+}
+function arcD(i, j) {
+  const a = xy(i), b = xy(j), c = arcCtrl(a, b);
+  return `M${pt(a)} Q${pt(c)} ${pt(b)}`;
+}
+// where a miss lands: off to one side and a little past the target
+function missPoint(a, t, past) {
+  const d = aim(a, t), side = Math.random() < 0.5 ? -1 : 1;
+  return offset(t, d, R * past, side * R * (0.5 + Math.random() * 0.25));
+}
+
+function shotFx(att, w, tgt, hit) {
+  const look = FX[w.fx] || (w.kind === "melee" ? FX.cleave : FX.burst);
+  return look(att, tgt, hit, w);
+}
+const FX = {
+  burst: (att, tgt, hit, w) => burstFx(att, tgt, hit, w.shots || 3),
+  beam: beamFx,
+  shell: shellFx,
+  cleave: (att, tgt, hit) => meleeFx(att, tgt, hit, cleaveMark),
+  claws: (att, tgt, hit) => meleeFx(att, tgt, hit, clawMarks),
+  maul: (att, tgt, hit) => meleeFx(att, tgt, hit, maulMark),
+};
+
+// ---------- Kinetic: a burst of tracer rounds ----------
+function sparks(at, d, side) {
+  const els = [];
+  for (let k = 0; k < 4; k++) {
+    const a = Math.atan2(-d.uy, -d.ux) + jitter(1.3), r = 5 + Math.random() * 6;
+    els.push(fxAdd("line", { x1: at.x, y1: at.y, x2: at.x + Math.cos(a) * r, y2: at.y + Math.sin(a) * r, class: `spark ${side}` }));
+  }
+  return reduceMotion.matches ? els : (fadeOut(els, 220), []);
+}
+async function burstFx(att, tgt, hit, shots) {
+  const a = xy(att.pos), t = xy(tgt.pos), d = aim(a, t);
+  const muzzle = offset(a, d, R * 0.55, 0);
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const ends = Array.from({ length: shots }, (_, k) =>
+    hit ? offset(t, d, jitter(3), jitter(4)) : offset(t, d, R * 1.5, side * R * (0.45 + k * 0.14)));
+  if (reduceMotion.matches) {
+    const els = ends.map((e) => fxAdd("line", { x1: muzzle.x, y1: muzzle.y, x2: e.x, y2: e.y, class: `slug ${att.side} still` }));
+    if (hit) els.push(...sparks(t, d, att.side));
+    return hold(els);
+  }
+  const travel = Math.max(110, d.len * 0.5);
+  await Promise.all(ends.map(async (end, k) => {
+    await sleep(k * 80);
+    const e = aim(muzzle, end);
+    const flash = fxAdd("circle", { cx: muzzle.x, cy: muzzle.y, r: 4.5, class: `muzzle ${att.side}` });
+    const slug = fxAdd("line", { class: `slug ${att.side}` });
+    await tween(travel, (q) => {
+      if (q > 0.3) flash.remove();
+      const head = lerp(muzzle, end, q), tail = offset(head, e, -Math.min(18, e.len * q), 0);
+      slug.setAttribute("x1", tail.x.toFixed(1)); slug.setAttribute("y1", tail.y.toFixed(1));
+      slug.setAttribute("x2", head.x.toFixed(1)); slug.setAttribute("y2", head.y.toFixed(1));
+    });
+    flash.remove();
+    slug.remove();
+    if (hit) sparks(end, d, att.side);
+  }));
+}
+
+// ---------- Energy: a charged, crackling beam ----------
+function boltPoints(a, b, amp) {
+  const d = aim(a, b), n = Math.max(4, Math.round(d.len / 14)), pts = [];
+  for (let k = 0; k <= n; k++) pts.push(pt(offset(lerp(a, b, k / n), d, 0, k === 0 || k === n ? 0 : jitter(amp))));
+  return pts.join(" ");
+}
+async function beamFx(att, tgt, hit) {
+  const a = xy(att.pos), t = xy(tgt.pos), d = aim(a, t);
+  const muzzle = offset(a, d, R * 0.55, 0);
+  const end = hit ? t : missPoint(a, t, 2.2);
+  const glow = fxAdd("circle", { cx: muzzle.x, cy: muzzle.y, r: 2, class: `charge ${att.side}` });
+  const draw = () => [fxAdd("polyline", { points: boltPoints(muzzle, end, 7), class: `beam-halo ${att.side}` }),
+    fxAdd("polyline", { points: boltPoints(muzzle, end, 5), class: "beam-core" })];
+  if (reduceMotion.matches) {
+    glow.setAttribute("r", 8);
+    const els = [glow, ...draw()];
+    if (hit) els.push(fxAdd("circle", { cx: t.x, cy: t.y, r: R * 0.5, class: `zap ${att.side}` }));
+    return hold(els);
+  }
+  await tween(260, (q) => glow.setAttribute("r", (2 + 7 * easeOut(q)).toFixed(1)));
+  const [halo, core] = draw();
+  const zap = hit ? fxAdd("circle", { cx: t.x, cy: t.y, r: 4, class: `zap ${att.side}` }) : null;
+  let last = 0;
+  await tween(320, (q) => {
+    // redraw the zigzag every few frames so the beam crackles
+    if (q - last > 0.12) {
+      last = q;
+      halo.setAttribute("points", boltPoints(muzzle, end, 7));
+      core.setAttribute("points", boltPoints(muzzle, end, 5));
+    }
+    if (zap) zap.setAttribute("r", (4 + R * 0.55 * easeOut(q)).toFixed(1));
+  });
+  await fadeOut([glow, halo, core, zap].filter(Boolean), 160);
+}
+
+// ---------- Explosive: a lobbed shell ----------
+function blast(at, cls = "blast") {
+  const fire = fxAdd("circle", { cx: at.x, cy: at.y, r: 3, class: `${cls}-fire` });
+  const ring = fxAdd("circle", { cx: at.x, cy: at.y, r: 3, class: `${cls}-ring` });
+  if (reduceMotion.matches) {
+    fire.setAttribute("r", R * 0.65);
+    ring.setAttribute("r", R * 1.05);
+    return [fire, ring];
+  }
+  const puffs = [0, 1, 2].map(() => fxAdd("circle", { cx: at.x + jitter(9), cy: at.y + jitter(6), r: 2, class: "puff" }));
+  tween(700, (q) => {
+    for (const [k, p] of puffs.entries()) {
+      p.setAttribute("r", (2 + 11 * easeOut(q)).toFixed(1));
+      p.setAttribute("cy", (at.y - 4 * k - 14 * q).toFixed(1));
+      p.style.opacity = 0.8 * (1 - q);
+    }
+  }).then(() => puffs.forEach((p) => p.remove()));
+  return tween(260, (q) => {
+    fire.setAttribute("r", (3 + R * 0.7 * easeOut(q)).toFixed(1));
+    fire.style.opacity = 1 - q * q;
+    ring.setAttribute("r", (3 + R * 1.15 * easeOut(q)).toFixed(1));
+    ring.style.opacity = 1 - q;
+  }).then(() => { fire.remove(); ring.remove(); return []; });
+}
+// the shell climbs the arc while its shadow runs straight along the ground beneath it
+async function lob(a, b, cls) {
+  const c = arcCtrl(a, b), len = Math.hypot(b.x - a.x, b.y - a.y);
+  const trail = fxAdd("path", { d: `M${pt(a)} Q${pt(c)} ${pt(b)}`, pathLength: 1, class: `${cls}-trail` });
+  const shadow = fxAdd("ellipse", { cx: a.x, cy: a.y, rx: 4, ry: 2, class: "shadow" });
+  const shell = fxAdd("circle", { cx: a.x, cy: a.y, r: 3.5, class: `${cls}-shell` });
+  await tween(Math.min(1000, 480 + len * 0.75), (q) => {
+    const p = arcAt(a, c, b, q), g = lerp(a, b, q), up = Math.sin(Math.PI * q);
+    shell.setAttribute("cx", p.x.toFixed(1)); shell.setAttribute("cy", p.y.toFixed(1));
+    shell.setAttribute("r", (3.5 + 2.5 * up).toFixed(1));
+    shadow.setAttribute("cx", g.x.toFixed(1)); shadow.setAttribute("cy", g.y.toFixed(1));
+    shadow.setAttribute("rx", (4.5 - 2 * up).toFixed(1));
+    shadow.style.opacity = 0.7 - 0.45 * up;
+    trail.style.strokeDashoffset = 1 - q;
+  });
+  shell.remove();
+  shadow.remove();
+  fadeOut([trail], 300);
+}
+async function shellFx(att, tgt, hit) {
+  const a = xy(att.pos), t = xy(tgt.pos);
+  const land = hit ? t : missPoint(a, t, 0.3);
+  if (reduceMotion.matches) {
+    const els = [fxAdd("path", { d: `M${pt(a)} Q${pt(arcCtrl(a, land))} ${pt(land)}`, class: "shell-trail still" }), ...blast(land)];
+    return hold(els);
+  }
+  await lob(a, land, "shell");
+  shake(hit ? 3 : 1.5);
+  await blast(land);
+}
+// the smoke launcher lobs a canister that blooms over every hex it covers
+async function canisterFx(from, to, cells) {
+  const a = xy(from), b = xy(to);
+  if (reduceMotion.matches) {
+    const els = [fxAdd("path", { d: arcD(from, to), class: "can-trail still" })];
+    for (const j of cells) { const p = xy(j); els.push(fxAdd("circle", { cx: p.x, cy: p.y, r: 14, class: "bloom" })); }
+    return hold(els);
+  }
+  await lob(a, b, "can");
+  const blooms = cells.map((j) => { const p = xy(j); return fxAdd("circle", { cx: p.x, cy: p.y, r: 2, class: "bloom" }); });
+  await tween(380, (q) => {
+    for (const [k, el] of blooms.entries()) {
+      const qq = Math.max(0, Math.min(1, q * 1.6 - (k ? 0.5 : 0)));
+      el.setAttribute("r", (2 + 16 * easeOut(qq)).toFixed(1));
+    }
+  });
+  blooms.forEach((el) => el.remove());
+}
+
+// ---------- Melee: a lunge and a strike ----------
+async function meleeFx(att, tgt, hit, mark) {
+  const a = xy(att.pos), t = xy(tgt.pos), d = aim(a, t);
+  const at = hit ? t : missPoint(a, t, -0.25);
+  if (reduceMotion.matches) return hold(mark(at, d, hit, att.side));
+  const el = tokEl.get(att);
+  const place = (k) => el && el.setAttribute("transform", `translate(${pt(offset(a, d, R * 0.4 * k, 0))})`);
+  await tween(110, (q) => place(easeOut(q)));
+  const strike = mark(at, d, hit, att.side);
+  await tween(150, (q) => place(1 - q));
+  await strike;
+}
+// draw a stroke on over ms by sweeping its dash, then fade it
+async function swipe(els, ms, delay = 0) {
+  for (const el of els) { el.setAttribute("pathLength", 1); el.style.strokeDasharray = 1; el.style.strokeDashoffset = 1; }
+  if (delay) await sleep(delay);
+  await tween(ms, (q) => { for (const el of els) el.style.strokeDashoffset = 1 - easeOut(q); });
+  await fadeOut(els, 200);
+}
+function slashPair(dPath, side, hit) {
+  const cls = hit ? "" : " whiff";
+  return [fxAdd("path", { d: dPath, class: `slash-halo ${side}${cls}` }), fxAdd("path", { d: dPath, class: `slash-core${cls}` })];
+}
+// a crescent swept across the target, bowed away from the attacker
+function cleaveMark(at, d, hit, side) {
+  const p1 = offset(at, d, -R * 0.15, R * 0.7), p2 = offset(at, d, -R * 0.15, -R * 0.7), c = offset(at, d, R * 0.55, 0);
+  const els = slashPair(`M${pt(p1)} Q${pt(c)} ${pt(p2)}`, side, hit);
+  return reduceMotion.matches ? els : swipe(els, 130);
+}
+// three raking scratches, slanted across the line of attack
+function clawMarks(at, d, hit, side) {
+  const s = { ux: d.ux * 0.5 - d.nx * 0.87, uy: d.uy * 0.5 - d.ny * 0.87 };
+  const sd = { ux: s.ux, uy: s.uy, nx: -s.uy, ny: s.ux };
+  const groups = [-7, 0, 7].map((k) => slashPair(`M${pt(offset(at, sd, -R * 0.42, k))} L${pt(offset(at, sd, R * 0.42, k))}`, side, hit));
+  if (reduceMotion.matches) return groups.flat();
+  return Promise.all(groups.map((g, k) => swipe(g, 90, k * 45)));
+}
+// a heavy blow: a shockwave and cracks
+function maulMark(at, d, hit, side) {
+  const ring = fxAdd("circle", { cx: at.x, cy: at.y, r: 4, class: `shock ${side}${hit ? "" : " whiff"}` });
+  const cracks = hit ? [0, 1, 2, 3, 4].map((k) => {
+    const ang = Math.PI * 2 * k / 5 + jitter(0.4), r1 = R * 0.2, r2 = R * (0.5 + Math.random() * 0.2);
+    return fxAdd("line", { x1: at.x + Math.cos(ang) * r1, y1: at.y + Math.sin(ang) * r1, x2: at.x + Math.cos(ang) * r2, y2: at.y + Math.sin(ang) * r2, class: "crack" });
+  }) : [];
+  if (reduceMotion.matches) { ring.setAttribute("r", R * 0.8); return [ring, ...cracks]; }
+  if (hit) shake(3.5);
+  return tween(280, (q) => {
+    ring.setAttribute("r", (4 + R * 0.85 * easeOut(q)).toFixed(1));
+    ring.style.opacity = 1 - q;
+  }).then(() => fadeOut([ring, ...cracks], 220));
+}
+
+// knockback slides the token instead of jumping it
+async function slideFx(u, fromPos) {
+  const el = tokEl.get(u);
+  if (!el || reduceMotion.matches) return;
+  const a = xy(fromPos), b = xy(u.pos);
+  await tween(160, (q) => el.setAttribute("transform", `translate(${pt(lerp(a, b, easeOut(q)))})`));
+}
+
 function pop(i, text, cls) {
   const [x, y] = center(i);
   const t = svgEl("text", { x, y: y - 14, class: `pop ${cls}` }, text);
