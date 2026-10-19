@@ -158,6 +158,19 @@ Guides are long, hands-on walkthroughs you work through over several sittings. `
 - State worth sharing goes in the URL hash via `URLSearchParams` and `history.replaceState` (see `bitfield-explorer`, `minifloat-ruler`), with a footer line saying the link is shareable. Per-visitor preferences may use `localStorage`, always wrapped in `try/catch`.
 - Audio uses the Web Audio API. On iOS, set `navigator.audioSession.type = "playback"`, resume when the state isn't `"running"`, and resume on `pointerup`/`touchend`/`keydown` since a touch `pointerdown` doesn't count as a gesture. See `morse-code`. A game whose sounds are effects, like `hardpoint`, uses `"ambient"` instead, so the silent switch mutes it.
 
+## Sound effects
+
+Game sounds are synthesized with Web Audio, never recorded files. A curio with sound effects keeps them as data: an object of sounds, each `{ "name", "use", "layers": [...] }`, where every layer is a tone or filtered noise:
+
+```js
+{ "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.9, "attack": 0.003, "dur": 0.5 }
+{ "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 1.1, "attack": 0.005, "dur": 0.9 }
+```
+
+`to` glides the pitch or cutoff, `at` starts the layer late, `vary` nudges its pitch at random on each play, and `repeat` scatters that many copies across `spread` seconds. Keep one layer per line and one sound per stanza (see `SOUNDS` in `hardpoint`). Play them with the same player and output chain as `hardpoint` (master gain 0.8 into a light limiter), so they sound the same everywhere.
+
+`sound-bench` holds an identical copy of every curio's sounds as its presets, one set per curio (`HARDPOINT_SOUNDS`, registered in its `GROUPS`). The data is duplicated on purpose, so each page stays self-contained. When one copy changes, change the other to match in the same commit. A Sound Bench export (`{ "format": "sound-bench/1", "group": "hardpoint", "sounds": {...} }`) uses the same layout, so its `sounds` object pastes straight into both pages. A new curio with sounds adds its set to `sound-bench` too.
+
 ## Writing style
 
 - Plain, concrete, second person. Short sentences that say what to do and what you'll see ("Drag z and watch…", "Press +1 to count").

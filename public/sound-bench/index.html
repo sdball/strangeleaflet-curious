@@ -1,0 +1,1526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sound Bench — The Cabinet of Curios</title>
+<meta name="description" content="Build game sound effects out of tones and noise in your browser, then take apart and retune the sounds from Hardpoint.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Instrument+Sans:ital,wght@0,400;0,600;1,400&family=Azeret+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* the bench: brushed aluminium with black legends and a patch-cable orange */
+  --bg: #E6E2D9;
+  --panel: #F2EFE8;
+  --panel-edge: #CDC6B8;
+  --ink: #1C1E20;
+  --muted: #5B5F63;
+  --accent: #C94A17;
+  --accent-ink: #FFFFFF;
+  --teal: #0D7275;
+  --btn: #FBFAF6;
+  --btn-edge: #B5AD9E;
+  --code-bg: #E7E2D7;
+  --focus: #C94A17;
+
+  /* the scope screen stays dark phosphor green in either theme */
+  --scope: #0E1B15;
+  --scope-grid: #22392D;
+  --scope-label: #5F8F74;
+  --trace: #7CF0A8;
+  --trace-hot: #F2FFE8;
+  --env: #FFB547;
+
+  --legend: "Michroma", "Eurostile", "Arial Black", system-ui, sans-serif;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "Azeret Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111315; --panel: #1A1D20; --panel-edge: #30353A; --ink: #E6E2DA; --muted: #9D9B94;
+    --accent: #FF7A3D; --accent-ink: #1A0C04; --teal: #45C4C7; --btn: #22262A; --btn-edge: #3B4147;
+    --code-bg: #202428; --focus: #FF9A66; --scope: #09120E; --scope-grid: #1A2C22;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111315; --panel: #1A1D20; --panel-edge: #30353A; --ink: #E6E2DA; --muted: #9D9B94;
+  --accent: #FF7A3D; --accent-ink: #1A0C04; --teal: #45C4C7; --btn: #22262A; --btn-edge: #3B4147;
+  --code-bg: #202428; --focus: #FF9A66; --scope: #09120E; --scope-grid: #1A2C22;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1, h2, .station {
+  font-family: var(--legend);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.15; margin: 0 0 .6rem; }
+h2 { font-size: 1.05rem; line-height: 1.3; margin: 0; }
+h3 { font: 600 1rem var(--sans); margin: 0; }
+.lede { font-size: 1.15rem; max-width: 62ch; margin: 0 0 .75rem; }
+.howto { color: var(--muted); max-width: 66ch; margin: 0 0 1.5rem; }
+kbd { font: 600 .82em var(--mono); padding: .05em .35em; border: 1px solid var(--btn-edge); border-radius: 4px; background: var(--btn); }
+code, .data { font-family: var(--mono); font-size: .86em; }
+.v { font-style: italic; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  margin: 0 0 1.25rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+.panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.station { font-size: .7rem; color: var(--accent); margin: 0 0 .2rem; }
+.panel p { max-width: 68ch; }
+.panel > p:first-of-type { margin-top: 0; }
+
+button {
+  font: 600 .95rem var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 7px;
+  min-height: 44px;
+  padding: .45rem .9rem;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--ink); }
+button:disabled { opacity: .45; cursor: default; }
+button.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.go kbd { background: transparent; color: inherit; border-color: currentColor; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+button.small { min-height: 40px; padding: .3rem .7rem; font-size: .88rem; }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: .35rem; }
+.examples { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .5rem 0; }
+.examples > span { color: var(--muted); font-size: .92rem; margin-right: .2rem; }
+
+/* sliders with a number box beside them */
+.ctls { display: grid; grid-template-columns: 1fr; gap: .35rem 1.25rem; margin: .6rem 0; }
+@media (min-width: 700px) { .ctls { grid-template-columns: 1fr 1fr; } }
+.ctl { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 .6rem; }
+.ctl label { grid-column: 1 / -1; font-size: .9rem; color: var(--muted); }
+.ctl input[type=range] { width: 100%; height: 44px; margin: 0; accent-color: var(--accent); background: transparent; }
+.ctl .num { display: flex; align-items: center; gap: .3rem; }
+.ctl input[type=number] {
+  width: 6.2em;
+  font: 400 16px var(--mono);
+  padding: .4rem .45rem;
+  min-height: 40px;
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 6px;
+}
+.ctl .unit { font: 400 .85rem var(--mono); color: var(--muted); min-width: 1.6em; }
+/* a control that does nothing right now dims, but its switch stays bright */
+.ctl.off input, .ctl.off .unit, .ctl.off label { opacity: .45; }
+
+/* the scope: a waveform and a spectrogram on a dark phosphor screen */
+.scope { position: relative; background: var(--scope); border-radius: 8px; padding: 6px; margin: .75rem 0; }
+.scope canvas { display: block; width: 100%; border-radius: 4px; }
+.scope .wave { height: 110px; }
+.scope .spec { height: 150px; margin-top: 6px; }
+.scope .cycles { height: 130px; }
+.scope .playhead {
+  position: absolute; top: 6px; bottom: 6px; left: 6px; width: 2px;
+  background: var(--trace-hot); opacity: 0; pointer-events: none;
+}
+.scope-key { font-size: .85rem; color: var(--muted); margin: -.35rem 0 .5rem; }
+.data {
+  display: block;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: .55rem .7rem;
+  overflow-x: auto;
+  white-space: pre;
+  margin: .5rem 0;
+}
+.cap { color: var(--muted); font-size: .95rem; min-height: 1.5em; }
+
+/* station 5: a recipe's layers, each one switchable */
+.recipe { list-style: none; padding: 0; margin: .6rem 0; display: grid; gap: .4rem; }
+.recipe li { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.recipe li span { font: 400 .85rem var(--mono); color: var(--muted); }
+
+/* the bench */
+.bench-top { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.bench-top label { font-weight: 600; }
+select {
+  font: 400 16px var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 7px;
+  min-height: 44px;
+  padding: .35rem .5rem;
+  max-width: 100%;
+}
+#pick { min-width: min(18rem, 100%); flex: 1 1 14rem; }
+.use { color: var(--muted); margin: .5rem 0 0; }
+.badge { font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-left: .4rem; }
+.meta { display: grid; grid-template-columns: 1fr; gap: .5rem 1rem; margin: .75rem 0; }
+@media (min-width: 700px) { .meta { grid-template-columns: 1fr 1fr; } }
+.meta label { display: grid; gap: .2rem; font-size: .9rem; color: var(--muted); }
+.meta input, textarea {
+  font: 400 16px var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 6px;
+  padding: .5rem .6rem;
+  min-height: 44px;
+  width: 100%;
+}
+textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: vertical; }
+
+.timeline { position: relative; margin: .5rem 0 .75rem; }
+.timeline button {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin: 0 0 4px;
+  padding: 0;
+  background: transparent;
+  border: 1px dashed var(--panel-edge);
+  border-radius: 6px;
+  text-align: left;
+  overflow: hidden;
+}
+.timeline .bar {
+  position: absolute; top: 4px; bottom: 4px;
+  border-radius: 4px;
+  background: var(--teal);
+  opacity: .85;
+}
+.timeline .bar.noise { background: var(--accent); opacity: .7; }
+.timeline .tl-label {
+  position: relative;
+  display: block;
+  padding: .3rem .5rem;
+  font: 600 .78rem var(--mono);
+  color: var(--ink);
+  text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel);
+}
+.timeline button.muted .bar { opacity: .25; }
+
+.layer {
+  border: 1px solid var(--panel-edge);
+  border-left: 5px solid var(--teal);
+  border-radius: 8px;
+  padding: .7rem .8rem .4rem;
+  margin: 0 0 .75rem;
+  background: var(--bg);
+}
+.layer.noise { border-left-color: var(--accent); }
+.layer header { display: flex; flex-wrap: wrap; gap: .4rem .6rem; align-items: center; }
+.layer header h3 { margin-right: auto; }
+.layer.muted .ctls { opacity: .55; }
+
+.take { border-top: 1px solid var(--panel-edge); margin-top: 1.25rem; padding-top: .5rem; }
+.take h3 { margin: .75rem 0 .25rem; }
+
+.notes, .history { max-width: 68ch; margin-top: 2rem; }
+.notes li, .history li { margin-bottom: .6rem; }
+.sources { max-width: 68ch; margin-top: 2.25rem; color: var(--muted); font-size: .92rem; }
+.sources li { margin-bottom: .4rem; }
+.foot { color: var(--muted); font-size: .9rem; margin-top: 2rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Sound Bench</h1>
+  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a>, or build your own.</p>
+  <p class="howto">Every station has a Play button. Change a control, press Play again, and listen for the difference. The pictures are drawn from the exact sound you'll hear. No sound on a phone? Check its volume.</p>
+
+  <!-- ---------- Station 1 ---------- -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 1</p>
+        <h2 id="s1-h">A tone</h2>
+      </div>
+      <button type="button" class="go" id="s1-play">Play</button>
+    </div>
+    <p>A tone is one shape of wave repeated over and over. How many times it repeats each second is its pitch, counted in hertz (Hz). The shape sets its color: a sine is pure and soft, a triangle a little brighter, a square hollow and buzzy, and a sawtooth the brightest and harshest of all.</p>
+    <div class="seg" role="group" aria-label="Wave shape" id="s1-waves"></div>
+    <div class="ctls" id="s1-ctls"></div>
+    <div class="scope"><canvas class="cycles" id="s1-scope" role="img" aria-label="Three repeats of the wave"></canvas></div>
+    <p class="scope-key" id="s1-key"></p>
+    <p>Written down as data, this tone is one layer:</p>
+    <code class="data" id="s1-data"></code>
+    <p>A tone that just switches on and off isn't much of an effect, though. Station 2 gives it a start and an end.</p>
+  </section>
+
+  <!-- ---------- Station 2 ---------- -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 2</p>
+        <h2 id="s2-h">Shape it</h2>
+      </div>
+      <button type="button" class="go" id="s2-play">Play</button>
+    </div>
+    <p>The envelope is how loud a sound is from moment to moment. Here it has two parts: the <b>attack</b>, how long the sound takes to rise to full volume, and the <b>length</b>, by when it has died away. A short attack sounds like a strike. A long one sounds like a swell.</p>
+    <div class="examples" role="group" aria-label="Examples" id="s2-ex"><span>Try:</span></div>
+    <div class="ctls" id="s2-ctls"></div>
+    <div class="seg" role="group" aria-label="How it dies away" id="s2-fade"></div>
+    <div class="scope"><canvas class="wave" id="s2-scope" role="img" aria-label="The tone's loudness over time"></canvas></div>
+    <p class="scope-key">The green is the sound itself, drawn over its length. The amber line is the envelope.</p>
+    <p>Switch between the two fades and listen to the tail. A straight-line fade seems to hang on and then stop short. Real sounds lose the same <i>fraction</i> of their loudness in each slice of time, which is what an exponential fade does, and your ear hears that as an even fade. Every sound on the bench fades that way.</p>
+  </section>
+
+  <!-- ---------- Station 3 ---------- -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 3</p>
+        <h2 id="s3-h">Slide it</h2>
+      </div>
+      <button type="button" class="go" id="s3-play">Play</button>
+    </div>
+    <p>Now let the pitch glide while the sound plays. A fast fall reads as something heavy landing. A slow fall is a whistle, something dropping from high up. A rise is power building. The glide is exponential too, so each octave takes the same time.</p>
+    <div class="examples" role="group" aria-label="Examples" id="s3-ex"><span>Try:</span></div>
+    <div class="seg" role="group" aria-label="Wave shape" id="s3-waves"></div>
+    <div class="ctls" id="s3-ctls"></div>
+    <div class="scope">
+      <canvas class="wave" id="s3-wave" role="img" aria-label="The sound's loudness over time"></canvas>
+      <canvas class="spec" id="s3-spec" role="img" aria-label="Spectrogram of the glide"></canvas>
+    </div>
+    <p class="scope-key">The lower picture is a spectrogram: time runs left to right, pitch rises upward, and brighter means louder. Pick a square or sawtooth and you'll see fainter copies above the main line. Those are its overtones, the extra pitches that give a wave its color.</p>
+  </section>
+
+  <!-- ---------- Station 4 ---------- -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 4</p>
+        <h2 id="s4-h">Noise</h2>
+      </div>
+      <button type="button" class="go" id="s4-play">Play</button>
+    </div>
+    <p>Noise is random values with no repeating shape, so every pitch is in it at once. On its own it's a hiss. Run it through a filter and it becomes something. A <b>lowpass</b> filter keeps the pitches below its cutoff, a rumble. A <b>highpass</b> keeps those above it, a hiss of steam. A <b>bandpass</b> keeps a band around the cutoff, and its <b>Q</b> sets how narrow the band is. Glide the cutoff and the noise moves, like air rushing past.</p>
+    <div class="examples" role="group" aria-label="Examples" id="s4-ex"><span>Try:</span></div>
+    <div class="seg" role="group" aria-label="Filter" id="s4-filters"></div>
+    <div class="ctls" id="s4-ctls"></div>
+    <div class="scope">
+      <canvas class="wave" id="s4-wave" role="img" aria-label="The noise's loudness over time"></canvas>
+      <canvas class="spec" id="s4-spec" role="img" aria-label="Spectrogram of the filtered noise"></canvas>
+    </div>
+    <p class="scope-key">Noise fills the spectrogram from top to bottom. The filter carves away everything outside the band it keeps.</p>
+  </section>
+
+  <!-- ---------- Station 5 ---------- -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 5</p>
+        <h2 id="s5-h">Layers</h2>
+      </div>
+      <button type="button" class="go" id="s5-play">Play</button>
+    </div>
+    <p>Real effects stack a few layers that start together. Turn layers off and on, then play again to hear what each one adds. These are the real recipes from Hardpoint.</p>
+    <div class="seg" role="group" aria-label="Recipe" id="s5-recipes"></div>
+    <ul class="recipe" id="s5-layers"></ul>
+    <div class="scope">
+      <canvas class="wave" id="s5-wave" role="img" aria-label="The layered sound's loudness over time"></canvas>
+      <canvas class="spec" id="s5-spec" role="img" aria-label="Spectrogram of the layered sound"></canvas>
+    </div>
+    <p class="cap" id="s5-cap" aria-live="polite"></p>
+    <p>The clang works because its four tones are <i>inharmonic</i>. A note on a string has overtones at 2, 3, and 4 times its pitch, and they blend into one note. The clang's sit at about 2.4, 3.5, and 5 times its lowest tone, which never blend, and that's the ring of struck metal. Station 6 lets you change every number in these.</p>
+  </section>
+
+  <!-- ---------- Station 6: the bench ---------- -->
+  <section class="panel" aria-labelledby="bench-h" id="bench">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 6</p>
+        <h2 id="bench-h">The bench</h2>
+      </div>
+    </div>
+    <p>Pick a sound and change anything about it. Each layer is a tone or filtered noise with the controls from the stations above, plus a few more: <b>Start at</b> delays a layer, <b>Vary</b> nudges its pitch at random each time it plays so repeats don't sound mechanical, and <b>Repeat</b> scatters copies of it across a <b>Spread</b> of time, which is how the Arc Lance crackles. Press <kbd>P</kbd> anywhere outside a text box to play.</p>
+    <div class="bench-top">
+      <label for="pick">Sound</label>
+      <select id="pick"></select>
+      <button type="button" class="go" id="b-play" aria-keyshortcuts="P">Play <kbd>P</kbd></button>
+      <button type="button" id="b-mutate">Mutate</button>
+      <button type="button" id="b-random">Random new sound</button>
+    </div>
+    <p class="use" id="b-use"></p>
+    <div class="scope" id="b-scope">
+      <canvas class="wave" id="b-wave" role="img"></canvas>
+      <canvas class="spec" id="b-spec" role="img"></canvas>
+      <div class="playhead" id="b-head"></div>
+    </div>
+    <p class="cap" id="b-cap" aria-live="polite"></p>
+    <h3 id="tl-h">Layers over time</h3>
+    <div class="timeline" id="b-timeline" role="group" aria-labelledby="tl-h"></div>
+    <div id="b-layers"></div>
+    <div class="row">
+      <button type="button" id="b-add-tone">Add a tone layer</button>
+      <button type="button" id="b-add-noise">Add a noise layer</button>
+    </div>
+    <div class="meta">
+      <label>Name <input type="text" id="b-name" autocomplete="off"></label>
+      <label>What it's for <input type="text" id="b-usefield" autocomplete="off"></label>
+    </div>
+    <div class="row">
+      <button type="button" id="b-reset">Undo my changes to this sound</button>
+      <button type="button" id="b-dup">Copy as a new sound</button>
+      <button type="button" id="b-delete">Delete this sound</button>
+    </div>
+
+    <div class="take">
+      <h3 id="take-h">Take it with you</h3>
+      <p>Your changes stay in this browser. To keep them for good, export the whole set of sounds as a file. It's the same data the game itself plays from, so it can go straight back into the game's source.</p>
+      <div class="row">
+        <button type="button" id="b-copy">Copy the set</button>
+        <button type="button" id="b-download">Download the set</button>
+        <button type="button" id="b-reset-all">Undo every change in this set</button>
+      </div>
+      <h3 id="import-h">Bring a set back</h3>
+      <p>Paste an export, or pick its file, to load it onto the bench.</p>
+      <textarea id="b-import" aria-labelledby="import-h" spellcheck="false" autocomplete="off"></textarea>
+      <div class="row">
+        <button type="button" id="b-load">Load what's pasted</button>
+        <label class="small-file"><span class="sr-only">Load from a file</span><input type="file" id="b-file" accept=".json,application/json"></label>
+      </div>
+      <p class="cap" id="b-take-cap" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">Things to notice</h2>
+    <ul>
+      <li><b>Game sounds are short.</b> Most of Hardpoint's are under a quarter of a second, and the longest, a smoke cloud's hiss, is just over one. A sound only has to say what happened.</li>
+      <li><b>Direction carries meaning.</b> Pitch that falls reads as weight and impact, and pitch that rises reads as energy building. The mortar's thump and boom both fall, and the lance's charge climbs.</li>
+      <li><b>Noise does the heavy lifting.</b> Cracks, booms, swings, scratches, and hisses are all filtered noise. Tones mostly add a body under the noise or a ring after it.</li>
+      <li><b>The attack tells you what made it.</b> A few thousandths of a second reads as a hit. A slower attack, like the swing's 0.07 seconds, reads as something moving through the air.</li>
+      <li><b>A little randomness goes a long way.</b> The ping's Vary and the crackle's Repeat make every play slightly different, so a burst of three rounds doesn't sound like one sound pasted three times.</li>
+      <li><b>Small numbers, whole sounds.</b> Every sound here is a short list of numbers. A whole game's worth fits in less space than one second of recorded audio.</li>
+    </ul>
+  </section>
+
+  <section class="history" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <ul>
+      <li><b>Game consoles built their sounds the same way.</b> The NES's sound chip has five channels: two pulse waves, a triangle, a noise generator, and one channel that plays short samples. Explosions, footsteps, and gunfire on it were mostly the noise channel.</li>
+      <li><b>sfxr made this a game-jam habit.</b> DrPetter wrote it for the tenth Ludum Dare in December 2007, so entrants racing a 48-hour deadline could get sound effects into their games. Press its randomize button for a new sound, then tweak any parameter by hand. The bench's Random button borrows the idea.</li>
+      <li><b>Browsers got a synthesizer.</b> The Web Audio API, which wires oscillators, noise, filters, and volume controls together into a graph, became a W3C Recommendation in June 2021. Everything on this page is built from its parts, with no recorded audio at all.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>NESdev Wiki, <a href="https://www.nesdev.org/wiki/APU">"APU"</a>, on the NES's five sound channels.</li>
+      <li>DrPetter, <a href="https://www.drpetter.se/project_sfxr.html">"sfxr"</a> (project page, updated September 14, 2012).</li>
+      <li>World Wide Web Consortium, <a href="https://www.w3.org/press-releases/2021/webaudio">"Web Audio API brings audio design to the Web as it becomes a World Wide Web Consortium (W3C) Recommendation"</a> (press release, June 17, 2021).</li>
+    </ul>
+  </section>
+
+  <p class="foot">The bench puts the sound you picked into the address bar, so a link to this page opens on it.</p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const sig = (v, n = 4) => +(+v).toPrecision(n);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// ---------- Sound data ----------
+// each sound is layers of tones and noise. a tone is an oscillator gliding from freq to to; noise
+// runs through a filter whose cutoff glides from freq to to. every layer rises to gain over attack
+// seconds and dies away by dur. at starts a layer late, vary nudges its pitch each time it plays,
+// and repeat scatters that many copies across spread seconds. each curio with sound keeps its own
+// copy of its set, and this page keeps an identical one, so a change in one goes into the other too.
+
+// Hardpoint's sounds, exactly as public/hardpoint/index.html has them
+const HARDPOINT_SOUNDS = {
+  "crack-you": { "name": "Rifle crack", "use": "Each round from your Lanyard Rifle", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 1800, "q": 0.7, "gain": 0.7, "attack": 0.003, "dur": 0.08 },
+    { "kind": "tone", "wave": "square", "freq": 150, "to": 60, "gain": 0.12, "attack": 0.003, "dur": 0.06 }
+  ] },
+  "crack-foe": { "name": "Carbine crack", "use": "Each round from a Picket's carbine", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 2600, "q": 0.7, "gain": 0.7, "attack": 0.003, "dur": 0.08 },
+    { "kind": "tone", "wave": "square", "freq": 210, "to": 60, "gain": 0.12, "attack": 0.003, "dur": 0.06 }
+  ] },
+  "ping": { "name": "Ricochet ping", "use": "A round hitting, and turning sound on", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 2700, "to": 1700, "gain": 0.1, "attack": 0.003, "dur": 0.07, "vary": 0.11 }
+  ] },
+  "charge": { "name": "Lance charge", "use": "The Arc Lance charging", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 160, "to": 900, "gain": 0.08, "attack": 0.208, "dur": 0.26 },
+    { "kind": "tone", "wave": "sine", "freq": 320, "to": 1800, "gain": 0.1, "attack": 0.208, "dur": 0.26 }
+  ] },
+  "beam": { "name": "Lance beam", "use": "The Arc Lance's beam, buzzing and crackling", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 92, "gain": 0.06, "attack": 0.01, "dur": 0.32 },
+    { "kind": "tone", "wave": "square", "freq": 95.5, "gain": 0.03, "attack": 0.01, "dur": 0.32 },
+    { "kind": "noise", "filter": "highpass", "freq": 3500, "q": 1, "gain": 0.25, "attack": 0.003, "dur": 0.03, "repeat": 7, "spread": 0.32 }
+  ] },
+  "zap": { "name": "Lance zap", "use": "The Arc Lance's beam hitting", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1400, "to": 250, "gain": 0.12, "attack": 0.003, "dur": 0.15 }
+  ] },
+  "thump": { "name": "Mortar thump", "use": "A Lobber firing its mortar", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 150, "to": 45, "gain": 0.5, "attack": 0.003, "dur": 0.28 },
+    { "kind": "noise", "filter": "lowpass", "freq": 500, "q": 1, "gain": 0.3, "attack": 0.003, "dur": 0.18 }
+  ] },
+  "whistle": { "name": "Shell whistle", "use": "A mortar shell in flight, stretched to its flight time", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1500, "to": 700, "gain": 0.04, "attack": 0.4, "dur": 0.72, "at": 0.08 }
+  ] },
+  "boom": { "name": "Shell boom", "use": "A mortar shell landing on its target", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 1.1, "attack": 0.005, "dur": 0.9 },
+    { "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.9, "attack": 0.003, "dur": 0.5 }
+  ] },
+  "boom-small": { "name": "Shell boom, wide", "use": "A mortar shell landing wide of its target", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 0.7, "attack": 0.005, "dur": 0.9 },
+    { "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.6, "attack": 0.003, "dur": 0.5 }
+  ] },
+  "pop": { "name": "Canister pop", "use": "Your Smoke Launcher firing", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 420, "to": 130, "gain": 0.3, "attack": 0.003, "dur": 0.09 },
+    { "kind": "noise", "filter": "bandpass", "freq": 900, "q": 1, "gain": 0.2, "attack": 0.003, "dur": 0.06 }
+  ] },
+  "hiss": { "name": "Smoke hiss", "use": "A smoke cloud spreading", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 2500, "q": 1, "gain": 0.12, "attack": 0.06, "dur": 1.1 }
+  ] },
+  "whoosh": { "name": "Swing", "use": "A cleaver or claw swing", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 450, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
+  ] },
+  "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul swing", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 250, "to": 900, "q": 1.4, "gain": 1.6, "attack": 0.07, "dur": 0.22 }
+  ] },
+  "clang": { "name": "Cleaver clang", "use": "Your Breach Cleaver hitting", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 523, "gain": 0.09, "attack": 0.003, "dur": 0.5 },
+    { "kind": "tone", "wave": "triangle", "freq": 1247, "gain": 0.06, "attack": 0.003, "dur": 0.38 },
+    { "kind": "tone", "wave": "triangle", "freq": 1813, "gain": 0.05, "attack": 0.003, "dur": 0.3 },
+    { "kind": "tone", "wave": "triangle", "freq": 2639, "gain": 0.03, "attack": 0.003, "dur": 0.22 },
+    { "kind": "noise", "filter": "highpass", "freq": 2000, "q": 1, "gain": 0.3, "attack": 0.003, "dur": 0.05 }
+  ] },
+  "scratch": { "name": "Claw scratch", "use": "Each rake of a Hound's claws", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 3800, "to": 1600, "q": 5, "gain": 0.9, "attack": 0.003, "dur": 0.09 }
+  ] },
+  "thud": { "name": "Maul thud", "use": "A Brute's maul hitting", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 120, "to": 38, "gain": 0.75, "attack": 0.003, "dur": 0.32 },
+    { "kind": "noise", "filter": "lowpass", "freq": 700, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.22 }
+  ] },
+  "scrape": { "name": "Knockback scrape", "use": "A hostile knocked back a hex", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 600, "to": 300, "q": 1, "gain": 1.2, "attack": 0.02, "dur": 0.18 }
+  ] }
+};
+
+const GROUPS = [
+  { id: "hardpoint", name: "Hardpoint", href: "../hardpoint/", sounds: HARDPOINT_SOUNDS },
+];
+const FORMAT = "sound-bench/1";
+const LAYER_KEYS = ["kind", "wave", "filter", "freq", "to", "q", "gain", "attack", "dur", "at", "vary", "repeat", "spread"];
+const WAVES = ["sine", "triangle", "square", "sawtooth"];
+const FILTERS = ["lowpass", "highpass", "bandpass"];
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const groupById = (id) => GROUPS.find((g) => g.id === id);
+
+// ---------- The player ----------
+// the same player Hardpoint uses, through the same output, so a sound here is the sound in the game
+const noiseBufs = new WeakMap();
+function noiseBuf(ctx) {
+  if (!noiseBufs.has(ctx)) {
+    const b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), ch = b.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    noiseBufs.set(ctx, b);
+  }
+  return noiseBufs.get(ctx);
+}
+function output(ctx) {
+  // a limiter that only steps in when sounds pile up
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -4;
+  comp.knee.value = 0;
+  comp.ratio.value = 20;
+  comp.attack.value = 0.001;
+  comp.release.value = 0.1;
+  const master = ctx.createGain();
+  master.gain.value = 0.8;
+  master.connect(comp).connect(ctx.destination);
+  return master;
+}
+// a gain that jumps up over attack seconds, then dies away by dur; straight is station 2's comparison
+function env(ctx, out, t, peak, attack, dur, straight) {
+  const g = ctx.createGain();
+  if (straight) {
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + attack);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+  } else {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  }
+  g.connect(out);
+  return g;
+}
+function voice(ctx, out, L, t, dur, attack, v, straight) {
+  const tone = L.kind === "tone";
+  const src = tone ? ctx.createOscillator() : ctx.createBufferSource();
+  let node = src, glide;
+  if (tone) {
+    src.type = L.wave || "sine";
+    glide = src.frequency;
+  } else {
+    src.buffer = noiseBuf(ctx);
+    src.loop = true;
+    node = ctx.createBiquadFilter();
+    node.type = L.filter || "bandpass";
+    node.Q.value = L.q ?? 1;
+    src.connect(node);
+    glide = node.frequency;
+  }
+  glide.setValueAtTime(L.freq * v, t);
+  if (L.to) glide.exponentialRampToValueAtTime(L.to * v, t + dur);
+  node.connect(env(ctx, out, t, L.gain, Math.min(attack, dur * 0.95), dur, straight));
+  if (tone) src.start(t); else src.start(t, Math.random() * 0.8);
+  src.stop(t + dur + 0.05);
+}
+const soundLength = (s) => Math.max(0.01, ...s.layers.map((L) => (L.at || 0) + (L.repeat > 1 ? L.spread || 0 : 0) + L.dur));
+function schedule(ctx, out, s, t0, { muted, straight } = {}) {
+  s.layers.forEach((L, i) => {
+    if (muted && muted.has(i)) return;
+    for (let n = 0; n < (L.repeat || 1); n++) {
+      const v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+      const late = (L.at || 0) + (L.repeat > 1 ? Math.random() * (L.spread || 0) : 0);
+      voice(ctx, out, L, t0 + late, L.dur, L.attack || 0.003, v, straight);
+    }
+  });
+}
+
+let audio = null, audioOut = null;
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    // you pressed Play to hear it, so play even with the iPhone's silent switch on
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+    audioOut = output(audio);
+  }
+  // iOS can leave the context suspended or "interrupted" after calls and app switches
+  if (audio.state !== "running") audio.resume();
+  return audio;
+}
+// a touch pointerdown doesn't count as a gesture, so start and resume audio from the ones that do
+["pointerup", "touchend", "keydown"].forEach((t) =>
+  document.addEventListener(t, () => ac(), { capture: true, passive: true }));
+
+function playNow(s, opts, head) {
+  const a = ac();
+  if (!a) return;
+  const start = a.currentTime + 0.03;
+  schedule(a, audioOut, s, start, opts);
+  if (head) sweep(head, start, soundLength(s));
+}
+// render a sound offline, exactly as it would play, for drawing; it starts a moment in so the
+// limiter has settled, and that lead-in is trimmed off along with the limiter's 6 ms lookahead
+async function render(s, opts) {
+  const sr = 44100, lead = 0.05, len = soundLength(s);
+  const ctx = new OfflineAudioContext(1, Math.ceil((lead + len + 0.05) * sr), sr);
+  schedule(ctx, output(ctx), s, lead, opts);
+  const buf = await ctx.startRendering();
+  return { data: buf.getChannelData(0).subarray(Math.round((lead + 0.006) * sr)), sr, len };
+}
+
+// a line that runs across the scope while the sound plays
+function sweep(head, start, len) {
+  if (reduceMotion.matches) return;
+  const box = head.parentElement;
+  const frame = () => {
+    const q = (audio.currentTime - start) / len;
+    if (q > 1) { head.style.opacity = 0; return; }
+    head.style.opacity = q < 0 ? 0 : 0.85;
+    head.style.transform = `translateX(${(Math.max(0, q) * (box.clientWidth - 14)).toFixed(1)}px)`;
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+// ---------- Drawing ----------
+function colors() {
+  const cs = getComputedStyle(document.documentElement);
+  const get = (k) => cs.getPropertyValue(k).trim();
+  return { bg: get("--scope"), grid: get("--scope-grid"), label: get("--scope-label"), trace: get("--trace"), hot: get("--trace-hot"), env: get("--env") };
+}
+function fit(cv) {
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * dpr);
+  cv.height = Math.round(h * dpr);
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { g, w, h };
+}
+function timeTicks(g, w, h, len, c) {
+  const step = len > 2 ? 0.5 : len > 0.8 ? 0.2 : len > 0.3 ? 0.1 : len > 0.12 ? 0.05 : 0.01;
+  g.font = "10px " + getComputedStyle(document.body).getPropertyValue("--mono");
+  g.fillStyle = c.label;
+  g.strokeStyle = c.grid;
+  g.lineWidth = 1;
+  for (let t = step; t < len; t += step) {
+    const x = Math.round((t / len) * w) + 0.5;
+    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke();
+    g.fillText(`${sig(t, 3)} s`, x + 3, h - 4);
+  }
+}
+// the whole sound: each column shows the loudest the wave swings in that slice of time
+function drawWave(cv, r, envFn) {
+  const { g, w, h } = fit(cv), c = colors(), mid = h / 2;
+  g.fillStyle = c.bg; g.fillRect(0, 0, w, h);
+  timeTicks(g, w, h, r.len, c);
+  g.strokeStyle = c.grid; g.beginPath(); g.moveTo(0, mid + 0.5); g.lineTo(w, mid + 0.5); g.stroke();
+  const n = Math.min(r.data.length, Math.round(r.len * r.sr));
+  g.fillStyle = c.trace;
+  for (let x = 0; x < w; x++) {
+    const a = Math.floor((x / w) * n), b = Math.max(a + 1, Math.floor(((x + 1) / w) * n));
+    let lo = 0, hi = 0;
+    for (let i = a; i < b; i++) { const v = r.data[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    const y1 = mid - hi * mid * 0.95, y2 = mid - lo * mid * 0.95;
+    g.fillRect(x, y1, 1, Math.max(1, y2 - y1));
+  }
+  if (envFn) {
+    g.strokeStyle = c.env; g.lineWidth = 2; g.beginPath();
+    for (let x = 0; x <= w; x++) {
+      const y = mid - envFn((x / w) * r.len) * mid * 0.95;
+      x ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+  }
+}
+
+// a radix-2 fft, in place
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const a = i + k, b = a + len / 2;
+        const tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - tr; im[b] = im[a] - ti;
+        re[a] += tr; im[a] += ti;
+        [cr, ci] = [cr * wr - ci * wi, cr * wi + ci * wr];
+      }
+    }
+  }
+}
+function hexRgb(hex) {
+  const m = hex.replace("#", "");
+  return [0, 2, 4].map((i) => parseInt(m.slice(i, i + 2), 16));
+}
+// pitch runs from 40 Hz at the bottom to 16 kHz at the top, spaced by octaves
+const F_LO = 40, F_HI = 16000;
+function drawSpec(cv, r) {
+  const { g, w, h } = fit(cv), c = colors();
+  const N = 2048, cols = Math.max(1, Math.round(w)), rows = Math.max(1, Math.round(h));
+  const n = Math.min(r.data.length, Math.round(r.len * r.sr));
+  const img = g.createImageData(cols, rows);
+  const bg = hexRgb(c.bg), tr = hexRgb(c.trace), hot = hexRgb(c.hot);
+  const pal = [];
+  for (let k = 0; k < 256; k++) {
+    const q = k / 255, mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    pal.push(q < 0.7 ? mix(bg, tr, q / 0.7) : mix(tr, hot, (q - 0.7) / 0.3));
+  }
+  const win = new Float64Array(N);
+  for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (N - 1));
+  // each row's pitch falls between two fft bins, so read between them
+  const binOf = new Float64Array(rows);
+  for (let y = 0; y < rows; y++) binOf[y] = (F_LO * (F_HI / F_LO) ** (1 - y / (rows - 1))) / (r.sr / N);
+  const mags = new Float64Array(N / 2);
+  const re = new Float64Array(N), im = new Float64Array(N);
+  for (let x = 0; x < cols; x++) {
+    const centre = Math.floor(((x + 0.5) / cols) * n);
+    for (let i = 0; i < N; i++) {
+      const j = centre - N / 2 + i;
+      re[i] = j >= 0 && j < n ? r.data[j] * win[i] : 0;
+      im[i] = 0;
+    }
+    fft(re, im);
+    for (let k = 0; k < N / 2; k++) mags[k] = Math.hypot(re[k], im[k]) / (N / 4);
+    for (let y = 0; y < rows; y++) {
+      const b = binOf[y], lo = Math.floor(b), f = b - lo;
+      const mag = mags[lo] * (1 - f) + mags[Math.min(lo + 1, N / 2 - 1)] * f;
+      const db = 20 * Math.log10(mag + 1e-9);
+      const p = pal[Math.round(clamp((db + 64) / 64, 0, 1) * 255)];
+      const o = (y * cols + x) * 4;
+      img.data[o] = p[0]; img.data[o + 1] = p[1]; img.data[o + 2] = p[2]; img.data[o + 3] = 255;
+    }
+  }
+  // the image is in device pixels' worth of css pixels, so paint it through a scratch canvas
+  const tmp = document.createElement("canvas");
+  tmp.width = cols; tmp.height = rows;
+  tmp.getContext("2d").putImageData(img, 0, 0);
+  g.imageSmoothingEnabled = true;
+  g.drawImage(tmp, 0, 0, w, h);
+  g.font = "10px " + getComputedStyle(document.body).getPropertyValue("--mono");
+  g.fillStyle = c.label;
+  for (const f of [100, 1000, 10000]) {
+    const y = h * (1 - Math.log(f / F_LO) / Math.log(F_HI / F_LO));
+    g.fillRect(0, Math.round(y), 6, 1);
+    g.fillText(f >= 1000 ? `${f / 1000} kHz` : `${f} Hz`, 9, y + 3);
+  }
+}
+// station 1 draws the ideal shape itself: three repeats, so the shape is easy to see
+function drawCycles(cv, wave) {
+  const { g, w, h } = fit(cv), c = colors(), mid = h / 2, amp = h * 0.38;
+  g.fillStyle = c.bg; g.fillRect(0, 0, w, h);
+  g.strokeStyle = c.grid; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, mid + 0.5); g.lineTo(w, mid + 0.5); g.stroke();
+  for (let k = 1; k < 3; k++) { const x = Math.round((k / 3) * w) + 0.5; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  const shape = {
+    sine: (p) => Math.sin(2 * Math.PI * p),
+    triangle: (p) => (p < 0.25 ? 4 * p : p < 0.75 ? 2 - 4 * p : 4 * p - 4),
+    square: (p) => (p < 0.5 ? 1 : -1),
+    sawtooth: (p) => (p < 0.5 ? 2 * p : 2 * p - 2),
+  }[wave];
+  g.strokeStyle = c.trace; g.lineWidth = 2.5; g.lineJoin = "round"; g.beginPath();
+  for (let x = 0; x <= w; x++) {
+    const p = ((x / w) * 3) % 1, y = mid - shape(p) * amp;
+    x ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.stroke();
+}
+
+// redraw only once the controls stop moving
+function debounce(fn, ms = 120) {
+  let t = 0;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+const redraws = [];
+addEventListener("resize", debounce(() => redraws.forEach((f) => f()), 200));
+for (const mq of [matchMedia("(prefers-color-scheme: dark)")]) mq.addEventListener("change", () => redraws.forEach((f) => f()));
+
+// ---------- Controls ----------
+// a slider with a number box; log sliders move evenly through ratios, the way pitch and time feel
+function control(host, { label, min, max, log, step = "any", unit = "", get, set, int }) {
+  const id = `c${++control.n}`;
+  const el = document.createElement("div");
+  el.className = "ctl";
+  el.innerHTML = `<label for="${id}">${label}</label>
+    <input type="range" id="${id}" min="0" max="1000" step="1" aria-label="${label}">
+    <span class="num"><input type="number" min="${min}" max="${max}" step="${int ? 1 : step}" inputmode="decimal" aria-label="${label}${unit ? ` in ${unit === "Hz" ? "hertz" : unit === "s" ? "seconds" : unit}` : ""}"><span class="unit">${unit}</span></span>`;
+  const range = el.querySelector("input[type=range]"), box = el.querySelector("input[type=number]");
+  const toR = (v) => Math.round(1000 * (log ? Math.log(v / min) / Math.log(max / min) : (v - min) / (max - min)));
+  const fromR = (r) => { const q = r / 1000; const v = log ? min * (max / min) ** q : min + (max - min) * q; return int ? Math.round(v) : sig(v, 3); };
+  const update = () => { const v = get(); range.value = toR(v); box.value = v; range.setAttribute("aria-valuetext", `${v} ${unit}`.trim()); };
+  range.addEventListener("input", () => { set(fromR(+range.value)); update(); });
+  box.addEventListener("change", () => {
+    const v = parseFloat(box.value);
+    if (Number.isFinite(v)) set(clamp(int ? Math.round(v) : sig(v), min, max));
+    update();
+  });
+  host.append(el);
+  update();
+  return { el, update };
+}
+control.n = 0;
+function segmented(host, options, isOn, pick) {
+  const btns = options.map(([value, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "small";
+    b.textContent = label;
+    b.addEventListener("click", () => { pick(value); sync(); });
+    host.append(b);
+    return [value, b];
+  });
+  const sync = () => btns.forEach(([v, b]) => b.setAttribute("aria-pressed", isOn(v)));
+  sync();
+  return sync;
+}
+function exampleButtons(host, list, apply) {
+  for (const [label, values] of list) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "small";
+    b.textContent = label;
+    b.addEventListener("click", () => apply(values, label));
+    host.append(b);
+  }
+}
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+
+// ---------- Writing sounds down ----------
+// one layer per line and one sound per stanza, the same layout as the data in the pages
+function layerText(L) {
+  return "{ " + LAYER_KEYS.filter((k) => k in L).map((k) => `"${k}": ${JSON.stringify(L[k])}`).join(", ") + " }";
+}
+function groupText(sounds) {
+  const ids = Object.keys(sounds);
+  const out = ["{"];
+  ids.forEach((id, i) => {
+    const s = sounds[id];
+    const head = ["name", "use"].filter((k) => k in s).map((k) => `"${k}": ${JSON.stringify(s[k])}`).join(", ");
+    out.push(`  "${id}": { ${head ? head + ", " : ""}"layers": [`);
+    s.layers.forEach((L, j) => out.push(`    ${layerText(L)}${j < s.layers.length - 1 ? "," : ""}`));
+    out.push(`  ] }${i < ids.length - 1 ? "," : ""}`);
+  });
+  out.push("}");
+  return out.join("\n");
+}
+function exportText(groupId, sounds) {
+  return `{ "format": "${FORMAT}", "group": "${groupId}", "sounds": ${groupText(sounds).replace(/\n/g, "\n  ")} }\n`;
+}
+function describeLayer(L) {
+  const glide = L.to ? `${sig(L.freq, 3)}→${sig(L.to, 3)} Hz` : `${sig(L.freq, 3)} Hz`;
+  const what = L.kind === "tone" ? `${L.wave || "sine"} tone` : `${L.filter || "bandpass"} noise`;
+  return `${what}, ${glide}, ${sig(L.dur, 3)} s${L.repeat > 1 ? `, ×${L.repeat}` : ""}`;
+}
+
+// ---------- Station 1: a tone ----------
+const s1 = { wave: "square", freq: 220 };
+const s1Sound = () => ({ layers: [{ kind: "tone", wave: s1.wave, freq: s1.freq, gain: 0.3, attack: 0.01, dur: 0.8 }] });
+function paint1() {
+  drawCycles($("s1-scope"), s1.wave);
+  const ms = (3000 / s1.freq).toFixed(s1.freq > 300 ? 2 : 1);
+  $("s1-key").textContent = `Three repeats of a ${s1.wave} wave. At ${s1.freq} Hz, those three take ${ms} thousandths of a second.`;
+  $("s1-scope").setAttribute("aria-label", `Three repeats of a ${s1.wave} wave`);
+  $("s1-data").textContent = layerText(s1Sound().layers[0]);
+}
+segmented($("s1-waves"), WAVES.map((w) => [w, cap(w)]), (w) => s1.wave === w, (w) => { s1.wave = w; paint1(); });
+control($("s1-ctls"), { label: "Pitch", min: 40, max: 4000, log: true, unit: "Hz", int: true, get: () => s1.freq, set: (v) => { s1.freq = v; paint1(); } });
+$("s1-play").addEventListener("click", () => playNow(s1Sound()));
+redraws.push(paint1);
+
+// ---------- Station 2: shape it ----------
+const s2 = { attack: 0.003, dur: 0.5, straight: false };
+const s2Sound = () => ({ layers: [{ kind: "tone", wave: "triangle", freq: 440, gain: 0.5, attack: s2.attack, dur: s2.dur }] });
+const s2Ctls = [
+  control($("s2-ctls"), { label: "Attack", min: 0.001, max: 1, log: true, unit: "s", get: () => s2.attack, set: (v) => { s2.attack = Math.min(v, s2.dur * 0.9); draw2(); } }),
+  control($("s2-ctls"), { label: "Length", min: 0.03, max: 2, log: true, unit: "s", get: () => s2.dur, set: (v) => { s2.dur = v; s2.attack = Math.min(s2.attack, v * 0.9); draw2(); } }),
+];
+const sync2 = segmented($("s2-fade"), [[false, "Exponential fade"], [true, "Straight-line fade"]], (v) => s2.straight === v, (v) => { s2.straight = v; draw2(); });
+exampleButtons($("s2-ex"), [["Blip", [0.003, 0.07]], ["Pluck", [0.003, 0.6]], ["Swell", [0.45, 0.6]], ["Bell", [0.002, 1.8]]], ([a, d]) => {
+  s2.attack = a; s2.dur = d;
+  s2Ctls.forEach((c) => c.update());
+  draw2();
+  playNow(s2Sound(), { straight: s2.straight });
+});
+const draw2 = debounce(async () => {
+  const r = await render(s2Sound(), { straight: s2.straight });
+  const { attack: a, dur: d, straight } = s2;
+  // the same curve the player follows, scaled to full height
+  const envFn = (t) => {
+    if (t >= d) return 0;
+    if (straight) return t < a ? t / a : 1 - (t - a) / (d - a);
+    return t < a ? 0.0001 * (1 / 0.0001) ** (t / a) : (0.0001) ** ((t - a) / (d - a));
+  };
+  drawWave($("s2-scope"), r, envFn);
+  $("s2-scope").setAttribute("aria-label", `A tone rising over ${a} seconds and gone by ${d} seconds, with a ${straight ? "straight-line" : "exponential"} fade`);
+});
+$("s2-play").addEventListener("click", () => playNow(s2Sound(), { straight: s2.straight }));
+redraws.push(draw2);
+
+// ---------- Station 3: slide it ----------
+const s3 = { wave: "sine", freq: 150, to: 45, dur: 0.28, attack: 0.003 };
+const s3Sound = () => ({ layers: [{ kind: "tone", wave: s3.wave, freq: s3.freq, to: s3.to, gain: 0.5, attack: s3.attack, dur: s3.dur }] });
+const sync3 = segmented($("s3-waves"), WAVES.map((w) => [w, cap(w)]), (w) => s3.wave === w, (w) => { s3.wave = w; draw3(); });
+const s3Ctls = [
+  control($("s3-ctls"), { label: "Start pitch", min: 30, max: 4000, log: true, unit: "Hz", int: true, get: () => s3.freq, set: (v) => { s3.freq = v; draw3(); } }),
+  control($("s3-ctls"), { label: "End pitch", min: 30, max: 4000, log: true, unit: "Hz", int: true, get: () => s3.to, set: (v) => { s3.to = v; draw3(); } }),
+  control($("s3-ctls"), { label: "Length", min: 0.03, max: 2, log: true, unit: "s", get: () => s3.dur, set: (v) => { s3.dur = v; draw3(); } }),
+];
+exampleButtons($("s3-ex"), [
+  ["Thump", { wave: "sine", freq: 150, to: 45, dur: 0.28, attack: 0.003 }],
+  ["Zap", { wave: "sine", freq: 1400, to: 250, dur: 0.15, attack: 0.003 }],
+  ["Whistle", { wave: "sine", freq: 1500, to: 700, dur: 0.8, attack: 0.4 }],
+  ["Charge", { wave: "sawtooth", freq: 160, to: 900, dur: 0.6, attack: 0.45 }],
+  ["Laser", { wave: "square", freq: 1800, to: 300, dur: 0.18, attack: 0.003 }],
+], (v) => {
+  Object.assign(s3, v);
+  s3Ctls.forEach((c) => c.update());
+  sync3();
+  draw3();
+  playNow(s3Sound());
+});
+const draw3 = debounce(async () => {
+  const r = await render(s3Sound());
+  drawWave($("s3-wave"), r);
+  drawSpec($("s3-spec"), r);
+  $("s3-spec").setAttribute("aria-label", `Spectrogram: a ${s3.wave} tone gliding from ${s3.freq} to ${s3.to} hertz over ${s3.dur} seconds`);
+});
+$("s3-play").addEventListener("click", () => playNow(s3Sound()));
+redraws.push(draw3);
+
+// ---------- Station 4: noise ----------
+const s4 = { filter: "bandpass", freq: 450, to: 2200, glide: true, q: 1.4, dur: 0.3, attack: 0.07 };
+const s4Sound = () => {
+  const L = { kind: "noise", filter: s4.filter, freq: s4.freq, q: s4.q, gain: s4.filter === "bandpass" ? 0.9 : 0.5, attack: s4.attack, dur: s4.dur };
+  if (s4.glide) L.to = s4.to;
+  return { layers: [L] };
+};
+const sync4 = segmented($("s4-filters"), FILTERS.map((f) => [f, cap(f)]), (f) => s4.filter === f, (f) => { s4.filter = f; draw4(); });
+const s4Ctls = [
+  control($("s4-ctls"), { label: "Cutoff", min: 40, max: 12000, log: true, unit: "Hz", int: true, get: () => s4.freq, set: (v) => { s4.freq = v; draw4(); } }),
+  control($("s4-ctls"), { label: "Glide the cutoff to", min: 40, max: 12000, log: true, unit: "Hz", int: true, get: () => s4.to, set: (v) => { s4.to = v; s4.glide = true; syncGlide4(); draw4(); } }),
+  control($("s4-ctls"), { label: "Q, how narrow the band is", min: 0.1, max: 20, log: true, get: () => s4.q, set: (v) => { s4.q = v; draw4(); } }),
+  control($("s4-ctls"), { label: "Length", min: 0.03, max: 2, log: true, unit: "s", get: () => s4.dur, set: (v) => { s4.dur = v; s4.attack = Math.min(s4.attack, v * 0.5); draw4(); } }),
+];
+const glideRow = document.createElement("div");
+glideRow.className = "row";
+$("s4-ctls").after(glideRow);
+const syncGlide4 = segmented(glideRow, [[true, "Glide on"], [false, "Glide off"]], (v) => s4.glide === v, (v) => { s4.glide = v; draw4(); });
+exampleButtons($("s4-ex"), [
+  ["Rumble", { filter: "lowpass", freq: 300, to: 120, glide: true, q: 1, dur: 1, attack: 0.005 }],
+  ["Hiss", { filter: "highpass", freq: 3000, glide: false, q: 1, dur: 1, attack: 0.06 }],
+  ["Crack", { filter: "bandpass", freq: 1800, glide: false, q: 0.7, dur: 0.08, attack: 0.003 }],
+  ["Swoosh", { filter: "bandpass", freq: 450, to: 2200, glide: true, q: 1.4, dur: 0.3, attack: 0.07 }],
+  ["Scratch", { filter: "bandpass", freq: 3800, to: 1600, glide: true, q: 5, dur: 0.09, attack: 0.003 }],
+], (v) => {
+  Object.assign(s4, v);
+  if (!v.to) s4.to = s4.freq;
+  s4Ctls.forEach((c) => c.update());
+  sync4();
+  syncGlide4();
+  draw4();
+  playNow(s4Sound());
+});
+const draw4 = debounce(async () => {
+  s4Ctls[1].el.classList.toggle("off", !s4.glide);
+  s4Ctls[2].el.classList.toggle("off", s4.filter !== "bandpass");
+  const r = await render(s4Sound());
+  drawWave($("s4-wave"), r);
+  drawSpec($("s4-spec"), r);
+  $("s4-spec").setAttribute("aria-label", `Spectrogram: noise through a ${s4.filter} filter at ${s4.freq} hertz${s4.glide ? `, gliding to ${s4.to}` : ""}`);
+});
+$("s4-play").addEventListener("click", () => playNow(s4Sound()));
+redraws.push(draw4);
+
+// ---------- Station 5: layers ----------
+const s5 = { recipe: "boom", muted: new Set() };
+const RECIPES = [["boom", "Shell boom"], ["clang", "Cleaver clang"], ["crack-you", "Rifle crack"]];
+const s5Sound = () => HARDPOINT_SOUNDS[s5.recipe];
+segmented($("s5-recipes"), RECIPES, (k) => s5.recipe === k, (k) => { s5.recipe = k; s5.muted.clear(); list5(); draw5(); });
+function list5() {
+  const ul = $("s5-layers");
+  ul.replaceChildren();
+  s5Sound().layers.forEach((L, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "small";
+    const sync = () => { const on = !s5.muted.has(i); b.setAttribute("aria-pressed", on); b.textContent = `Layer ${i + 1} ${on ? "on" : "off"}`; };
+    b.addEventListener("click", () => {
+      s5.muted.has(i) ? s5.muted.delete(i) : s5.muted.add(i);
+      sync();
+      draw5();
+      $("s5-cap").textContent = s5.muted.size === s5Sound().layers.length ? "Every layer is off." : `Layer ${i + 1} is ${s5.muted.has(i) ? "off" : "on"}. Press Play to hear the difference.`;
+    });
+    sync();
+    const span = document.createElement("span");
+    span.textContent = cap(describeLayer(L));
+    li.append(b, span);
+    ul.append(li);
+  });
+}
+const draw5 = debounce(async () => {
+  const r = await render(s5Sound(), { muted: s5.muted });
+  drawWave($("s5-wave"), r);
+  drawSpec($("s5-spec"), r);
+  $("s5-spec").setAttribute("aria-label", `Spectrogram of the ${s5Sound().name} with ${s5Sound().layers.length - s5.muted.size} of its layers on`);
+});
+$("s5-play").addEventListener("click", () => playNow(s5Sound(), { muted: s5.muted }));
+redraws.push(draw5);
+
+// ---------- The bench: state and saving ----------
+// edits holds a whole edited copy of a group; groups you haven't touched play as shipped
+const EDITS_KEY = "sound-bench:edits";
+let edits = {};
+try {
+  const saved = JSON.parse(localStorage.getItem(EDITS_KEY) || "null");
+  if (saved && saved.v === 1 && saved.groups) {
+    for (const [g, sounds] of Object.entries(saved.groups)) {
+      if (!groupById(g)) continue;
+      const ok = cleanGroup(sounds);
+      if (ok) edits[g] = ok;
+    }
+  }
+} catch (e) { /* storage blocked */ }
+const saveEdits = debounce(() => {
+  try { localStorage.setItem(EDITS_KEY, JSON.stringify({ v: 1, groups: edits })); } catch (e) { /* storage blocked */ }
+}, 300);
+
+const bench = { group: "hardpoint", id: "boom", muted: new Set() };
+const soundsOf = (g) => edits[g] || groupById(g).sounds;
+const current = () => soundsOf(bench.group)[bench.id];
+// the first change to a group copies it into edits
+function editable() {
+  if (!edits[bench.group]) edits[bench.group] = clone(groupById(bench.group).sounds);
+  return edits[bench.group][bench.id];
+}
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const isEdited = (g, id) => !same(soundsOf(g)[id], groupById(g).sounds[id]);
+const isShipped = (g, id) => id in groupById(g).sounds;
+function tidy(g) {
+  // a group edited back to how it shipped stops counting as edited
+  if (edits[g] && same(edits[g], groupById(g).sounds)) delete edits[g];
+  saveEdits();
+}
+
+// check and clamp a group from storage or an import; null when it isn't a group of sounds at all
+const LIMITS = { freq: [20, 20000], to: [20, 20000], q: [0.1, 30], gain: [0.001, 2], attack: [0.001, 2], dur: [0.005, 4], at: [0, 4], vary: [0, 0.5], repeat: [1, 32], spread: [0, 4] };
+function cleanLayer(L) {
+  if (!L || (L.kind !== "tone" && L.kind !== "noise")) return null;
+  const out = { kind: L.kind };
+  if (L.kind === "tone") out.wave = WAVES.includes(L.wave) ? L.wave : "sine";
+  else out.filter = FILTERS.includes(L.filter) ? L.filter : "bandpass";
+  for (const k of ["freq", "to", "q", "gain", "attack", "dur", "at", "vary", "repeat", "spread"]) {
+    if (!(k in L)) continue;
+    const v = +L[k];
+    if (!Number.isFinite(v)) continue;
+    if (k === "q" && L.kind === "tone") continue;
+    out[k] = k === "repeat" ? Math.round(clamp(v, ...LIMITS[k])) : clamp(v, ...LIMITS[k]);
+  }
+  if (!out.freq || !out.gain || !out.dur) return null;
+  return out;
+}
+function cleanGroup(sounds) {
+  if (!sounds || typeof sounds !== "object") return null;
+  const out = {};
+  for (const [id, s] of Object.entries(sounds)) {
+    if (!/^[a-z0-9-]+$/.test(id) || !s || !Array.isArray(s.layers)) continue;
+    const layers = s.layers.map(cleanLayer).filter(Boolean);
+    if (!layers.length) continue;
+    out[id] = {};
+    if (typeof s.name === "string") out[id].name = s.name.slice(0, 80);
+    if (typeof s.use === "string") out[id].use = s.use.slice(0, 160);
+    out[id].layers = layers;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+// ---------- The bench: drawing ----------
+function fillPick() {
+  const sel = $("pick");
+  sel.replaceChildren();
+  for (const g of GROUPS) {
+    const og = document.createElement("optgroup");
+    og.label = g.name;
+    for (const [id, s] of Object.entries(soundsOf(g.id))) {
+      const o = document.createElement("option");
+      o.value = `${g.id}/${id}`;
+      o.textContent = (s.name || id) + (isEdited(g.id, id) ? (isShipped(g.id, id) ? " (changed)" : " (new)") : "");
+      og.append(o);
+    }
+    sel.append(og);
+  }
+  sel.value = `${bench.group}/${bench.id}`;
+}
+function paintMeta() {
+  const s = current(), g = groupById(bench.group);
+  const edited = isEdited(bench.group, bench.id);
+  $("b-use").innerHTML = "";
+  const a = document.createElement("a");
+  a.href = g.href;
+  a.textContent = g.name;
+  $("b-use").append(a, document.createTextNode(`: ${s.use || "no note yet"}.`));
+  if (edited) {
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = isShipped(bench.group, bench.id) ? "changed" : "new";
+    $("b-use").append(b);
+  }
+  $("b-name").value = s.name || "";
+  $("b-usefield").value = s.use || "";
+  $("b-reset").disabled = !edited || !isShipped(bench.group, bench.id);
+  $("b-delete").disabled = isShipped(bench.group, bench.id);
+  $("b-reset-all").disabled = !edits[bench.group];
+}
+function paintTimeline() {
+  const s = current(), len = soundLength(s), tl = $("b-timeline");
+  tl.replaceChildren();
+  s.layers.forEach((L, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = bench.muted.has(i) ? "muted" : "";
+    const start = L.at || 0, span = (L.repeat > 1 ? L.spread || 0 : 0) + L.dur;
+    const bar = document.createElement("span");
+    bar.className = `bar ${L.kind}`;
+    bar.style.left = `${(100 * start / len).toFixed(2)}%`;
+    bar.style.width = `${Math.max(1, 100 * span / len).toFixed(2)}%`;
+    const label = document.createElement("span");
+    label.className = "tl-label";
+    label.textContent = `${i + 1}. ${describeLayer(L)}`;
+    b.append(bar, label);
+    b.setAttribute("aria-label", `Layer ${i + 1}, ${describeLayer(L)}, from ${sig(start, 3)} to ${sig(start + span, 3)} seconds. Go to its controls.`);
+    b.addEventListener("click", () => {
+      const card = $(`layer-${i}`);
+      card.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "nearest" });
+      card.querySelector("button, input, select").focus({ preventScroll: true });
+    });
+    tl.append(b);
+  });
+}
+const drawBench = debounce(async () => {
+  const s = current(), r = await render(s, { muted: bench.muted });
+  drawWave($("b-wave"), r);
+  drawSpec($("b-spec"), r);
+  $("b-wave").setAttribute("aria-label", `Waveform of ${s.name || bench.id}, ${sig(r.len, 3)} seconds long`);
+  $("b-spec").setAttribute("aria-label", `Spectrogram of ${s.name || bench.id}: ${s.layers.map(describeLayer).join("; ")}`);
+}, 150);
+redraws.push(() => drawBench());
+
+// a change to a number: save, then redraw the pictures but leave the controls in place
+function changed() {
+  tidy(bench.group);
+  paintMeta();
+  paintTimeline();
+  fillPickLabels();
+  drawBench();
+}
+function fillPickLabels() {
+  const o = $("pick").querySelector(`option[value="${bench.group}/${bench.id}"]`);
+  if (!o) return;
+  const s = current();
+  o.textContent = (s.name || bench.id) + (isEdited(bench.group, bench.id) ? (isShipped(bench.group, bench.id) ? " (changed)" : " (new)") : "");
+}
+
+// ---------- The bench: layer cards ----------
+function layerCard(L, i) {
+  const s = current();
+  const card = document.createElement("article");
+  card.className = `layer ${L.kind}${bench.muted.has(i) ? " muted" : ""}`;
+  card.id = `layer-${i}`;
+  card.setAttribute("aria-labelledby", `layer-${i}-h`);
+  const head = document.createElement("header");
+  const h = document.createElement("h3");
+  h.id = `layer-${i}-h`;
+  h.textContent = `Layer ${i + 1}`;
+  head.append(h);
+
+  // which ingredient, and its shape or filter
+  const kind = document.createElement("div");
+  kind.className = "seg";
+  kind.setAttribute("role", "group");
+  kind.setAttribute("aria-label", `Layer ${i + 1} is a`);
+  segmented(kind, [["tone", "Tone"], ["noise", "Noise"]], (k) => L.kind === k, (k) => {
+    if (L.kind === k) return;
+    const E = editable().layers[i];
+    E.kind = k;
+    if (k === "tone") { delete E.filter; delete E.q; E.wave = "sine"; } else { delete E.wave; E.filter = "bandpass"; E.q = 1; }
+    rebuild();
+  });
+  const sel = document.createElement("select");
+  sel.setAttribute("aria-label", L.kind === "tone" ? `Layer ${i + 1} wave shape` : `Layer ${i + 1} filter`);
+  for (const v of L.kind === "tone" ? WAVES : FILTERS) {
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = cap(v);
+    sel.append(o);
+  }
+  sel.value = L.kind === "tone" ? L.wave || "sine" : L.filter || "bandpass";
+  sel.addEventListener("change", () => { editable().layers[i][L.kind === "tone" ? "wave" : "filter"] = sel.value; changed(); });
+
+  const mute = document.createElement("button");
+  mute.type = "button";
+  mute.className = "small";
+  mute.textContent = "Mute";
+  mute.setAttribute("aria-pressed", bench.muted.has(i));
+  mute.setAttribute("aria-label", `Mute layer ${i + 1}`);
+  mute.addEventListener("click", () => {
+    bench.muted.has(i) ? bench.muted.delete(i) : bench.muted.add(i);
+    mute.setAttribute("aria-pressed", bench.muted.has(i));
+    card.classList.toggle("muted", bench.muted.has(i));
+    paintTimeline();
+    drawBench();
+  });
+  const dup = document.createElement("button");
+  dup.type = "button";
+  dup.className = "small";
+  dup.textContent = "Copy";
+  dup.setAttribute("aria-label", `Copy layer ${i + 1}`);
+  dup.addEventListener("click", () => { editable().layers.splice(i + 1, 0, clone(L)); bench.muted.clear(); rebuild(i + 1); });
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "small";
+  del.textContent = "Remove";
+  del.setAttribute("aria-label", `Remove layer ${i + 1}`);
+  del.disabled = s.layers.length < 2;
+  del.addEventListener("click", () => { editable().layers.splice(i, 1); bench.muted.clear(); rebuild(Math.max(0, i - 1)); });
+  head.append(kind, sel, mute, dup, del);
+  card.append(head);
+
+  const ctls = document.createElement("div");
+  ctls.className = "ctls";
+  // every control reads the live layer and writes through editable(), so the first change copies the group
+  const live = () => current().layers[i];
+  const field = (key, opts) => control(ctls, {
+    ...opts,
+    get: () => live()[key] ?? opts.fallback,
+    set: (v) => {
+      const E = editable().layers[i];
+      if (opts.unset && opts.unset(v)) delete E[key]; else E[key] = v;
+      if (key === "dur" && E.attack > v * 0.95) E.attack = sig(v * 0.95, 3);
+      changed();
+      refresh();
+    },
+  });
+  const isTone = L.kind === "tone";
+  const parts = [
+    field("freq", { label: isTone ? "Pitch" : "Cutoff", min: 20, max: 20000, log: true, unit: "Hz" }),
+    field("to", { label: isTone ? "Glide the pitch to" : "Glide the cutoff to", min: 20, max: 20000, log: true, unit: "Hz", fallback: L.freq }),
+  ];
+  if (!isTone) parts.push(field("q", { label: "Q", min: 0.1, max: 30, log: true, fallback: 1 }));
+  parts.push(
+    field("gain", { label: "Gain", min: 0.001, max: 2, log: true }),
+    field("attack", { label: "Attack", min: 0.001, max: 2, log: true, unit: "s", fallback: 0.003 }),
+    field("dur", { label: "Length", min: 0.005, max: 4, log: true, unit: "s" }),
+    field("at", { label: "Start at", min: 0, max: 4, unit: "s", fallback: 0, unset: (v) => v === 0 }),
+    field("vary", { label: "Vary", min: 0, max: 0.5, fallback: 0, unset: (v) => v === 0 }),
+    field("repeat", { label: "Repeat", min: 1, max: 32, int: true, fallback: 1, unset: (v) => v === 1 }),
+    field("spread", { label: "Spread", min: 0, max: 4, unit: "s", fallback: 0, unset: (v) => v === 0 }),
+  );
+  // gliding is a switch: off drops the to key, so the layer holds still
+  const glideBtn = document.createElement("button");
+  glideBtn.type = "button";
+  glideBtn.className = "small";
+  glideBtn.textContent = "Glide";
+  glideBtn.setAttribute("aria-label", `Layer ${i + 1} glides`);
+  glideBtn.addEventListener("click", () => {
+    const E = editable().layers[i];
+    if (E.to) delete E.to; else E.to = sig(E.freq * (isTone ? 0.5 : 2), 4);
+    changed();
+    refresh();
+  });
+  parts[1].el.querySelector("label").after(glideBtn);
+  parts[1].el.querySelector("label").style.gridColumn = "1";
+  const refresh = () => {
+    const now = live();
+    parts.forEach((p) => p.update());
+    glideBtn.setAttribute("aria-pressed", !!now.to);
+    parts[1].el.classList.toggle("off", !now.to);
+    parts[parts.length - 1].el.classList.toggle("off", !(now.repeat > 1));
+  };
+  refresh();
+  card.append(ctls);
+  return card;
+}
+function rebuild(focusLayer) {
+  changed();
+  const host = $("b-layers");
+  host.replaceChildren(...current().layers.map(layerCard));
+  if (focusLayer != null) $(`layer-${focusLayer}`)?.querySelector("button")?.focus({ preventScroll: false });
+}
+function select(group, id, announce) {
+  bench.group = group;
+  bench.id = id;
+  bench.muted.clear();
+  fillPick();
+  rebuild();
+  try { history.replaceState(null, "", `#sound=${group}/${id}`); } catch (e) { /* sandboxed */ }
+  if (announce) $("b-cap").textContent = announce;
+}
+
+// ---------- The bench: wiring ----------
+$("pick").addEventListener("change", () => {
+  const [g, id] = $("pick").value.split("/");
+  select(g, id);
+});
+const playBench = () => {
+  playNow(current(), { muted: bench.muted }, $("b-head"));
+  $("b-cap").textContent = `Playing ${current().name || bench.id}${bench.muted.size ? `, with ${bench.muted.size === 1 ? "one layer" : bench.muted.size + " layers"} muted` : ""}.`;
+};
+$("b-play").addEventListener("click", playBench);
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  if (e.key === "p" || e.key === "P") { e.preventDefault(); playBench(); }
+});
+
+// nudge every number a little, the way you'd turn every knob a hair
+$("b-mutate").addEventListener("click", () => {
+  const S = editable(), wob = (v, f) => v * Math.exp((Math.random() * 2 - 1) * f);
+  for (const L of S.layers) {
+    L.freq = sig(clamp(wob(L.freq, 0.15), 20, 20000));
+    if (L.to) L.to = sig(clamp(wob(L.to, 0.15), 20, 20000));
+    if (L.q) L.q = sig(clamp(wob(L.q, 0.2), 0.1, 30));
+    L.gain = sig(clamp(wob(L.gain, 0.15), 0.001, 2));
+    L.dur = sig(clamp(wob(L.dur, 0.15), 0.005, 4));
+    L.attack = sig(clamp(wob(L.attack || 0.003, 0.2), 0.001, L.dur * 0.95));
+  }
+  rebuild();
+  playBench();
+  $("b-cap").textContent = "Mutated: every pitch, gain, and time moved a little. Undo my changes puts it back.";
+});
+
+const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "sound";
+function freshId(base) {
+  const taken = soundsOf(bench.group);
+  let id = slug(base), n = 2;
+  while (id in taken) id = `${slug(base)}-${n++}`;
+  return id;
+}
+function addSound(sound) {
+  if (!edits[bench.group]) edits[bench.group] = clone(groupById(bench.group).sounds);
+  const id = freshId(sound.name);
+  edits[bench.group][id] = sound;
+  select(bench.group, id);
+  return id;
+}
+// a new sound from nothing, in the spirit of sfxr's randomize button
+function randomLayer(kind) {
+  const r = (lo, hi) => lo * (hi / lo) ** Math.random();
+  const dur = sig(r(0.04, 0.7), 3);
+  const L = kind === "tone"
+    ? { kind, wave: WAVES[Math.floor(Math.random() * 4)], freq: Math.round(r(60, 2400)) }
+    : { kind, filter: FILTERS[Math.floor(Math.random() * 3)], freq: Math.round(r(150, 7000)), q: sig(r(0.5, 6), 2) };
+  if (Math.random() < 0.7) L.to = Math.round(clamp(L.freq * r(0.2, 3), 20, 20000));
+  L.gain = sig(kind === "tone" ? r(0.08, 0.4) : r(0.3, 1), 2);
+  L.attack = Math.random() < 0.75 ? 0.003 : sig(dur * r(0.1, 0.6), 2);
+  L.dur = dur;
+  if (Math.random() < 0.2) L.at = sig(r(0.01, 0.15), 2);
+  return L;
+}
+$("b-random").addEventListener("click", () => {
+  const layers = [randomLayer(Math.random() < 0.55 ? "tone" : "noise")];
+  const more = Math.random();
+  if (more < 0.6) layers.push(randomLayer(layers[0].kind === "tone" ? "noise" : "tone"));
+  if (more < 0.2) layers.push(randomLayer(Math.random() < 0.5 ? "tone" : "noise"));
+  const n = Object.keys(soundsOf(bench.group)).filter((k) => k.startsWith("random")).length + 1;
+  addSound({ name: `Random ${n}`, use: "A sound from the Random button", layers });
+  playBench();
+  $("b-cap").textContent = `Made ${current().name}, with ${plural(layers.length, "layer")}. It's a new sound in the ${groupById(bench.group).name} set.`;
+});
+const plural = (n, w) => `${n} ${n === 1 ? w : w + "s"}`;
+
+$("b-add-tone").addEventListener("click", () => {
+  editable().layers.push({ kind: "tone", wave: "sine", freq: 440, gain: 0.2, attack: 0.003, dur: 0.2 });
+  rebuild(current().layers.length - 1);
+});
+$("b-add-noise").addEventListener("click", () => {
+  editable().layers.push({ kind: "noise", filter: "bandpass", freq: 1200, q: 1, gain: 0.5, attack: 0.003, dur: 0.2 });
+  rebuild(current().layers.length - 1);
+});
+$("b-name").addEventListener("input", () => { editable().name = $("b-name").value.slice(0, 80); changed(); });
+$("b-usefield").addEventListener("input", () => { editable().use = $("b-usefield").value.slice(0, 160); changed(); });
+$("b-reset").addEventListener("click", () => {
+  edits[bench.group][bench.id] = clone(groupById(bench.group).sounds[bench.id]);
+  tidy(bench.group);
+  select(bench.group, bench.id, `${current().name} is back to how it shipped.`);
+  $("b-play").focus();
+});
+$("b-dup").addEventListener("click", () => {
+  const s = clone(current());
+  s.name = `${s.name || bench.id} copy`;
+  addSound(s);
+  $("b-cap").textContent = `Made ${s.name}, a new sound in the ${groupById(bench.group).name} set.`;
+});
+$("b-delete").addEventListener("click", () => {
+  if (isShipped(bench.group, bench.id)) return;
+  const gone = current().name || bench.id;
+  delete edits[bench.group][bench.id];
+  tidy(bench.group);
+  select(bench.group, Object.keys(soundsOf(bench.group))[0], `Deleted ${gone}.`);
+  $("pick").focus();
+});
+$("b-reset-all").addEventListener("click", () => {
+  delete edits[bench.group];
+  saveEdits();
+  const id = bench.id in groupById(bench.group).sounds ? bench.id : Object.keys(groupById(bench.group).sounds)[0];
+  select(bench.group, id);
+  $("b-take-cap").textContent = `Every ${groupById(bench.group).name} sound is back to how it shipped.`;
+});
+
+// ---------- Export and import ----------
+const fileName = () => `${bench.group}-sounds.json`;
+$("b-copy").addEventListener("click", async () => {
+  const text = exportText(bench.group, soundsOf(bench.group));
+  try {
+    await navigator.clipboard.writeText(text);
+    $("b-take-cap").textContent = `Copied all ${plural(Object.keys(soundsOf(bench.group)).length, "sound")} in the ${groupById(bench.group).name} set.`;
+  } catch (e) {
+    // no clipboard access: put it in the box to copy by hand
+    $("b-import").value = text;
+    $("b-import").select();
+    $("b-take-cap").textContent = "Your browser wouldn't let the page copy, so the set is in the box below, selected and ready to copy.";
+  }
+});
+$("b-download").addEventListener("click", () => {
+  const blob = new Blob([exportText(bench.group, soundsOf(bench.group))], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName();
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  $("b-take-cap").textContent = `Saved ${fileName()}.`;
+});
+function load(text) {
+  let data;
+  try { data = JSON.parse(text); } catch (e) { $("b-take-cap").textContent = "That isn't an export: it doesn't read as JSON."; return; }
+  if (!data || data.format !== FORMAT) { $("b-take-cap").textContent = "That isn't a Sound Bench export."; return; }
+  const g = groupById(data.group);
+  if (!g) { $("b-take-cap").textContent = `That export is for "${data.group}", which the bench doesn't have.`; return; }
+  const sounds = cleanGroup(data.sounds);
+  if (!sounds) { $("b-take-cap").textContent = "That export has no sounds the bench can play."; return; }
+  edits[g.id] = sounds;
+  tidy(g.id);
+  const id = bench.group === g.id && bench.id in sounds ? bench.id : Object.keys(sounds)[0];
+  select(g.id, id);
+  $("b-take-cap").textContent = `Loaded ${plural(Object.keys(sounds).length, "sound")} into the ${g.name} set.`;
+}
+$("b-load").addEventListener("click", () => load($("b-import").value));
+$("b-file").addEventListener("change", async () => {
+  const f = $("b-file").files[0];
+  if (f) load(await f.text());
+  $("b-file").value = "";
+});
+
+// ---------- Start ----------
+(function boot() {
+  list5();
+  const m = /sound=([a-z0-9-]+)\/([a-z0-9-]+)/.exec(location.hash);
+  if (m && groupById(m[1]) && m[2] in soundsOf(m[1])) select(m[1], m[2]);
+  else select("hardpoint", "boom");
+  history.replaceState(null, "", location.pathname + location.search + (m ? location.hash : ""));
+  redraws.forEach((f) => f());
+})();
+</script>
+</body>
+</html>
