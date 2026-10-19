@@ -474,27 +474,28 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // Hardpoint's sounds, exactly as public/hardpoint/index.html has them
 const HARDPOINT_SOUNDS = {
   "crack-you": { "name": "Rifle crack", "use": "Each round from your Lanyard Rifle", "layers": [
-    { "kind": "noise", "filter": "bandpass", "freq": 1800, "q": 0.7, "gain": 0.7, "attack": 0.003, "dur": 0.08 },
-    { "kind": "tone", "wave": "square", "freq": 150, "to": 60, "gain": 0.12, "attack": 0.003, "dur": 0.06 }
+    { "kind": "noise", "filter": "bandpass", "freq": 1906, "q": 0.4106, "gain": 0.233, "attack": 0.002334, "dur": 0.0427 },
+    { "kind": "tone", "wave": "square", "freq": 158, "to": 108.6, "gain": 0.09306, "attack": 0.003665, "dur": 0.05059 }
   ] },
   "crack-foe": { "name": "Carbine crack", "use": "Each round from a Picket's carbine", "layers": [
-    { "kind": "noise", "filter": "bandpass", "freq": 2600, "q": 0.7, "gain": 0.7, "attack": 0.003, "dur": 0.08 },
-    { "kind": "tone", "wave": "square", "freq": 210, "to": 60, "gain": 0.12, "attack": 0.003, "dur": 0.06 }
+    { "kind": "noise", "filter": "bandpass", "freq": 72.8, "to": 4350, "q": 4.54, "gain": 0.277, "attack": 0.00173, "dur": 0.0359 },
+    { "kind": "tone", "wave": "square", "freq": 35, "to": 29.9, "gain": 0.203, "attack": 0.0016, "dur": 0.0392 }
   ] },
   "ping": { "name": "Ricochet ping", "use": "A round hitting, and turning sound on", "layers": [
-    { "kind": "tone", "wave": "triangle", "freq": 2700, "to": 1700, "gain": 0.1, "attack": 0.003, "dur": 0.07, "vary": 0.11 }
+    { "kind": "tone", "wave": "triangle", "freq": 3160, "to": 3030, "gain": 0.129, "attack": 0.003, "dur": 0.0828, "vary": 0.0635 }
   ] },
   "charge": { "name": "Lance charge", "use": "The Arc Lance charging", "layers": [
-    { "kind": "tone", "wave": "sawtooth", "freq": 160, "to": 900, "gain": 0.08, "attack": 0.208, "dur": 0.26 },
-    { "kind": "tone", "wave": "sine", "freq": 320, "to": 1800, "gain": 0.1, "attack": 0.208, "dur": 0.26 }
+    { "kind": "tone", "wave": "sawtooth", "freq": 160, "to": 1530, "gain": 0.08, "attack": 0.208, "dur": 0.26 },
+    { "kind": "tone", "wave": "sine", "freq": 320, "to": 2370, "gain": 0.1, "attack": 0.208, "dur": 0.26 },
+    { "kind": "noise", "filter": "bandpass", "freq": 5890, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.2, "at": 0.172 }
   ] },
   "beam": { "name": "Lance beam", "use": "The Arc Lance's beam, buzzing and crackling", "layers": [
-    { "kind": "tone", "wave": "sawtooth", "freq": 92, "gain": 0.06, "attack": 0.01, "dur": 0.32 },
-    { "kind": "tone", "wave": "square", "freq": 95.5, "gain": 0.03, "attack": 0.01, "dur": 0.32 },
-    { "kind": "noise", "filter": "highpass", "freq": 3500, "q": 1, "gain": 0.25, "attack": 0.003, "dur": 0.03, "repeat": 7, "spread": 0.32 }
+    { "kind": "tone", "wave": "square", "freq": 50.5, "to": 36, "gain": 0.06, "attack": 0.01, "dur": 0.324 },
+    { "kind": "tone", "wave": "sawtooth", "freq": 101, "gain": 0.03, "attack": 0.00146, "dur": 0.32 },
+    { "kind": "noise", "filter": "highpass", "freq": 412, "q": 0.56, "gain": 0.0198, "attack": 0.00117, "dur": 0.00982, "vary": 0.0325, "repeat": 6, "spread": 0.172 }
   ] },
   "zap": { "name": "Lance zap", "use": "The Arc Lance's beam hitting", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 1400, "to": 250, "gain": 0.12, "attack": 0.003, "dur": 0.15 }
+    { "kind": "noise", "filter": "bandpass", "freq": 1200, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.2 }
   ] },
   "thump": { "name": "Mortar thump", "use": "A Lobber firing its mortar", "layers": [
     { "kind": "tone", "wave": "sine", "freq": 150, "to": 45, "gain": 0.5, "attack": 0.003, "dur": 0.28 },
@@ -508,28 +509,28 @@ const HARDPOINT_SOUNDS = {
     { "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.9, "attack": 0.003, "dur": 0.5 }
   ] },
   "boom-small": { "name": "Shell boom, wide", "use": "A mortar shell landing wide of its target", "layers": [
-    { "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 0.7, "attack": 0.005, "dur": 0.9 },
-    { "kind": "tone", "wave": "sine", "freq": 80, "to": 30, "gain": 0.6, "attack": 0.003, "dur": 0.5 }
+    { "kind": "noise", "filter": "lowpass", "freq": 562, "to": 120, "q": 1, "gain": 0.0461, "attack": 0.005, "dur": 0.9 },
+    { "kind": "tone", "wave": "sine", "freq": 40.7, "to": 30, "gain": 0.198, "attack": 0.003, "dur": 0.5 }
   ] },
   "pop": { "name": "Canister pop", "use": "Your Smoke Launcher firing", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 420, "to": 130, "gain": 0.3, "attack": 0.003, "dur": 0.09 },
+    { "kind": "tone", "wave": "sine", "freq": 121, "to": 130, "gain": 0.3, "attack": 0.003, "dur": 0.09 },
     { "kind": "noise", "filter": "bandpass", "freq": 900, "q": 1, "gain": 0.2, "attack": 0.003, "dur": 0.06 }
   ] },
   "hiss": { "name": "Smoke hiss", "use": "A smoke cloud spreading", "layers": [
     { "kind": "noise", "filter": "highpass", "freq": 2500, "q": 1, "gain": 0.12, "attack": 0.06, "dur": 1.1 }
   ] },
   "whoosh": { "name": "Swing", "use": "A cleaver or claw swing", "layers": [
-    { "kind": "noise", "filter": "bandpass", "freq": 450, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
+    { "kind": "noise", "filter": "bandpass", "freq": 1490, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
   ] },
   "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul swing", "layers": [
-    { "kind": "noise", "filter": "bandpass", "freq": 250, "to": 900, "q": 1.4, "gain": 1.6, "attack": 0.07, "dur": 0.22 }
+    { "kind": "noise", "filter": "bandpass", "freq": 76.4, "to": 900, "q": 1.4, "gain": 1.6, "attack": 0.07, "dur": 0.22 }
   ] },
   "clang": { "name": "Cleaver clang", "use": "Your Breach Cleaver hitting", "layers": [
-    { "kind": "tone", "wave": "triangle", "freq": 523, "gain": 0.09, "attack": 0.003, "dur": 0.5 },
-    { "kind": "tone", "wave": "triangle", "freq": 1247, "gain": 0.06, "attack": 0.003, "dur": 0.38 },
-    { "kind": "tone", "wave": "triangle", "freq": 1813, "gain": 0.05, "attack": 0.003, "dur": 0.3 },
-    { "kind": "tone", "wave": "triangle", "freq": 2639, "gain": 0.03, "attack": 0.003, "dur": 0.22 },
-    { "kind": "noise", "filter": "highpass", "freq": 2000, "q": 1, "gain": 0.3, "attack": 0.003, "dur": 0.05 }
+    { "kind": "tone", "wave": "triangle", "freq": 93.3, "to": 112, "gain": 0.09, "attack": 0.001, "dur": 0.5 },
+    { "kind": "tone", "wave": "triangle", "freq": 37.8, "to": 25.5, "gain": 0.06, "attack": 0.003, "dur": 0.38 },
+    { "kind": "tone", "wave": "triangle", "freq": 404, "to": 65.6, "gain": 0.05, "attack": 0.003, "dur": 0.3, "repeat": 5, "spread": 0.08 },
+    { "kind": "tone", "wave": "triangle", "freq": 38.8, "to": 2100, "gain": 0.03, "attack": 0.003, "dur": 0.22 },
+    { "kind": "noise", "filter": "highpass", "freq": 20, "q": 0.1, "gain": 0.3, "attack": 0.001, "dur": 0.169 }
   ] },
   "scratch": { "name": "Claw scratch", "use": "Each rake of a Hound's claws", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 3800, "to": 1600, "q": 5, "gain": 0.9, "attack": 0.003, "dur": 0.09 }
