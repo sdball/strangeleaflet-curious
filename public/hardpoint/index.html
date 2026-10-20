@@ -550,7 +550,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
   <section class="sheet" id="hangar" aria-labelledby="hangar-h" hidden>
     <div class="stick"><button type="button" data-menu="back">Back</button></div>
     <h1 id="hangar-h">Hangar</h1>
-    <p class="lede">Build pilots and mechs here, then pick a pair to field in the briefing before each battle. Any pilot can fly any mech. A battle already under way keeps the pilot and mech it started with.</p>
+    <p class="lede">Build pilots and mechs here, then pick a pair in the briefing before each battle. The pilot and mech marked Selected are the ones the next battle uses. Any pilot can fly any mech. A battle already under way keeps the pilot and mech it started with.</p>
     <h2 id="pilots-h">Pilots</h2>
     <ul class="roster" id="pilotlist" aria-labelledby="pilots-h"></ul>
     <button type="button" data-menu="new-pilot">New pilot</button>
@@ -3093,13 +3093,13 @@ function mechSummary(m) {
   return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}`;
 }
 function rosterItem(kind, x, title, sub) {
-  const fielded = roster.active[kind] === x.id;
+  const selected = roster.active[kind] === x.id;
   const list = kind === "pilot" ? roster.pilots : roster.mechs;
   const confirming = pendingDelete === `${kind}:${x.id}`;
   const acts = confirming
     ? `<button type="button" class="warn" data-menu="del-${kind}" data-id="${x.id}">Delete ${escapeHtml(title)}</button><button type="button" data-menu="keep" data-id="${x.id}">Keep</button>`
     : `<button type="button" data-menu="edit-${kind}" data-id="${x.id}">Edit</button><button type="button" data-menu="ask-del-${kind}" data-id="${x.id}" ${list.length > 1 ? "" : `disabled title="You need at least one ${kind}"`}>Delete</button>`;
-  return `<li><div class="who"><b>${escapeHtml(title)}</b>${fielded ? `<span class="tagged">Fielded</span>` : ""}<span>${escapeHtml(sub)}</span></div><div class="acts">${acts}</div></li>`;
+  return `<li><div class="who"><b>${escapeHtml(title)}</b>${selected ? `<span class="tagged">Selected</span>` : ""}<span>${escapeHtml(sub)}</span></div><div class="acts">${acts}</div></li>`;
 }
 function paintHangar() {
   $("pilotlist").innerHTML = roster.pilots.map((p) => rosterItem("pilot", p, p.callsign, pilotSummary(p))).join("");
