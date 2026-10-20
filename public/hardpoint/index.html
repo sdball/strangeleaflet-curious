@@ -251,6 +251,8 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .can-trail { stroke: var(--smoke); stroke-opacity: .5; }
 .shell-trail.still, .can-trail.still { stroke-dasharray: 4 4; stroke-dashoffset: 0; }
 .shell-shell { fill: #1A0C08; stroke: var(--foe); stroke-width: 2; }
+.shell-trail.you { stroke: var(--you); }
+.shell-shell.you { fill: #08222A; stroke: var(--you); }
 .can-shell { fill: var(--smoke); stroke: #fff; stroke-width: 1.2; }
 .shadow { fill: #000; }
 .blast-fire { fill: var(--amber); }
@@ -268,6 +270,7 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .pop.hurt { fill: var(--foe); }
 .pop.dealt { fill: var(--amber); }
 .pop.miss { fill: var(--muted); }
+.pop.healed { fill: var(--good); }
 @keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-18px); opacity: 0; } }
 .pop { animation: rise .9s ease-out forwards; }
 
@@ -310,6 +313,8 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 }
 .dialog[hidden] { display: none; }
 .dialog.low { top: auto; bottom: 8px; transform: translateX(-50%); }
+/* a phone's map is too short for the briefing, so it takes the whole screen */
+@media (max-width: 699px) { .dialog.brief { position: fixed; max-height: calc(100% - 16px - var(--safe-t) - var(--safe-b)); } }
 .dialog h2 { font: 700 1.4rem/1.1 var(--display); letter-spacing: .04em; margin: 0 0 .4rem; }
 .dialog .eyebrow { font: 600 .7rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 .15rem; }
 .dialog p { margin: 0 0 .6rem; font-size: .92rem; }
@@ -422,6 +427,59 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .sheet li { margin-bottom: .6rem; }
 .sheet .lede { color: var(--muted); }
 .sheet .stick { position: sticky; top: 0; padding: .5rem 0; background: rgba(6, 11, 14, .92); z-index: 1; }
+.sheet code { font: 500 .9em var(--mono); }
+
+/* ---------- Hangar ---------- */
+.btnrow { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0; }
+.note { color: var(--muted); font-size: .9rem; min-height: 1.4em; }
+.note.bad { color: var(--foe); }
+.note.good { color: var(--good); }
+.roster { list-style: none; padding: 0 !important; margin: 0 0 .7rem; display: grid; gap: .5rem; }
+.roster li { margin: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem .8rem; padding: .6rem .75rem; background: var(--panel); border: 1px solid var(--edge); border-radius: 8px; }
+.roster .who { min-width: 0; flex: 1 1 14rem; }
+.roster .who b { font: 600 1.05rem var(--display); letter-spacing: .03em; overflow-wrap: anywhere; }
+.roster .who span { display: block; font: 400 .76rem/1.45 var(--mono); color: var(--muted); }
+.roster .who .tagged { display: inline-block; font: 600 .66rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--you); border: 1px solid var(--you); border-radius: 3px; padding: .05rem .3rem; margin-left: .4rem; vertical-align: .15em; }
+.roster .acts { display: flex; gap: .4rem; }
+.field { display: block; font: 600 .72rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 1.2rem 0 .35rem; }
+input[type=text], textarea, select {
+  font: 400 16px/1.3 var(--sans);
+  color: var(--ink);
+  background: var(--panel-deep);
+  border: 1px solid var(--btn-edge);
+  border-radius: 6px;
+  min-height: 44px;
+  padding: .5rem .65rem;
+  width: 100%;
+  max-width: 100%;
+}
+textarea { font-family: var(--mono); font-size: 16px; resize: vertical; }
+select { cursor: pointer; }
+input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { border-color: var(--amber); }
+.stat { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .3rem .8rem; align-items: center; padding: .55rem 0; border-top: 1px dashed var(--edge); }
+.stat b { font: 600 1rem var(--display); letter-spacing: .03em; }
+.stat span { display: block; color: var(--muted); font-size: .85rem; }
+.stepper { display: flex; align-items: center; gap: .35rem; }
+.stepper button { width: 44px; min-height: 44px; padding: 0; font-size: 1.2rem; }
+.stepper output { font: 700 1.3rem var(--display); min-width: 1.4em; text-align: center; }
+.left { font: 500 .85rem var(--mono); color: var(--amber); margin: .3rem 0 .4rem; }
+.frames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+@media (max-width: 420px) { .frames { grid-template-columns: minmax(0, 1fr); } }
+.frames button { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: .2rem; padding: .6rem .75rem; height: 100%; }
+.frames button small { font: 400 .72rem/1.45 var(--mono); color: var(--muted); letter-spacing: 0; }
+.frames button[aria-pressed="true"] small { color: inherit; opacity: .8; }
+.mount { padding: .55rem 0; border-top: 1px dashed var(--edge); }
+.mount label { display: block; font: 600 .72rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .3rem; }
+.mount .d { display: block; font: 400 .76rem/1.45 var(--mono); color: var(--muted); margin-top: .3rem; min-height: 1.1em; }
+.weight { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .6rem; align-items: center; font: 500 .85rem var(--mono); margin: .4rem 0; }
+.weight .bar-meter { height: 12px; }
+.weight.over { color: var(--foe); }
+.frame-facts { font: 400 .8rem/1.6 var(--mono); color: var(--muted); margin: .5rem 0 0; }
+.frame-facts b { color: var(--ink); font-weight: 600; }
+/* the crew picker in the briefing */
+.crew { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: 0 0 .5rem; }
+.crew label { font: 600 .68rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: grid; gap: .2rem; }
+.dialog .crewnote { font: 400 .76rem/1.45 var(--mono); color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
@@ -483,11 +541,45 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
     <div class="menu" role="group" aria-label="Main menu">
       <button type="button" data-menu="continue" id="continuebtn">Continue<small id="continuenote"></small></button>
       <button type="button" class="go" data-menu="new">New Game<small>Get a briefing on a fresh battlefield</small></button>
-      <button type="button" data-menu="pilot" disabled>Create Pilot<small>Opens with the hangar, coming next</small></button>
-      <button type="button" data-menu="mech" disabled>Create Mech<small>Opens with the hangar, coming next</small></button>
+      <button type="button" data-menu="hangar">Hangar<small>Build pilots and mechs, back them up, share them</small></button>
       <button type="button" data-menu="help">Instructions<small>How turns, cover, heat, and damage work</small></button>
     </div>
     <p class="legal">Hardpoint is inspired by LANCER. LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</p><!-- tic-ok -->
+  </section>
+
+  <section class="sheet" id="hangar" aria-labelledby="hangar-h" hidden>
+    <div class="stick"><button type="button" data-menu="back">Back</button></div>
+    <h1 id="hangar-h">Hangar</h1>
+    <p class="lede">Build pilots and mechs here, then pick a pair to field in the briefing before each battle. Any pilot can fly any mech. A battle already under way keeps the pilot and mech it started with.</p>
+    <h2 id="pilots-h">Pilots</h2>
+    <ul class="roster" id="pilotlist" aria-labelledby="pilots-h"></ul>
+    <button type="button" data-menu="new-pilot">New pilot</button>
+    <h2 id="mechs-h">Mechs</h2>
+    <ul class="roster" id="mechlist" aria-labelledby="mechs-h"></ul>
+    <button type="button" data-menu="new-mech">New mech</button>
+    <h2 id="share-h">Back up and share</h2>
+    <p>Export saves every pilot and mech to a <code>.json</code> file. Import adds the pilots and mechs from one of those files, or from its text pasted below, next to the ones you already have.</p>
+    <div class="btnrow">
+      <button type="button" data-menu="export">Export roster</button>
+      <button type="button" data-menu="import-file">Import a file</button>
+      <input type="file" id="importfile" accept=".json,application/json" hidden>
+    </div>
+    <label class="field" for="importtext">Or paste exported text</label>
+    <textarea id="importtext" rows="4" spellcheck="false" autocomplete="off"></textarea>
+    <div class="btnrow"><button type="button" data-menu="import-text">Import pasted text</button></div>
+    <p class="note" id="importnote" aria-live="polite"></p>
+  </section>
+
+  <section class="sheet" id="pilotedit" aria-labelledby="pilot-h" hidden>
+    <div class="stick"><button type="button" data-menu="cancel-edit">Cancel</button></div>
+    <h1 id="pilot-h">New pilot</h1>
+    <div id="pilotform"></div>
+  </section>
+
+  <section class="sheet" id="mechedit" aria-labelledby="mech-h" hidden>
+    <div class="stick"><button type="button" data-menu="cancel-edit">Cancel</button></div>
+    <h1 id="mech-h">New mech</h1>
+    <div id="mechform"></div>
   </section>
 
   <section class="sheet" id="help" aria-labelledby="help-h" hidden>
@@ -498,7 +590,7 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 
     <h2 id="turn-h">A turn</h2>
     <ul>
-      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Smoke. Or spend both on one full action: Barrage (fire two different weapons) or Stabilize.</li>
+      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Systems (fire smoke, send a repair drone, and so on). Or spend both on one full action: Barrage (fire two different weapons) or Stabilize.</li>
       <li><b>Overcharge and your core power are free.</b> Overcharge buys an extra quick action for heat. Your core power works once per battle.</li>
       <li><b>Ending your turn early asks first.</b> If you still have movement or actions left, you'll be asked to confirm.</li>
       <li><b>Then every hostile takes a turn.</b> Watch the log, or the bar under the map, to see what they did.</li>
@@ -526,15 +618,16 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
     <h2 id="close-h">Getting close</h2>
     <ul>
       <li><b>Moving next to a hostile engages you both.</b> Your movement stops there, and ranged attacks made while engaged take +1 difficulty.</li>
-      <li><b>Leaving costs a swing.</b> If you start moving while inside a hostile's threat, it gets a free attack first (overwatch). Your cleaver does the same to them.</li>
+      <li><b>Leaving costs a swing.</b> If you start moving while inside a hostile's threat, it gets a free attack first (overwatch). A melee weapon on your mech does the same to them.</li>
+      <li><b>Knockback shoves.</b> A hit from a weapon with Knockback pushes its target straight away from the attacker, unless something is in the way. If it happens as you start a move, the move is called off, but you keep your movement.</li>
     </ul>
 
     <h2 id="damage-h">Damage and heat</h2>
     <ul>
-      <li><b>HP is only the first layer.</b> At 0 HP the Halberd loses a point of structure and its HP refills. Then you roll a structure check: a d6 for each point lost so far, keeping the lowest. A 5 or 6 leaves you impaired for a turn, 2 to 4 wrecks a weapon or system, and a 1 can stun or destroy you. Lose all four points and the mech is done.</li>
-      <li><b>Heat is the price of pushing.</b> Overcharge costs 1 heat, then 1d3, 1d6, and 1d6+4 for each later use in the same battle. The Arc Lance adds 2 heat per shot. Go past your heat cap and you lose a point of stress and roll an overheat check the same way.</li>
+      <li><b>HP is only the first layer.</b> At 0 HP your mech loses a point of structure and its HP refills. Then you roll a structure check: a d6 for each point lost so far, keeping the lowest. A 5 or 6 leaves you impaired for a turn, 2 to 4 wrecks a weapon or system, and a 1 can stun or destroy you. Lose all four points and the mech is done.</li>
+      <li><b>Heat is the price of pushing.</b> Overcharge costs 1 heat, then 1d3, 1d6, and 1d6+4 for each later use in the same battle. Some weapons add heat with every shot, like the Arc Lance's 2. Go past your heat cap and you lose a point of stress and roll an overheat check the same way.</li>
       <li><b>Stabilize to recover.</b> It's a full action: spend a repair to refill your HP, or vent all your heat.</li>
-      <li><b>Brace when a hit would cost structure.</b> It's a reaction: you take half damage, and attacks against you take +1 difficulty until the end of your next turn. The cost is that next turn you get only one quick action, though the Halberd's Steady Footing still lets you move.</li>
+      <li><b>Brace when a hit would cost structure.</b> It's a reaction: you take half damage, and attacks against you take +1 difficulty until the end of your next turn. The cost is that next turn you get only one quick action and can't move, though a Halberd's Steady Footing still lets it move.</li>
     </ul>
 
     <h2 id="hostile-h">The hostiles</h2>
@@ -545,9 +638,21 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
       <li><b>Lobbers shoot over walls.</b> Their mortars arc over anything, so cover doesn't help against them. A Lobber has to spend a turn reloading after each shot, and it can't fire at a target right next to it.</li>
     </ul>
 
+    <h2 id="hangar-help-h">The hangar</h2>
+    <ul>
+      <li><b>A pilot and a mech go into every battle.</b> Build them in the Hangar from the main menu, then pick the pair in the briefing. Any pilot can fly any mech. Wren and a stock Halberd are there from the start.</li>
+      <li><b>Pilots spend 2 points.</b> Hull gives +2 HP a point and a repair for every 2. Agility gives +1 Evasion a point and +1 Speed for every 2. Systems gives +1 charge a point to every system that uses charges. Engineering gives +1 heat cap a point. No stat can take more than 2.</li>
+      <li><b>The Halberd is the striker.</b> It's balanced, can't be knocked back, and still moves after bracing. Its core power, Hunting Pattern, gives +1 accuracy and +2 damage.</li>
+      <li><b>The Rampart is the defender.</b> It has 16 HP but moves only 3. Cover takes another point off each ranged hit against it, and its core power, Aegis, puts up a 10-point shield.</li>
+      <li><b>The Kestrel is the skirmisher.</b> It has Speed 6 and Evasion 11 but only 10 HP and no armor. Hostiles never get overwatch on it, and its core power, Afterburn, gives free Boosts and +3 Evasion.</li>
+      <li><b>The Lantern is the artillery.</b> It sees 15 hexes and gets a free Lock On every turn. Its core power, Flare Net, locks on to every hostile in sight and lets your attacks ignore cover.</li>
+      <li><b>Mounts take gear of their size.</b> A main mount takes a main weapon, a heavy mount takes a heavy or a main weapon, and a system mount takes a system. Everything together has to fit the frame's weight capacity, and each system fits only once.</li>
+      <li><b>Export to keep a copy.</b> The Hangar saves your pilots and mechs to a file you can import later, on another device, or send to a friend. Importing adds to what you have and replaces nothing.</li>
+    </ul>
+
     <h2 id="credit-h">Credits</h2>
     <ul>
-      <li>Hardpoint is inspired by <i>LANCER</i>, the mech roleplaying game by Tom Parkinson-Morgan and Miguel Lopez, published by <a href="https://massifpress.com/">Massif Press</a>. Thanks to Massif Press for the Lancer system. The rules here are a small, simplified slice of it: pilot stats and grit, structure and stress checks, heat, accuracy and difficulty dice, cover, overwatch, and bracing. The frame, weapons, hostiles, and all of the text here are written for Hardpoint.</li>
+      <li>Hardpoint is inspired by <i>LANCER</i>, the mech roleplaying game by Tom Parkinson-Morgan and Miguel Lopez, published by <a href="https://massifpress.com/">Massif Press</a>. Thanks to Massif Press for the Lancer system. The rules here are a small, simplified slice of it: pilot stats and grit, structure and stress checks, heat, accuracy and difficulty dice, cover, overwatch, and bracing. The frames, gear, hostiles, and all of the text here are written for Hardpoint.</li>
       <li>LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</li><!-- tic-ok -->
       <li>A battlefield's link names its site and threat level, so you can send someone the same fight.</li>
     </ul>
@@ -644,17 +749,73 @@ const T_OPEN = 0, T_ROUGH = 1, T_SCRUB = 2, T_BARRICADE = 3, T_WALL = 4;
 const TERRAIN_NAME = ["open ground", "rough ground", "scrub", "barricade", "wall"];
 const passable = (t) => t <= T_SCRUB;
 
-const PILOT = { callsign: "Wren", grit: 1, hull: 1, agility: 1, systems: 0, engineering: 0 };
-const FRAME = {
-  name: "Halberd", line: "line frame, striker",
-  hp: 12, armor: 1, evasion: 8, speed: 4, heatCap: 6, repairs: 4, sensors: 10, structure: 4, stress: 4,
-  gear: ["rifle", "cleaver", "lance", "smoke"],
+// a pilot spreads a few points across four stats, no more than STAT_MAX in any one
+const GRIT = 1, PILOT_POINTS = 2, STAT_MAX = 2;
+const STATS = [
+  { key: "hull", letter: "H", name: "Hull", does: "+2 HP per point, and +1 repair for every 2 points" },
+  { key: "agility", letter: "A", name: "Agility", does: "+1 Evasion per point, and +1 Speed for every 2 points" },
+  { key: "systems", letter: "S", name: "Systems", does: "+1 charge per point on every system that uses charges" },
+  { key: "engineering", letter: "E", name: "Engineering", does: "+1 heat cap per point" },
+];
+
+// a frame's mounts take gear of their size, and a main weapon also fits a heavy mount.
+// all the gear together can't weigh more than the frame's capacity
+const MOUNT_NAME = { main: "Main", heavy: "Heavy", system: "System" };
+const fits = (mount, g) => g.mount === mount || (mount === "heavy" && g.mount === "main");
+const FRAMES = {
+  halberd: {
+    name: "Halberd", role: "striker", blurb: "A balanced line frame that hits hard up close and far off.",
+    hp: 12, armor: 1, evasion: 8, speed: 4, heatCap: 6, repairs: 4, sensors: 10, structure: 4, stress: 4,
+    capacity: 8, mounts: ["main", "main", "heavy", "system"], stock: ["rifle", "cleaver", "lance", "smoke"],
+    trait: "steady", core: "hunt",
+  },
+  rampart: {
+    name: "Rampart", role: "defender", blurb: "Slow and heavily plated. It holds ground nothing else can.",
+    hp: 16, armor: 1, evasion: 6, speed: 3, heatCap: 6, repairs: 5, sensors: 10, structure: 4, stress: 4,
+    capacity: 9, mounts: ["main", "heavy", "system", "system"], stock: ["scatter", "driver", "smoke", "drone"],
+    trait: "bulkhead", core: "aegis",
+  },
+  kestrel: {
+    name: "Kestrel", role: "skirmisher", blurb: "Fast and hard to pin down, with almost nothing to spare.",
+    hp: 10, armor: 0, evasion: 11, speed: 6, heatCap: 5, repairs: 3, sensors: 10, structure: 4, stress: 4,
+    capacity: 5, mounts: ["main", "main", "system"], stock: ["rifle", "cleaver", "smoke"],
+    trait: "slipstream", core: "afterburn",
+  },
+  lantern: {
+    name: "Lantern", role: "artillery", blurb: "Long sight and a mortar. It wants distance and a clear view.",
+    hp: 12, armor: 1, evasion: 8, speed: 3, heatCap: 8, repairs: 4, sensors: 15, structure: 4, stress: 4,
+    capacity: 7, mounts: ["heavy", "main", "system", "system"], stock: ["mortar", "rifle", "smoke", "drone"],
+    trait: "spotter", core: "flare",
+  },
 };
+const TRAITS = {
+  steady: { name: "Steady Footing", text: "You can't be knocked back, and you can still move after bracing." },
+  bulkhead: { name: "Bulkhead", text: "When you have cover against a ranged attack, it deals 1 less damage to you." },
+  slipstream: { name: "Slipstream", text: "Moving away from a hostile never gives it an overwatch swing." },
+  spotter: { name: "Spotter", text: "Your first Lock On each turn is free." },
+};
+// each core power marks its effect with a status that runs out at the end of your next turn
+const CORES = {
+  hunt: { name: "Hunting Pattern", status: "surge", text: "+1 accuracy and +2 damage on a hit until the end of your next turn." },
+  aegis: { name: "Aegis", status: "aegis", text: "A 10-point shield soaks up damage until the end of your next turn." },
+  afterburn: { name: "Afterburn", status: "afterburn", text: "A free Boost now and another next turn, and +3 Evasion until the end of your next turn." },
+  flare: { name: "Flare Net", status: "flare", text: "Lock on to every hostile in sight, and your attacks ignore cover until the end of your next turn." },
+};
+const AEGIS = 10, AFTERBURN_EVASION = 3;
+
+// a system is used up when its charges run out. each system fits once per mech
 const GEAR = {
-  rifle: { name: "Lanyard Rifle", mount: "Main rifle", kind: "ranged", range: 8, dmg: [1, 6, 1], type: "kinetic", reliable: 1, fx: "burst", shots: 3 },
-  cleaver: { name: "Breach Cleaver", mount: "Main melee", kind: "melee", threat: 1, dmg: [1, 6, 3], type: "kinetic", knockback: 1, fx: "cleave" },
-  lance: { name: "Arc Lance", mount: "Heavy cannon", kind: "ranged", range: 6, dmg: [2, 6, 0], type: "energy", heat: 2, fx: "beam" },
-  smoke: { name: "Smoke Launcher", mount: "System", kind: "system", charges: 2 },
+  rifle: { name: "Lanyard Rifle", mount: "main", weight: 2, kind: "ranged", range: 8, dmg: [1, 6, 1], type: "kinetic", reliable: 1, fx: "burst", shots: 3 },
+  pistol: { name: "Tack Pistol", mount: "main", weight: 1, kind: "ranged", range: 5, dmg: [1, 6, 0], type: "kinetic", fx: "burst", shots: 2 },
+  scatter: { name: "Hail Scattergun", mount: "main", weight: 2, kind: "ranged", range: 3, dmg: [1, 6, 3], type: "kinetic", knockback: 1, fx: "burst", shots: 5 },
+  cleaver: { name: "Breach Cleaver", mount: "main", weight: 2, kind: "melee", threat: 1, dmg: [1, 6, 3], type: "kinetic", knockback: 1, fx: "cleave" },
+  lance: { name: "Arc Lance", mount: "heavy", weight: 3, kind: "ranged", range: 6, dmg: [2, 6, 0], type: "energy", heat: 2, fx: "beam" },
+  mortar: { name: "Kettle Mortar", mount: "heavy", weight: 3, kind: "ranged", arcing: true, range: 10, minRange: 2, dmg: [2, 6, 0], type: "explosive", heat: 2, fx: "shell" },
+  driver: { name: "Piledriver", mount: "heavy", weight: 4, kind: "melee", threat: 1, dmg: [2, 6, 2], type: "kinetic", knockback: 2, fx: "maul" },
+  smoke: { name: "Smoke Launcher", mount: "system", weight: 1, kind: "system", use: "smoke", charges: 2, range: 5 },
+  drone: { name: "Patch Drone", mount: "system", weight: 1, kind: "system", use: "patch", charges: 1, heal: [1, 6, 2] },
+  plating: { name: "Spare Plating", mount: "system", weight: 2, kind: "system", hp: 4 },
+  sink: { name: "Heat Sink", mount: "system", weight: 1, kind: "system", heatCap: 2 },
 };
 const OC_COST = ["1", "1d3", "1d6", "1d6+4"];
 
@@ -698,6 +859,17 @@ function weaponLine(w) {
   if (w.heat) bits.push(`Heat ${w.heat}`);
   return bits.join(" · ");
 }
+// charges is how many a mech has left, or null in the hangar, before a pilot adds to them
+function systemLine(g, charges) {
+  const n = !g.charges ? "" : charges == null ? ` · ${plural(g.charges, "charge")}, +1 per Systems point` : ` · ${plural(charges, "charge")}`;
+  if (g.use === "smoke") return `Quick action · Range ${g.range} · soft cover in a 1-hex blast${n}`;
+  if (g.use === "patch") return `Quick action · repair ${dmgText(g.heal)} HP${n}`;
+  if (g.hp) return `Always on · +${g.hp} HP`;
+  if (g.heatCap) return `Always on · +${g.heatCap} heat cap`;
+  return "";
+}
+const gearLine = (g, charges) => (g.kind === "system" ? systemLine(g, charges) : weaponLine(g));
+const loadWeight = (gear) => gear.reduce((n, k) => n + (k ? GEAR[k].weight : 0), 0);
 
 // ---------- Battlefield generation ----------
 const SITE_A = ["Cinder", "Halcyon", "Tessera", "Morrow", "Vantage", "Kiln", "Lattice", "Ossuary", "Saltreach", "Gantry", "Meridian", "Hollow"];
@@ -765,7 +937,7 @@ function rollRoster(rnd, threat) {
   return roster.sort((a, b) => order[a] - order[b]);
 }
 
-function buildBattle(seed, threat) {
+function buildBattle(seed, threat, crew) {
   const rnd = mulberry32(seed);
   const name = SITE_A[Math.floor(rnd() * SITE_A.length)] + " " + SITE_B[Math.floor(rnd() * SITE_B.length)];
   let terrain, start, reach;
@@ -780,7 +952,7 @@ function buildBattle(seed, threat) {
     if (reach.size >= open * 0.9 && spawns >= 10) break;
   }
   const roster = rollRoster(rnd, threat);
-  const units = [makeYou(start)];
+  const units = [makeYou(start, crew.pilot, crew.mech)];
   const taken = new Set([start]);
   const counts = {};
   for (const kind of roster) {
@@ -794,32 +966,45 @@ function buildBattle(seed, threat) {
     units.push(makeFoe(kind, counts[kind], pos));
   }
   return {
-    seed, threat, name, terrain, units, you: units[0],
+    seed, threat, name, terrain, units, you: units[0], pilot: crew.pilot, mech: crew.mech,
     smoke: new Map(), round: 1, phase: "you", active: null,
     turn: null, ocCount: 0, coreUsed: false, over: null,
   };
 }
 
 function freshStatus() {
-  return { impaired: 0, stunned: 0, braced: 0, surge: 0, meltdown: 0, exposed: false, locked: false };
+  return { impaired: 0, stunned: 0, braced: 0, meltdown: 0, surge: 0, aegis: 0, afterburn: 0, flare: 0, exposed: false, locked: false };
 }
-function makeYou(pos) {
-  const p = PILOT, f = FRAME;
-  const hp = f.hp + 2 * p.hull;
+const TIMED = ["impaired", "stunned", "braced", "meltdown", "surge", "aegis", "afterburn", "flare"];
+// gear is per mount, so the same weapon can sit in two mounts; broken and charges go by mount number
+function makeYou(pos, p, m) {
+  const f = FRAMES[m.frame];
+  const gear = m.gear.slice();
+  const extra = (k) => gear.reduce((n, g) => n + ((g && GEAR[g][k]) || 0), 0);
+  const hp = f.hp + 2 * p.hull + extra("hp");
+  const charges = {};
+  gear.forEach((g, s) => { if (g && GEAR[g].charges) charges[s] = GEAR[g].charges + p.systems; });
   return {
-    id: "you", side: "you", name: f.name, pos, alive: true,
+    id: "you", side: "you", name: m.name, frame: m.frame, trait: f.trait, core: f.core,
+    grit: GRIT, hull: p.hull, pos, alive: true,
     maxHp: hp, hp, armor: f.armor,
     evasion: f.evasion + p.agility,
     speed: f.speed + Math.floor(p.agility / 2),
-    heatCap: f.heatCap + p.engineering, heat: 0,
+    heatCap: f.heatCap + p.engineering + extra("heatCap"), heat: 0,
     maxStructure: f.structure, structure: f.structure,
     maxStress: f.stress, stress: f.stress,
     repairs: f.repairs + Math.floor(p.hull / 2),
     sensors: f.sensors,
-    gear: f.gear.slice(), broken: new Set(), smokeLeft: GEAR.smoke.charges,
+    gear, broken: new Set(), charges, shield: 0,
     status: freshStatus(), reaction: true, braceLimit: false,
   };
 }
+// "the Halberd" for a stock name, or just the name you gave it
+function theMech(cap) {
+  const u = B.you;
+  return u.name === FRAMES[u.frame].name ? (cap ? "The " : "the ") + u.name : u.name;
+}
+const evasionOf = (u) => u.evasion + (u.status.afterburn ? AFTERBURN_EVASION : 0);
 function makeFoe(kind, n, pos) {
   const h = HOSTILES[kind];
   return {
@@ -837,12 +1022,100 @@ function savePrefs() {
   try { localStorage.setItem("hardpoint:prefs", JSON.stringify(prefs)); } catch (e) { /* storage blocked */ }
 }
 
+// ---------- Roster ----------
+// pilots and mechs you've built, kept apart so any pilot can fly any mech
+const ROSTER_KEY = "hardpoint:roster";
+const WREN = { id: "p1", callsign: "Wren", hull: 1, agility: 1, systems: 0, engineering: 0 };
+const STOCK_HALBERD = { id: "m1", name: "Halberd", frame: "halberd", gear: FRAMES.halberd.stock.slice() };
+const CALLSIGN_MAX = 16, MECH_NAME_MAX = 20;
+
+// imports and old saves come from outside, so everything is rebuilt from known keys and clamped
+const cleanText = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, max) : "");
+const cleanId = (v) => (typeof v === "string" && /^[a-z0-9-]{1,24}$/i.test(v) ? v : null);
+function cleanPilot(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const p = { id: cleanId(r.id), callsign: cleanText(r.callsign, CALLSIGN_MAX) || "Pilot" };
+  let left = PILOT_POINTS;
+  for (const st of STATS) {
+    const n = Math.max(0, Math.min(STAT_MAX, left, Math.floor(Number(r[st.key])) || 0));
+    p[st.key] = n;
+    left -= n;
+  }
+  return p;
+}
+function cleanMech(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const f = FRAMES[r.frame];
+  if (!f || !Object.hasOwn(FRAMES, r.frame)) return null;
+  const given = Array.isArray(r.gear) ? r.gear : [];
+  const seen = new Set();
+  let weight = 0;
+  const gear = f.mounts.map((mount, s) => {
+    const k = given[s];
+    const g = typeof k === "string" && Object.hasOwn(GEAR, k) ? GEAR[k] : null;
+    if (!g || !fits(mount, g) || (g.kind === "system" && seen.has(k)) || weight + g.weight > f.capacity) return null;
+    seen.add(k);
+    weight += g.weight;
+    return k;
+  });
+  return { id: cleanId(r.id), name: cleanText(r.name, MECH_NAME_MAX) || f.name, frame: r.frame, gear };
+}
+
+let roster = null;
+function freshRoster() {
+  return { v: 1, pilots: [{ ...WREN }], mechs: [{ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() }], active: { pilot: WREN.id, mech: STOCK_HALBERD.id } };
+}
+function loadRoster() {
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem(ROSTER_KEY) || "null"); } catch (e) { /* storage blocked */ }
+  if (!r || r.v !== 1) return freshRoster();
+  const out = { v: 1, pilots: [], mechs: [], active: {} };
+  addToRoster(out, r.pilots, r.mechs);
+  if (!out.pilots.length) out.pilots.push({ ...WREN });
+  if (!out.mechs.length) out.mechs.push({ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() });
+  const a = r.active || {};
+  out.active.pilot = out.pilots.some((p) => p.id === a.pilot) ? a.pilot : out.pilots[0].id;
+  out.active.mech = out.mechs.some((m) => m.id === a.mech) ? a.mech : out.mechs[0].id;
+  return out;
+}
+function saveRoster() {
+  try { localStorage.setItem(ROSTER_KEY, JSON.stringify(roster)); } catch (e) { /* storage blocked */ }
+}
+function newId(prefix, taken) {
+  let n = taken.length + 1;
+  while (taken.some((x) => x.id === prefix + n)) n++;
+  return prefix + n;
+}
+// cleans each entry and gives it a fresh id when its own is missing or taken. returns how many it added
+function addToRoster(r, pilots, mechs) {
+  let np = 0, nm = 0;
+  for (const raw of Array.isArray(pilots) ? pilots.slice(0, 50) : []) {
+    const p = cleanPilot(raw);
+    if (!p.id || r.pilots.some((x) => x.id === p.id)) p.id = newId("p", r.pilots);
+    r.pilots.push(p);
+    np++;
+  }
+  for (const raw of Array.isArray(mechs) ? mechs.slice(0, 50) : []) {
+    const m = cleanMech(raw);
+    if (!m) continue;
+    if (!m.id || r.mechs.some((x) => x.id === m.id)) m.id = newId("m", r.mechs);
+    r.mechs.push(m);
+    nm++;
+  }
+  return { pilots: np, mechs: nm };
+}
+const activePilot = () => roster.pilots.find((p) => p.id === roster.active.pilot) || roster.pilots[0];
+const activeMech = () => roster.mechs.find((m) => m.id === roster.active.mech) || roster.mechs[0];
+// a copy, so the battle doesn't change when the roster does
+const activeCrew = () => JSON.parse(JSON.stringify({ pilot: activePilot(), mech: activeMech() }));
+roster = loadRoster();
+
 // ---------- State ----------
 let B = null;
 let busy = false;
 const ui = {
   mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null,
-  inspect: null, cursor: 0, showCursor: false, hover: null, dialog: null,
+  inspect: null, cursor: 0, showCursor: false, hover: null, dialog: null, system: null,
 };
 
 // ---------- Board queries ----------
@@ -874,12 +1147,20 @@ function coverAt(a, b) {
   return { level: 0, why: "" };
 }
 
+// your weapons and systems carry key: the mount they sit in
+function mounted(u, kind) {
+  const out = [];
+  u.gear.forEach((k, s) => { if (k && !u.broken.has(s) && kind(GEAR[k])) out.push({ key: s, ...GEAR[k] }); });
+  return out;
+}
 function weaponsOf(u) {
   if (u.side === "foe") return [u.weapon];
-  return u.gear.filter((k) => GEAR[k].kind !== "system" && !u.broken.has(k)).map((k) => ({ key: k, ...GEAR[k] }));
+  return mounted(u, (g) => g.kind !== "system");
 }
+const systemsOf = (u) => mounted(u, (g) => g.use);
+const usable = (u, sys) => u.charges[sys.key] > 0;
 const threatWeapon = (u) => weaponsOf(u).find((w) => w.kind === "melee");
-const canSmoke = () => !B.you.broken.has("smoke") && B.you.smokeLeft > 0;
+const hasTrait = (u, t) => u.trait === t;
 
 function attackProfile(att, w, tgt, from = att.pos) {
   const dd = dist(from, tgt.pos);
@@ -894,7 +1175,8 @@ function attackProfile(att, w, tgt, from = att.pos) {
   if (w.kind === "ranged" && !w.arcing) {
     const cv = coverAt(from, tgt.pos);
     if (!cv) return { ok: false, reason: "no line of sight" };
-    if (cv.level) { diff += cv.level; notes.push(`+${cv.level} difficulty: ${cv.why}`); }
+    if (cv.level && att.status.flare) notes.push(`${cv.why} ignored: Flare Net`);
+    else if (cv.level) { diff += cv.level; notes.push(`+${cv.level} difficulty: ${cv.why}`); }
   } else if (w.kind === "melee" && !sight(from, tgt.pos).los) {
     return { ok: false, reason: "no line of sight" };
   }
@@ -904,9 +1186,9 @@ function attackProfile(att, w, tgt, from = att.pos) {
   if (tgt.status.braced) { diff++; notes.push("+1 difficulty: target is braced"); }
   if (tgt.status.locked && att.side === "you") { acc++; usedLock = true; notes.push("+1 accuracy: locked on"); }
   if (att.status.surge) { acc++; notes.push("+1 accuracy: Hunting Pattern"); }
-  const bonus = att.side === "you" ? PILOT.grit : w.bonus;
+  const bonus = att.side === "you" ? att.grit : w.bonus;
   const net = acc - diff;
-  return { ok: true, dist: dd, bonus, net, notes, usedLock, chance: hitChance(bonus, net, tgt.evasion) };
+  return { ok: true, dist: dd, bonus, net, notes, usedLock, chance: hitChance(bonus, net, evasionOf(tgt)) };
 }
 
 function hitChance(bonus, net, evasion) {
@@ -928,7 +1210,7 @@ function smokeCells() {
   const out = [];
   for (let i = 0; i < COLS * ROWS; i++) {
     if (B.terrain[i] === T_WALL) continue;
-    if (dist(B.you.pos, i) <= 5 && sight(B.you.pos, i).los) out.push(i);
+    if (dist(B.you.pos, i) <= GEAR.smoke.range && sight(B.you.pos, i).los) out.push(i);
   }
   return out;
 }
@@ -974,6 +1256,7 @@ function stepDistances(from) {
 }
 
 async function overwatch(mover) {
+  if (hasTrait(mover, "slipstream")) return;
   for (const h of hostilesOf(mover)) {
     if (!mover.alive || !h.alive) break;
     if (!h.reaction || h.status.stunned) continue;
@@ -985,27 +1268,31 @@ async function overwatch(mover) {
   }
 }
 
+// false when overwatch stops the move: a stun, a wreck, or a knockback off the path
 async function moveUnit(u, path) {
-  if (!path.length) return;
+  if (!path.length) return true;
+  const start = u.pos;
   await overwatch(u);
-  if (!u.alive || u.status.stunned || B.over) return;
+  if (!u.alive || u.status.stunned || B.over || u.pos !== start) return false;
   for (const step of path) {
     u.pos = step;
     if (!reduceMotion.matches) { paint(); await sleep(120); }
   }
   paint();
+  return true;
 }
 
+// how many hexes the target actually moved before something stopped it
 function knockback(att, tgt, n) {
   for (let k = 0; k < n; k++) {
     const A = cube(att.pos), T = cube(tgt.pos);
     const dd = dist(att.pos, tgt.pos);
     const [q, r] = cubeRound(T[0] + (T[0] - A[0]) / dd, T[1] + (T[1] - A[1]) / dd, T[2] + (T[2] - A[2]) / dd);
     const j = fromCube(q, r);
-    if (j < 0 || !passable(B.terrain[j]) || occupant(j)) return false;
+    if (j < 0 || !passable(B.terrain[j]) || occupant(j)) return k;
     tgt.pos = j;
   }
-  return true;
+  return n;
 }
 
 // ---------- Damage, structure, heat ----------
@@ -1035,9 +1322,9 @@ function applyDamage(u, n) {
   if (u.hp > 0) return;
   if (u.side === "foe") { destroy(u, `${u.name} is destroyed.`); return; }
   u.structure--;
-  if (u.structure <= 0) { destroy(u, "The Halberd's last point of structure is gone. It falls and doesn't get up."); return; }
+  if (u.structure <= 0) { destroy(u, `${theMech(true)}'s last point of structure is gone. It falls and doesn't get up.`); return; }
   u.hp = u.maxHp;
-  log(`Structure damage! The Halberd loses a point of structure (${u.structure} left) and its HP refills.`, "bad");
+  log(`Structure damage! ${theMech(true)} loses a point of structure (${u.structure} left) and its HP refills.`, "bad");
   structureCheck(u);
 }
 
@@ -1045,22 +1332,25 @@ function structureCheck(u) {
   const lost = u.maxStructure - u.structure;
   const rolls = rollMany(lost, 6), low = Math.min(...rolls), ones = rolls.filter((r) => r === 1).length;
   const head = `Structure check: rolled ${rolls.join(", ")}, keep ${low}. `;
-  if (ones >= 2) { destroy(u, head + "Crushing hit. The Halberd is torn apart."); return; }
+  if (ones >= 2) { destroy(u, head + `Crushing hit. ${theMech(true)} is torn apart.`); return; }
   if (low === 1) {
     if (u.structure >= 3) {
       setTimed(u, "stunned");
       log(head + "Direct hit: stunned until the end of your next turn.", "bad");
     } else if (u.structure === 2) {
-      const h = d(20) + PILOT.hull;
+      const h = d(20) + u.hull;
       if (h >= 10) { setTimed(u, "stunned"); log(head + `Direct hit. Your hull check of ${h} beats 10, so you're only stunned.`, "bad"); }
-      else destroy(u, head + `Direct hit. Your hull check of ${h} misses 10, and the Halberd is destroyed.`);
-    } else destroy(u, head + "Direct hit to a frame with nothing left. The Halberd is destroyed.");
+      else destroy(u, head + `Direct hit. Your hull check of ${h} misses 10, and ${theMech()} is destroyed.`);
+    } else destroy(u, head + `Direct hit to a frame with nothing left. ${theMech(true)} is destroyed.`);
   } else if (low <= 4) {
-    const intact = u.gear.filter((k) => !u.broken.has(k));
+    const intact = [...u.gear.keys()].filter((s) => u.gear[s] && !u.broken.has(s));
     if (!intact.length) { setTimed(u, "stunned"); log(head + "System trauma with nothing left to break: stunned instead.", "bad"); return; }
-    const k = intact[Math.floor(Math.random() * intact.length)];
-    u.broken.add(k);
-    log(head + `System trauma: your ${GEAR[k].name} is wrecked.`, "bad");
+    const s = intact[Math.floor(Math.random() * intact.length)], g = GEAR[u.gear[s]];
+    u.broken.add(s);
+    log(head + `System trauma: your ${g.name} is wrecked.`, "bad");
+    // always-on systems take their bonus with them
+    if (g.hp) { u.maxHp -= g.hp; u.hp = Math.min(u.hp, u.maxHp); }
+    if (g.heatCap) { u.heatCap -= g.heatCap; u.heat = Math.min(u.heat, u.heatCap); }
   } else {
     setTimed(u, "impaired");
     log(head + "Glancing blow: impaired (+1 difficulty) until the end of your next turn.", "bad");
@@ -1075,7 +1365,7 @@ function gainHeat(u, n, why) {
   u.heat = Math.min(extra, u.heatCap);
   u.stress--;
   log(`+${n} heat from ${why} pushes you past your heat cap. You lose a point of stress (${u.stress} left).`, "bad");
-  if (u.stress <= 0) { destroy(u, "No stress left to give. The Halberd's reactor melts down."); return; }
+  if (u.stress <= 0) { destroy(u, `No stress left to give. ${theMech(true)}'s reactor melts down.`); return; }
   overheatCheck(u);
 }
 
@@ -1083,7 +1373,7 @@ function overheatCheck(u) {
   const lost = u.maxStress - u.stress;
   const rolls = rollMany(lost, 6), low = Math.min(...rolls), ones = rolls.filter((r) => r === 1).length;
   const head = `Overheat check: rolled ${rolls.join(", ")}, keep ${low}. `;
-  if (ones >= 2) { destroy(u, head + "Runaway reactor. The Halberd melts down."); return; }
+  if (ones >= 2) { destroy(u, head + `Runaway reactor. ${theMech(true)} melts down.`); return; }
   if (low === 1 && u.stress <= 2) {
     setTimed(u, "meltdown");
     log(head + "Meltdown! The reactor blows at the end of your next turn unless you Stabilize and cool down first.", "bad");
@@ -1111,14 +1401,15 @@ async function attack(att, w, tgt, opts = {}) {
   let accRoll = 0;
   if (p.net) accRoll = Math.max(...rollMany(Math.abs(p.net), 6)) * Math.sign(p.net);
   const total = d20 + p.bonus + accRoll;
-  const hit = total >= tgt.evasion;
+  const evasion = evasionOf(tgt);
+  const hit = total >= evasion;
   const crit = hit && att.side === "you" && total >= 20;
   if (p.usedLock) tgt.status.locked = false;
 
   const verb = att.side === "you"
     ? (w.kind === "melee" ? `You swing your ${w.name} at ${tgt.name}` : `You fire your ${w.name} at ${tgt.name}`)
     : (w.kind === "melee" ? `${att.name} swings its ${w.name} at you` : `${att.name} fires its ${w.name} at you`);
-  let line = `${verb}: ${rollText(d20, p.bonus, accRoll, p.net)} = ${total} vs Evasion ${tgt.evasion}. `;
+  let line = `${verb}: ${rollText(d20, p.bonus, accRoll, p.net)} = ${total} vs Evasion ${evasion}. `;
   let raw = 0;
   if (hit) {
     raw = rollDamage(w.dmg, crit) + (att.status.surge ? 2 : 0);
@@ -1136,6 +1427,13 @@ async function attack(att, w, tgt, opts = {}) {
     const bits = [`${raw} ${w.type}`];
     if (tgt.armor) bits.push(`−${Math.min(raw, tgt.armor)} armor`);
     if (tgt.status.exposed && dmg) { dmg *= 2; bits.push("doubled, exposed"); }
+    if (dmg && hasTrait(tgt, "bulkhead") && w.kind === "ranged" && !w.arcing && coverAt(att.pos, tgt.pos)?.level) { dmg--; bits.push("−1 Bulkhead"); }
+    if (dmg && tgt.shield > 0) {
+      const soak = Math.min(tgt.shield, dmg);
+      tgt.shield -= soak;
+      dmg -= soak;
+      bits.push(`−${soak} Aegis (${tgt.shield} left)`);
+    }
     if (tgt.side === "you" && hit && dmg >= tgt.hp && tgt.reaction && !tgt.status.stunned && tgt.alive) {
       log(line + `${dmg} damage is coming.`, att.side);
       line = "";
@@ -1157,12 +1455,12 @@ async function attack(att, w, tgt, opts = {}) {
   }
 
   if (hit && w.knockback && tgt.alive) {
-    if (tgt.side === "you") log("Steady Footing: the Halberd doesn't budge.", "sys");
+    if (hasTrait(tgt, "steady")) log(`Steady Footing: ${theMech()} doesn't budge.`, "sys");
     else {
-      const from = tgt.pos;
-      if (knockback(att, tgt, w.knockback)) {
+      const from = tgt.pos, n = knockback(att, tgt, w.knockback);
+      if (n) {
         await slideFx(tgt, from);
-        log(`${tgt.name} is knocked back a hex.`, att.side);
+        log(`${tgt.side === "you" ? "You're" : tgt.name + " is"} knocked back ${n === 1 ? "a hex" : plural(n, "hex")}.`, att.side);
       }
     }
   }
@@ -1197,16 +1495,24 @@ function startPlayerTurn() {
   B.active = u;
   for (const [i, until] of B.smoke) if (until <= B.round) B.smoke.delete(i);
   log(`Round ${B.round}`, "round");
-  B.turn = { mp: u.speed, quick: 2, fullOk: true, ocUsed: false, limited: false };
+  B.turn = { mp: u.speed, quick: 2, fullOk: true, ocUsed: false, limited: false, freeLock: hasTrait(u, "spotter") };
   if (u.braceLimit) {
     u.braceLimit = false;
     u.reaction = false;
     B.turn.quick = 1;
     B.turn.fullOk = false;
     B.turn.limited = true;
-    log("Still recovering from bracing: one quick action this turn, no full actions, no overcharge.", "sys");
+    if (hasTrait(u, "steady")) log("Still recovering from bracing: one quick action this turn, no full actions, no overcharge. Steady Footing lets you move.", "sys");
+    else {
+      B.turn.mp = 0;
+      log("Still recovering from bracing: one quick action this turn, and no moving, full actions, or overcharge.", "sys");
+    }
   } else {
     u.reaction = true;
+  }
+  if (u.status.afterburn && B.turn.mp > 0) {
+    B.turn.mp += u.speed;
+    log(`Afterburn: a free Boost, +${u.speed} movement.`, "you");
   }
   if (u.status.stunned) {
     B.turn.mp = 0; B.turn.quick = 0; B.turn.fullOk = false; B.turn.limited = true;
@@ -1216,10 +1522,11 @@ function startPlayerTurn() {
 }
 
 function endTurnTicks(u) {
-  for (const key of ["impaired", "stunned", "braced", "surge", "meltdown"]) {
+  for (const key of TIMED) {
     if (u.status[key] > 0) {
       u.status[key]--;
-      if (key === "meltdown" && u.status.meltdown === 0 && u.alive) destroy(u, "The reactor goes critical. The Halberd is destroyed.");
+      if (key === "meltdown" && u.status.meltdown === 0 && u.alive) destroy(u, `The reactor goes critical. ${theMech(true)} is destroyed.`);
+      if (key === "aegis" && u.status.aegis === 0 && u.shield) { u.shield = 0; log("The Aegis shield fades.", "sys"); }
     }
   }
 }
@@ -1256,7 +1563,7 @@ function checkOver() {
   if (!B.you.alive) {
     B.over = "lost";
     const left = foes().length;
-    log(`The Halberd is down in round ${B.round}, with ${plural(left, "hostile")} still standing.`, "bad");
+    log(`${theMech(true)} is down in round ${B.round}, with ${plural(left, "hostile")} still standing.`, "bad");
   } else if (!foes().length) {
     B.over = "won";
     log(`Area clear in ${plural(B.round, "round")}, with ${B.you.structure} of ${B.you.maxStructure} structure left.`, "you");
@@ -1342,7 +1649,7 @@ const ORDERS = [
   { act: "skirmish", name: "Skirmish", key: "S", cost: "quick" },
   { act: "barrage", name: "Barrage", key: "R", cost: "full" },
   { act: "lock", name: "Lock On", key: "L", cost: "quick" },
-  { act: "smoke", name: "Smoke", key: "G", cost: "quick" },
+  { act: "systems", name: "Systems", key: "G", cost: "quick" },
   { act: "stabilize", name: "Stabilize", key: "T", cost: "full" },
   { act: "overcharge", name: "Overcharge", key: "O", cost: "free" },
   { act: "core", name: "Core power", key: "C", cost: "free" },
@@ -1358,8 +1665,8 @@ function canDo(act) {
     case "boost": return t.quick >= 1;
     case "skirmish": return t.quick >= 1 && weaponsOf(you).some((w) => validTargets(w).length);
     case "barrage": return t.fullOk && t.quick >= 2 && weaponsOf(you).length >= 2 && weaponsOf(you).some((w) => validTargets(w).length);
-    case "lock": return t.quick >= 1 && lockTargets().length > 0;
-    case "smoke": return t.quick >= 1 && canSmoke();
+    case "lock": return (t.quick >= 1 || t.freeLock) && lockTargets().length > 0;
+    case "systems": return t.quick >= 1 && systemsOf(you).some((x) => usable(you, x));
     case "stabilize": return t.fullOk && t.quick >= 2;
     case "overcharge": return !t.ocUsed && !t.limited;
     case "core": return !B.coreUsed && !t.limited;
@@ -1385,11 +1692,18 @@ function orderNote(act) {
       if (!fullLeft) return "needs both quick actions";
       if (weaponsOf(you).length < 2) return "needs two weapons";
       return canDo("barrage") ? "full · fire two weapons" : "nothing in range";
-    case "lock": return !quickLeft ? "no quick actions left" : lockTargets().length ? "quick · +1 accuracy next shot" : "no hostile in sight";
-    case "smoke": return you.broken.has("smoke") ? "launcher wrecked" : !you.smokeLeft ? "out of charges" : quickLeft ? `quick · ${plural(you.smokeLeft, "charge")}` : "no quick actions left";
+    case "lock":
+      if (!quickLeft && !t.freeLock) return "no quick actions left";
+      return lockTargets().length ? `${t.freeLock ? "free" : "quick"} · +1 accuracy next shot` : "no hostile in sight";
+    case "systems": {
+      const sys = systemsOf(you);
+      if (!sys.length) return you.gear.some((k) => k && GEAR[k].use) ? "wrecked" : "nothing to use";
+      if (!sys.some((x) => usable(you, x))) return "out of charges";
+      return quickLeft ? `quick · ${sys.map((x) => x.name.split(" ")[0]).join(", ")}` : "no quick actions left";
+    }
     case "stabilize": return fullLeft ? "full · repair or vent" : "needs both quick actions";
     case "overcharge": return t.limited ? "not after bracing" : t.ocUsed ? "used this turn" : `+1 quick action · ${OC_COST[Math.min(B.ocCount, 3)]} heat`;
-    case "core": return B.coreUsed ? "spent" : t.limited ? "not after bracing" : "Hunting Pattern, once";
+    case "core": return B.coreUsed ? "spent" : t.limited ? "not after bracing" : `${CORES[you.core].name}, once`;
     case "end": return "";
   }
   return "";
@@ -1401,12 +1715,13 @@ function setMode(mode, extra = {}) {
   ui.target = null;
   ui.reach = null;
   if (mode !== "weapon" && mode !== "target") { ui.weapon = null; ui.barrage = null; }
+  if (mode !== "smoke") ui.system = null;
   Object.assign(ui, extra);
   if (mode === "move") ui.reach = reachWithPrev(B.you, T().mp);
   paint();
 }
 
-const MENU_MODES = ["orders", "weapon", "stabilize"];
+const MENU_MODES = ["orders", "weapon", "systems", "stabilize"];
 const PICK_MODES = ["move", "target", "lock", "smoke"];
 
 function doAction(act, viaKey) {
@@ -1423,7 +1738,7 @@ function doAction(act, viaKey) {
     case "skirmish": setMode("weapon", { barrage: null }); break;
     case "barrage": setMode("weapon", { barrage: { used: [], committed: false } }); break;
     case "lock": setMode("lock"); break;
-    case "smoke": setMode("smoke"); break;
+    case "systems": setMode("systems"); break;
     case "stabilize": setMode("stabilize"); break;
     case "overcharge": overcharge(); break;
     case "core": core(); break;
@@ -1467,9 +1782,20 @@ function overcharge() {
   setMode("idle");
 }
 function core() {
+  const you = B.you, c = CORES[you.core];
   B.coreUsed = true;
-  B.you.status.surge = 2;
-  log("Core power: Hunting Pattern. Until the end of your next turn, your attacks gain +1 accuracy and deal +2 damage on a hit.", "you");
+  setTimed(you, c.status);
+  log(`Core power: ${c.name}. ${c.text}`, "you");
+  if (you.core === "aegis") you.shield = AEGIS;
+  if (you.core === "afterburn") {
+    T().mp += you.speed;
+    log(`Afterburn: a free Boost, +${you.speed} movement.`, "you");
+  }
+  if (you.core === "flare") {
+    const seen = foes().filter((f) => dist(you.pos, f.pos) <= you.sensors && sight(you.pos, f.pos).los);
+    for (const f of seen) f.status.locked = true;
+    log(seen.length ? `Flare Net locks on to ${seen.map((f) => f.name).join(", ")}.` : "Flare Net finds no hostile in sight to lock on to.", "you");
+  }
   setMode("idle");
 }
 
@@ -1477,13 +1803,16 @@ async function commitMove(dest) {
   const you = B.you, full = ui.reach;
   const cost = full.get(dest).cost, path = pathTo(full, dest);
   const was = isEngaged(you);
+  const start = you.pos;
   busy = true;
   setMode("idle");
-  await moveUnit(you, path);
+  const moved = await moveUnit(you, path);
   busy = false;
   if (B.over) { paint(); return; }
-  if (you.status.stunned && you.pos !== dest) {
+  if (you.status.stunned) {
     T().mp = 0;
+  } else if (!moved) {
+    if (you.pos !== start) log("Knocked off your path. The move is called off, but you keep your movement.", "sys");
   } else {
     T().mp = Math.max(0, T().mp - cost);
     if (!was && isEngaged(you)) {
@@ -1516,22 +1845,44 @@ async function fire(w, tgt) {
 
 function lockOn(f) {
   f.status.locked = true;
-  spendQuick();
-  log(`You lock on to ${f.name}. The next attack against it gains +1 accuracy.`, "you");
+  const free = T().freeLock;
+  if (free) T().freeLock = false; else spendQuick();
+  log(`You lock on to ${f.name}${free ? " (Spotter, free)" : ""}. The next attack against it gains +1 accuracy.`, "you");
   setMode("idle");
+}
+
+function useSystem(sys, viaKey) {
+  const you = B.you;
+  if (!usable(you, sys) || T().quick < 1) return;
+  if (sys.use === "smoke") {
+    setMode("smoke", { system: sys.key });
+    if (viaKey) focusMap(you.pos); else map.focus({ preventScroll: true });
+    return;
+  }
+  if (sys.use === "patch") {
+    you.charges[sys.key]--;
+    spendQuick();
+    const heal = Math.min(rollDamage(sys.heal, false), you.maxHp - you.hp);
+    you.hp += heal;
+    log(`Your ${sys.name} patches ${heal} HP (${you.hp}/${you.maxHp}, ${plural(you.charges[sys.key], "charge")} left).`, "you");
+    pop(you.pos, `+${heal}`, "healed");
+    setMode("idle");
+    focusMap(you.pos);
+  }
 }
 
 async function placeSmoke(i) {
   const cells = [i, ...neighbors(i)].filter((j) => B.terrain[j] !== T_WALL);
-  B.you.smokeLeft--;
+  const you = B.you, s = ui.system;
+  you.charges[s]--;
   spendQuick();
   busy = true;
   ui.mode = "idle"; ui.dest = null;
   paint();
-  await canisterFx(B.you.pos, i, cells);
+  await canisterFx(you.pos, i, cells);
   busy = false;
   for (const j of cells) B.smoke.set(j, B.round + 2);
-  log(`You fire a smoke canister. The cloud gives soft cover until the end of next round (${plural(B.you.smokeLeft, "charge")} left).`, "you");
+  log(`You fire a smoke canister. The cloud gives soft cover until the end of next round (${plural(you.charges[s], "charge")} left).`, "you");
   setMode("idle");
 }
 
@@ -1620,7 +1971,7 @@ function focusDialog() {
 function describeHex(i) {
   const bits = [`Row ${rowOf(i) + 1}, column ${colOf(i) + 1}: ${TERRAIN_NAME[B.terrain[i]]}${smokeAt(i) ? " in smoke" : ""}.`];
   const occ = occupant(i);
-  if (occ && occ.side === "you") bits.push(yourTurn() ? "Your Halberd. Press Enter for orders." : "Your Halberd.");
+  if (occ && occ.side === "you") bits.push(yourTurn() ? `Your mech, ${occ.name}. Press Enter for orders.` : `Your mech, ${occ.name}.`);
   else if (occ) {
     bits.push(`${occ.name}, ${occ.grunt ? "grunt" : `${occ.hp} of ${occ.maxHp} HP`}, ${plural(dist(B.you.pos, i), "hex")} away.`);
     const cv = coverAt(B.you.pos, i);
@@ -1817,7 +2168,7 @@ function env(a, t, peak, attack, dur) {
 // and repeat scatters that many copies across spread seconds. the Sound Bench (../sound-bench/)
 // has an identical copy to play and edit, so a change here goes there too, and the other way round.
 const SOUNDS = {
-  "crack-you": { "name": "Rifle crack", "use": "Each round from your Lanyard Rifle", "layers": [
+  "crack-you": { "name": "Rifle crack", "use": "Each round from your rifle, pistol, or scattergun", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 1906, "q": 0.4106, "gain": 0.233, "attack": 0.002334, "dur": 0.0427 },
     { "kind": "tone", "wave": "square", "freq": 158, "to": 108.6, "gain": 0.09306, "attack": 0.003665, "dur": 0.05059 }
   ] },
@@ -1841,7 +2192,7 @@ const SOUNDS = {
   "zap": { "name": "Lance zap", "use": "The Arc Lance's beam hitting", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 1200, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.2 }
   ] },
-  "thump": { "name": "Mortar thump", "use": "A Lobber firing its mortar", "layers": [
+  "thump": { "name": "Mortar thump", "use": "A mortar firing, a Lobber's or yours", "layers": [
     { "kind": "tone", "wave": "sine", "freq": 150, "to": 45, "gain": 0.5, "attack": 0.003, "dur": 0.28 },
     { "kind": "noise", "filter": "lowpass", "freq": 500, "q": 1, "gain": 0.3, "attack": 0.003, "dur": 0.18 }
   ] },
@@ -1866,7 +2217,7 @@ const SOUNDS = {
   "whoosh": { "name": "Swing", "use": "A cleaver or claw swing", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 1490, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
   ] },
-  "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul swing", "layers": [
+  "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul or your Piledriver swinging", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 76.4, "to": 900, "q": 1.4, "gain": 1.6, "attack": 0.07, "dur": 0.22 }
   ] },
   "clang": { "name": "Cleaver clang", "use": "Your Breach Cleaver hitting", "layers": [
@@ -1879,11 +2230,11 @@ const SOUNDS = {
   "scratch": { "name": "Claw scratch", "use": "Each rake of a Hound's claws", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 3800, "to": 1600, "q": 5, "gain": 0.9, "attack": 0.003, "dur": 0.09 }
   ] },
-  "thud": { "name": "Maul thud", "use": "A Brute's maul hitting", "layers": [
+  "thud": { "name": "Maul thud", "use": "A Brute's maul or your Piledriver hitting", "layers": [
     { "kind": "tone", "wave": "sine", "freq": 120, "to": 38, "gain": 0.75, "attack": 0.003, "dur": 0.32 },
     { "kind": "noise", "filter": "lowpass", "freq": 700, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.22 }
   ] },
-  "scrape": { "name": "Knockback scrape", "use": "A hostile knocked back a hex", "layers": [
+  "scrape": { "name": "Knockback scrape", "use": "A mech knocked back a hex", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 600, "to": 300, "q": 1, "gain": 1.2, "attack": 0.02, "dur": 0.18 }
   ] }
 };
@@ -2122,11 +2473,11 @@ function blast(at, cls = "blast") {
 }
 // the shell climbs the arc while its shadow runs straight along the ground beneath it
 const flightMs = (a, b) => Math.min(1000, 480 + Math.hypot(b.x - a.x, b.y - a.y) * 0.75);
-async function lob(a, b, cls) {
+async function lob(a, b, cls, side = "") {
   const c = arcCtrl(a, b);
-  const trail = fxAdd("path", { d: `M${pt(a)} Q${pt(c)} ${pt(b)}`, pathLength: 1, class: `${cls}-trail` });
+  const trail = fxAdd("path", { d: `M${pt(a)} Q${pt(c)} ${pt(b)}`, pathLength: 1, class: `${cls}-trail ${side}` });
   const shadow = fxAdd("ellipse", { cx: a.x, cy: a.y, rx: 4, ry: 2, class: "shadow" });
-  const shell = fxAdd("circle", { cx: a.x, cy: a.y, r: 3.5, class: `${cls}-shell` });
+  const shell = fxAdd("circle", { cx: a.x, cy: a.y, r: 3.5, class: `${cls}-shell ${side}` });
   await tween(flightMs(a, b), (q) => {
     const p = arcAt(a, c, b, q), g = lerp(a, b, q), up = Math.sin(Math.PI * q);
     shell.setAttribute("cx", p.x.toFixed(1)); shell.setAttribute("cy", p.y.toFixed(1));
@@ -2144,14 +2495,14 @@ async function shellFx(att, tgt, hit) {
   const a = xy(att.pos), t = xy(tgt.pos);
   const land = hit ? t : missPoint(a, t, 0.3);
   if (reduceMotion.matches) {
-    const els = [fxAdd("path", { d: `M${pt(a)} Q${pt(arcCtrl(a, land))} ${pt(land)}`, class: "shell-trail still" }), ...blast(land)];
+    const els = [fxAdd("path", { d: `M${pt(a)} Q${pt(arcCtrl(a, land))} ${pt(land)}`, class: `shell-trail ${att.side} still` }), ...blast(land)];
     play("thump");
     play(hit ? "boom" : "boom-small", 0.3);
     return hold(els);
   }
   play("thump");
   play("whistle", 0, flightMs(a, land) / 1000);
-  await lob(a, land, "shell");
+  await lob(a, land, "shell", att.side);
   play(hit ? "boom" : "boom-small");
   shake(hit ? 3 : 1.5);
   await blast(land);
@@ -2273,7 +2624,7 @@ function miniHex(t, extra = "") {
 
 function legendHtml() {
   const rows = [0, 1, 2, 3, 4].map((t) => `<li>${miniHex(t)}<div><b>${TERRAIN_TITLE[t]}.</b> <span>${TERRAIN_INFO[t]}</span></div></li>`);
-  rows.push(`<li>${miniHex(0, `<circle r="8" fill="#0B2A33" stroke="var(--you)" stroke-width="1.6" />`)}<div><b>Your Halberd.</b> <span>Tap it for orders.</span></div></li>`);
+  rows.push(`<li>${miniHex(0, `<circle r="8" fill="#0B2A33" stroke="var(--you)" stroke-width="1.6" />`)}<div><b>Your mech.</b> <span>Tap it for orders.</span></div></li>`);
   rows.push(`<li>${miniHex(0, `<polygon points="8,0 4,6.9 -4,6.9 -8,0 -4,-6.9 4,-6.9" fill="#36140D" stroke="var(--foe)" stroke-width="1.6" />`)}<div><b>Hostiles.</b> <span>Tap one to see its stats and your odds of hitting it.</span></div></li>`);
   return `<p class="kind">Map key</p><h3>Reading the ground</h3><p>Tap any hex to see what's there.</p><ul class="legend">${rows.join("")}</ul>`;
 }
@@ -2331,7 +2682,7 @@ function infoHtml() {
   const occ = occupant(i);
   let h = "";
   if (occ && occ.side === "foe") h += foeInfo(occ) + "<hr>";
-  else if (occ) h += `<p class="kind">Your mech</p><h3 class="you">Halberd</h3><p>${B.phase === "you" && !B.over ? "Tap it to open its orders. " : ""}Its full readout is ${matchMedia("(min-width: 1150px)").matches ? "on the left" : "under Mech"}.</p><hr>`;
+  else if (occ) h += `<p class="kind">Your mech</p><h3 class="you">${escapeHtml(occ.name)}</h3><p>${B.phase === "you" && !B.over ? "Tap it to open its orders. " : ""}Its full readout is ${matchMedia("(min-width: 1150px)").matches ? "on the left" : "under Mech"}.</p><hr>`;
   else if (B.units.some((u) => !u.alive && u.pos === i)) h += `<p class="kind">Wreck</p><p>What's left of a hostile. It doesn't block anything.</p><hr>`;
   h += tileInfo(i);
   h += `<p><button type="button" data-key="legend">Map key</button></p>`;
@@ -2347,25 +2698,26 @@ function mechCard() {
   if (u.status.exposed) chips.push(["Exposed", "bad"]);
   if (u.status.meltdown) chips.push(["Meltdown!", "bad"]);
   if (u.status.braced) chips.push(["Braced", "good"]);
-  if (u.status.surge) chips.push(["Hunting Pattern", "good"]);
+  const c = CORES[u.core], f = FRAMES[u.frame], t = TRAITS[u.trait], p = B.pilot;
+  if (u.status[c.status]) chips.push([c.name + (u.shield ? ` ${u.shield}` : ""), "good"]);
   const pipRow = (n, max, cls) => `<span class="pips ${cls}">${Array.from({ length: max }, (_, k) => `<i class="${k < n ? "" : "gone"}"></i>`).join("")}</span>`;
-  const gear = u.gear.map((k) => {
+  const gear = u.gear.map((k, s) => {
+    if (!k) return `<li class="broken"><b>Empty</b> <span class="d">${MOUNT_NAME[f.mounts[s]]} mount</span></li>`;
     const g = GEAR[k];
-    const desc = g.kind === "system" ? `Quick action · Range 5 · soft cover in a 1-hex blast · ${plural(u.smokeLeft, "charge")}` : weaponLine(g);
-    return `<li class="${u.broken.has(k) ? "broken" : ""}"><b>${g.name}</b> <span class="d">${g.mount} · ${desc}</span></li>`;
+    return `<li class="${u.broken.has(s) ? "broken" : ""}"><b>${g.name}</b> <span class="d">${MOUNT_NAME[f.mounts[s]]} · ${gearLine(g, u.charges[s])}</span></li>`;
   }).join("");
   return `
-    <h3>${FRAME.name.toUpperCase()}</h3>
-    <p class="sub">Pilot callsign ${PILOT.callsign} · grit +${PILOT.grit} · H${PILOT.hull} A${PILOT.agility} S${PILOT.systems} E${PILOT.engineering}</p>
+    <h3>${escapeHtml(u.name.toUpperCase())}</h3>
+    <p class="sub">${u.name === f.name ? "" : `${f.name} · `}${f.role} · pilot ${escapeHtml(p.callsign)} · grit +${u.grit} · ${STATS.map((x) => x.letter + p[x.key]).join(" ")}</p>
     <div class="meter"><span class="k">HP</span><span class="bar-meter"><i style="width:${(100 * u.hp / u.maxHp).toFixed(0)}%"></i></span><span>${u.hp}/${u.maxHp}</span></div>
     <div class="meter"><span class="k">Structure</span>${pipRow(u.structure, u.maxStructure, "")}<span>${u.structure}/${u.maxStructure}</span></div>
     <div class="meter"><span class="k">Heat</span><span class="bar-meter heat"><i style="width:${(100 * u.heat / u.heatCap).toFixed(0)}%"></i></span><span>${u.heat}/${u.heatCap}</span></div>
     <div class="meter"><span class="k">Stress</span>${pipRow(u.stress, u.maxStress, "stress")}<span>${u.stress}/${u.maxStress}</span></div>
-    <p class="stats">Evasion <b>${u.evasion}</b> · Armor <b>${u.armor}</b> · Speed <b>${u.speed}</b> · Repairs <b>${u.repairs}</b></p>
+    <p class="stats">Evasion <b>${evasionOf(u)}</b> · Armor <b>${u.armor}</b> · Speed <b>${u.speed}</b> · Repairs <b>${u.repairs}</b> · Sensors <b>${u.sensors}</b></p>
     ${chips.length ? `<div class="chips">${chips.map(([t, c]) => `<span class="chip ${c}">${t}</span>`).join("")}</div>` : ""}
     <ul class="gear">${gear}
-      <li><b>Steady Footing</b> <span class="d">Trait · You can't be knocked back, and you can still move after bracing.</span></li>
-      <li class="${B.coreUsed ? "broken" : ""}"><b>Hunting Pattern</b> <span class="d">Core power, once per battle · +1 accuracy and +2 damage until the end of your next turn</span></li>
+      <li><b>${t.name}</b> <span class="d">Trait · ${t.text}</span></li>
+      <li class="${B.coreUsed ? "broken" : ""}"><b>${c.name}</b> <span class="d">Core power, once per battle · ${c.text}</span></li>
     </ul>
     <p class="stats"><button type="button" data-key="askbrace" aria-pressed="${prefs.askBrace}">Ask before bracing</button></p>`;
 }
@@ -2386,11 +2738,11 @@ function promptParts() {
   const btn = (key, label, cls = "", kbd = "") => `<button type="button" data-key="${key}" class="${cls}">${label}${kbd ? ` <kbd>${kbd}</kbd>` : ""}</button>`;
   const cancel = btn("cancel", "Cancel", "", "Esc");
   if (B.phase === "brief") return ["Read the briefing, then deploy. You can tap the map to look it over first.", ""];
-  if (B.over) return [B.over === "won" ? "Area clear." : "The Halberd is down.", btn("over", "Options")];
+  if (B.over) return [B.over === "won" ? "Area clear." : escapeHtml(`${theMech(true)} is down.`), btn("over", "Options")];
   if (B.phase === "foe" || busy) return [B.lastLine || "…", ""];
   if (ui.dialog) return ["", ""];
   switch (ui.mode) {
-    case "orders": case "weapon": case "stabilize":
+    case "orders": case "weapon": case "systems": case "stabilize":
       return ["Pick from the orders beside your mech.", btn("close", "Close", "", "Esc")];
     case "move":
       if (ui.dest != null) {
@@ -2416,7 +2768,7 @@ function promptParts() {
       return ["<b>Smoke.</b> Tap a lit hex within 5, then tap it again to fire.", cancel];
   }
   if (you.status.stunned) return ["You're stunned and can't act this turn.", btn("end", "End turn", "", "E")];
-  return ["Tap your Halberd for orders. Tap anything else to look it over.", btn("orders", "Orders") + btn("end", "End turn", "", "E")];
+  return ["Tap your mech for orders. Tap anything else to look it over.", btn("orders", "Orders") + btn("end", "End turn", "", "E")];
 }
 
 function ordersHtml() {
@@ -2443,6 +2795,15 @@ function ordersHtml() {
     }).join("");
     return head(title, back) + `<div class="orders-grid one" role="menu" aria-label="${title}">${items}</div>`;
   }
+  if (ui.mode === "systems") {
+    const items = systemsOf(you).map((x) => {
+      const n = you.charges[x.key];
+      const full = x.use === "patch" && you.hp >= you.maxHp;
+      const ok = n > 0 && !full && T().quick >= 1;
+      return `<button type="button" role="menuitem" data-key="sys-${x.key}" ${ok ? "" : "disabled"}><span>${x.name}</span><small>${systemLine(x, n)}${full ? " · HP already full" : ""}</small></button>`;
+    }).join("");
+    return head("Systems", `<button type="button" data-key="to-orders">Back</button>`) + `<div class="orders-grid one" role="menu" aria-label="Systems">${items}</div>`;
+  }
   if (ui.mode === "stabilize") {
     const canRepair = you.repairs > 0 && you.hp < you.maxHp;
     return head("Stabilize", `<button type="button" data-key="to-orders">Back</button>`) + `<div class="orders-grid one" role="menu" aria-label="Stabilize">
@@ -2462,6 +2823,12 @@ function dialogHtml() {
       <h2 id="dialog-h">${B.name}</h2>
       <p>Objective: <b>destroy every hostile.</b></p>
       <p>Hostiles: ${rosterText()}.</p>
+      <p class="eyebrow">Crew</p>
+      <div class="crew">
+        <label>Pilot<select data-key="pick-pilot">${roster.pilots.map((p) => `<option value="${p.id}" ${p.id === B.pilot.id ? "selected" : ""}>${escapeHtml(p.callsign)}</option>`).join("")}</select></label>
+        <label>Mech<select data-key="pick-mech">${roster.mechs.map((m) => `<option value="${m.id}" ${m.id === B.mech.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("")}</select></label>
+      </div>
+      <p class="crewnote">${escapeHtml(B.pilot.callsign)} · ${pilotSummary(B.pilot)}<br>${escapeHtml(mechSummary(B.mech))}</p>
       <p class="eyebrow">Threat</p>
       <div class="seg" role="group" aria-label="Threat level">${seg}</div>
       <div class="row"><button type="button" class="go" data-key="deploy" data-autofocus>Deploy</button><button type="button" data-key="reroll">Another site</button></div>
@@ -2480,7 +2847,7 @@ function dialogHtml() {
   if (dg.kind === "over") {
     const won = B.over === "won";
     return `<p class="eyebrow">${B.name} · Round ${B.round}</p>
-      <h2 id="dialog-h">${won ? "Area clear" : "Halberd down"}</h2>
+      <h2 id="dialog-h">${won ? "Area clear" : escapeHtml(B.you.name) + " down"}</h2>
       <p>${won
         ? `You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.`
         : `${plural(foes().length, "hostile")} still standing after ${plural(B.round, "round")}.`}</p>
@@ -2538,7 +2905,7 @@ function paint() {
   const dlg = $("dialog");
   render(dlg, dialogHtml());
   dlg.hidden = !ui.dialog;
-  dlg.className = "dialog" + (ui.dialog && ui.dialog.kind === "brace" ? " low" : "") + (ui.dialog && ui.dialog.kind === "over" ? ` over-${B.over}` : "");
+  dlg.className = "dialog" + (ui.dialog && ui.dialog.kind === "brace" ? " low" : "") + (ui.dialog && ui.dialog.kind === "brief" ? " brief" : "") + (ui.dialog && ui.dialog.kind === "over" ? ` over-${B.over}` : "");
   saveBattle();
 }
 
@@ -2567,11 +2934,12 @@ const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt
 
 // ---------- Saving ----------
 const SAVE_KEY = "hardpoint:battle";
-const UNIT_FIELDS = ["pos", "hp", "alive", "structure", "stress", "heat", "repairs", "smokeLeft", "status", "reaction", "braceLimit", "loaded"];
+const UNIT_FIELDS = ["pos", "hp", "maxHp", "alive", "structure", "stress", "heat", "heatCap", "repairs", "charges", "shield", "status", "reaction", "braceLimit", "loaded"];
+// the save keeps its own copy of the pilot and mech, so hangar edits can't reach a fight in progress
 function saveBattle() {
   if (!B || B.phase !== "you" || B.over || busy) return;
   const data = {
-    v: 1, seed: B.seed, threat: B.threat, name: B.name, round: B.round,
+    v: 2, seed: B.seed, threat: B.threat, name: B.name, round: B.round, crew: { pilot: B.pilot, mech: B.mech },
     ocCount: B.ocCount, coreUsed: B.coreUsed, turn: B.turn, smoke: [...B.smoke],
     units: B.units.map((u) => {
       const o = { id: u.id };
@@ -2586,8 +2954,21 @@ function saveBattle() {
 function loadSave() {
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
-    return s && s.v === 1 ? s : null;
+    if (s && s.v === 1) return upgradeSave(s);
+    if (!s || s.v !== 2) return null;
+    const pilot = cleanPilot(s.crew && s.crew.pilot), mech = cleanMech(s.crew && s.crew.mech);
+    return mech ? { ...s, crew: { pilot, mech } } : null;
   } catch (e) { return null; }
+}
+// a battle saved before the hangar was always Wren in the stock Halberd
+function upgradeSave(s) {
+  const crew = { pilot: { ...WREN }, mech: { ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() } };
+  const you = s.units.find((u) => u.id === "you");
+  if (you) {
+    if (you.broken) you.broken = you.broken.map((k) => crew.mech.gear.indexOf(k)).filter((n) => n >= 0);
+    if ("smokeLeft" in you) { you.charges = { 3: you.smokeLeft }; delete you.smokeLeft; }
+  }
+  return { ...s, v: 2, crew };
 }
 function clearSave() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage blocked */ }
@@ -2603,7 +2984,7 @@ function rosterText() {
   return Object.entries(counts).map(([k, n]) => plural(n, HOSTILES[k].name)).join(", ");
 }
 function resetUi() {
-  Object.assign(ui, { mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null, inspect: null, hover: null, dialog: null, cursor: B.you.pos, showCursor: false });
+  Object.assign(ui, { mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null, inspect: null, hover: null, dialog: null, system: null, cursor: B.you.pos, showCursor: false });
 }
 function setHeader() {
   $("sitename").textContent = `Site ${String(B.seed).padStart(5, "0")} · ${B.name} · ${B.threat}`;
@@ -2612,7 +2993,7 @@ function setHeader() {
 function newBattle(seed, threat, deployNow) {
   if (ui.dialog && ui.dialog.kind === "brace") ui.dialog.resolve(false);
   busy = false;
-  B = buildBattle(seed, threat);
+  B = buildBattle(seed, threat, activeCrew());
   B.phase = "brief";
   B.logLines = [];
   prefs.threat = threat;
@@ -2638,13 +3019,14 @@ function deploy() {
 
 function restoreBattle(s) {
   busy = false;
-  B = buildBattle(s.seed, s.threat);
+  B = buildBattle(s.seed, s.threat, s.crew);
   Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, turn: s.turn, smoke: new Map(s.smoke), phase: "you", logLines: [] });
   for (const su of s.units) {
     const u = B.units.find((x) => x.id === su.id);
     if (!u) continue;
-    const { broken, ...rest } = su;
+    const { broken, status, ...rest } = su;
     Object.assign(u, rest);
+    if (status) u.status = { ...freshStatus(), ...status };
     if (broken) u.broken = new Set(broken);
   }
   B.active = B.you;
@@ -2659,18 +3041,28 @@ function restoreBattle(s) {
 
 // ---------- Screens ----------
 let screenKind = null, helpFrom = "title";
+// each screen's sheet and its heading
+const SHEETS = { title: ["title", "title-h"], help: ["help", "help-h"], hangar: ["hangar", "hangar-h"], pilot: ["pilotedit", "pilot-h"], mech: ["mechedit", "mech-h"] };
 function openScreen(kind) {
   screenKind = kind;
   const scr = $("screen");
   scr.hidden = false;
-  $("title").hidden = kind !== "title";
-  $("help").hidden = kind !== "help";
-  scr.setAttribute("aria-labelledby", kind === "title" ? "title-h" : "help-h");
+  for (const k in SHEETS) $(SHEETS[k][0]).hidden = k !== kind;
+  scr.setAttribute("aria-labelledby", SHEETS[kind][1]);
   $("game").inert = true;
   if (kind === "title") updateTitle();
+  if (kind === "hangar") paintHangar();
   scr.scrollTop = 0;
-  const first = kind === "title" ? $("title").querySelector(".menu button:not(:disabled)") : $("help").querySelector("button");
+  const sheet = $(SHEETS[kind][0]);
+  const first = kind === "title" ? sheet.querySelector(".menu button:not(:disabled)")
+    : kind === "pilot" || kind === "mech" ? sheet.querySelector("input[type=text]") : sheet.querySelector("button");
   if (first) first.focus({ preventScroll: true });
+}
+function backFromScreen() {
+  if (screenKind === "help") { if (helpFrom === "game") closeScreen(); else openScreen("title"); }
+  else if (screenKind === "hangar") openScreen("title");
+  else if (screenKind === "pilot" || screenKind === "mech") openScreen("hangar");
+  else if (liveBattle()) closeScreen();
 }
 function closeScreen() {
   screenKind = null;
@@ -2686,6 +3078,174 @@ function updateTitle() {
   else if (saved) { btn.disabled = false; note.textContent = `${saved.name}, round ${saved.round}`; }
   else { btn.disabled = true; note.textContent = "No battle in progress"; }
 }
+
+// ---------- Hangar ----------
+let pendingDelete = null, draft = null;
+const pilotSummary = (p) => STATS.map((x) => x.letter + p[x.key]).join(" ") + ` · grit +${GRIT}`;
+function mechSummary(m) {
+  const f = FRAMES[m.frame];
+  const kit = m.gear.filter(Boolean).map((k) => GEAR[k].name).join(", ") || "no gear";
+  return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}`;
+}
+function rosterItem(kind, x, title, sub) {
+  const fielded = roster.active[kind] === x.id;
+  const list = kind === "pilot" ? roster.pilots : roster.mechs;
+  const confirming = pendingDelete === `${kind}:${x.id}`;
+  const acts = confirming
+    ? `<button type="button" class="warn" data-menu="del-${kind}" data-id="${x.id}">Delete ${escapeHtml(title)}</button><button type="button" data-menu="keep" data-id="${x.id}">Keep</button>`
+    : `<button type="button" data-menu="edit-${kind}" data-id="${x.id}">Edit</button><button type="button" data-menu="ask-del-${kind}" data-id="${x.id}" ${list.length > 1 ? "" : `disabled title="You need at least one ${kind}"`}>Delete</button>`;
+  return `<li><div class="who"><b>${escapeHtml(title)}</b>${fielded ? `<span class="tagged">Fielded</span>` : ""}<span>${escapeHtml(sub)}</span></div><div class="acts">${acts}</div></li>`;
+}
+function paintHangar() {
+  $("pilotlist").innerHTML = roster.pilots.map((p) => rosterItem("pilot", p, p.callsign, pilotSummary(p))).join("");
+  $("mechlist").innerHTML = roster.mechs.map((m) => rosterItem("mech", m, m.name, mechSummary(m))).join("");
+}
+// re-render a form and put focus back on the control that had it, by its data-f
+function renderForm(el, html) {
+  const a = document.activeElement;
+  const f = a && el.contains(a) ? a.dataset.f : null;
+  el.innerHTML = html;
+  if (!f) return;
+  // a stepper button that just ran out hands focus to its partner
+  const partner = f.startsWith("up-") ? "down-" + f.slice(3) : f.startsWith("down-") ? "up-" + f.slice(5) : f;
+  const again = el.querySelector(`[data-f="${f}"]:not(:disabled)`) || el.querySelector(`[data-f="${partner}"]:not(:disabled)`);
+  if (again) again.focus({ preventScroll: true });
+}
+
+function editPilot(id) {
+  const p = roster.pilots.find((x) => x.id === id);
+  draft = p ? { ...p } : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0 };
+  $("pilot-h").textContent = p ? `Edit ${p.callsign}` : "New pilot";
+  $("pilotform").innerHTML = "";
+  paintPilotForm();
+  openScreen("pilot");
+}
+function paintPilotForm() {
+  const spent = STATS.reduce((n, x) => n + draft[x.key], 0), left = PILOT_POINTS - spent;
+  const rows = STATS.map((x) => `<div class="stat"><div><b>${x.name} (${x.letter})</b><span>${x.does}</span></div>
+    <div class="stepper" role="group" aria-label="${x.name}">
+      <button type="button" data-menu="stat-down" data-stat="${x.key}" data-f="down-${x.key}" aria-label="Less ${x.name}" ${draft[x.key] > 0 ? "" : "disabled"}>−</button>
+      <output aria-live="polite">${draft[x.key]}</output>
+      <button type="button" data-menu="stat-up" data-stat="${x.key}" data-f="up-${x.key}" aria-label="More ${x.name}" ${left > 0 && draft[x.key] < STAT_MAX ? "" : "disabled"}>+</button>
+    </div></div>`).join("");
+  renderForm($("pilotform"), `<label class="field" for="callsign">Callsign</label>
+    <input type="text" id="callsign" data-f="callsign" maxlength="${CALLSIGN_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.callsign)}" placeholder="Pilot">
+    <p class="field">Stats</p>
+    <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${STAT_MAX} in one stat</p>
+    <p>Every pilot adds grit +${GRIT} to attack rolls. Stats change the mech you fly:</p>
+    ${rows}
+    <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">Save pilot</button></div>`);
+}
+
+function editMech(id) {
+  const m = roster.mechs.find((x) => x.id === id);
+  draft = m ? { ...m, gear: m.gear.slice() } : { id: null, name: FRAMES.halberd.name, frame: "halberd", gear: FRAMES.halberd.stock.slice() };
+  $("mech-h").textContent = m ? `Edit ${m.name}` : "New mech";
+  $("mechform").innerHTML = "";
+  paintMechForm();
+  openScreen("mech");
+}
+function paintMechForm() {
+  const f = FRAMES[draft.frame], weight = loadWeight(draft.gear);
+  const frames = Object.entries(FRAMES).map(([k, x]) => `<button type="button" data-menu="frame" data-frame="${k}" data-f="frame-${k}" aria-pressed="${k === draft.frame}">
+    <span>${x.name}</span><small>${x.role} · HP ${x.hp} · Armor ${x.armor} · Evasion ${x.evasion} · Speed ${x.speed}</small></button>`).join("");
+  const mounts = f.mounts.map((mount, s) => {
+    const others = draft.gear.filter((_, j) => j !== s);
+    const room = f.capacity - loadWeight(others);
+    const opts = Object.entries(GEAR).filter(([, g]) => fits(mount, g)).map(([k, g]) => {
+      const why = g.weight > room ? "too heavy" : g.kind === "system" && others.includes(k) ? "already fitted" : "";
+      return `<option value="${k}" ${draft.gear[s] === k ? "selected" : ""} ${why ? "disabled" : ""}>${g.name} · weight ${g.weight}${why ? ` (${why})` : ""}</option>`;
+    }).join("");
+    const g = draft.gear[s] && GEAR[draft.gear[s]];
+    return `<div class="mount"><label for="mount-${s}">Mount ${s + 1} · ${MOUNT_NAME[mount]}</label>
+      <select id="mount-${s}" data-mount="${s}" data-f="mount-${s}"><option value="">Empty</option>${opts}</select>
+      <span class="d">${g ? gearLine(g, null) : mount === "heavy" ? "Takes a heavy or a main weapon." : ""}</span></div>`;
+  }).join("");
+  const t = TRAITS[f.trait], c = CORES[f.core];
+  renderForm($("mechform"), `<label class="field" for="mechname">Name</label>
+    <input type="text" id="mechname" data-f="mechname" maxlength="${MECH_NAME_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.name)}" placeholder="${f.name}">
+    <p class="field">Frame</p>
+    <div class="frames" role="group" aria-label="Frame">${frames}</div>
+    <p>${f.blurb}</p>
+    <p class="frame-facts">HP <b>${f.hp}</b> · Armor <b>${f.armor}</b> · Evasion <b>${f.evasion}</b> · Speed <b>${f.speed}</b> · Heat cap <b>${f.heatCap}</b> · Repairs <b>${f.repairs}</b> · Sensors <b>${f.sensors}</b><br>
+      <b>${t.name}</b> (trait): ${t.text}<br><b>${c.name}</b> (core power, once per battle): ${c.text}</p>
+    <p class="field">Mounts</p>
+    <div class="weight${weight > f.capacity ? " over" : ""}"><span>Weight</span><span class="bar-meter heat"><i style="width:${Math.min(100, 100 * weight / f.capacity).toFixed(0)}%"></i></span><span aria-live="polite">${weight} of ${f.capacity}</span></div>
+    ${mounts}
+    <div class="btnrow"><button type="button" class="go" data-menu="save-mech" data-f="save">Save mech</button></div>`);
+}
+
+function saveDraft(kind) {
+  const list = kind === "pilot" ? roster.pilots : roster.mechs;
+  const clean = kind === "pilot" ? cleanPilot(draft) : cleanMech(draft);
+  if (!clean) return;
+  const at = list.findIndex((x) => x.id === draft.id);
+  if (at >= 0) list[at] = { ...clean, id: draft.id };
+  else list.push({ ...clean, id: newId(kind === "pilot" ? "p" : "m", list) });
+  saveRoster();
+  draft = null;
+  openScreen("hangar");
+}
+function deleteEntry(kind, id) {
+  const list = kind === "pilot" ? roster.pilots : roster.mechs;
+  if (list.length <= 1) return;
+  list.splice(list.findIndex((x) => x.id === id), 1);
+  if (roster.active[kind] === id) roster.active[kind] = list[0].id;
+  pendingDelete = null;
+  saveRoster();
+  paintHangar();
+  $(kind === "pilot" ? "pilotlist" : "mechlist").querySelector("button:not(:disabled)")?.focus();
+}
+
+function exportRoster() {
+  const data = { format: "hardpoint-roster/1", pilots: roster.pilots, mechs: roster.mechs };
+  const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "hardpoint-roster.json";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  importNote(`Exported ${plural(roster.pilots.length, "pilot")} and ${plural(roster.mechs.length, "mech")}.`, "good");
+}
+function importNote(text, cls = "") {
+  const n = $("importnote");
+  n.textContent = text;
+  n.className = "note " + cls;
+}
+function importText(text) {
+  let data;
+  if (text.length > 200000) { importNote("That's far too long to be a roster.", "bad"); return; }
+  try { data = JSON.parse(text); } catch (e) { importNote("That isn't readable JSON. Paste the whole exported file, from the first { to the last }.", "bad"); return; }
+  if (!data || typeof data !== "object" || (!Array.isArray(data.pilots) && !Array.isArray(data.mechs))) {
+    importNote("That JSON has no pilots or mechs in it.", "bad");
+    return;
+  }
+  const added = addToRoster(roster, data.pilots, data.mechs);
+  if (!added.pilots && !added.mechs) { importNote("Nothing in it could be used.", "bad"); return; }
+  saveRoster();
+  paintHangar();
+  importNote(`Added ${plural(added.pilots, "pilot")} and ${plural(added.mechs, "mech")}.`, "good");
+  $("importtext").value = "";
+}
+$("importfile").addEventListener("change", () => {
+  const file = $("importfile").files[0];
+  if (!file) return;
+  file.text().then(importText, () => importNote("That file couldn't be read.", "bad"));
+  $("importfile").value = "";
+});
+$("screen").addEventListener("input", (e) => {
+  if (!draft) return;
+  if (e.target.id === "callsign") draft.callsign = e.target.value;
+  if (e.target.id === "mechname") draft.name = e.target.value;
+});
+$("screen").addEventListener("change", (e) => {
+  const s = e.target.dataset.mount;
+  if (s == null || !draft) return;
+  draft.gear[Number(s)] = e.target.value || null;
+  paintMechForm();
+});
 
 // ---------- Wiring ----------
 map.addEventListener("click", (e) => {
@@ -2767,10 +3327,15 @@ function onKeyButton(k, viaKey) {
   if (k === "fire" && ui.target) return fire(ui.weapon, ui.target);
   if (k === "skip") { log("You hold the second shot.", "sys"); setMode("idle"); map.focus({ preventScroll: true }); return; }
   if (k === "back") { setMode("weapon", { barrage: ui.barrage }); focusOrders(); return; }
+  if (k.startsWith("sys-")) {
+    const sys = systemsOf(you).find((x) => x.key === Number(k.slice(4)));
+    if (sys) useSystem(sys, viaKey);
+    return;
+  }
   if (k === "st-repair") return stabilize("repair");
   if (k === "st-cool") return stabilize("cool");
   if (k.startsWith("w-")) {
-    const w = weaponsOf(you).find((x) => x.key === k.slice(2));
+    const w = weaponsOf(you).find((x) => x.key === Number(k.slice(2)));
     if (!w) return;
     const targets = validTargets(w);
     setMode("target", { weapon: w, barrage: ui.barrage });
@@ -2782,6 +3347,15 @@ $("game").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-key]");
   if (b && B) onKeyButton(b.dataset.key, e.detail === 0);
 });
+// picking a pilot or mech in the briefing rebuilds the same site around them
+$("dialog").addEventListener("change", (e) => {
+  const k = e.target.dataset.key;
+  if (!B || B.phase !== "brief" || (k !== "pick-pilot" && k !== "pick-mech")) return;
+  roster.active[k === "pick-pilot" ? "pilot" : "mech"] = e.target.value;
+  saveRoster();
+  newBattle(B.seed, B.threat);
+  $("dialog").querySelector(`[data-key="${k}"]`)?.focus({ preventScroll: true });
+});
 for (const b of document.querySelectorAll(".tabs [role=tab]")) b.addEventListener("click", () => showTab(b.dataset.tab));
 $("menubtn").addEventListener("click", () => openScreen("title"));
 $("helpbtn").addEventListener("click", () => { helpFrom = "game"; openScreen("help"); });
@@ -2791,7 +3365,7 @@ $("soundbtn").setAttribute("aria-pressed", prefs.sound);
 $("screen").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-menu]");
   if (!b) return;
-  const m = b.dataset.menu;
+  const m = b.dataset.menu, id = b.dataset.id;
   if (m === "continue") {
     if (liveBattle()) { closeScreen(); return; }
     const saved = loadSave();
@@ -2802,8 +3376,50 @@ $("screen").addEventListener("click", (e) => {
   } else if (m === "help") {
     helpFrom = "title";
     openScreen("help");
-  } else if (m === "back") {
-    if (helpFrom === "game") closeScreen(); else openScreen("title");
+  } else if (m === "hangar") {
+    pendingDelete = null;
+    importNote("");
+    openScreen("hangar");
+  } else if (m === "back" || m === "cancel-edit") {
+    backFromScreen();
+  } else if (m === "new-pilot" || m === "edit-pilot") {
+    editPilot(id);
+  } else if (m === "new-mech" || m === "edit-mech") {
+    editMech(id);
+  } else if (m.startsWith("ask-del-")) {
+    pendingDelete = `${m.slice(8)}:${id}`;
+    paintHangar();
+    document.querySelector(`#screen [data-menu="keep"]`)?.focus();
+  } else if (m === "keep") {
+    pendingDelete = null;
+    paintHangar();
+    document.querySelector(`#screen [data-menu^="ask-del-"][data-id="${id}"]`)?.focus();
+  } else if (m === "del-pilot" || m === "del-mech") {
+    deleteEntry(m.slice(4), id);
+  } else if (m === "stat-up" || m === "stat-down") {
+    const k = b.dataset.stat, spent = STATS.reduce((n, x) => n + draft[x.key], 0);
+    if (m === "stat-up" && spent < PILOT_POINTS && draft[k] < STAT_MAX) draft[k]++;
+    if (m === "stat-down" && draft[k] > 0) draft[k]--;
+    paintPilotForm();
+  } else if (m === "frame") {
+    const k = b.dataset.frame;
+    if (k === draft.frame) return;
+    // a stock name follows the frame; a name you chose stays
+    if (!draft.name.trim() || Object.values(FRAMES).some((f) => f.name === draft.name.trim())) draft.name = FRAMES[k].name;
+    draft.frame = k;
+    draft.gear = FRAMES[k].stock.slice();
+    paintMechForm();
+  } else if (m === "save-pilot") {
+    saveDraft("pilot");
+  } else if (m === "save-mech") {
+    saveDraft("mech");
+  } else if (m === "export") {
+    exportRoster();
+  } else if (m === "import-file") {
+    $("importfile").click();
+  } else if (m === "import-text") {
+    const text = $("importtext").value.trim();
+    if (text) importText(text); else importNote("Paste the exported text into the box first.", "bad");
   }
 });
 
@@ -2812,10 +3428,7 @@ document.addEventListener("keydown", (e) => {
   if (e.target.matches("input:not([type=range]), textarea, select")) return;
   if (e.key === "v" || e.key === "V") { setSound(!prefs.sound); return; }
   if (screenKind) {
-    if (e.key === "Escape") {
-      if (screenKind === "help") { if (helpFrom === "game") closeScreen(); else openScreen("title"); }
-      else if (liveBattle()) closeScreen();
-    }
+    if (e.key === "Escape") backFromScreen();
     return;
   }
   const dg = ui.dialog;
@@ -2837,7 +3450,7 @@ document.addEventListener("keydown", (e) => {
     else { setMode("idle"); focusMap(B.you.pos); }
     return;
   }
-  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "smoke", t: "stabilize", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
+  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "systems", t: "stabilize", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
   if (act && canDo(act)) { e.preventDefault(); doAction(act, true); }
 });
 
