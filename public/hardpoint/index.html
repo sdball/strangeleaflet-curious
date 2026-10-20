@@ -590,7 +590,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <div class="stick"><button type="button" data-menu="back">Back</button></div>
     <h1 id="help-h">How to play</h1>
     <p class="lede">Tap your mech to give it orders. Tap anything else on the map to see what it is and what it does. On a keyboard, the arrow keys move a cursor over the map, <kbd>Enter</kbd> picks a hex or opens your orders, <kbd>Esc</kbd> backs out, and each order has a letter key shown beside it.</p>
-    <p>Every shot makes a sound, built on the spot by your browser. Sound starts on. The Sound button at the top, or <kbd>V</kbd>, turns it off and back on. On an iPhone, the silent switch mutes it too. See how each sound is built, and change it, on the <a href="../sound-bench/">Sound Bench</a>.</p>
+    <p>Every shot makes a sound, built on the spot by your browser. Sound starts on. The Sound button at the top, or <kbd>V</kbd>, turns it off and back on. On an iPhone it plays even with the silent switch on, so use the Sound button to keep it quiet. See how each sound is built, and change it, on the <a href="../sound-bench/">Sound Bench</a>.</p>
 
     <h2 id="turn-h">A turn</h2>
     <ul>
@@ -2124,8 +2124,8 @@ function ac() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     audio = new AC();
-    // ambient, so the iPhone's silent switch mutes the game
-    if (navigator.audioSession) navigator.audioSession.type = "ambient";
+    // playback, so the game is heard even with the iPhone's silent switch on. the Sound button mutes it
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
     // a limiter that only steps in when sounds pile up, so a lone boom keeps its punch
     const comp = audio.createDynamicsCompressor();
     comp.threshold.value = -4;

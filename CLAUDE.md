@@ -156,7 +156,7 @@ Guides are long, hands-on walkthroughs you work through over several sittings. `
 
   Advertise shortcuts with `aria-keyshortcuts` and `<kbd>` in the captions.
 - State worth sharing goes in the URL hash via `URLSearchParams` and `history.replaceState` (see `bitfield-explorer`, `minifloat-ruler`), with a footer line saying the link is shareable. Per-visitor preferences may use `localStorage`, always wrapped in `try/catch`.
-- Audio uses the Web Audio API. On iOS, set `navigator.audioSession.type = "playback"`, resume when the state isn't `"running"`, and resume on `pointerup`/`touchend`/`keydown` since a touch `pointerdown` doesn't count as a gesture. See `morse-code`. A game whose sounds are effects, like `hardpoint`, uses `"ambient"` instead, so the silent switch mutes it.
+- Audio uses the Web Audio API. On iOS, set `navigator.audioSession.type = "playback"`, resume when the state isn't `"running"`, and resume on `pointerup`/`touchend`/`keydown` since a touch `pointerdown` doesn't count as a gesture. See `morse-code`. Games use `"playback"` too (`hardpoint` tried `"ambient"`, and on a phone with the silent switch on it seemed broken), so give them their own Sound toggle.
 
 ## Sound effects
 
