@@ -429,6 +429,13 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .sheet .stick { position: sticky; top: 0; padding: .5rem 0; background: rgba(6, 11, 14, .92); z-index: 1; }
 .sheet code { font: 500 .9em var(--mono); }
 
+/* ---------- Sound test ---------- */
+.btnrow.tight { margin: 0; }
+.stage { display: block; width: 100%; height: auto; margin: .5rem 0 .35rem; pointer-events: none; }
+.stage .hx { cursor: default; }
+.testcap { margin: 0; min-height: 2.9em; font: 400 .8rem/1.45 var(--mono); color: var(--muted); }
+.testcap b { color: var(--ink); font-weight: 600; }
+
 /* ---------- Hangar ---------- */
 .btnrow { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0; }
 .note { color: var(--muted); font-size: .9rem; min-height: 1.4em; }
@@ -542,6 +549,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <button type="button" class="go" data-menu="new">New Game<small>Get a briefing on a fresh battlefield</small></button>
       <button type="button" data-menu="hangar">Hangar<small>Build pilots and mechs, back them up, share them</small></button>
       <button type="button" data-menu="help">Instructions<small>How turns, cover, heat, and damage work</small></button>
+      <button type="button" data-menu="soundtest">Sound Test<small>Fire every weapon on a practice range</small></button>
     </div>
     <p class="legal">Hardpoint is inspired by LANCER. LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</p><!-- tic-ok -->
   </section>
@@ -585,11 +593,30 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <div id="mechform"></div>
   </section>
 
+  <section class="sheet" id="soundtest" aria-labelledby="soundtest-h" hidden>
+    <div class="stick">
+      <div class="btnrow tight">
+        <button type="button" data-menu="back">Back</button>
+        <button type="button" data-menu="test-sound" id="testsound" aria-pressed="true" aria-keyshortcuts="V">Sound</button>
+      </div>
+      <svg class="stage" id="stage" role="img" aria-label="A practice range: your mech on the left, a hostile on the right"></svg>
+      <p class="testcap" id="testcap" aria-live="polite"></p>
+    </div>
+    <h1 id="soundtest-h">Sound test</h1>
+    <p class="lede">Fire any weapon on this practice range. Each shot looks and sounds just as it does in battle. Press Hit to land it, or Miss to send it wide. The sounds it made are listed under the range, and each name opens that sound on the <a href="../sound-bench/">Sound Bench</a>.</p>
+    <h2 id="test-you-h">Your weapons</h2>
+    <ul class="roster" id="testyou" aria-labelledby="test-you-h"></ul>
+    <h2 id="test-sys-h">Your systems</h2>
+    <ul class="roster" id="testsys" aria-labelledby="test-sys-h"></ul>
+    <h2 id="test-foe-h">The hostiles</h2>
+    <ul class="roster" id="testfoe" aria-labelledby="test-foe-h"></ul>
+  </section>
+
   <section class="sheet" id="help" aria-labelledby="help-h" hidden>
     <div class="stick"><button type="button" data-menu="back">Back</button></div>
     <h1 id="help-h">How to play</h1>
     <p class="lede">Tap your mech to give it orders. Tap anything else on the map to see what it is and what it does. On a keyboard, the arrow keys move a cursor over the map, <kbd>Enter</kbd> picks a hex or opens your orders, <kbd>Esc</kbd> backs out, and each order has a letter key shown beside it.</p>
-    <p>Every shot makes a sound, built on the spot by your browser. Sound starts on. The Sound button at the top, or <kbd>V</kbd>, turns it off and back on. On an iPhone it plays even with the silent switch on, so use the Sound button to keep it quiet. See how each sound is built, and change it, on the <a href="../sound-bench/">Sound Bench</a>.</p>
+    <p>Every shot makes a sound, built on the spot by your browser. Sound starts on. The Sound button at the top, or <kbd>V</kbd>, turns it off and back on. On an iPhone it plays even with the silent switch on, so use the Sound button to keep it quiet. To hear every weapon without a fight, pick Sound Test on the main menu. See how each sound is built, and change it, on the <a href="../sound-bench/">Sound Bench</a>.</p>
 
     <h2 id="turn-h">A turn</h2>
     <ul>
@@ -2082,6 +2109,23 @@ function drawOverlay() {
   if (ui.showCursor && document.activeElement === map) o.append(hexPoly(ui.cursor, "cursor", 0.97));
 }
 
+// a token: your mech is a circle with an arrowhead, a hostile a hexagon with its letter
+function tokBody(u, cls = "") {
+  const [x, y] = center(u.pos);
+  const t = svgEl("g", { class: `tok ${u.side}${cls}`, transform: `translate(${x.toFixed(1)},${y.toFixed(1)})` });
+  if (u.side === "you") {
+    t.append(svgEl("circle", { r: R * 0.62, class: "tok-body" }));
+    t.append(svgEl("path", { d: "M0 -11 L10 7 L0 2 L-10 7 Z", class: "glyph" }));
+  } else {
+    const pts = [];
+    for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k; pts.push(`${(R * 0.6 * Math.cos(a)).toFixed(1)},${(R * 0.6 * Math.sin(a)).toFixed(1)}`); }
+    t.append(svgEl("polygon", { points: pts.join(" "), class: "tok-body" }));
+    t.append(svgEl("text", { x: -1.5, y: 0 }, u.letter));
+    if (u.num) t.append(svgEl("text", { x: 9, y: 7, class: "num" }, String(u.num)));
+  }
+  return t;
+}
+
 function drawUnits() {
   const g = layers.units;
   g.replaceChildren();
@@ -2091,17 +2135,7 @@ function drawUnits() {
       if (u.side === "foe") g.append(svgEl("path", { d: `M${x - 8} ${y - 8} L${x + 8} ${y + 8} M${x + 8} ${y - 8} L${x - 8} ${y + 8}`, class: "wreck" }));
       continue;
     }
-    const t = svgEl("g", { class: `tok ${u.side}${B.active === u && u.side === "foe" ? " active" : ""}`, transform: `translate(${x.toFixed(1)},${y.toFixed(1)})` });
-    if (u.side === "you") {
-      t.append(svgEl("circle", { r: R * 0.62, class: "tok-body" }));
-      t.append(svgEl("path", { d: "M0 -11 L10 7 L0 2 L-10 7 Z", class: "glyph" }));
-    } else {
-      const pts = [];
-      for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k; pts.push(`${(R * 0.6 * Math.cos(a)).toFixed(1)},${(R * 0.6 * Math.sin(a)).toFixed(1)}`); }
-      t.append(svgEl("polygon", { points: pts.join(" "), class: "tok-body" }));
-      t.append(svgEl("text", { x: -1.5, y: 0 }, u.letter));
-      t.append(svgEl("text", { x: 9, y: 7, class: "num" }, String(u.num)));
-    }
+    const t = tokBody(u, B.active === u && u.side === "foe" ? " active" : "");
     if (!u.grunt) {
       const w = R * 1.0;
       t.append(svgEl("rect", { x: -w / 2, y: R * 0.66, width: w, height: 4, class: "hpbar-bg" }));
@@ -2152,6 +2186,8 @@ function setSound(on) {
   prefs.sound = on;
   savePrefs();
   $("soundbtn").setAttribute("aria-pressed", on);
+  $("testsound").setAttribute("aria-pressed", on);
+  if (screenKind === "soundtest") paintCaption();
   if (on && ac()) audio.resume().then(() => play("ping"));
 }
 
@@ -2245,7 +2281,9 @@ const SOUNDS = {
 
 const soundLength = (s) => Math.max(...s.layers.map((L) => (L.at || 0) + (L.spread || 0) + L.dur));
 // play a sound at seconds from now; len stretches it to last that long
+let listen = null;
 function play(id, at = 0, len) {
+  if (listen) listen(id);
   const a = live(), s = SOUNDS[id];
   if (!a || !s) return;
   const k = len ? len / soundLength(s) : 1;
@@ -2294,9 +2332,12 @@ function aim(a, b) {
   const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
   return { ux: dx / len, uy: dy / len, nx: -dy / len, ny: dx / len, len };
 }
+// effects draw on the battle map, or on the sound test's range while a test is firing
+let fxHost = null;
+const fxLayer = () => (fxHost ? fxHost.fx : layers.fx);
 function fxAdd(tag, attrs, text) {
   const el = svgEl(tag, attrs, text);
-  layers.fx.append(el);
+  fxLayer().append(el);
   return el;
 }
 // requestAnimationFrame pauses in a background tab, so a fight waits for you to come back
@@ -2322,9 +2363,10 @@ async function hold(els) {
 }
 function shake(px) {
   if (reduceMotion.matches) return;
+  const el = fxHost ? fxHost.svg : map;
   tween(200, (q) => {
     const k = px * (1 - q);
-    map.style.transform = q < 1 ? `translate(${jitter(k).toFixed(1)}px, ${jitter(k).toFixed(1)}px)` : "";
+    el.style.transform = q < 1 ? `translate(${jitter(k).toFixed(1)}px, ${jitter(k).toFixed(1)}px)` : "";
   });
 }
 
@@ -2602,7 +2644,7 @@ async function slideFx(u, fromPos) {
 function pop(i, text, cls) {
   const [x, y] = center(i);
   const t = svgEl("text", { x, y: y - 14, class: `pop ${cls}` }, text);
-  layers.fx.append(t);
+  fxLayer().append(t);
   setTimeout(() => t.remove(), 900);
 }
 
@@ -3046,7 +3088,7 @@ function restoreBattle(s) {
 // ---------- Screens ----------
 let screenKind = null, helpFrom = "title";
 // each screen's sheet and its heading
-const SHEETS = { title: ["title", "title-h"], help: ["help", "help-h"], hangar: ["hangar", "hangar-h"], pilot: ["pilotedit", "pilot-h"], mech: ["mechedit", "mech-h"] };
+const SHEETS = { title: ["title", "title-h"], help: ["help", "help-h"], hangar: ["hangar", "hangar-h"], pilot: ["pilotedit", "pilot-h"], mech: ["mechedit", "mech-h"], soundtest: ["soundtest", "soundtest-h"] };
 function openScreen(kind) {
   screenKind = kind;
   const scr = $("screen");
@@ -3056,6 +3098,7 @@ function openScreen(kind) {
   $("game").inert = true;
   if (kind === "title") updateTitle();
   if (kind === "hangar") paintHangar();
+  if (kind === "soundtest") openRange();
   scr.scrollTop = 0;
   const sheet = $(SHEETS[kind][0]);
   const first = kind === "title" ? sheet.querySelector(".menu button:not(:disabled)")
@@ -3064,7 +3107,7 @@ function openScreen(kind) {
 }
 function backFromScreen() {
   if (screenKind === "help") { if (helpFrom === "game") closeScreen(); else openScreen("title"); }
-  else if (screenKind === "hangar") openScreen("title");
+  else if (screenKind === "hangar" || screenKind === "soundtest") openScreen("title");
   else if (screenKind === "pilot" || screenKind === "mech") openScreen("hangar");
   else if (liveBattle()) closeScreen();
 }
@@ -3263,6 +3306,131 @@ $("screen").addEventListener("change", (e) => {
   paintMechForm();
 });
 
+// ---------- Sound test ----------
+// a strip of the hex grid where each weapon fires through the same effects, and so the same sounds,
+// as in battle. ranged shots cross five hexes; melee is hex to hex. row 3 leaves room for a shell's arc.
+const RANGE_ROW = 3, RANGE_ROWS = [1, 4];
+const FX_NOTE = {
+  burst: (w) => plural(w.shots || 3, "round"),
+  beam: () => "A charged beam",
+  shell: () => "A lobbed shell",
+  cleave: () => "A cleaving swing",
+  claws: () => "Three raking claws",
+  maul: () => "A heavy blow",
+};
+function testNote(w) {
+  const bits = [FX_NOTE[w.fx](w)];
+  if (w.reliable) bits.push(`Reliable ${w.reliable} on a miss`);
+  if (w.knockback) bits.push(`knockback ${w.knockback} on a hit`);
+  return bits.join(" · ");
+}
+const TESTS = [
+  ...Object.values(GEAR).filter((g) => g.kind === "ranged" || g.kind === "melee").map((g) => ({ list: "testyou", name: g.name, side: "you", w: g })),
+  ...Object.values(GEAR).filter((g) => g.use === "smoke").map((g) => ({ list: "testsys", name: g.name, side: "you", smoke: true })),
+  ...Object.values(HOSTILES).map((h) => ({ list: "testfoe", name: `${h.name} ${h.weapon.name}`, side: "foe", letter: h.letter, foe: h.name, w: h.weapon })),
+];
+let testing = false, queued = null, lastTest = null, heard = new Map();
+
+function listTests() {
+  for (const id of ["testyou", "testsys", "testfoe"]) {
+    $(id).innerHTML = TESTS.map((t, i) => t.list !== id ? "" : `<li>
+      <div class="who"><b>${escapeHtml(t.name)}</b><span>${t.smoke ? "A canister that blooms into smoke" : escapeHtml(testNote(t.w))}</span></div>
+      <div class="acts">${t.smoke
+        ? `<button type="button" data-menu="test" data-test="${i}" data-hit="1" aria-label="Fire the ${escapeHtml(t.name)}">Fire</button>`
+        : `<button type="button" data-menu="test" data-test="${i}" data-hit="1" aria-label="${escapeHtml(t.name)}, hit">Hit</button><button type="button" data-menu="test" data-test="${i}" data-hit="0" aria-label="${escapeHtml(t.name)}, miss">Miss</button>`}</div>
+    </li>`).join("");
+  }
+}
+
+const stage = { svg: $("stage"), fx: null };
+function drawRange(units) {
+  const [r0, r1] = RANGE_ROWS, top = center(idxOf(0, r0))[1] - R - 6, h = center(idxOf(0, r1))[1] + R + 6 - top;
+  const svg = stage.svg;
+  svg.setAttribute("viewBox", `0 ${top.toFixed(1)} ${VBW.toFixed(1)} ${h.toFixed(1)}`);
+  svg.replaceChildren(svgEl("rect", { x: 0.5, y: top + 0.5, width: VBW - 1, height: h - 1, rx: 8, class: "board-bg" }));
+  for (let r = r0; r <= r1; r++) for (let c = 0; c < COLS; c++) svg.append(svgEl("polygon", { points: corners(idxOf(c, r)), class: "hx t0" }));
+  for (const u of units) {
+    const t = tokBody(u);
+    tokEl.set(u, t);
+    svg.append(t);
+  }
+  stage.fx = svgEl("g");
+  svg.append(stage.fx);
+}
+// your mech on the left and a hostile on the right, close enough for melee or five hexes apart
+function rangeUnits(t) {
+  const melee = t && t.w && t.w.kind === "melee";
+  const foe = t && t.foe ? t : null;
+  const you = { side: "you", pos: idxOf(melee ? 3 : 1, RANGE_ROW) };
+  const them = { side: "foe", pos: idxOf(melee ? 4 : 6, RANGE_ROW), letter: foe ? foe.letter : "B" };
+  stage.svg.setAttribute("aria-label", `A practice range: your mech on the left, ${foe ? `a ${foe.foe}` : "a hostile"} ${melee ? "next to it" : "five hexes away"} on the right`);
+  return { you, them };
+}
+function openRange() {
+  if (testing) return;
+  drawRange(Object.values(rangeUnits(null)));
+  lastTest = null;
+  paintCaption();
+}
+
+function paintCaption() {
+  const cap = $("testcap");
+  if (!lastTest) {
+    cap.innerHTML = "Pick a weapon below and press Hit or Miss.";
+    if (!prefs.sound) cap.innerHTML += " Sound is off: turn it on with the Sound button or <kbd>V</kbd>.";
+    return;
+  }
+  const [t, hit] = lastTest;
+  const names = [...heard].map(([id, n]) => `<a href="../sound-bench/#sound=hardpoint/${id}">${escapeHtml(SOUNDS[id].name)}</a>${n > 1 ? ` ×${n}` : ""}`);
+  cap.innerHTML = `<b>${escapeHtml(t.name)}${t.smoke ? "" : hit ? ", hit" : ", miss"}.</b> ` +
+    (names.length ? `Sounds: ${names.join(" · ")}.` : "") +
+    (prefs.sound ? "" : " Sound is off, so these stay silent.");
+}
+
+// a fresh context can still be starting up when the first test fires, so wait a moment for it
+async function wake() {
+  if (!prefs.sound || !ac() || audio.state === "running") return;
+  await Promise.race([audio.resume().catch(() => {}), sleep(300)]);
+}
+
+// a test pressed while another is firing goes next, so shots never pile up
+async function fireTest(t, hit) {
+  if (testing) { queued = [t, hit]; return; }
+  testing = true;
+  await wake();
+  const { you, them } = rangeUnits(t);
+  drawRange([you, them]);
+  lastTest = [t, hit];
+  heard = new Map();
+  paintCaption();
+  fxHost = stage;
+  listen = (id) => { heard.set(id, (heard.get(id) || 0) + 1); paintCaption(); };
+  try {
+    if (t.smoke) {
+      const at = idxOf(5, RANGE_ROW);
+      await canisterFx(you.pos, at, [at, ...neighbors(at)]);
+    } else {
+      const att = t.side === "you" ? you : them, tgt = att === you ? them : you, w = t.w;
+      await shotFx(att, w, tgt, hit);
+      // the damage number and knockback follow the shot, the way an attack resolves in battle
+      const dmg = hit ? rollDamage(w.dmg, false) : w.reliable || 0;
+      pop(tgt.pos, dmg ? `−${dmg}` : "miss", dmg ? (tgt.side === "you" ? "hurt" : "dealt") : "miss");
+      if (hit && w.knockback) {
+        const from = tgt.pos, step = Math.sign(colOf(tgt.pos) - colOf(att.pos));
+        tgt.pos = idxOf(colOf(from) + step * w.knockback, RANGE_ROW);
+        await slideFx(tgt, from);
+      }
+      await sleep(reduceMotion.matches ? 250 : 420);
+    }
+  } finally {
+    listen = null;
+    fxHost = null;
+    testing = false;
+  }
+  if (queued && screenKind === "soundtest") { const [qt, qh] = queued; queued = null; fireTest(qt, qh); }
+  queued = null;
+}
+
 // ---------- Wiring ----------
 map.addEventListener("click", (e) => {
   const hx = e.target.closest("[data-i]");
@@ -3377,6 +3545,7 @@ $("menubtn").addEventListener("click", () => openScreen("title"));
 $("helpbtn").addEventListener("click", () => { helpFrom = "game"; openScreen("help"); });
 $("soundbtn").addEventListener("click", () => setSound(!prefs.sound));
 $("soundbtn").setAttribute("aria-pressed", prefs.sound);
+$("testsound").setAttribute("aria-pressed", prefs.sound);
 
 $("screen").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-menu]");
@@ -3398,6 +3567,12 @@ $("screen").addEventListener("click", (e) => {
     importNote("");
     $("resetnote").textContent = "";
     openScreen("hangar");
+  } else if (m === "soundtest") {
+    openScreen("soundtest");
+  } else if (m === "test") {
+    fireTest(TESTS[b.dataset.test], b.dataset.hit === "1");
+  } else if (m === "test-sound") {
+    setSound(!prefs.sound);
   } else if (m === "back" || m === "cancel-edit") {
     backFromScreen();
   } else if (m === "new-pilot" || m === "edit-pilot") {
@@ -3482,6 +3657,7 @@ document.addEventListener("keydown", (e) => {
 addEventListener("resize", () => placeOrders());
 
 // ---------- Start ----------
+listTests();
 (function boot() {
   const params = new URLSearchParams(location.hash.slice(1));
   const seed = parseInt(params.get("site"), 10);
