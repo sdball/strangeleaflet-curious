@@ -568,6 +568,10 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <textarea id="importtext" rows="4" spellcheck="false" autocomplete="off"></textarea>
     <div class="btnrow"><button type="button" data-menu="import-text">Import pasted text</button></div>
     <p class="note" id="importnote" aria-live="polite"></p>
+    <h2 id="reset-h">Start over</h2>
+    <p>Reset puts the hangar back the way the game starts: Wren and a stock Halberd, and nothing else. Every other pilot and mech is gone for good, so export first if you might want them back. A battle already under way isn't affected.</p>
+    <div class="btnrow" id="resetrow"></div>
+    <p class="note" id="resetnote" aria-live="polite"></p>
   </section>
 
   <section class="sheet" id="pilotedit" aria-labelledby="pilot-h" hidden>
@@ -648,6 +652,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <li><b>The Lantern is the artillery.</b> It sees 15 hexes and gets a free Lock On every turn. Its core power, Flare Net, locks on to every hostile in sight and lets your attacks ignore cover.</li>
       <li><b>Mounts take gear of their size.</b> A main mount takes a main weapon, a heavy mount takes a heavy or a main weapon, and a system mount takes a system. Everything together has to fit the frame's weight capacity, and each system fits only once.</li>
       <li><b>Export to keep a copy.</b> The Hangar saves your pilots and mechs to a file you can import later, on another device, or send to a friend. Importing adds to what you have and replaces nothing.</li>
+      <li><b>Reset to start over.</b> Reset hangar, at the end of the Hangar, puts back Wren and the stock Halberd and removes everything else.</li>
     </ul>
 
     <h2 id="credit-h">Credits</h2>
@@ -3080,7 +3085,7 @@ function updateTitle() {
 }
 
 // ---------- Hangar ----------
-let pendingDelete = null, draft = null;
+let pendingDelete = null, pendingReset = false, draft = null;
 const pilotSummary = (p) => STATS.map((x) => x.letter + p[x.key]).join(" ") + ` · grit +${GRIT}`;
 function mechSummary(m) {
   const f = FRAMES[m.frame];
@@ -3099,6 +3104,9 @@ function rosterItem(kind, x, title, sub) {
 function paintHangar() {
   $("pilotlist").innerHTML = roster.pilots.map((p) => rosterItem("pilot", p, p.callsign, pilotSummary(p))).join("");
   $("mechlist").innerHTML = roster.mechs.map((m) => rosterItem("mech", m, m.name, mechSummary(m))).join("");
+  $("resetrow").innerHTML = pendingReset
+    ? `<button type="button" class="warn" data-menu="reset">Reset to Wren and the Halberd</button><button type="button" data-menu="keep-roster">Keep my hangar</button>`
+    : `<button type="button" data-menu="ask-reset">Reset hangar</button>`;
 }
 // re-render a form and put focus back on the control that had it, by its data-f
 function renderForm(el, html) {
@@ -3195,6 +3203,16 @@ function deleteEntry(kind, id) {
   saveRoster();
   paintHangar();
   $(kind === "pilot" ? "pilotlist" : "mechlist").querySelector("button:not(:disabled)")?.focus();
+}
+
+function resetRoster() {
+  roster = freshRoster();
+  saveRoster();
+  pendingReset = false;
+  pendingDelete = null;
+  paintHangar();
+  $("resetnote").textContent = "Hangar reset to Wren and the stock Halberd.";
+  $("resetrow").querySelector("button").focus();
 }
 
 function exportRoster() {
@@ -3378,7 +3396,9 @@ $("screen").addEventListener("click", (e) => {
     openScreen("help");
   } else if (m === "hangar") {
     pendingDelete = null;
+    pendingReset = false;
     importNote("");
+    $("resetnote").textContent = "";
     openScreen("hangar");
   } else if (m === "back" || m === "cancel-edit") {
     backFromScreen();
@@ -3413,6 +3433,13 @@ $("screen").addEventListener("click", (e) => {
     saveDraft("pilot");
   } else if (m === "save-mech") {
     saveDraft("mech");
+  } else if (m === "ask-reset" || m === "keep-roster") {
+    pendingReset = m === "ask-reset";
+    $("resetnote").textContent = "";
+    paintHangar();
+    $("resetrow").querySelector(pendingReset ? '[data-menu="keep-roster"]' : "button").focus();
+  } else if (m === "reset") {
+    resetRoster();
   } else if (m === "export") {
     exportRoster();
   } else if (m === "import-file") {
