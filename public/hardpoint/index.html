@@ -620,8 +620,8 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 
     <h2 id="turn-h">A turn</h2>
     <ul>
-      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Systems (fire smoke, send a repair drone, and so on). Or spend both on one full action: Barrage (fire two different weapons) or Stabilize.</li>
-      <li><b>Overcharge and your core power are free.</b> Overcharge buys an extra quick action for heat. Your core power works once per battle.</li>
+      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Systems (fire smoke, send a repair drone, and so on). Each quick action works once a turn, so to fire twice, spend both on one full action: Barrage (fire two different weapons). The other full action is Stabilize.</li>
+      <li><b>Overcharge and your core power are free.</b> Overcharge buys an extra quick action for heat. You take it right away, and it can be one you've already used this turn, like a second Skirmish. Your core power works once per battle.</li>
       <li><b>Ending your turn early asks first.</b> If you still have movement or actions left, you'll be asked to confirm.</li>
       <li><b>Then every hostile takes a turn.</b> Watch the log, or the bar under the map, to see what they did.</li>
     </ul>
@@ -1526,7 +1526,7 @@ function startPlayerTurn() {
   B.active = u;
   for (const [i, until] of B.smoke) if (until <= B.round) B.smoke.delete(i);
   log(`Round ${B.round}`, "round");
-  B.turn = { mp: u.speed, quick: 2, fullOk: true, ocUsed: false, limited: false, freeLock: hasTrait(u, "spotter") };
+  B.turn = { mp: u.speed, quick: 2, fullOk: true, ocUsed: false, oc: false, used: [], limited: false, freeLock: hasTrait(u, "spotter") };
   if (u.braceLimit) {
     u.braceLimit = false;
     u.reaction = false;
@@ -1670,8 +1670,15 @@ async function foeAct(e) {
 
 // ---------- Your actions ----------
 const T = () => B.turn;
-function spendQuick() { T().quick--; T().fullOk = false; }
+// each quick action works once a turn; an overcharged one is free, can repeat one, and has to be used at once
+const quickOk = (act) => T().oc || (T().quick >= 1 && !T().used.includes(act));
+function spendQuick(act) {
+  const t = T();
+  if (t.oc) { t.oc = false; return; }
+  t.quick--; t.fullOk = false; t.used.push(act);
+}
 function spendFull() { T().quick -= 2; T().fullOk = false; }
+const firing = () => weaponsOf(B.you).filter((w) => validTargets(w).length);
 const yourTurn = () => B && !B.over && B.phase === "you" && !busy && B.you.alive && !ui.dialog;
 
 const ORDERS = [
@@ -1691,13 +1698,15 @@ function canDo(act) {
   if (!yourTurn()) return false;
   const t = T(), you = B.you;
   if (you.status.stunned) return act === "end";
+  // an overcharged action can't wait, so only quick actions until it's spent
+  if (t.oc && !["boost", "skirmish", "lock", "systems", "end"].includes(act)) return false;
   switch (act) {
     case "move": return t.mp > 0;
-    case "boost": return t.quick >= 1;
-    case "skirmish": return t.quick >= 1 && weaponsOf(you).some((w) => validTargets(w).length);
-    case "barrage": return t.fullOk && t.quick >= 2 && weaponsOf(you).length >= 2 && weaponsOf(you).some((w) => validTargets(w).length);
-    case "lock": return (t.quick >= 1 || t.freeLock) && lockTargets().length > 0;
-    case "systems": return t.quick >= 1 && systemsOf(you).some((x) => usable(you, x));
+    case "boost": return quickOk("boost");
+    case "skirmish": return quickOk("skirmish") && firing().length > 0;
+    case "barrage": return t.fullOk && t.quick >= 2 && firing().length >= 2;
+    case "lock": return (quickOk("lock") || t.freeLock) && lockTargets().length > 0;
+    case "systems": return quickOk("systems") && systemsOf(you).some((x) => usable(you, x));
     case "stabilize": return t.fullOk && t.quick >= 2;
     case "overcharge": return !t.ocUsed && !t.limited;
     case "core": return !B.coreUsed && !t.limited;
@@ -1710,30 +1719,34 @@ function canDo(act) {
 function orderNote(act) {
   const t = T(), you = B.you;
   if (you.status.stunned && act !== "end") return "stunned";
-  const quickLeft = t.quick >= 1, fullLeft = t.fullOk && t.quick >= 2;
+  const fullLeft = t.fullOk && t.quick >= 2;
+  // why a quick action is out, or null when it's open
+  const quickWhy = (a) => quickOk(a) ? null : t.used.includes(a) && t.quick >= 1 ? "used this turn" : "no quick actions left";
+  const cost = t.oc ? "overcharged" : "quick";
+  if (t.oc && !["boost", "skirmish", "lock", "systems", "overcharge", "end"].includes(act)) return "use the overcharge first";
   switch (act) {
     case "move": return t.mp > 0 ? `${t.mp} movement left` : "no movement left";
-    case "boost": return quickLeft ? `quick · +${you.speed} movement` : "no quick actions left";
+    case "boost": return quickWhy("boost") || `${cost} · +${you.speed} movement`;
     case "skirmish": {
-      if (!quickLeft) return "no quick actions left";
+      if (quickWhy("skirmish")) return quickWhy("skirmish");
       const n = foes().filter((f) => weaponsOf(you).some((w) => attackProfile(you, w, f).ok)).length;
-      return n ? `quick · ${plural(n, "target")} in reach` : "nothing in range";
+      return n ? `${cost} · ${plural(n, "target")} in reach` : "nothing in range";
     }
     case "barrage":
       if (!fullLeft) return "needs both quick actions";
       if (weaponsOf(you).length < 2) return "needs two weapons";
-      return canDo("barrage") ? "full · fire two weapons" : "nothing in range";
+      return canDo("barrage") ? "full · fire two weapons" : firing().length ? "only one weapon in reach" : "nothing in range";
     case "lock":
-      if (!quickLeft && !t.freeLock) return "no quick actions left";
-      return lockTargets().length ? `${t.freeLock ? "free" : "quick"} · +1 accuracy next shot` : "no hostile in sight";
+      if (!t.freeLock && quickWhy("lock")) return quickWhy("lock");
+      return lockTargets().length ? `${t.freeLock ? "free" : cost} · +1 accuracy next shot` : "no hostile in sight";
     case "systems": {
       const sys = systemsOf(you);
       if (!sys.length) return you.gear.some((k) => k && GEAR[k].use) ? "wrecked" : "nothing to use";
       if (!sys.some((x) => usable(you, x))) return "out of charges";
-      return quickLeft ? `quick · ${sys.map((x) => x.name.split(" ")[0]).join(", ")}` : "no quick actions left";
+      return quickWhy("systems") || `${cost} · ${sys.map((x) => x.name.split(" ")[0]).join(", ")}`;
     }
     case "stabilize": return fullLeft ? "full · repair or vent" : "needs both quick actions";
-    case "overcharge": return t.limited ? "not after bracing" : t.ocUsed ? "used this turn" : `+1 quick action · ${OC_COST[Math.min(B.ocCount, 3)]} heat`;
+    case "overcharge": return t.limited ? "not after bracing" : t.ocUsed ? "used this turn" : `a quick action now · ${OC_COST[Math.min(B.ocCount, 3)]} heat`;
     case "core": return B.coreUsed ? "spent" : t.limited ? "not after bracing" : `${CORES[you.core].name}, once`;
     case "end": return "";
   }
@@ -1761,7 +1774,7 @@ function doAction(act, viaKey) {
   switch (act) {
     case "move": setMode("move"); break;
     case "boost":
-      spendQuick();
+      spendQuick("boost");
       T().mp += you.speed;
       log(`You boost: +${you.speed} movement.`, "you");
       setMode("move");
@@ -1785,6 +1798,7 @@ function doAction(act, viaKey) {
 function askEnd() {
   const t = T(), left = [];
   if (!B.you.status.stunned) {
+    if (t.oc) left.push("your overcharged action");
     if (t.quick > 0) left.push(plural(t.quick, "quick action"));
     if (t.mp > 0) left.push(`${t.mp} movement`);
   }
@@ -1806,11 +1820,11 @@ function overcharge() {
   const heat = [1, d(3), d(6), d(6) + 4][k];
   B.ocCount++;
   T().ocUsed = true;
-  T().quick++;
-  log(`You overcharge (${OC_COST[k]} heat, rolled ${heat}) for an extra quick action.`, "you");
+  T().oc = true;
+  log(`You overcharge (${OC_COST[k]} heat, rolled ${heat}) for an extra quick action. Take it now: it can repeat one you've used.`, "you");
   gainHeat(you, heat, "overcharging");
-  checkOver();
-  setMode("idle");
+  if (checkOver()) return;
+  setMode(you.status.stunned ? "idle" : "orders");
 }
 function core() {
   const you = B.you, c = CORES[you.core];
@@ -1851,7 +1865,7 @@ async function commitMove(dest) {
       T().mp = 0;
     }
   }
-  if (you.status.stunned) { T().mp = 0; T().quick = 0; T().fullOk = false; T().limited = true; }
+  if (you.status.stunned) { T().mp = 0; T().quick = 0; T().oc = false; T().fullOk = false; T().limited = true; }
   paint();
 }
 
@@ -1860,7 +1874,7 @@ async function fire(w, tgt) {
   if (ui.barrage) {
     if (!ui.barrage.committed) { spendFull(); ui.barrage.committed = true; }
     ui.barrage.used.push(w.key);
-  } else spendQuick();
+  } else spendQuick("skirmish");
   const barrage = ui.barrage;
   busy = true;
   ui.mode = "idle"; ui.target = null; ui.weapon = null;
@@ -1877,14 +1891,14 @@ async function fire(w, tgt) {
 function lockOn(f) {
   f.status.locked = true;
   const free = T().freeLock;
-  if (free) T().freeLock = false; else spendQuick();
+  if (free) T().freeLock = false; else spendQuick("lock");
   log(`You lock on to ${f.name}${free ? " (Spotter, free)" : ""}. The next attack against it gains +1 accuracy.`, "you");
   setMode("idle");
 }
 
 function useSystem(sys, viaKey) {
   const you = B.you;
-  if (!usable(you, sys) || T().quick < 1) return;
+  if (!usable(you, sys) || !quickOk("systems")) return;
   if (sys.use === "smoke") {
     setMode("smoke", { system: sys.key });
     if (viaKey) focusMap(you.pos); else map.focus({ preventScroll: true });
@@ -1892,7 +1906,7 @@ function useSystem(sys, viaKey) {
   }
   if (sys.use === "patch") {
     you.charges[sys.key]--;
-    spendQuick();
+    spendQuick("systems");
     const heal = Math.min(rollDamage(sys.heal, false), you.maxHp - you.hp);
     you.hp += heal;
     log(`Your ${sys.name} patches ${heal} HP (${you.hp}/${you.maxHp}, ${plural(you.charges[sys.key], "charge")} left).`, "you");
@@ -1906,7 +1920,7 @@ async function placeSmoke(i) {
   const cells = [i, ...neighbors(i)].filter((j) => B.terrain[j] !== T_WALL);
   const you = B.you, s = ui.system;
   you.charges[s]--;
-  spendQuick();
+  spendQuick("systems");
   busy = true;
   ui.mode = "idle"; ui.dest = null;
   paint();
@@ -2775,8 +2789,8 @@ function budgetHtml() {
   const t = T(), you = B.you;
   const parts = [`<b>Round ${B.round}</b> · <span class="on">Your turn</span>`];
   parts.push(`<span class="vitals">HP <b>${you.hp}/${you.maxHp}</b> · Structure <b>${you.structure}</b> · Heat <b>${you.heat}/${you.heatCap}</b> · </span>Move <b>${t.mp}</b>`);
-  parts.push(`Quick <b>${t.quick}</b>${t.fullOk && t.quick >= 2 ? " (or 1 full)" : ""}`);
-  return parts.join(" · ") + `<span class="extra"> · Overcharge ${t.limited ? "not this turn" : t.ocUsed ? "used" : "ready"} · Reaction ${you.reaction ? "ready" : "spent"}</span>`;
+  parts.push(`Quick <b>${t.quick}</b>${t.fullOk && t.quick >= 2 ? " (or 1 full)" : ""}${t.oc ? " + <b>1</b> overcharged" : ""}`);
+  return parts.join(" · ") + `<span class="extra"> · Overcharge ${t.limited ? "not this turn" : t.oc ? "take it now" : t.ocUsed ? "used" : "ready"} · Reaction ${you.reaction ? "ready" : "spent"}</span>`;
 }
 
 function promptParts() {
@@ -2845,7 +2859,7 @@ function ordersHtml() {
     const items = systemsOf(you).map((x) => {
       const n = you.charges[x.key];
       const full = x.use === "patch" && you.hp >= you.maxHp;
-      const ok = n > 0 && !full && T().quick >= 1;
+      const ok = n > 0 && !full && quickOk("systems");
       return `<button type="button" role="menuitem" data-key="sys-${x.key}" ${ok ? "" : "disabled"}><span>${x.name}</span><small>${systemLine(x, n)}${full ? " · HP already full" : ""}</small></button>`;
     }).join("");
     return head("Systems", `<button type="button" data-key="to-orders">Back</button>`) + `<div class="orders-grid one" role="menu" aria-label="Systems">${items}</div>`;
@@ -3066,7 +3080,7 @@ function deploy() {
 function restoreBattle(s) {
   busy = false;
   B = buildBattle(s.seed, s.threat, s.crew);
-  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, turn: s.turn, smoke: new Map(s.smoke), phase: "you", logLines: [] });
+  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, turn: { oc: false, used: [], ...s.turn }, smoke: new Map(s.smoke), phase: "you", logLines: [] });
   for (const su of s.units) {
     const u = B.units.find((x) => x.id === su.id);
     if (!u) continue;
