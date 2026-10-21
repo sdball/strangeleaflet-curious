@@ -482,10 +482,18 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 .weight.over { color: var(--foe); }
 .frame-facts { font: 400 .8rem/1.6 var(--mono); color: var(--muted); margin: .5rem 0 0; }
 .frame-facts b { color: var(--ink); font-weight: 600; }
+.table-wrap { overflow-x: auto; }
+.record { border-collapse: collapse; font: 400 .8rem/1.5 var(--mono); color: var(--muted); margin: .5rem 0 0; }
+.record caption { text-align: left; padding-bottom: .2rem; }
+.record th, .record td { text-align: left; padding: .15rem 1.2rem .15rem 0; border-bottom: 1px solid var(--edge); }
+.record th { font-weight: 600; }
+.record td { color: var(--ink); }
 /* the crew picker in the briefing */
 .crew { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: 0 0 .5rem; }
 .crew label { font: 600 .68rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: grid; gap: .2rem; }
 .dialog .crewnote { font: 400 .76rem/1.45 var(--mono); color: var(--muted); }
+.dialog .crewnote.bad { color: var(--foe); }
+.dialog .levelup b { color: var(--good); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
@@ -557,7 +565,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
   <section class="sheet" id="hangar" aria-labelledby="hangar-h" hidden>
     <div class="stick"><button type="button" data-menu="back">Back</button></div>
     <h1 id="hangar-h">Hangar</h1>
-    <p class="lede">Build pilots and mechs here, then pick a pair in the briefing before each battle. Any pilot can fly any mech. A battle already under way keeps the pilot and mech it started with.</p>
+    <p class="lede">Build pilots and mechs here, then pick a pair in the briefing before each battle. A pilot can field any mech their license covers, and wins raise the license. A battle already under way keeps the pilot and mech it started with.</p>
     <h2 id="pilots-h">Pilots</h2>
     <ul class="roster" id="pilotlist" aria-labelledby="pilots-h"></ul>
     <button type="button" data-menu="new-pilot">New pilot</button>
@@ -576,7 +584,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <div class="btnrow"><button type="button" data-menu="import-text">Import pasted text</button></div>
     <p class="note" id="importnote" aria-live="polite"></p>
     <h2 id="reset-h">Start over</h2>
-    <p>Reset puts the hangar back the way the game starts: Wren and a stock Halberd, and nothing else. Every other pilot and mech is gone for good, so export first if you might want them back. A battle already under way isn't affected.</p>
+    <p>Reset puts the hangar back the way the game starts: Wren at license 0 and a stock Halberd, and nothing else. Every other pilot and mech is gone for good, so export first if you might want them back. A battle already under way isn't affected.</p>
     <div class="btnrow" id="resetrow"></div>
     <p class="note" id="resetnote" aria-live="polite"></p>
   </section>
@@ -670,8 +678,10 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 
     <h2 id="hangar-help-h">The hangar</h2>
     <ul>
-      <li><b>A pilot and a mech go into every battle.</b> Build them in the Hangar from the main menu, then pick the pair in the briefing. Any pilot can fly any mech. Wren and a stock Halberd are there from the start.</li>
-      <li><b>Pilots spend 2 points.</b> Hull gives +2 HP a point and a repair for every 2. Agility gives +1 Evasion a point and +1 Speed for every 2. Systems gives +1 charge a point to every system that uses charges. Engineering gives +1 heat cap a point. No stat can take more than 2.</li>
+      <li><b>A pilot and a mech go into every battle.</b> Build them in the Hangar from the main menu, then pick the pair in the briefing. A pilot can field a mech only when their license covers its frame and every piece of its gear. Wren and a stock Halberd are there from the start.</li>
+      <li id="licensehelp"></li>
+      <li id="unlockhelp"></li>
+      <li><b>Pilots start with 2 points to spend.</b> Hull gives +2 HP a point and a repair for every 2. Agility gives +1 Evasion a point and +1 Speed for every 2. Systems gives +1 charge a point to every system that uses charges. Engineering gives +1 heat cap a point. At first no stat can take more than 2.</li>
       <li><b>The Halberd is the striker.</b> It's balanced, can't be knocked back, and still moves after bracing. Its core power, Hunting Pattern, gives +1 accuracy and +2 damage.</li>
       <li><b>The Rampart is the defender.</b> It has 16 HP but moves only 3. Cover takes another point off each ranged hit against it, and its core power, Aegis, puts up a 10-point shield.</li>
       <li><b>The Kestrel is the skirmisher.</b> It has Speed 6 and Evasion 11 but only 10 HP and no armor. Hostiles never get overwatch on it, and its core power, Afterburn, gives free Boosts and +3 Evasion.</li>
@@ -780,8 +790,12 @@ const T_OPEN = 0, T_ROUGH = 1, T_SCRUB = 2, T_BARRICADE = 3, T_WALL = 4;
 const TERRAIN_NAME = ["open ground", "rough ground", "scrub", "barricade", "wall"];
 const passable = (t) => t <= T_SCRUB;
 
-// a pilot spreads a few points across four stats, no more than STAT_MAX in any one
-const GRIT = 1, PILOT_POINTS = 2, STAT_MAX = 2;
+// a pilot spreads a few points across four stats. each license level adds a point,
+// and every few levels raise grit and the most any one stat can take
+const PILOT_POINTS = 2, MAX_LL = 6;
+const gritAt = (ll) => 1 + Math.floor(ll / 2);
+const statMaxAt = (ll) => 2 + Math.floor(ll / 3);
+const pointsAt = (ll) => PILOT_POINTS + ll;
 const STATS = [
   { key: "hull", letter: "H", name: "Hull", does: "+2 HP per point, and +1 repair for every 2 points" },
   { key: "agility", letter: "A", name: "Agility", does: "+1 Evasion per point, and +1 Speed for every 2 points" },
@@ -902,6 +916,28 @@ function systemLine(g, charges) {
 const gearLine = (g, charges) => (g.kind === "system" ? systemLine(g, charges) : weaponLine(g));
 const loadWeight = (gear) => gear.reduce((n, k) => n + (k ? GEAR[k].weight : 0), 0);
 
+// ---------- License levels ----------
+// wins a pilot needs for each level: one apiece at first, then more
+const LEVEL_AT = [0, 1, 2, 4, 6, 9, 12];
+// light battles stop counting toward a license past this level
+const LIGHT_LL = 2;
+// what each level unlocks, by frame or gear key. anything not listed is there from the start.
+// a frame arrives once its stock gear is open, so it can be fielded straight away
+const UNLOCKS = [[], ["drone", "sink"], ["kestrel"], ["scatter", "driver"], ["rampart"], ["mortar", "plating"], ["lantern"]];
+const UNLOCK_LL = {};
+UNLOCKS.forEach((keys, ll) => { for (const k of keys) UNLOCK_LL[k] = ll; });
+const needLL = (k) => UNLOCK_LL[k] || 0;
+const unlockName = (k) => (FRAMES[k] || GEAR[k]).name;
+const levelAt = (xp) => { let ll = 0; while (ll < MAX_LL && xp >= LEVEL_AT[ll + 1]) ll++; return ll; };
+const levelOf = (p) => levelAt(p.xp);
+const mechLL = (m) => Math.max(needLL(m.frame), ...m.gear.filter(Boolean).map(needLL));
+const canField = (p, m) => mechLL(m) <= levelOf(p);
+function nextLevelText(xp) {
+  const ll = levelAt(xp);
+  return ll >= MAX_LL ? `at the top license level, ${MAX_LL}` : `${plural(LEVEL_AT[ll + 1] - xp, "win")} from license level ${ll + 1}`;
+}
+const listText = (xs) => (xs.length < 3 ? xs.join(" and ") : xs.slice(0, -1).join(", ") + ", and " + xs[xs.length - 1]);
+
 // ---------- Battlefield generation ----------
 const SITE_A = ["Cinder", "Halcyon", "Tessera", "Morrow", "Vantage", "Kiln", "Lattice", "Ossuary", "Saltreach", "Gantry", "Meridian", "Hollow"];
 const SITE_B = ["Flats", "Yards", "Ridge", "Causeway", "Terraces", "Spillway", "Quarry", "Depot", "Crossing", "Basin", "Works", "Cut"];
@@ -1017,7 +1053,7 @@ function makeYou(pos, p, m) {
   gear.forEach((g, s) => { if (g && GEAR[g].charges) charges[s] = GEAR[g].charges + p.systems; });
   return {
     id: "you", side: "you", name: m.name, frame: m.frame, trait: f.trait, core: f.core,
-    grit: GRIT, hull: p.hull, pos, alive: true,
+    grit: gritAt(levelOf(p)), hull: p.hull, pos, alive: true,
     maxHp: hp, hp, armor: f.armor,
     evasion: f.evasion + p.agility,
     speed: f.speed + Math.floor(p.agility / 2),
@@ -1063,17 +1099,27 @@ const CALLSIGN_MAX = 16, MECH_NAME_MAX = 20;
 // imports and old saves come from outside, so everything is rebuilt from known keys and clamped
 const cleanText = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, max) : "");
 const cleanId = (v) => (typeof v === "string" && /^[a-z0-9-]{1,24}$/i.test(v) ? v : null);
+const cleanCount = (v, max = 99999) => Math.max(0, Math.min(max, Math.floor(Number(v)) || 0));
+// a pilot's record: wins and losses at each threat level, and every hostile destroyed
+function cleanRecord(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const rec = { kills: cleanCount(r.kills) };
+  for (const t in THREATS) rec[t] = { won: cleanCount(r[t] && r[t].won), lost: cleanCount(r[t] && r[t].lost) };
+  return rec;
+}
 function cleanPilot(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
-  const p = { id: cleanId(r.id), callsign: cleanText(r.callsign, CALLSIGN_MAX) || "Pilot" };
-  let left = PILOT_POINTS;
+  const p = { id: cleanId(r.id), callsign: cleanText(r.callsign, CALLSIGN_MAX) || "Pilot", xp: cleanCount(r.xp, LEVEL_AT[MAX_LL]), record: cleanRecord(r.record) };
+  const ll = levelOf(p);
+  let left = pointsAt(ll);
   for (const st of STATS) {
-    const n = Math.max(0, Math.min(STAT_MAX, left, Math.floor(Number(r[st.key])) || 0));
+    const n = Math.max(0, Math.min(statMaxAt(ll), left, Math.floor(Number(r[st.key])) || 0));
     p[st.key] = n;
     left -= n;
   }
   return p;
 }
+const unspent = (p) => pointsAt(levelOf(p)) - STATS.reduce((n, x) => n + p[x.key], 0);
 function cleanMech(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
   const f = FRAMES[r.frame];
@@ -1094,7 +1140,7 @@ function cleanMech(raw) {
 
 let roster = null;
 function freshRoster() {
-  return { v: 1, pilots: [{ ...WREN }], mechs: [{ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() }], active: { pilot: WREN.id, mech: STOCK_HALBERD.id } };
+  return { v: 1, pilots: [cleanPilot(WREN)], mechs: [{ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() }], active: { pilot: WREN.id, mech: STOCK_HALBERD.id } };
 }
 function loadRoster() {
   let r = null;
@@ -1102,7 +1148,7 @@ function loadRoster() {
   if (!r || r.v !== 1) return freshRoster();
   const out = { v: 1, pilots: [], mechs: [], active: {} };
   addToRoster(out, r.pilots, r.mechs);
-  if (!out.pilots.length) out.pilots.push({ ...WREN });
+  if (!out.pilots.length) out.pilots.push(cleanPilot(WREN));
   if (!out.mechs.length) out.mechs.push({ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() });
   const a = r.active || {};
   out.active.pilot = out.pilots.some((p) => p.id === a.pilot) ? a.pilot : out.pilots[0].id;
@@ -1139,6 +1185,13 @@ const activePilot = () => roster.pilots.find((p) => p.id === roster.active.pilot
 const activeMech = () => roster.mechs.find((m) => m.id === roster.active.mech) || roster.mechs[0];
 // a copy, so the battle doesn't change when the roster does
 const activeCrew = () => JSON.parse(JSON.stringify({ pilot: activePilot(), mech: activeMech() }));
+// a pilot only takes a mech their license covers, so a new pilot may need a different mech
+function fitCrew() {
+  const p = activePilot();
+  if (canField(p, activeMech())) return;
+  const m = roster.mechs.find((x) => canField(p, x));
+  if (m) { roster.active.mech = m.id; saveRoster(); }
+}
 roster = loadRoster();
 
 // ---------- State ----------
@@ -1589,6 +1642,38 @@ async function endPlayerTurn() {
   startPlayerTurn();
 }
 
+// a finished battle goes on the pilot's record in the hangar, and a win can raise their license.
+// returns what changed, for the battle's last dialog
+function recordResult() {
+  const p = roster.pilots.find((x) => x.id === B.pilot.id);
+  if (!p) return null;
+  const won = B.over === "won", before = levelOf(p);
+  p.record[B.threat][won ? "won" : "lost"]++;
+  p.record.kills += B.units.filter((u) => u.side === "foe" && !u.alive).length;
+  const counts = won && !(B.threat === "light" && before >= LIGHT_LL);
+  if (counts) p.xp = Math.min(LEVEL_AT[MAX_LL], p.xp + 1);
+  saveRoster();
+  const r = p.record, tally = (k) => Object.keys(THREATS).reduce((n, t) => n + r[t][k], 0);
+  return { callsign: p.callsign, won, counts, before, after: levelOf(p), xp: p.xp, wins: tally("won"), losses: tally("lost"), kills: r.kills };
+}
+function resultHtml(r) {
+  if (!r) return "";
+  const name = escapeHtml(r.callsign);
+  let news;
+  if (r.after > r.before) {
+    const ll = r.after, more = [`${name} has another stat point to spend in the Hangar.`];
+    if (gritAt(ll) > gritAt(r.before)) more.push(`Grit rises to +${gritAt(ll)}.`);
+    if (statMaxAt(ll) > statMaxAt(r.before)) more.push(`Any one stat can now take ${statMaxAt(ll)} points.`);
+    news = `<b>${name} reaches license level ${ll}.</b> Unlocked: ${listText(UNLOCKS[ll].map(unlockName))}. ${more.join(" ")}`;
+  } else if (r.won && !r.counts) {
+    news = `Light battles stop counting toward a license after level ${LIGHT_LL}. ${name} is ${nextLevelText(r.xp)}, from standard or heavy battles.`;
+  } else {
+    news = `${name} is ${r.won ? "" : "still "}${nextLevelText(r.xp)}.`;
+  }
+  return `<p class="levelup">${news}</p>
+    <p class="crewnote">${name}'s record: ${plural(r.wins, "win")}, ${r.losses} ${r.losses === 1 ? "loss" : "losses"}, ${plural(r.kills, "hostile")} destroyed.</p>`;
+}
+
 function checkOver() {
   if (B.over) return true;
   if (!B.you.alive) {
@@ -1599,6 +1684,7 @@ function checkOver() {
     B.over = "won";
     log(`Area clear in ${plural(B.round, "round")}, with ${B.you.structure} of ${B.you.maxStructure} structure left.`, "you");
   } else return false;
+  B.result = recordResult();
   clearSave();
   ui.dialog = { kind: "over" };
   setMode("idle");
@@ -2768,7 +2854,7 @@ function mechCard() {
   }).join("");
   return `
     <h3>${escapeHtml(u.name.toUpperCase())}</h3>
-    <p class="sub">${u.name === f.name ? "" : `${f.name} · `}${f.role} · pilot ${escapeHtml(p.callsign)} · grit +${u.grit} · ${STATS.map((x) => x.letter + p[x.key]).join(" ")}</p>
+    <p class="sub">${u.name === f.name ? "" : `${f.name} · `}${f.role} · pilot ${escapeHtml(p.callsign)} · license ${levelOf(p)} · grit +${u.grit} · ${STATS.map((x) => x.letter + p[x.key]).join(" ")}</p>
     <div class="meter"><span class="k">HP</span><span class="bar-meter"><i style="width:${(100 * u.hp / u.maxHp).toFixed(0)}%"></i></span><span>${u.hp}/${u.maxHp}</span></div>
     <div class="meter"><span class="k">Structure</span>${pipRow(u.structure, u.maxStructure, "")}<span>${u.structure}/${u.maxStructure}</span></div>
     <div class="meter"><span class="k">Heat</span><span class="bar-meter heat"><i style="width:${(100 * u.heat / u.heatCap).toFixed(0)}%"></i></span><span>${u.heat}/${u.heatCap}</span></div>
@@ -2878,6 +2964,7 @@ function dialogHtml() {
   const dg = ui.dialog, you = B.you;
   if (!dg) return "";
   if (dg.kind === "brief") {
+    const ok = canField(B.pilot, B.mech);
     const seg = ["light", "standard", "heavy"].map((k) => `<button type="button" data-key="threat-${k}" aria-pressed="${B.threat === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("");
     return `<p class="eyebrow">Site ${String(B.seed).padStart(5, "0")} · Briefing</p>
       <h2 id="dialog-h">${B.name}</h2>
@@ -2886,12 +2973,16 @@ function dialogHtml() {
       <p class="eyebrow">Crew</p>
       <div class="crew">
         <label>Pilot<select data-key="pick-pilot">${roster.pilots.map((p) => `<option value="${p.id}" ${p.id === B.pilot.id ? "selected" : ""}>${escapeHtml(p.callsign)}</option>`).join("")}</select></label>
-        <label>Mech<select data-key="pick-mech">${roster.mechs.map((m) => `<option value="${m.id}" ${m.id === B.mech.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("")}</select></label>
+        <label>Mech<select data-key="pick-mech">${roster.mechs.map((m) => {
+          const need = canField(B.pilot, m) ? "" : ` (needs license ${mechLL(m)})`;
+          return `<option value="${m.id}" ${m.id === B.mech.id ? "selected" : ""} ${need ? "disabled" : ""}>${escapeHtml(m.name)}${need}</option>`;
+        }).join("")}</select></label>
       </div>
       <p class="crewnote">${escapeHtml(B.pilot.callsign)} · ${pilotSummary(B.pilot)}<br>${escapeHtml(mechSummary(B.mech))}</p>
+      ${ok ? "" : `<p class="crewnote bad">${escapeHtml(B.pilot.callsign)} can't field any mech in the hangar yet. Build one in the Hangar from gear marked license 0.</p>`}
       <p class="eyebrow">Threat</p>
       <div class="seg" role="group" aria-label="Threat level">${seg}</div>
-      <div class="row"><button type="button" class="go" data-key="deploy" data-autofocus>Deploy</button><button type="button" data-key="reroll">Another site</button></div>
+      <div class="row"><button type="button" class="go" data-key="deploy" ${ok ? "data-autofocus" : "disabled"}>Deploy</button><button type="button" data-key="reroll">Another site</button></div>
       <div class="row"><button type="button" data-key="menu">Main menu</button></div>`;
   }
   if (dg.kind === "end") {
@@ -2911,6 +3002,7 @@ function dialogHtml() {
       <p>${won
         ? `You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.`
         : `${plural(foes().length, "hostile")} still standing after ${plural(B.round, "round")}.`}</p>
+      ${resultHtml(B.result)}
       <div class="row"><button type="button" class="go" data-key="again" data-autofocus>${won ? "Fight here again" : "Try this fight again"}</button><button type="button" data-key="next">New battlefield</button></div>
       <div class="row"><button type="button" data-key="menu">Main menu</button><button type="button" data-key="close-over">Look at the field</button></div>`;
   }
@@ -3022,7 +3114,7 @@ function loadSave() {
 }
 // a battle saved before the hangar was always Wren in the stock Halberd
 function upgradeSave(s) {
-  const crew = { pilot: { ...WREN }, mech: { ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() } };
+  const crew = { pilot: cleanPilot(WREN), mech: { ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() } };
   const you = s.units.find((u) => u.id === "you");
   if (you) {
     if (you.broken) you.broken = you.broken.map((k) => crew.mech.gear.indexOf(k)).filter((n) => n >= 0);
@@ -3053,6 +3145,7 @@ function setHeader() {
 function newBattle(seed, threat, deployNow) {
   if (ui.dialog && ui.dialog.kind === "brace") ui.dialog.resolve(false);
   busy = false;
+  fitCrew();
   B = buildBattle(seed, threat, activeCrew());
   B.phase = "brief";
   B.logLines = [];
@@ -3062,13 +3155,14 @@ function newBattle(seed, threat, deployNow) {
   drawTerrain();
   $("log").replaceChildren();
   setHeader();
-  if (deployNow) { deploy(); return; }
+  if (deployNow && canField(B.pilot, B.mech)) { deploy(); return; }
   ui.dialog = { kind: "brief" };
   paint();
   focusDialog();
 }
 
 function deploy() {
+  if (!canField(B.pilot, B.mech)) return;
   ui.dialog = null;
   B.phase = "you";
   history.replaceState(null, "", "#" + new URLSearchParams({ site: String(B.seed), threat: B.threat }).toString());
@@ -3142,11 +3236,14 @@ function updateTitle() {
 
 // ---------- Hangar ----------
 let pendingDelete = null, pendingReset = false, draft = null;
-const pilotSummary = (p) => STATS.map((x) => x.letter + p[x.key]).join(" ") + ` · grit +${GRIT}`;
+function pilotSummary(p) {
+  const left = unspent(p);
+  return `License ${levelOf(p)} · ` + STATS.map((x) => x.letter + p[x.key]).join(" ") + ` · grit +${gritAt(levelOf(p))}` + (left ? ` · ${plural(left, "point")} to spend` : "");
+}
 function mechSummary(m) {
-  const f = FRAMES[m.frame];
+  const f = FRAMES[m.frame], ll = mechLL(m);
   const kit = m.gear.filter(Boolean).map((k) => GEAR[k].name).join(", ") || "no gear";
-  return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}`;
+  return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}${ll ? ` · needs license ${ll}` : ""}`;
 }
 function rosterItem(kind, x, title, sub) {
   const list = kind === "pilot" ? roster.pilots : roster.mechs;
@@ -3177,25 +3274,38 @@ function renderForm(el, html) {
 
 function editPilot(id) {
   const p = roster.pilots.find((x) => x.id === id);
-  draft = p ? { ...p } : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0 };
+  draft = p ? { ...p } : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0, xp: 0, record: cleanRecord(null) };
   $("pilot-h").textContent = p ? `Edit ${p.callsign}` : "New pilot";
   $("pilotform").innerHTML = "";
   paintPilotForm();
   openScreen("pilot");
 }
+// the license section of the pilot editor: level, what the next one brings, and the record
+function licenseHtml(p) {
+  const ll = levelOf(p), r = p.record;
+  const next = ll < MAX_LL ? ` Level ${ll + 1} unlocks ${listText(UNLOCKS[ll + 1].map(unlockName))}.` : "";
+  const rows = Object.keys(THREATS).map((t) => `<tr><th scope="row">${t[0].toUpperCase() + t.slice(1)}</th><td>${r[t].won}</td><td>${r[t].lost}</td></tr>`).join("");
+  return `<p class="field">License</p>
+    <p class="frame-facts">Level <b>${ll}</b> of ${MAX_LL} · ${nextLevelText(p.xp)}.${next}<br>
+      ${plural(r.kills, "hostile")} destroyed.</p>
+    <div class="table-wrap"><table class="record"><caption>Battles won and lost</caption>
+      <thead><tr><th scope="col">Threat</th><th scope="col">Won</th><th scope="col">Lost</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
 function paintPilotForm() {
-  const spent = STATS.reduce((n, x) => n + draft[x.key], 0), left = PILOT_POINTS - spent;
+  const ll = levelOf(draft), max = statMaxAt(ll);
+  const left = unspent(draft);
   const rows = STATS.map((x) => `<div class="stat"><div><b>${x.name} (${x.letter})</b><span>${x.does}</span></div>
     <div class="stepper" role="group" aria-label="${x.name}">
       <button type="button" data-menu="stat-down" data-stat="${x.key}" data-f="down-${x.key}" aria-label="Less ${x.name}" ${draft[x.key] > 0 ? "" : "disabled"}>−</button>
       <output aria-live="polite">${draft[x.key]}</output>
-      <button type="button" data-menu="stat-up" data-stat="${x.key}" data-f="up-${x.key}" aria-label="More ${x.name}" ${left > 0 && draft[x.key] < STAT_MAX ? "" : "disabled"}>+</button>
+      <button type="button" data-menu="stat-up" data-stat="${x.key}" data-f="up-${x.key}" aria-label="More ${x.name}" ${left > 0 && draft[x.key] < max ? "" : "disabled"}>+</button>
     </div></div>`).join("");
   renderForm($("pilotform"), `<label class="field" for="callsign">Callsign</label>
     <input type="text" id="callsign" data-f="callsign" maxlength="${CALLSIGN_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.callsign)}" placeholder="Pilot">
+    ${licenseHtml(draft)}
     <p class="field">Stats</p>
-    <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${STAT_MAX} in one stat</p>
-    <p>Every pilot adds grit +${GRIT} to attack rolls. Stats change the mech you fly:</p>
+    <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${max} in one stat</p>
+    <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls. Stats change the mech you fly:</p>
     ${rows}
     <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">Save pilot</button></div>`);
 }
@@ -3211,20 +3321,20 @@ function editMech(id) {
 function paintMechForm() {
   const f = FRAMES[draft.frame], weight = loadWeight(draft.gear);
   const frames = Object.entries(FRAMES).map(([k, x]) => `<button type="button" data-menu="frame" data-frame="${k}" data-f="frame-${k}" aria-pressed="${k === draft.frame}">
-    <span>${x.name}</span><small>${x.role} · HP ${x.hp} · Armor ${x.armor} · Evasion ${x.evasion} · Speed ${x.speed}</small></button>`).join("");
+    <span>${x.name}</span><small>${x.role} · HP ${x.hp} · Armor ${x.armor} · Evasion ${x.evasion} · Speed ${x.speed}${needLL(k) ? ` · license ${needLL(k)}` : ""}</small></button>`).join("");
   const mounts = f.mounts.map((mount, s) => {
     const others = draft.gear.filter((_, j) => j !== s);
     const room = f.capacity - loadWeight(others);
     const opts = Object.entries(GEAR).filter(([, g]) => fits(mount, g)).map(([k, g]) => {
       const why = g.weight > room ? "too heavy" : g.kind === "system" && others.includes(k) ? "already fitted" : "";
-      return `<option value="${k}" ${draft.gear[s] === k ? "selected" : ""} ${why ? "disabled" : ""}>${g.name} · weight ${g.weight}${why ? ` (${why})` : ""}</option>`;
+      return `<option value="${k}" ${draft.gear[s] === k ? "selected" : ""} ${why ? "disabled" : ""}>${g.name} · weight ${g.weight}${needLL(k) ? ` · license ${needLL(k)}` : ""}${why ? ` (${why})` : ""}</option>`;
     }).join("");
     const g = draft.gear[s] && GEAR[draft.gear[s]];
     return `<div class="mount"><label for="mount-${s}">Mount ${s + 1} · ${MOUNT_NAME[mount]}</label>
       <select id="mount-${s}" data-mount="${s}" data-f="mount-${s}"><option value="">Empty</option>${opts}</select>
       <span class="d">${g ? gearLine(g, null) : mount === "heavy" ? "Takes a heavy or a main weapon." : ""}</span></div>`;
   }).join("");
-  const t = TRAITS[f.trait], c = CORES[f.core];
+  const t = TRAITS[f.trait], c = CORES[f.core], ll = mechLL(draft);
   renderForm($("mechform"), `<label class="field" for="mechname">Name</label>
     <input type="text" id="mechname" data-f="mechname" maxlength="${MECH_NAME_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.name)}" placeholder="${f.name}">
     <p class="field">Frame</p>
@@ -3235,6 +3345,7 @@ function paintMechForm() {
     <p class="field">Mounts</p>
     <div class="weight${weight > f.capacity ? " over" : ""}"><span>Weight</span><span class="bar-meter heat"><i style="width:${Math.min(100, 100 * weight / f.capacity).toFixed(0)}%"></i></span><span aria-live="polite">${weight} of ${f.capacity}</span></div>
     ${mounts}
+    <p class="left" aria-live="polite">${ll ? `Needs a pilot at license ${ll} or higher` : "Any pilot can field it"}</p>
     <div class="btnrow"><button type="button" class="go" data-menu="save-mech" data-f="save">Save mech</button></div>`);
 }
 
@@ -3271,7 +3382,7 @@ function resetRoster() {
 }
 
 function exportRoster() {
-  const data = { format: "hardpoint-roster/1", pilots: roster.pilots, mechs: roster.mechs };
+  const data = { format: "hardpoint-roster/2", pilots: roster.pilots, mechs: roster.mechs };
   const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -3604,8 +3715,8 @@ $("screen").addEventListener("click", (e) => {
   } else if (m === "del-pilot" || m === "del-mech") {
     deleteEntry(m.slice(4), id);
   } else if (m === "stat-up" || m === "stat-down") {
-    const k = b.dataset.stat, spent = STATS.reduce((n, x) => n + draft[x.key], 0);
-    if (m === "stat-up" && spent < PILOT_POINTS && draft[k] < STAT_MAX) draft[k]++;
+    const k = b.dataset.stat;
+    if (m === "stat-up" && unspent(draft) > 0 && draft[k] < statMaxAt(levelOf(draft))) draft[k]++;
     if (m === "stat-down" && draft[k] > 0) draft[k]--;
     paintPilotForm();
   } else if (m === "frame") {
@@ -3670,8 +3781,18 @@ document.addEventListener("keydown", (e) => {
 
 addEventListener("resize", () => placeOrders());
 
+// the help's license notes come from the same tables the game uses
+function writeLicenseHelp() {
+  const wins = LEVEL_AT.slice(1).map((n, k) => `level ${k + 1} at ${plural(n, "win")}`);
+  $("licensehelp").innerHTML = `<b>Wins raise a pilot's license.</b> A pilot starts at license 0 and reaches ${listText(wins)}. Light battles stop counting after level ${LIGHT_LL}, and a loss only goes on the record. Each level adds a stat point to spend, every second level adds +1 grit, and every third lets one stat take another point. The pilot editor shows each pilot's level and record.`;
+  const start = [...Object.keys(FRAMES), ...Object.keys(GEAR)].filter((k) => !needLL(k)).map(unlockName);
+  const later = UNLOCKS.map((keys, ll) => (keys.length ? `level ${ll} adds ${listText(keys.map(unlockName))}` : "")).filter(Boolean);
+  $("unlockhelp").innerHTML = `<b>Each level unlocks a frame or gear.</b> At license 0 a pilot can field the ${listText(start)}. Then ${listText(later)}. The mech editor marks what each one needs.`;
+}
+
 // ---------- Start ----------
 listTests();
+writeLicenseHelp();
 (function boot() {
   const params = new URLSearchParams(location.hash.slice(1));
   const seed = parseInt(params.get("site"), 10);
