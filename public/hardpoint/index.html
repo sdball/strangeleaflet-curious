@@ -420,6 +420,8 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .menu button { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-height: 52px; font-size: 1.1rem; padding: .55rem 1rem; }
 .menu button small { font: 400 .72rem var(--mono); color: var(--muted); letter-spacing: 0; margin-top: .15rem; }
 .menu button.go small { color: inherit; opacity: .75; }
+.menu.more { margin-top: 1.2rem; }
+.shared { font: 500 .85rem/1.45 var(--mono); color: var(--amber); max-width: 46ch; }
 .legal { margin-top: 2.2rem; font-size: .78rem; color: var(--muted); max-width: 60ch; }
 .sheet h2 { font: 600 1.3rem/1.2 var(--display); letter-spacing: .03em; margin: 2rem 0 .6rem; }
 .sheet h1 { font: 700 2.2rem/1 var(--display); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 .6rem; }
@@ -490,6 +492,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 .record td { color: var(--ink); }
 /* the crew picker in the briefing */
 .crew { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: 0 0 .5rem; }
+.crew.one { grid-template-columns: 1fr; }
 .crew label { font: 600 .68rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: grid; gap: .2rem; }
 .dialog .crewnote { font: 400 .76rem/1.45 var(--mono); color: var(--muted); }
 .dialog .crewnote.bad { color: var(--foe); }
@@ -514,7 +517,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <p class="sitename" id="sitename"></p>
     <button type="button" id="soundbtn" aria-pressed="true" aria-keyshortcuts="V">Sound</button>
     <button type="button" id="helpbtn">Help</button>
-    <button type="button" id="menubtn">Menu</button>
+    <button type="button" id="menubtn">Hangar</button>
   </header>
 
   <div class="mapwrap" id="mapwrap">
@@ -552,30 +555,43 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <a class="back" href="/">The Cabinet of Curios</a>
     <h2 class="logo" id="title-h">Hardpoint</h2>
     <p class="tagline">You pilot one mech against a squad of hostiles on a battlefield built at random. Find cover, watch your heat, and pick the moment to push your reactor past what's safe.</p>
-    <div class="menu" role="group" aria-label="Main menu">
-      <button type="button" data-menu="continue" id="continuebtn">Continue<small id="continuenote"></small></button>
-      <button type="button" class="go" data-menu="new">New Game<small>Get a briefing on a fresh battlefield</small></button>
-      <button type="button" data-menu="hangar">Hangar<small>Build pilots and mechs, back them up, share them</small></button>
+    <p class="shared" id="sharednote" aria-live="polite" hidden></p>
+    <p class="field" id="pick-h">Pick a pilot</p>
+    <div class="menu" id="pilotpick" role="group" aria-labelledby="pick-h"></div>
+    <div class="menu more" role="group" aria-label="Main menu">
+      <button type="button" data-menu="new-pilot">New Pilot<small>Starts at license 0 with a stock Halberd</small></button>
       <button type="button" data-menu="help">Instructions<small>How turns, cover, heat, and damage work</small></button>
       <button type="button" data-menu="soundtest">Sound Test<small>Fire every weapon on a practice range</small></button>
+      <button type="button" data-menu="backup">Back Up and Share<small>Export, import, or reset your pilots</small></button>
     </div>
     <p class="legal">Hardpoint is inspired by LANCER. LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</p><!-- tic-ok -->
   </section>
 
   <section class="sheet" id="hangar" aria-labelledby="hangar-h" hidden>
-    <div class="stick"><button type="button" data-menu="back">Back</button></div>
-    <h1 id="hangar-h">Hangar</h1>
-    <p class="lede">Build pilots and mechs here, then pick a pair in the briefing before each battle. A pilot can field any mech their license covers, and wins raise the license. A battle already under way keeps the pilot and mech it started with.</p>
-    <h2 id="pilots-h">Pilots</h2>
-    <ul class="roster" id="pilotlist" aria-labelledby="pilots-h"></ul>
-    <button type="button" data-menu="new-pilot">New pilot</button>
+    <div class="stick"><button type="button" data-menu="back">Pilots</button></div>
+    <p class="field">Hangar</p>
+    <h1 id="hangar-h">Pilot</h1>
+    <p class="lede" id="pilotsum"></p>
+    <div class="menu" role="group" aria-label="Battle">
+      <button type="button" data-menu="continue" id="continuebtn">Continue<small id="continuenote"></small></button>
+      <button type="button" class="go" data-menu="new">New Game<small id="newnote"></small></button>
+    </div>
+    <div id="license"></div>
     <h2 id="mechs-h">Mechs</h2>
+    <p>Pick one of these in the briefing before each battle. A battle already under way keeps the mech it started with.</p>
     <ul class="roster" id="mechlist" aria-labelledby="mechs-h"></ul>
-    <button type="button" data-menu="new-mech">New mech</button>
-    <h2 id="share-h">Back up and share</h2>
-    <p>Export saves every pilot and mech to a <code>.json</code> file. Import adds the pilots and mechs from one of those files, or from its text pasted below, next to the ones you already have.</p>
+    <button type="button" data-menu="new-mech" id="newmech">New mech</button>
+    <h2 id="pilotown-h">Pilot</h2>
+    <p>Change the callsign or move stat points around. Deleting a pilot also deletes their mechs and any battle they have under way.</p>
+    <div class="btnrow" id="pilotrow"></div>
+  </section>
+
+  <section class="sheet" id="backup" aria-labelledby="backup-h" hidden>
+    <div class="stick"><button type="button" data-menu="back">Back</button></div>
+    <h1 id="backup-h">Back up and share</h1>
+    <p class="lede">Export saves every pilot, with their mechs, license, and record, to a <code>.json</code> file. Import adds the pilots from one of those files, or from its text pasted below, next to the ones you already have.</p>
     <div class="btnrow">
-      <button type="button" data-menu="export">Export roster</button>
+      <button type="button" data-menu="export">Export pilots</button>
       <button type="button" data-menu="import-file">Import a file</button>
       <input type="file" id="importfile" accept=".json,application/json" hidden>
     </div>
@@ -584,7 +600,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <div class="btnrow"><button type="button" data-menu="import-text">Import pasted text</button></div>
     <p class="note" id="importnote" aria-live="polite"></p>
     <h2 id="reset-h">Start over</h2>
-    <p>Reset puts the hangar back the way the game starts: Wren at license 0 and a stock Halberd, and nothing else. Every other pilot and mech is gone for good, so export first if you might want them back. A battle already under way isn't affected.</p>
+    <p>Reset puts the game back the way it starts: Wren at license 0 with a stock Halberd, and nothing else. Every other pilot and every battle under way is gone for good, so export first if you might want them back.</p>
     <div class="btnrow" id="resetrow"></div>
     <p class="note" id="resetnote" aria-live="polite"></p>
   </section>
@@ -676,9 +692,11 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <li><b>Lobbers shoot over walls.</b> Their mortars arc over anything, so cover doesn't help against them. A Lobber has to spend a turn reloading after each shot, and it can't fire at a target right next to it.</li>
     </ul>
 
-    <h2 id="hangar-help-h">The hangar</h2>
+    <h2 id="hangar-help-h">Pilots and the hangar</h2>
     <ul>
-      <li><b>A pilot and a mech go into every battle.</b> Build them in the Hangar from the main menu, then pick the pair in the briefing. A pilot can field a mech only when their license covers its frame and every piece of its gear. Wren and a stock Halberd are there from the start.</li>
+      <li><b>Start by picking a pilot.</b> The main menu lists your pilots. Pick one to open their hangar, where New Game gets a briefing on a fresh battlefield and Continue goes back to the battle they have under way. Each pilot keeps their own battle, so switching pilots never loses one. Wren is there from the start, and New Pilot adds more.</li>
+      <li><b>Each pilot has their own mechs.</b> A new pilot gets a stock Halberd. Build more in their hangar, then pick one in the briefing. The mech editor only offers frames and gear the pilot's license covers.</li>
+      <li><b>Every battle ends in a debriefing.</b> It says how the fight went, what it did for the pilot's license, and their record so far, then sends you back to the hangar. Look at the field closes it so you can study the final board first.</li>
       <li id="licensehelp"></li>
       <li id="unlockhelp"></li>
       <li><b>Pilots start with 2 points to spend.</b> Hull gives +2 HP a point and a repair for every 2. Agility gives +1 Evasion a point and +1 Speed for every 2. Systems gives +1 charge a point to every system that uses charges. Engineering gives +1 heat cap a point. At first no stat can take more than 2.</li>
@@ -687,15 +705,15 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <li><b>The Kestrel is the skirmisher.</b> It has Speed 6 and Evasion 11 but only 10 HP and no armor. Hostiles never get overwatch on it, and its core power, Afterburn, gives free Boosts and +3 Evasion.</li>
       <li><b>The Lantern is the artillery.</b> It sees 15 hexes and gets a free Lock On every turn. Its core power, Flare Net, locks on to every hostile in sight and lets your attacks ignore cover.</li>
       <li><b>Mounts take gear of their size.</b> A main mount takes a main weapon, a heavy mount takes a heavy or a main weapon, and a system mount takes a system. Everything together has to fit the frame's weight capacity, and each system fits only once.</li>
-      <li><b>Export to keep a copy.</b> The Hangar saves your pilots and mechs to a file you can import later, on another device, or send to a friend. Importing adds to what you have and replaces nothing.</li>
-      <li><b>Reset to start over.</b> Reset hangar, at the end of the Hangar, puts back Wren and the stock Halberd and removes everything else.</li>
+      <li><b>Export to keep a copy.</b> Back Up and Share, on the main menu, saves your pilots and their mechs to a file you can import later, on another device, or send to a friend. Importing adds to what you have and replaces nothing.</li>
+      <li><b>Reset to start over.</b> Reset, at the end of Back Up and Share, puts back Wren and the stock Halberd and removes everything else.</li>
     </ul>
 
     <h2 id="credit-h">Credits</h2>
     <ul>
       <li>Hardpoint is inspired by <i>LANCER</i>, the mech roleplaying game by Tom Parkinson-Morgan and Miguel Lopez, published by <a href="https://massifpress.com/">Massif Press</a>. Thanks to Massif Press for the Lancer system. The rules here are a small, simplified slice of it: pilot stats and grit, structure and stress checks, heat, accuracy and difficulty dice, cover, overwatch, and bracing. The frames, gear, hostiles, and all of the text here are written for Hardpoint.</li>
       <li>LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</li><!-- tic-ok -->
-      <li>A battlefield's link names its site and threat level, so you can send someone the same fight.</li>
+      <li>A battlefield's link names its site and threat level, so you can send someone the same fight. Opening one asks for a pilot, then New Game takes you there.</li>
     </ul>
   </section>
 </div>
@@ -930,8 +948,6 @@ const needLL = (k) => UNLOCK_LL[k] || 0;
 const unlockName = (k) => (FRAMES[k] || GEAR[k]).name;
 const levelAt = (xp) => { let ll = 0; while (ll < MAX_LL && xp >= LEVEL_AT[ll + 1]) ll++; return ll; };
 const levelOf = (p) => levelAt(p.xp);
-const mechLL = (m) => Math.max(needLL(m.frame), ...m.gear.filter(Boolean).map(needLL));
-const canField = (p, m) => mechLL(m) <= levelOf(p);
 function nextLevelText(xp) {
   const ll = levelAt(xp);
   return ll >= MAX_LL ? `at the top license level, ${MAX_LL}` : `${plural(LEVEL_AT[ll + 1] - xp, "win")} from license level ${ll + 1}`;
@@ -1090,11 +1106,11 @@ function savePrefs() {
 }
 
 // ---------- Roster ----------
-// pilots and mechs you've built, kept apart so any pilot can fly any mech
+// your pilots, each with their own mechs. a pilot's mechs only use what their license covers
 const ROSTER_KEY = "hardpoint:roster";
 const WREN = { id: "p1", callsign: "Wren", hull: 1, agility: 1, systems: 0, engineering: 0 };
-const STOCK_HALBERD = { id: "m1", name: "Halberd", frame: "halberd", gear: FRAMES.halberd.stock.slice() };
-const CALLSIGN_MAX = 16, MECH_NAME_MAX = 20;
+const stockHalberd = () => ({ id: "m1", name: "Halberd", frame: "halberd", gear: FRAMES.halberd.stock.slice() });
+const CALLSIGN_MAX = 16, MECH_NAME_MAX = 20, MECHS_MAX = 20;
 
 // imports and old saves come from outside, so everything is rebuilt from known keys and clamped
 const cleanText = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, max) : "");
@@ -1107,6 +1123,7 @@ function cleanRecord(raw) {
   for (const t in THREATS) rec[t] = { won: cleanCount(r[t] && r[t].won), lost: cleanCount(r[t] && r[t].lost) };
   return rec;
 }
+// just the pilot, without their mechs: what a battle carries
 function cleanPilot(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
   const p = { id: cleanId(r.id), callsign: cleanText(r.callsign, CALLSIGN_MAX) || "Pilot", xp: cleanCount(r.xp, LEVEL_AT[MAX_LL]), record: cleanRecord(r.record) };
@@ -1120,39 +1137,50 @@ function cleanPilot(raw) {
   return p;
 }
 const unspent = (p) => pointsAt(levelOf(p)) - STATS.reduce((n, x) => n + p[x.key], 0);
-function cleanMech(raw) {
+// anything past the pilot's license comes off: a locked frame drops the mech, locked gear leaves its mount empty
+function cleanMech(raw, ll) {
   const r = raw && typeof raw === "object" ? raw : {};
   const f = FRAMES[r.frame];
-  if (!f || !Object.hasOwn(FRAMES, r.frame)) return null;
+  if (!f || !Object.hasOwn(FRAMES, r.frame) || needLL(r.frame) > ll) return null;
   const given = Array.isArray(r.gear) ? r.gear : [];
   const seen = new Set();
   let weight = 0;
   const gear = f.mounts.map((mount, s) => {
     const k = given[s];
     const g = typeof k === "string" && Object.hasOwn(GEAR, k) ? GEAR[k] : null;
-    if (!g || !fits(mount, g) || (g.kind === "system" && seen.has(k)) || weight + g.weight > f.capacity) return null;
+    if (!g || needLL(k) > ll || !fits(mount, g) || (g.kind === "system" && seen.has(k)) || weight + g.weight > f.capacity) return null;
     seen.add(k);
     weight += g.weight;
     return k;
   });
   return { id: cleanId(r.id), name: cleanText(r.name, MECH_NAME_MAX) || f.name, frame: r.frame, gear };
 }
+// the pilot as the hangar keeps them: with their mechs, and the one they last picked
+function cleanEntry(raw) {
+  const p = cleanPilot(raw), ll = levelOf(p);
+  p.mechs = [];
+  for (const m of (raw && Array.isArray(raw.mechs) ? raw.mechs.slice(0, MECHS_MAX) : []).map((x) => cleanMech(x, ll))) {
+    if (!m) continue;
+    if (!m.id || p.mechs.some((x) => x.id === m.id)) m.id = newId("m", p.mechs);
+    p.mechs.push(m);
+  }
+  if (!p.mechs.length) p.mechs.push(stockHalberd());
+  p.mech = p.mechs.some((m) => m.id === raw.mech) ? raw.mech : p.mechs[0].id;
+  return p;
+}
 
 let roster = null;
 function freshRoster() {
-  return { v: 1, pilots: [cleanPilot(WREN)], mechs: [{ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() }], active: { pilot: WREN.id, mech: STOCK_HALBERD.id } };
+  return { v: 2, pilots: [cleanEntry(WREN)], active: WREN.id };
 }
 function loadRoster() {
   let r = null;
   try { r = JSON.parse(localStorage.getItem(ROSTER_KEY) || "null"); } catch (e) { /* storage blocked */ }
-  if (!r || r.v !== 1) return freshRoster();
-  const out = { v: 1, pilots: [], mechs: [], active: {} };
-  addToRoster(out, r.pilots, r.mechs);
-  if (!out.pilots.length) out.pilots.push(cleanPilot(WREN));
-  if (!out.mechs.length) out.mechs.push({ ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() });
-  const a = r.active || {};
-  out.active.pilot = out.pilots.some((p) => p.id === a.pilot) ? a.pilot : out.pilots[0].id;
-  out.active.mech = out.mechs.some((m) => m.id === a.mech) ? a.mech : out.mechs[0].id;
+  if (!r || r.v !== 2) return freshRoster();
+  const out = { v: 2, pilots: [], active: null };
+  addToRoster(out, r.pilots);
+  if (!out.pilots.length) return freshRoster();
+  out.active = out.pilots.some((p) => p.id === r.active) ? r.active : out.pilots[0].id;
   return out;
 }
 function saveRoster() {
@@ -1163,35 +1191,21 @@ function newId(prefix, taken) {
   while (taken.some((x) => x.id === prefix + n)) n++;
   return prefix + n;
 }
-// cleans each entry and gives it a fresh id when its own is missing or taken. returns how many it added
-function addToRoster(r, pilots, mechs) {
-  let np = 0, nm = 0;
+// cleans each pilot and gives them a fresh id when their own is missing or taken. returns how many it added
+function addToRoster(r, pilots) {
+  let n = 0;
   for (const raw of Array.isArray(pilots) ? pilots.slice(0, 50) : []) {
-    const p = cleanPilot(raw);
+    const p = cleanEntry(raw);
     if (!p.id || r.pilots.some((x) => x.id === p.id)) p.id = newId("p", r.pilots);
     r.pilots.push(p);
-    np++;
+    n++;
   }
-  for (const raw of Array.isArray(mechs) ? mechs.slice(0, 50) : []) {
-    const m = cleanMech(raw);
-    if (!m) continue;
-    if (!m.id || r.mechs.some((x) => x.id === m.id)) m.id = newId("m", r.mechs);
-    r.mechs.push(m);
-    nm++;
-  }
-  return { pilots: np, mechs: nm };
+  return n;
 }
-const activePilot = () => roster.pilots.find((p) => p.id === roster.active.pilot) || roster.pilots[0];
-const activeMech = () => roster.mechs.find((m) => m.id === roster.active.mech) || roster.mechs[0];
+const activePilot = () => roster.pilots.find((p) => p.id === roster.active) || roster.pilots[0];
+const activeMech = (p = activePilot()) => p.mechs.find((m) => m.id === p.mech) || p.mechs[0];
 // a copy, so the battle doesn't change when the roster does
-const activeCrew = () => JSON.parse(JSON.stringify({ pilot: activePilot(), mech: activeMech() }));
-// a pilot only takes a mech their license covers, so a new pilot may need a different mech
-function fitCrew() {
-  const p = activePilot();
-  if (canField(p, activeMech())) return;
-  const m = roster.mechs.find((x) => canField(p, x));
-  if (m) { roster.active.mech = m.id; saveRoster(); }
-}
+const activeCrew = () => JSON.parse(JSON.stringify({ pilot: cleanPilot(activePilot()), mech: activeMech() }));
 roster = loadRoster();
 
 // ---------- State ----------
@@ -1623,6 +1637,8 @@ async function endPlayerTurn() {
   busy = true;
   B.phase = "foe";
   paint();
+  // the hangar can start another battle mid-turn; this one stops where it is, saved at your last turn
+  const battle = B;
   for (const e of B.units) {
     if (e.side !== "foe" || !e.alive) continue;
     if (B.over) break;
@@ -1630,8 +1646,10 @@ async function endPlayerTurn() {
     e.reaction = true;
     paint();
     await sleep(reduceMotion.matches ? 200 : 380);
+    if (B !== battle) return;
     if (e.status.stunned) log(`${e.name} is stunned.`, "foe");
     else await foeAct(e);
+    if (B !== battle) return;
     endTurnTicks(e);
     if (checkOver()) break;
   }
@@ -1653,8 +1671,7 @@ function recordResult() {
   const counts = won && !(B.threat === "light" && before >= LIGHT_LL);
   if (counts) p.xp = Math.min(LEVEL_AT[MAX_LL], p.xp + 1);
   saveRoster();
-  const r = p.record, tally = (k) => Object.keys(THREATS).reduce((n, t) => n + r[t][k], 0);
-  return { callsign: p.callsign, won, counts, before, after: levelOf(p), xp: p.xp, wins: tally("won"), losses: tally("lost"), kills: r.kills };
+  return { callsign: p.callsign, won, counts, before, after: levelOf(p), xp: p.xp, record: cleanRecord(p.record) };
 }
 function resultHtml(r) {
   if (!r) return "";
@@ -1671,7 +1688,7 @@ function resultHtml(r) {
     news = `${name} is ${r.won ? "" : "still "}${nextLevelText(r.xp)}.`;
   }
   return `<p class="levelup">${news}</p>
-    <p class="crewnote">${name}'s record: ${plural(r.wins, "win")}, ${r.losses} ${r.losses === 1 ? "loss" : "losses"}, ${plural(r.kills, "hostile")} destroyed.</p>`;
+    <p class="crewnote">${name}'s record: ${recordLine(r.record)}, ${plural(r.record.kills, "hostile")} destroyed.</p>`;
 }
 
 function checkOver() {
@@ -1685,7 +1702,7 @@ function checkOver() {
     log(`Area clear in ${plural(B.round, "round")}, with ${B.you.structure} of ${B.you.maxStructure} structure left.`, "you");
   } else return false;
   B.result = recordResult();
-  clearSave();
+  clearSave(B.pilot.id);
   ui.dialog = { kind: "over" };
   setMode("idle");
   focusDialog();
@@ -2964,26 +2981,20 @@ function dialogHtml() {
   const dg = ui.dialog, you = B.you;
   if (!dg) return "";
   if (dg.kind === "brief") {
-    const ok = canField(B.pilot, B.mech);
     const seg = ["light", "standard", "heavy"].map((k) => `<button type="button" data-key="threat-${k}" aria-pressed="${B.threat === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("");
     return `<p class="eyebrow">Site ${String(B.seed).padStart(5, "0")} · Briefing</p>
       <h2 id="dialog-h">${B.name}</h2>
       <p>Objective: <b>destroy every hostile.</b></p>
       <p>Hostiles: ${rosterText()}.</p>
       <p class="eyebrow">Crew</p>
-      <div class="crew">
-        <label>Pilot<select data-key="pick-pilot">${roster.pilots.map((p) => `<option value="${p.id}" ${p.id === B.pilot.id ? "selected" : ""}>${escapeHtml(p.callsign)}</option>`).join("")}</select></label>
-        <label>Mech<select data-key="pick-mech">${roster.mechs.map((m) => {
-          const need = canField(B.pilot, m) ? "" : ` (needs license ${mechLL(m)})`;
-          return `<option value="${m.id}" ${m.id === B.mech.id ? "selected" : ""} ${need ? "disabled" : ""}>${escapeHtml(m.name)}${need}</option>`;
-        }).join("")}</select></label>
+      <div class="crew one">
+        <label>${escapeHtml(B.pilot.callsign)}'s mech<select data-key="pick-mech">${pilotMechs().map((m) => `<option value="${m.id}" ${m.id === B.mech.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("")}</select></label>
       </div>
       <p class="crewnote">${escapeHtml(B.pilot.callsign)} · ${pilotSummary(B.pilot)}<br>${escapeHtml(mechSummary(B.mech))}</p>
-      ${ok ? "" : `<p class="crewnote bad">${escapeHtml(B.pilot.callsign)} can't field any mech in the hangar yet. Build one in the Hangar from gear marked license 0.</p>`}
       <p class="eyebrow">Threat</p>
       <div class="seg" role="group" aria-label="Threat level">${seg}</div>
-      <div class="row"><button type="button" class="go" data-key="deploy" ${ok ? "data-autofocus" : "disabled"}>Deploy</button><button type="button" data-key="reroll">Another site</button></div>
-      <div class="row"><button type="button" data-key="menu">Main menu</button></div>`;
+      <div class="row"><button type="button" class="go" data-key="deploy" data-autofocus>Deploy</button><button type="button" data-key="reroll">Another site</button></div>
+      <div class="row"><button type="button" data-key="menu">Back to the hangar</button></div>`;
   }
   if (dg.kind === "end") {
     return `<p class="eyebrow">Round ${B.round}</p><h2 id="dialog-h">End your turn?</h2>
@@ -2997,14 +3008,14 @@ function dialogHtml() {
   }
   if (dg.kind === "over") {
     const won = B.over === "won";
-    return `<p class="eyebrow">${B.name} · Round ${B.round}</p>
-      <h2 id="dialog-h">${won ? "Area clear" : escapeHtml(B.you.name) + " down"}</h2>
+    const all = B.units.filter((u) => u.side === "foe"), down = all.filter((u) => !u.alive).length;
+    return `<p class="eyebrow">Debriefing · ${B.name} · ${B.threat}</p>
+      <h2 id="dialog-h">${won ? "Success" : "Failure"}</h2>
       <p>${won
-        ? `You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.`
-        : `${plural(foes().length, "hostile")} still standing after ${plural(B.round, "round")}.`}</p>
+        ? `Area clear. You broke the line in ${plural(B.round, "round")} with ${you.structure} of ${you.maxStructure} structure and ${you.stress} of ${you.maxStress} stress left.`
+        : `${escapeHtml(theMech(true))} went down in round ${B.round}, with ${down} of ${plural(all.length, "hostile")} destroyed.`}</p>
       ${resultHtml(B.result)}
-      <div class="row"><button type="button" class="go" data-key="again" data-autofocus>${won ? "Fight here again" : "Try this fight again"}</button><button type="button" data-key="next">New battlefield</button></div>
-      <div class="row"><button type="button" data-key="menu">Main menu</button><button type="button" data-key="close-over">Look at the field</button></div>`;
+      <div class="row"><button type="button" class="go" data-key="menu" data-autofocus>Return to the hangar</button><button type="button" data-key="close-over">Look at the field</button></div>`;
   }
   return "";
 }
@@ -3085,13 +3096,14 @@ function log(text, cls = "sys") {
 const escapeHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // ---------- Saving ----------
-const SAVE_KEY = "hardpoint:battle";
+// each pilot keeps their own battle under way, saved under their id
+const SAVE_KEY = "hardpoint:battle:";
 const UNIT_FIELDS = ["pos", "hp", "maxHp", "alive", "structure", "stress", "heat", "heatCap", "repairs", "charges", "shield", "status", "reaction", "braceLimit", "loaded"];
 // the save keeps its own copy of the pilot and mech, so hangar edits can't reach a fight in progress
 function saveBattle() {
   if (!B || B.phase !== "you" || B.over || busy) return;
   const data = {
-    v: 2, seed: B.seed, threat: B.threat, name: B.name, round: B.round, crew: { pilot: B.pilot, mech: B.mech },
+    v: 3, seed: B.seed, threat: B.threat, name: B.name, round: B.round, crew: { pilot: B.pilot, mech: B.mech },
     ocCount: B.ocCount, coreUsed: B.coreUsed, turn: B.turn, smoke: [...B.smoke],
     units: B.units.map((u) => {
       const o = { id: u.id };
@@ -3101,34 +3113,29 @@ function saveBattle() {
     }),
     log: B.logLines.slice(-80),
   };
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { /* storage blocked */ }
+  try { localStorage.setItem(SAVE_KEY + B.pilot.id, JSON.stringify(data)); } catch (e) { /* storage blocked */ }
 }
-function loadSave() {
+function loadSave(id) {
   try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
-    if (s && s.v === 1) return upgradeSave(s);
-    if (!s || s.v !== 2) return null;
-    const pilot = cleanPilot(s.crew && s.crew.pilot), mech = cleanMech(s.crew && s.crew.mech);
-    return mech ? { ...s, crew: { pilot, mech } } : null;
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY + id) || "null");
+    if (!s || s.v !== 3) return null;
+    const pilot = cleanPilot(s.crew && s.crew.pilot), mech = cleanMech(s.crew && s.crew.mech, levelOf(pilot));
+    return mech && pilot.id === id ? { ...s, crew: { pilot, mech } } : null;
   } catch (e) { return null; }
 }
-// a battle saved before the hangar was always Wren in the stock Halberd
-function upgradeSave(s) {
-  const crew = { pilot: cleanPilot(WREN), mech: { ...STOCK_HALBERD, gear: STOCK_HALBERD.gear.slice() } };
-  const you = s.units.find((u) => u.id === "you");
-  if (you) {
-    if (you.broken) you.broken = you.broken.map((k) => crew.mech.gear.indexOf(k)).filter((n) => n >= 0);
-    if ("smokeLeft" in you) { you.charges = { 3: you.smokeLeft }; delete you.smokeLeft; }
-  }
-  return { ...s, v: 2, crew };
-}
-function clearSave() {
-  try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage blocked */ }
+function clearSave(id) {
+  try { localStorage.removeItem(SAVE_KEY + id); } catch (e) { /* storage blocked */ }
 }
 
 // ---------- Battles ----------
 const randomSeed = () => 1 + Math.floor(Math.random() * 99998);
 const liveBattle = () => B && !B.over && B.phase !== "brief";
+const siteName = (seed) => `Site ${String(seed).padStart(5, "0")}`;
+// a shared link's battlefield, waiting for a pilot to take it on
+let sharedSite = null;
+// the battle's pilot as the hangar has them now, and their mechs for the briefing
+const battlePilot = () => roster.pilots.find((p) => p.id === B.pilot.id);
+const pilotMechs = () => (battlePilot() || activePilot()).mechs;
 
 function rosterText() {
   const counts = {};
@@ -3139,13 +3146,13 @@ function resetUi() {
   Object.assign(ui, { mode: "idle", reach: null, dest: null, target: null, weapon: null, barrage: null, inspect: null, hover: null, dialog: null, system: null, cursor: B.you.pos, showCursor: false });
 }
 function setHeader() {
-  $("sitename").textContent = `Site ${String(B.seed).padStart(5, "0")} · ${B.name} · ${B.threat}`;
+  $("sitename").textContent = `${siteName(B.seed)} · ${B.name} · ${B.threat}`;
 }
 
-function newBattle(seed, threat, deployNow) {
+// a briefing for the pilot picked in the hangar
+function newBattle(seed, threat) {
   if (ui.dialog && ui.dialog.kind === "brace") ui.dialog.resolve(false);
   busy = false;
-  fitCrew();
   B = buildBattle(seed, threat, activeCrew());
   B.phase = "brief";
   B.logLines = [];
@@ -3155,14 +3162,12 @@ function newBattle(seed, threat, deployNow) {
   drawTerrain();
   $("log").replaceChildren();
   setHeader();
-  if (deployNow && canField(B.pilot, B.mech)) { deploy(); return; }
   ui.dialog = { kind: "brief" };
   paint();
   focusDialog();
 }
 
 function deploy() {
-  if (!canField(B.pilot, B.mech)) return;
   ui.dialog = null;
   B.phase = "you";
   history.replaceState(null, "", "#" + new URLSearchParams({ site: String(B.seed), threat: B.threat }).toString());
@@ -3193,10 +3198,32 @@ function restoreBattle(s) {
   setMode("idle");
 }
 
+// where the battle the pilot has under way stands, or "" when there's none
+function battleNote(p) {
+  if (liveBattle() && B.pilot.id === p.id) return `${B.name}, round ${B.round}`;
+  const s = loadSave(p.id);
+  return s ? `${s.name}, round ${s.round}` : "";
+}
+function continueBattle() {
+  if (liveBattle() && B.pilot.id === roster.active) { closeScreen(); return; }
+  const saved = loadSave(roster.active);
+  if (!saved) return;
+  closeScreen();
+  restoreBattle(saved);
+  map.focus({ preventScroll: true });
+}
+// New Game takes a shared link's site if one is waiting
+function startNew() {
+  const site = sharedSite;
+  sharedSite = null;
+  closeScreen();
+  newBattle(site ? site.seed : randomSeed(), site ? site.threat : prefs.threat || "standard");
+}
+
 // ---------- Screens ----------
 let screenKind = null, helpFrom = "title";
 // each screen's sheet and its heading
-const SHEETS = { title: ["title", "title-h"], help: ["help", "help-h"], hangar: ["hangar", "hangar-h"], pilot: ["pilotedit", "pilot-h"], mech: ["mechedit", "mech-h"], soundtest: ["soundtest", "soundtest-h"] };
+const SHEETS = { title: ["title", "title-h"], help: ["help", "help-h"], hangar: ["hangar", "hangar-h"], pilot: ["pilotedit", "pilot-h"], mech: ["mechedit", "mech-h"], soundtest: ["soundtest", "soundtest-h"], backup: ["backup", "backup-h"] };
 function openScreen(kind) {
   screenKind = kind;
   const scr = $("screen");
@@ -3204,19 +3231,23 @@ function openScreen(kind) {
   for (const k in SHEETS) $(SHEETS[k][0]).hidden = k !== kind;
   scr.setAttribute("aria-labelledby", SHEETS[kind][1]);
   $("game").inert = true;
-  if (kind === "title") updateTitle();
+  if (kind === "title") paintTitle();
   if (kind === "hangar") paintHangar();
+  if (kind === "backup") paintBackup();
   if (kind === "soundtest") openRange();
+  // with no battle under way, a link to the last one would only mislead a reload
+  if ((kind === "title" || kind === "hangar") && !liveBattle() && !sharedSite && location.hash) history.replaceState(null, "", location.pathname);
   scr.scrollTop = 0;
   const sheet = $(SHEETS[kind][0]);
-  const first = kind === "title" ? sheet.querySelector(".menu button:not(:disabled)")
-    : kind === "pilot" || kind === "mech" ? sheet.querySelector("input[type=text]") : sheet.querySelector("button");
+  const first = kind === "pilot" || kind === "mech" ? sheet.querySelector("input[type=text]")
+    : sheet.querySelector(".menu button:not(:disabled)") || sheet.querySelector("button");
   if (first) first.focus({ preventScroll: true });
 }
 function backFromScreen() {
   if (screenKind === "help") { if (helpFrom === "game") closeScreen(); else openScreen("title"); }
-  else if (screenKind === "hangar" || screenKind === "soundtest") openScreen("title");
-  else if (screenKind === "pilot" || screenKind === "mech") openScreen("hangar");
+  else if (screenKind === "hangar" || screenKind === "soundtest" || screenKind === "backup") openScreen("title");
+  else if (screenKind === "pilot") openScreen(draft && draft.id ? "hangar" : "title");
+  else if (screenKind === "mech") openScreen("hangar");
   else if (liveBattle()) closeScreen();
 }
 function closeScreen() {
@@ -3226,12 +3257,29 @@ function closeScreen() {
   paint();
   if (ui.dialog) focusDialog(); else map.focus({ preventScroll: true });
 }
-function updateTitle() {
-  const saved = loadSave();
-  const btn = $("continuebtn"), note = $("continuenote");
-  if (liveBattle()) { btn.disabled = false; note.textContent = `Back to ${B.name}, round ${B.round}`; }
-  else if (saved) { btn.disabled = false; note.textContent = `${saved.name}, round ${saved.round}`; }
-  else { btn.disabled = true; note.textContent = "No battle in progress"; }
+// the battle's own pilot, or the pilot list if they're gone
+function openHangar() {
+  pendingDelete = null;
+  if (B && battlePilot()) { roster.active = B.pilot.id; openScreen("hangar"); } else openScreen("title");
+}
+function openPilot(id) {
+  roster.active = id;
+  saveRoster();
+  pendingDelete = null;
+  openScreen("hangar");
+}
+function recordLine(r) {
+  const won = Object.keys(THREATS).reduce((n, t) => n + r[t].won, 0), lost = Object.keys(THREATS).reduce((n, t) => n + r[t].lost, 0);
+  return `${plural(won, "win")}, ${lost} ${lost === 1 ? "loss" : "losses"}`;
+}
+function paintTitle() {
+  $("pilotpick").innerHTML = roster.pilots.map((p) => {
+    const on = battleNote(p);
+    return `<button type="button" data-menu="pick" data-id="${p.id}">${escapeHtml(p.callsign)}<small>License ${levelOf(p)} · ${recordLine(p.record)}${on ? ` · in battle at ${escapeHtml(on)}` : ""}</small></button>`;
+  }).join("");
+  const n = $("sharednote");
+  n.hidden = !sharedSite;
+  n.textContent = sharedSite ? `A shared link brought you here: ${siteName(sharedSite.seed)}, ${sharedSite.threat} threat. Pick a pilot, and New Game takes you there.` : "";
 }
 
 // ---------- Hangar ----------
@@ -3241,24 +3289,41 @@ function pilotSummary(p) {
   return `License ${levelOf(p)} · ` + STATS.map((x) => x.letter + p[x.key]).join(" ") + ` · grit +${gritAt(levelOf(p))}` + (left ? ` · ${plural(left, "point")} to spend` : "");
 }
 function mechSummary(m) {
-  const f = FRAMES[m.frame], ll = mechLL(m);
+  const f = FRAMES[m.frame];
   const kit = m.gear.filter(Boolean).map((k) => GEAR[k].name).join(", ") || "no gear";
-  return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}${ll ? ` · needs license ${ll}` : ""}`;
+  return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}`;
 }
-function rosterItem(kind, x, title, sub) {
-  const list = kind === "pilot" ? roster.pilots : roster.mechs;
-  const confirming = pendingDelete === `${kind}:${x.id}`;
-  const acts = confirming
-    ? `<button type="button" class="warn" data-menu="del-${kind}" data-id="${x.id}">Delete ${escapeHtml(title)}</button><button type="button" data-menu="keep" data-id="${x.id}">Keep</button>`
-    : `<button type="button" data-menu="edit-${kind}" data-id="${x.id}">Edit</button><button type="button" data-menu="ask-del-${kind}" data-id="${x.id}" ${list.length > 1 ? "" : `disabled title="You need at least one ${kind}"`}>Delete</button>`;
-  return `<li><div class="who"><b>${escapeHtml(title)}</b><span>${escapeHtml(sub)}</span></div><div class="acts">${acts}</div></li>`;
+function mechItem(m, count) {
+  const acts = pendingDelete === m.id
+    ? `<button type="button" class="warn" data-menu="del-mech" data-id="${m.id}">Delete ${escapeHtml(m.name)}</button><button type="button" data-menu="keep-mech" data-id="${m.id}">Keep</button>`
+    : `<button type="button" data-menu="edit-mech" data-id="${m.id}">Edit</button><button type="button" data-menu="ask-del-mech" data-id="${m.id}" ${count > 1 ? "" : `disabled title="A pilot needs at least one mech"`}>Delete</button>`;
+  return `<li><div class="who"><b>${escapeHtml(m.name)}</b><span>${escapeHtml(mechSummary(m))}</span></div><div class="acts">${acts}</div></li>`;
+}
+// level, what the next one brings, and the record
+function licenseHtml(p) {
+  const ll = levelOf(p), r = p.record;
+  const next = ll < MAX_LL ? ` Level ${ll + 1} unlocks ${listText(UNLOCKS[ll + 1].map(unlockName))}.` : "";
+  const rows = Object.keys(THREATS).map((t) => `<tr><th scope="row">${t[0].toUpperCase() + t.slice(1)}</th><td>${r[t].won}</td><td>${r[t].lost}</td></tr>`).join("");
+  return `<h2 id="license-h">License</h2>
+    <p class="frame-facts">Level <b>${ll}</b> of ${MAX_LL} · ${nextLevelText(p.xp)}.${next}<br>
+      ${plural(r.kills, "hostile")} destroyed.</p>
+    <div class="table-wrap"><table class="record" aria-labelledby="license-h"><caption>Battles won and lost</caption>
+      <thead><tr><th scope="col">Threat</th><th scope="col">Won</th><th scope="col">Lost</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function paintHangar() {
-  $("pilotlist").innerHTML = roster.pilots.map((p) => rosterItem("pilot", p, p.callsign, pilotSummary(p))).join("");
-  $("mechlist").innerHTML = roster.mechs.map((m) => rosterItem("mech", m, m.name, mechSummary(m))).join("");
-  $("resetrow").innerHTML = pendingReset
-    ? `<button type="button" class="warn" data-menu="reset">Reset to Wren and the Halberd</button><button type="button" data-menu="keep-roster">Keep my hangar</button>`
-    : `<button type="button" data-menu="ask-reset">Reset hangar</button>`;
+  const p = activePilot(), on = battleNote(p), left = unspent(p);
+  $("hangar-h").textContent = p.callsign;
+  $("pilotsum").textContent = pilotSummary(p);
+  $("continuebtn").disabled = !on;
+  $("continuenote").textContent = on ? `Back to ${on}` : "No battle under way";
+  $("newnote").textContent = sharedSite ? `Get a briefing on ${siteName(sharedSite.seed)}, from your link`
+    : on ? "A fresh battlefield. Deploying there gives up the battle under way" : "Get a briefing on a fresh battlefield";
+  $("license").innerHTML = licenseHtml(p);
+  $("mechlist").innerHTML = p.mechs.map((m) => mechItem(m, p.mechs.length)).join("");
+  $("newmech").disabled = p.mechs.length >= MECHS_MAX;
+  $("pilotrow").innerHTML = pendingDelete === "pilot"
+    ? `<button type="button" class="warn" data-menu="del-pilot">Delete ${escapeHtml(p.callsign)}</button><button type="button" data-menu="keep-pilot">Keep</button>`
+    : `<button type="button" data-menu="edit-pilot">Edit ${escapeHtml(p.callsign)}${left ? ` · ${plural(left, "point")} to spend` : ""}</button><button type="button" data-menu="ask-del-pilot" ${roster.pilots.length > 1 ? "" : `disabled title="You need at least one pilot"`}>Delete</button>`;
 }
 // re-render a form and put focus back on the control that had it, by its data-f
 function renderForm(el, html) {
@@ -3272,24 +3337,14 @@ function renderForm(el, html) {
   if (again) again.focus({ preventScroll: true });
 }
 
+// a new pilot when there's no id
 function editPilot(id) {
   const p = roster.pilots.find((x) => x.id === id);
-  draft = p ? { ...p } : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0, xp: 0, record: cleanRecord(null) };
+  draft = p ? cleanPilot(p) : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0, xp: 0, record: cleanRecord(null) };
   $("pilot-h").textContent = p ? `Edit ${p.callsign}` : "New pilot";
   $("pilotform").innerHTML = "";
   paintPilotForm();
   openScreen("pilot");
-}
-// the license section of the pilot editor: level, what the next one brings, and the record
-function licenseHtml(p) {
-  const ll = levelOf(p), r = p.record;
-  const next = ll < MAX_LL ? ` Level ${ll + 1} unlocks ${listText(UNLOCKS[ll + 1].map(unlockName))}.` : "";
-  const rows = Object.keys(THREATS).map((t) => `<tr><th scope="row">${t[0].toUpperCase() + t.slice(1)}</th><td>${r[t].won}</td><td>${r[t].lost}</td></tr>`).join("");
-  return `<p class="field">License</p>
-    <p class="frame-facts">Level <b>${ll}</b> of ${MAX_LL} · ${nextLevelText(p.xp)}.${next}<br>
-      ${plural(r.kills, "hostile")} destroyed.</p>
-    <div class="table-wrap"><table class="record"><caption>Battles won and lost</caption>
-      <thead><tr><th scope="col">Threat</th><th scope="col">Won</th><th scope="col">Lost</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function paintPilotForm() {
   const ll = levelOf(draft), max = statMaxAt(ll);
@@ -3302,39 +3357,63 @@ function paintPilotForm() {
     </div></div>`).join("");
   renderForm($("pilotform"), `<label class="field" for="callsign">Callsign</label>
     <input type="text" id="callsign" data-f="callsign" maxlength="${CALLSIGN_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.callsign)}" placeholder="Pilot">
-    ${licenseHtml(draft)}
     <p class="field">Stats</p>
     <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${max} in one stat</p>
-    <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls. Stats change the mech you fly:</p>
+    <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls.${draft.id ? "" : " A new pilot starts at license 0 with a stock Halberd."} Stats change the mech you fly:</p>
     ${rows}
     <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">Save pilot</button></div>`);
 }
+function savePilot() {
+  const clean = cleanPilot(draft), p = roster.pilots.find((x) => x.id === draft.id);
+  if (p) Object.assign(p, clean, { id: p.id });
+  else {
+    const fresh = cleanEntry({ ...clean, id: newId("p", roster.pilots) });
+    roster.pilots.push(fresh);
+    roster.active = fresh.id;
+  }
+  saveRoster();
+  draft = null;
+  openScreen("hangar");
+}
+function deletePilot() {
+  if (roster.pilots.length <= 1) return;
+  const id = roster.active;
+  clearSave(id);
+  roster.pilots.splice(roster.pilots.findIndex((x) => x.id === id), 1);
+  roster.active = roster.pilots[0].id;
+  pendingDelete = null;
+  saveRoster();
+  // a battle in memory for a pilot who's gone would only save itself back
+  if (B && B.pilot.id === id) newBattle(randomSeed(), prefs.threat);
+  openScreen("title");
+}
 
 function editMech(id) {
-  const m = roster.mechs.find((x) => x.id === id);
+  const m = activePilot().mechs.find((x) => x.id === id);
   draft = m ? { ...m, gear: m.gear.slice() } : { id: null, name: FRAMES.halberd.name, frame: "halberd", gear: FRAMES.halberd.stock.slice() };
   $("mech-h").textContent = m ? `Edit ${m.name}` : "New mech";
   $("mechform").innerHTML = "";
   paintMechForm();
   openScreen("mech");
 }
+// frames and gear past the pilot's license show when they unlock, but can't be picked
 function paintMechForm() {
-  const f = FRAMES[draft.frame], weight = loadWeight(draft.gear);
-  const frames = Object.entries(FRAMES).map(([k, x]) => `<button type="button" data-menu="frame" data-frame="${k}" data-f="frame-${k}" aria-pressed="${k === draft.frame}">
-    <span>${x.name}</span><small>${x.role} · HP ${x.hp} · Armor ${x.armor} · Evasion ${x.evasion} · Speed ${x.speed}${needLL(k) ? ` · license ${needLL(k)}` : ""}</small></button>`).join("");
+  const f = FRAMES[draft.frame], weight = loadWeight(draft.gear), p = activePilot(), ll = levelOf(p);
+  const frames = Object.entries(FRAMES).map(([k, x]) => `<button type="button" data-menu="frame" data-frame="${k}" data-f="frame-${k}" aria-pressed="${k === draft.frame}" ${needLL(k) > ll ? "disabled" : ""}>
+    <span>${x.name}</span><small>${x.role} · HP ${x.hp} · Armor ${x.armor} · Evasion ${x.evasion} · Speed ${x.speed}${needLL(k) > ll ? ` · unlocks at license ${needLL(k)}` : ""}</small></button>`).join("");
   const mounts = f.mounts.map((mount, s) => {
     const others = draft.gear.filter((_, j) => j !== s);
     const room = f.capacity - loadWeight(others);
     const opts = Object.entries(GEAR).filter(([, g]) => fits(mount, g)).map(([k, g]) => {
-      const why = g.weight > room ? "too heavy" : g.kind === "system" && others.includes(k) ? "already fitted" : "";
-      return `<option value="${k}" ${draft.gear[s] === k ? "selected" : ""} ${why ? "disabled" : ""}>${g.name} · weight ${g.weight}${needLL(k) ? ` · license ${needLL(k)}` : ""}${why ? ` (${why})` : ""}</option>`;
+      const why = needLL(k) > ll ? `license ${needLL(k)}` : g.weight > room ? "too heavy" : g.kind === "system" && others.includes(k) ? "already fitted" : "";
+      return `<option value="${k}" ${draft.gear[s] === k ? "selected" : ""} ${why ? "disabled" : ""}>${g.name} · weight ${g.weight}${why ? ` (${why})` : ""}</option>`;
     }).join("");
     const g = draft.gear[s] && GEAR[draft.gear[s]];
     return `<div class="mount"><label for="mount-${s}">Mount ${s + 1} · ${MOUNT_NAME[mount]}</label>
       <select id="mount-${s}" data-mount="${s}" data-f="mount-${s}"><option value="">Empty</option>${opts}</select>
       <span class="d">${g ? gearLine(g, null) : mount === "heavy" ? "Takes a heavy or a main weapon." : ""}</span></div>`;
   }).join("");
-  const t = TRAITS[f.trait], c = CORES[f.core], ll = mechLL(draft);
+  const t = TRAITS[f.trait], c = CORES[f.core];
   renderForm($("mechform"), `<label class="field" for="mechname">Name</label>
     <input type="text" id="mechname" data-f="mechname" maxlength="${MECH_NAME_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.name)}" placeholder="${f.name}">
     <p class="field">Frame</p>
@@ -3345,44 +3424,51 @@ function paintMechForm() {
     <p class="field">Mounts</p>
     <div class="weight${weight > f.capacity ? " over" : ""}"><span>Weight</span><span class="bar-meter heat"><i style="width:${Math.min(100, 100 * weight / f.capacity).toFixed(0)}%"></i></span><span aria-live="polite">${weight} of ${f.capacity}</span></div>
     ${mounts}
-    <p class="left" aria-live="polite">${ll ? `Needs a pilot at license ${ll} or higher` : "Any pilot can field it"}</p>
+    <p class="left">${escapeHtml(p.callsign)} is at license ${ll}. Anything marked with a higher license unlocks as they win.</p>
     <div class="btnrow"><button type="button" class="go" data-menu="save-mech" data-f="save">Save mech</button></div>`);
 }
-
-function saveDraft(kind) {
-  const list = kind === "pilot" ? roster.pilots : roster.mechs;
-  const clean = kind === "pilot" ? cleanPilot(draft) : cleanMech(draft);
+function saveMech() {
+  const p = activePilot(), clean = cleanMech(draft, levelOf(p));
   if (!clean) return;
-  const at = list.findIndex((x) => x.id === draft.id);
-  if (at >= 0) list[at] = { ...clean, id: draft.id };
-  else list.push({ ...clean, id: newId(kind === "pilot" ? "p" : "m", list) });
+  const at = p.mechs.findIndex((x) => x.id === draft.id);
+  if (at >= 0) p.mechs[at] = { ...clean, id: draft.id };
+  else if (p.mechs.length < MECHS_MAX) p.mechs.push({ ...clean, id: newId("m", p.mechs) });
   saveRoster();
   draft = null;
   openScreen("hangar");
 }
-function deleteEntry(kind, id) {
-  const list = kind === "pilot" ? roster.pilots : roster.mechs;
-  if (list.length <= 1) return;
-  list.splice(list.findIndex((x) => x.id === id), 1);
-  if (roster.active[kind] === id) roster.active[kind] = list[0].id;
+function deleteMech(id) {
+  const p = activePilot();
+  if (p.mechs.length <= 1) return;
+  p.mechs.splice(p.mechs.findIndex((x) => x.id === id), 1);
+  if (p.mech === id) p.mech = p.mechs[0].id;
   pendingDelete = null;
   saveRoster();
   paintHangar();
-  $(kind === "pilot" ? "pilotlist" : "mechlist").querySelector("button:not(:disabled)")?.focus();
+  $("mechlist").querySelector("button:not(:disabled)")?.focus();
 }
 
+// ---------- Back up and share ----------
+function paintBackup() {
+  $("resetrow").innerHTML = pendingReset
+    ? `<button type="button" class="warn" data-menu="reset">Reset to Wren and the Halberd</button><button type="button" data-menu="keep-roster">Keep my pilots</button>`
+    : `<button type="button" data-menu="ask-reset">Reset</button>`;
+}
 function resetRoster() {
+  for (const p of roster.pilots) clearSave(p.id);
   roster = freshRoster();
   saveRoster();
   pendingReset = false;
   pendingDelete = null;
-  paintHangar();
-  $("resetnote").textContent = "Hangar reset to Wren and the stock Halberd.";
+  // the battle in memory belonged to someone who's gone
+  newBattle(randomSeed(), prefs.threat);
+  paintBackup();
+  $("resetnote").textContent = "Reset to Wren and a stock Halberd.";
   $("resetrow").querySelector("button").focus();
 }
 
 function exportRoster() {
-  const data = { format: "hardpoint-roster/2", pilots: roster.pilots, mechs: roster.mechs };
+  const data = { format: "hardpoint-roster/3", pilots: roster.pilots };
   const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -3391,7 +3477,7 @@ function exportRoster() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  importNote(`Exported ${plural(roster.pilots.length, "pilot")} and ${plural(roster.mechs.length, "mech")}.`, "good");
+  importNote(`Exported ${plural(roster.pilots.length, "pilot")} and their mechs.`, "good");
 }
 function importNote(text, cls = "") {
   const n = $("importnote");
@@ -3400,17 +3486,15 @@ function importNote(text, cls = "") {
 }
 function importText(text) {
   let data;
-  if (text.length > 200000) { importNote("That's far too long to be a roster.", "bad"); return; }
+  if (text.length > 400000) { importNote("That's far too long to be a roster.", "bad"); return; }
   try { data = JSON.parse(text); } catch (e) { importNote("That isn't readable JSON. Paste the whole exported file, from the first { to the last }.", "bad"); return; }
-  if (!data || typeof data !== "object" || (!Array.isArray(data.pilots) && !Array.isArray(data.mechs))) {
-    importNote("That JSON has no pilots or mechs in it.", "bad");
+  if (!data || typeof data !== "object" || !Array.isArray(data.pilots) || !data.pilots.length) {
+    importNote("That JSON has no pilots in it.", "bad");
     return;
   }
-  const added = addToRoster(roster, data.pilots, data.mechs);
-  if (!added.pilots && !added.mechs) { importNote("Nothing in it could be used.", "bad"); return; }
+  const added = addToRoster(roster, data.pilots);
   saveRoster();
-  paintHangar();
-  importNote(`Added ${plural(added.pilots, "pilot")} and ${plural(added.mechs, "mech")}.`, "good");
+  importNote(`Added ${plural(added, "pilot")}.`, "good");
   $("importtext").value = "";
 }
 $("importfile").addEventListener("change", () => {
@@ -3615,12 +3699,10 @@ function onKeyButton(k, viaKey) {
   if (k === "askbrace") { prefs.askBrace = !prefs.askBrace; savePrefs(); paint(); return; }
   if (k === "brace") return answerBrace(true);
   if (k === "nobrace") return answerBrace(false);
-  if (k === "menu") return openScreen("title");
+  if (k === "menu") return openHangar();
   if (k === "deploy") return deploy();
   if (k === "reroll") return newBattle(randomSeed(), B.threat);
   if (k.startsWith("threat-")) return newBattle(B.seed, k.slice(7));
-  if (k === "again") return newBattle(B.seed, B.threat, true);
-  if (k === "next") return newBattle(randomSeed(), B.threat);
   if (k === "close-over") return closeDialog();
   if (k === "over") { ui.dialog = { kind: "over" }; paint(); focusDialog(); return; }
   if (k === "end-yes") { ui.dialog = null; endPlayerTurn(); return; }
@@ -3656,17 +3738,17 @@ $("game").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-key]");
   if (b && B) onKeyButton(b.dataset.key, e.detail === 0);
 });
-// picking a pilot or mech in the briefing rebuilds the same site around them
+// picking a mech in the briefing rebuilds the same site around it
 $("dialog").addEventListener("change", (e) => {
-  const k = e.target.dataset.key;
-  if (!B || B.phase !== "brief" || (k !== "pick-pilot" && k !== "pick-mech")) return;
-  roster.active[k === "pick-pilot" ? "pilot" : "mech"] = e.target.value;
+  const p = B && battlePilot();
+  if (!p || B.phase !== "brief" || e.target.dataset.key !== "pick-mech") return;
+  p.mech = e.target.value;
   saveRoster();
   newBattle(B.seed, B.threat);
-  $("dialog").querySelector(`[data-key="${k}"]`)?.focus({ preventScroll: true });
+  $("dialog").querySelector(`[data-key="pick-mech"]`)?.focus({ preventScroll: true });
 });
 for (const b of document.querySelectorAll(".tabs [role=tab]")) b.addEventListener("click", () => showTab(b.dataset.tab));
-$("menubtn").addEventListener("click", () => openScreen("title"));
+$("menubtn").addEventListener("click", () => openHangar());
 $("helpbtn").addEventListener("click", () => { helpFrom = "game"; openScreen("help"); });
 $("soundbtn").addEventListener("click", () => setSound(!prefs.sound));
 $("soundbtn").setAttribute("aria-pressed", prefs.sound);
@@ -3676,22 +3758,20 @@ $("screen").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-menu]");
   if (!b) return;
   const m = b.dataset.menu, id = b.dataset.id;
-  if (m === "continue") {
-    if (liveBattle()) { closeScreen(); return; }
-    const saved = loadSave();
-    if (saved) { closeScreen(); restoreBattle(saved); map.focus({ preventScroll: true }); }
+  if (m === "pick") {
+    openPilot(id);
+  } else if (m === "continue") {
+    continueBattle();
   } else if (m === "new") {
-    closeScreen();
-    newBattle(randomSeed(), prefs.threat || "standard");
+    startNew();
   } else if (m === "help") {
     helpFrom = "title";
     openScreen("help");
-  } else if (m === "hangar") {
-    pendingDelete = null;
+  } else if (m === "backup") {
     pendingReset = false;
     importNote("");
     $("resetnote").textContent = "";
-    openScreen("hangar");
+    openScreen("backup");
   } else if (m === "soundtest") {
     openScreen("soundtest");
   } else if (m === "test") {
@@ -3700,20 +3780,24 @@ $("screen").addEventListener("click", (e) => {
     setSound(!prefs.sound);
   } else if (m === "back" || m === "cancel-edit") {
     backFromScreen();
-  } else if (m === "new-pilot" || m === "edit-pilot") {
-    editPilot(id);
+  } else if (m === "new-pilot") {
+    editPilot(null);
+  } else if (m === "edit-pilot") {
+    editPilot(roster.active);
   } else if (m === "new-mech" || m === "edit-mech") {
     editMech(id);
-  } else if (m.startsWith("ask-del-")) {
-    pendingDelete = `${m.slice(8)}:${id}`;
+  } else if (m === "ask-del-mech" || m === "ask-del-pilot") {
+    pendingDelete = m === "ask-del-pilot" ? "pilot" : id;
     paintHangar();
-    document.querySelector(`#screen [data-menu="keep"]`)?.focus();
-  } else if (m === "keep") {
+    $(m === "ask-del-pilot" ? "pilotrow" : "mechlist").querySelector(`[data-menu^="keep-"]`)?.focus();
+  } else if (m === "keep-mech" || m === "keep-pilot") {
     pendingDelete = null;
     paintHangar();
-    document.querySelector(`#screen [data-menu^="ask-del-"][data-id="${id}"]`)?.focus();
-  } else if (m === "del-pilot" || m === "del-mech") {
-    deleteEntry(m.slice(4), id);
+    document.querySelector(m === "keep-pilot" ? `#screen [data-menu="ask-del-pilot"]` : `#screen [data-menu="ask-del-mech"][data-id="${id}"]`)?.focus();
+  } else if (m === "del-mech") {
+    deleteMech(id);
+  } else if (m === "del-pilot") {
+    deletePilot();
   } else if (m === "stat-up" || m === "stat-down") {
     const k = b.dataset.stat;
     if (m === "stat-up" && unspent(draft) > 0 && draft[k] < statMaxAt(levelOf(draft))) draft[k]++;
@@ -3721,20 +3805,20 @@ $("screen").addEventListener("click", (e) => {
     paintPilotForm();
   } else if (m === "frame") {
     const k = b.dataset.frame;
-    if (k === draft.frame) return;
+    if (k === draft.frame || needLL(k) > levelOf(activePilot())) return;
     // a stock name follows the frame; a name you chose stays
     if (!draft.name.trim() || Object.values(FRAMES).some((f) => f.name === draft.name.trim())) draft.name = FRAMES[k].name;
     draft.frame = k;
     draft.gear = FRAMES[k].stock.slice();
     paintMechForm();
   } else if (m === "save-pilot") {
-    saveDraft("pilot");
+    savePilot();
   } else if (m === "save-mech") {
-    saveDraft("mech");
+    saveMech();
   } else if (m === "ask-reset" || m === "keep-roster") {
     pendingReset = m === "ask-reset";
     $("resetnote").textContent = "";
-    paintHangar();
+    paintBackup();
     $("resetrow").querySelector(pendingReset ? '[data-menu="keep-roster"]' : "button").focus();
   } else if (m === "reset") {
     resetRoster();
@@ -3784,10 +3868,10 @@ addEventListener("resize", () => placeOrders());
 // the help's license notes come from the same tables the game uses
 function writeLicenseHelp() {
   const wins = LEVEL_AT.slice(1).map((n, k) => `level ${k + 1} at ${plural(n, "win")}`);
-  $("licensehelp").innerHTML = `<b>Wins raise a pilot's license.</b> A pilot starts at license 0 and reaches ${listText(wins)}. Light battles stop counting after level ${LIGHT_LL}, and a loss only goes on the record. Each level adds a stat point to spend, every second level adds +1 grit, and every third lets one stat take another point. The pilot editor shows each pilot's level and record.`;
+  $("licensehelp").innerHTML = `<b>Wins raise a pilot's license.</b> A pilot starts at license 0 and reaches ${listText(wins)}. Light battles stop counting after level ${LIGHT_LL}, and a loss only goes on the record. Each level adds a stat point to spend, every second level adds +1 grit, and every third lets one stat take another point. Each pilot's hangar shows their level and record.`;
   const start = [...Object.keys(FRAMES), ...Object.keys(GEAR)].filter((k) => !needLL(k)).map(unlockName);
   const later = UNLOCKS.map((keys, ll) => (keys.length ? `level ${ll} adds ${listText(keys.map(unlockName))}` : "")).filter(Boolean);
-  $("unlockhelp").innerHTML = `<b>Each level unlocks a frame or gear.</b> At license 0 a pilot can field the ${listText(start)}. Then ${listText(later)}. The mech editor marks what each one needs.`;
+  $("unlockhelp").innerHTML = `<b>Each level unlocks a frame or gear.</b> At license 0 a pilot can field the ${listText(start)}. Then ${listText(later)}. The mech editor only offers what the pilot has unlocked.`;
 }
 
 // ---------- Start ----------
@@ -3797,13 +3881,14 @@ writeLicenseHelp();
   const params = new URLSearchParams(location.hash.slice(1));
   const seed = parseInt(params.get("site"), 10);
   const threat = THREATS[params.get("threat")] ? params.get("threat") : (THREATS[prefs.threat] ? prefs.threat : "standard");
-  const saved = loadSave();
   if (seed > 0 && seed < 100000) {
-    // a shared link opens its briefing, unless it's the battle you were already fighting
-    if (saved && saved.seed === seed && saved.threat === threat) restoreBattle(saved);
-    else newBattle(seed, threat);
-    return;
+    // a link to a battle one of your pilots has under way goes straight back to it.
+    // any other waits for you to pick a pilot
+    const owner = roster.pilots.find((p) => { const s = loadSave(p.id); return s && s.seed === seed && s.threat === threat; });
+    if (owner) { roster.active = owner.id; restoreBattle(loadSave(owner.id)); return; }
+    sharedSite = { seed, threat };
   }
+  // a briefing sits behind the menu so the board isn't empty
   newBattle(randomSeed(), threat);
   openScreen("title");
 })();
