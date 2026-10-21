@@ -584,7 +584,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <ul class="roster" id="mechlist" aria-labelledby="mechs-h"></ul>
     <button type="button" data-menu="new-mech" id="newmech">New mech</button>
     <h2 id="pilotown-h">Pilot</h2>
-    <p>Change the callsign or move stat points around. Deleting a pilot also deletes their mechs and any battle they have under way.</p>
+    <p>Rename the pilot, or spend and move their stat points. Deleting a pilot also deletes their mechs and any battle they have under way.</p>
     <div class="btnrow" id="pilotrow"></div>
   </section>
 
@@ -3242,7 +3242,7 @@ function openScreen(kind) {
   if ((kind === "title" || kind === "hangar") && !liveBattle() && !sharedSite && location.hash) history.replaceState(null, "", location.pathname);
   scr.scrollTop = 0;
   const sheet = $(SHEETS[kind][0]);
-  const first = kind === "pilot" || kind === "mech" ? sheet.querySelector("input[type=text]")
+  const first = kind === "pilot" || kind === "mech" ? sheet.querySelector("input[type=text]") || sheet.querySelector(`[data-menu="stat-up"]:not(:disabled), [data-menu="save-pilot"]`)
     : sheet.querySelector(".menu button:not(:disabled), #newmech:not(:disabled)") || sheet.querySelector("button");
   if (first) first.focus({ preventScroll: true });
 }
@@ -3310,7 +3310,7 @@ function licenseHtml(p) {
   return `<h2 id="license-h">License</h2>
     <p class="frame-facts">Level <b>${ll}</b> of ${MAX_LL} · ${nextLevelText(p.xp)}.${next}<br>
       ${plural(r.kills, "hostile")} destroyed.</p>
-    ${unspent(p) ? `<div class="btnrow"><button type="button" class="go" data-menu="edit-pilot">Level up · ${plural(unspent(p), "point")} to spend</button></div>` : ""}
+    ${unspent(p) ? `<div class="btnrow"><button type="button" class="go" data-menu="level-pilot">Level up · ${plural(unspent(p), "point")} to spend</button></div>` : ""}
     <div class="table-wrap"><table class="record" aria-labelledby="license-h"><caption>Battles won and lost</caption>
       <thead><tr><th scope="col">Threat</th><th scope="col">Won</th><th scope="col">Lost</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -3333,7 +3333,7 @@ function paintHangar() {
   $("newmech").disabled = p.mechs.length >= MECHS_MAX;
   $("pilotrow").innerHTML = pendingDelete === "pilot"
     ? `<button type="button" class="warn" data-menu="del-pilot">Delete ${escapeHtml(p.callsign)}</button><button type="button" data-menu="keep-pilot">Keep</button>`
-    : `<button type="button" data-menu="edit-pilot">Edit ${escapeHtml(p.callsign)}${left ? ` · ${plural(left, "point")} to spend` : ""}</button><button type="button" data-menu="ask-del-pilot" ${roster.pilots.length > 1 ? "" : `disabled title="You need at least one pilot"`}>Delete</button>`;
+    : `<button type="button" data-menu="rename-pilot">Rename</button><button type="button" data-menu="level-pilot">${left ? `Level up · ${plural(left, "point")} to spend` : "Stats"}</button><button type="button" data-menu="ask-del-pilot" ${roster.pilots.length > 1 ? "" : `disabled title="You need at least one pilot"`}>Delete</button>`;
 }
 // re-render a form and put focus back on the control that had it, by its data-f
 function renderForm(el, html) {
@@ -3347,11 +3347,11 @@ function renderForm(el, html) {
   if (again) again.focus({ preventScroll: true });
 }
 
-// a new pilot when there's no id
-function editPilot(id) {
+// a new pilot when there's no id. an existing one is renamed ("name") or levels up ("stats") on its own
+function editPilot(id, part, thenNew) {
   const p = roster.pilots.find((x) => x.id === id);
-  draft = p ? cleanPilot(p) : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0, xp: 0, record: cleanRecord(null) };
-  $("pilot-h").textContent = p ? `Edit ${p.callsign}` : "New pilot";
+  draft = p ? { ...cleanPilot(p), part, thenNew } : { id: null, callsign: "", hull: 0, agility: 0, systems: 0, engineering: 0, xp: 0, record: cleanRecord(null) };
+  $("pilot-h").textContent = !p ? "New pilot" : part === "name" ? `Rename ${p.callsign}` : unspent(p) ? `Level up ${p.callsign}` : `${p.callsign}'s stats`;
   $("pilotform").innerHTML = "";
   paintPilotForm();
   openScreen("pilot");
@@ -3365,13 +3365,16 @@ function paintPilotForm() {
       <output aria-live="polite">${draft[x.key]}</output>
       <button type="button" data-menu="stat-up" data-stat="${x.key}" data-f="up-${x.key}" aria-label="More ${x.name}" ${left > 0 && draft[x.key] < max ? "" : "disabled"}>+</button>
     </div></div>`).join("");
-  renderForm($("pilotform"), `<label class="field" for="callsign">Callsign</label>
-    <input type="text" id="callsign" data-f="callsign" maxlength="${CALLSIGN_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.callsign)}" placeholder="Pilot">
-    <p class="field">Stats</p>
+  const name = `<label class="field" for="callsign">Callsign</label>
+    <input type="text" id="callsign" data-f="callsign" maxlength="${CALLSIGN_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.callsign)}" placeholder="Pilot">`;
+  const stats = `<p class="field">Stats</p>
     <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${max} in one stat</p>
     <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls.${draft.id ? "" : " A new pilot starts at license 0 with no mechs, so build one in their hangar."} Stats change the mech you fly:</p>
-    ${rows}
-    <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">${draft.thenNew ? "Save and get a briefing" : "Save pilot"}</button></div>`);
+    ${rows}`;
+  const save = draft.thenNew ? "Save and get a briefing" : draft.part === "name" ? "Save callsign" : draft.part === "stats" ? "Save stats" : "Save pilot";
+  renderForm($("pilotform"), `${draft.part === "stats" ? "" : name}
+    ${draft.part === "name" ? "" : stats}
+    <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">${save}</button></div>`);
 }
 function savePilot() {
   const clean = cleanPilot(draft), p = roster.pilots.find((x) => x.id === draft.id);
@@ -3785,9 +3788,7 @@ $("screen").addEventListener("click", (e) => {
   } else if (m === "new-anyway") {
     startNew();
   } else if (m === "spend-first") {
-    editPilot(roster.active);
-    draft.thenNew = true;
-    paintPilotForm();
+    editPilot(roster.active, "stats", true);
   } else if (m === "help") {
     helpFrom = "title";
     openScreen("help");
@@ -3806,8 +3807,8 @@ $("screen").addEventListener("click", (e) => {
     backFromScreen();
   } else if (m === "new-pilot") {
     editPilot(null);
-  } else if (m === "edit-pilot") {
-    editPilot(roster.active);
+  } else if (m === "rename-pilot" || m === "level-pilot") {
+    editPilot(roster.active, m === "rename-pilot" ? "name" : "stats");
   } else if (m === "new-mech" || m === "edit-mech") {
     editMech(id);
   } else if (m === "ask-del-mech" || m === "ask-del-pilot") {
