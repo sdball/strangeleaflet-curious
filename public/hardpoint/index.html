@@ -563,7 +563,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <button type="button" data-menu="new-pilot">New Pilot<small>Starts at license 0 with an empty hangar</small></button>
       <button type="button" data-menu="help">Instructions<small>How turns, cover, heat, and damage work</small></button>
       <button type="button" data-menu="soundtest">Sound Test<small>Fire every weapon on a practice range</small></button>
-      <button type="button" data-menu="backup">Back Up and Share<small>Export, import, or reset your pilots</small></button>
+      <button type="button" data-menu="backup">Import and Export<small>Export, import, or reset your pilots</small></button>
     </div>
     <p class="legal">Hardpoint is inspired by LANCER. LANCER is copyright Massif Press. Hardpoint is not an official LANCER product; it is a third party work, and is not affiliated with Massif Press. Hardpoint is published via the <a href="https://massifpress.com/legal">LANCER Third Party License</a>.</p><!-- tic-ok -->
   </section>
@@ -590,7 +590,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 
   <section class="sheet" id="backup" aria-labelledby="backup-h" hidden>
     <div class="stick"><button type="button" data-menu="back">Back</button></div>
-    <h1 id="backup-h">Back up and share</h1>
+    <h1 id="backup-h">Import and export</h1>
     <p class="lede">Export saves every pilot, with their mechs, license, and record, to a <code>.json</code> file. Import adds the pilots from one of those files, or from its text pasted below, next to the ones you already have.</p>
     <div class="btnrow">
       <button type="button" data-menu="export">Export pilots</button>
@@ -707,8 +707,8 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <li><b>The Kestrel is the skirmisher.</b> It has Speed 6 and Evasion 11 but only 10 HP and no armor. Hostiles never get overwatch on it, and its core power, Afterburn, gives free Boosts and +3 Evasion.</li>
       <li><b>The Lantern is the artillery.</b> It sees 15 hexes and gets a free Lock On every turn. Its core power, Flare Net, locks on to every hostile in sight and lets your attacks ignore cover.</li>
       <li><b>Mounts take gear of their size.</b> A main mount takes a main weapon, a heavy mount takes a heavy or a main weapon, and a system mount takes a system. Everything together has to fit the frame's weight capacity, and each system fits only once.</li>
-      <li><b>Export to keep a copy.</b> Back Up and Share, on the main menu, saves your pilots and their mechs to a file you can import later, on another device, or send to a friend. Importing adds to what you have and replaces nothing.</li>
-      <li><b>Reset to start over.</b> Reset, at the end of Back Up and Share, puts back Wren and the stock Halberd and removes everything else.</li>
+      <li><b>Export to keep a copy.</b> Import and Export, on the main menu, saves your pilots and their mechs to a file you can import later, on another device, or send to a friend. Importing adds to what you have and replaces nothing.</li>
+      <li><b>Reset to start over.</b> Reset, at the end of Import and Export, puts back Wren and the stock Halberd and removes everything else.</li>
     </ul>
 
     <h2 id="credit-h">Credits</h2>
@@ -3465,7 +3465,7 @@ function deleteMech(id) {
   ($("mechlist").querySelector("button:not(:disabled)") || $("newmech")).focus();
 }
 
-// ---------- Back up and share ----------
+// ---------- Import and export ----------
 function paintBackup() {
   $("resetrow").innerHTML = pendingReset
     ? `<button type="button" class="warn" data-menu="reset">Reset to Wren and the Halberd</button><button type="button" data-menu="keep-roster">Keep my pilots</button>`
