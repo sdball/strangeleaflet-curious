@@ -449,6 +449,7 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .roster .who b { font: 600 1.05rem var(--display); letter-spacing: .03em; overflow-wrap: anywhere; }
 .roster .who span { display: block; font: 400 .76rem/1.45 var(--mono); color: var(--muted); }
 .roster .acts { display: flex; gap: .4rem; }
+.roster li.none { color: var(--muted); border-style: dashed; }
 .field { display: block; font: 600 .72rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 1.2rem 0 .35rem; }
 input[type=text], textarea, select {
   font: 400 16px/1.3 var(--sans);
@@ -559,7 +560,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <p class="field" id="pick-h">Pick a pilot</p>
     <div class="menu" id="pilotpick" role="group" aria-labelledby="pick-h"></div>
     <div class="menu more" role="group" aria-label="Main menu">
-      <button type="button" data-menu="new-pilot">New Pilot<small>Starts at license 0 with a stock Halberd</small></button>
+      <button type="button" data-menu="new-pilot">New Pilot<small>Starts at license 0 with an empty hangar</small></button>
       <button type="button" data-menu="help">Instructions<small>How turns, cover, heat, and damage work</small></button>
       <button type="button" data-menu="soundtest">Sound Test<small>Fire every weapon on a practice range</small></button>
       <button type="button" data-menu="backup">Back Up and Share<small>Export, import, or reset your pilots</small></button>
@@ -574,7 +575,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <p class="lede" id="pilotsum"></p>
     <div class="menu" role="group" aria-label="Battle">
       <button type="button" data-menu="continue" id="continuebtn">Continue<small id="continuenote"></small></button>
-      <button type="button" class="go" data-menu="new">New Game<small id="newnote"></small></button>
+      <button type="button" class="go" data-menu="new" id="newbtn">New Game<small id="newnote"></small></button>
     </div>
     <div id="license"></div>
     <h2 id="mechs-h">Mechs</h2>
@@ -695,7 +696,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <h2 id="hangar-help-h">Pilots and the hangar</h2>
     <ul>
       <li><b>Start by picking a pilot.</b> The main menu lists your pilots. Pick one to open their hangar, where New Game gets a briefing on a fresh battlefield and Continue goes back to the battle they have under way. Each pilot keeps their own battle, so switching pilots never loses one. Wren is there from the start, and New Pilot adds more.</li>
-      <li><b>Each pilot has their own mechs.</b> A new pilot gets a stock Halberd. Build more in their hangar, then pick one in the briefing. The mech editor only offers frames and gear the pilot's license covers.</li>
+      <li><b>Each pilot has their own mechs.</b> Wren starts with a stock Halberd, but a new pilot starts with none. Build mechs in their hangar, then pick one in the briefing. The mech editor only offers frames and gear the pilot's license covers.</li>
       <li><b>Every battle ends in a debriefing.</b> It says how the fight went, what it did for the pilot's license, and their record so far, then sends you back to the hangar. Look at the field closes it so you can study the final board first.</li>
       <li id="licensehelp"></li>
       <li id="unlockhelp"></li>
@@ -1164,14 +1165,13 @@ function cleanEntry(raw) {
     if (!m.id || p.mechs.some((x) => x.id === m.id)) m.id = newId("m", p.mechs);
     p.mechs.push(m);
   }
-  if (!p.mechs.length) p.mechs.push(stockHalberd());
-  p.mech = p.mechs.some((m) => m.id === raw.mech) ? raw.mech : p.mechs[0].id;
+  p.mech = p.mechs.some((m) => m.id === raw.mech) ? raw.mech : (p.mechs[0]?.id ?? null);
   return p;
 }
 
 let roster = null;
 function freshRoster() {
-  return { v: 2, pilots: [cleanEntry(WREN)], active: WREN.id };
+  return { v: 2, pilots: [cleanEntry({ ...WREN, mechs: [stockHalberd()] })], active: WREN.id };
 }
 function loadRoster() {
   let r = null;
@@ -1204,8 +1204,9 @@ function addToRoster(r, pilots) {
 }
 const activePilot = () => roster.pilots.find((p) => p.id === roster.active) || roster.pilots[0];
 const activeMech = (p = activePilot()) => p.mechs.find((m) => m.id === p.mech) || p.mechs[0];
-// a copy, so the battle doesn't change when the roster does
-const activeCrew = () => JSON.parse(JSON.stringify({ pilot: cleanPilot(activePilot()), mech: activeMech() }));
+// a copy, so the battle doesn't change when the roster does. a pilot with no mechs
+// can't start one, but the briefing behind the menu still needs something to stand in
+const activeCrew = () => JSON.parse(JSON.stringify({ pilot: cleanPilot(activePilot()), mech: activeMech() || stockHalberd() }));
 roster = loadRoster();
 
 // ---------- State ----------
@@ -3214,6 +3215,7 @@ function continueBattle() {
 }
 // New Game takes a shared link's site if one is waiting
 function startNew() {
+  if (!activePilot().mechs.length) return;
   const site = sharedSite;
   sharedSite = null;
   closeScreen();
@@ -3240,7 +3242,7 @@ function openScreen(kind) {
   scr.scrollTop = 0;
   const sheet = $(SHEETS[kind][0]);
   const first = kind === "pilot" || kind === "mech" ? sheet.querySelector("input[type=text]")
-    : sheet.querySelector(".menu button:not(:disabled)") || sheet.querySelector("button");
+    : sheet.querySelector(".menu button:not(:disabled), #newmech:not(:disabled)") || sheet.querySelector("button");
   if (first) first.focus({ preventScroll: true });
 }
 function backFromScreen() {
@@ -3293,10 +3295,10 @@ function mechSummary(m) {
   const kit = m.gear.filter(Boolean).map((k) => GEAR[k].name).join(", ") || "no gear";
   return `${m.name === f.name ? "" : f.name + " · "}${f.role} · ${kit}`;
 }
-function mechItem(m, count) {
+function mechItem(m) {
   const acts = pendingDelete === m.id
     ? `<button type="button" class="warn" data-menu="del-mech" data-id="${m.id}">Delete ${escapeHtml(m.name)}</button><button type="button" data-menu="keep-mech" data-id="${m.id}">Keep</button>`
-    : `<button type="button" data-menu="edit-mech" data-id="${m.id}">Edit</button><button type="button" data-menu="ask-del-mech" data-id="${m.id}" ${count > 1 ? "" : `disabled title="A pilot needs at least one mech"`}>Delete</button>`;
+    : `<button type="button" data-menu="edit-mech" data-id="${m.id}">Edit</button><button type="button" data-menu="ask-del-mech" data-id="${m.id}">Delete</button>`;
   return `<li><div class="who"><b>${escapeHtml(m.name)}</b><span>${escapeHtml(mechSummary(m))}</span></div><div class="acts">${acts}</div></li>`;
 }
 // level, what the next one brings, and the record
@@ -3315,11 +3317,13 @@ function paintHangar() {
   $("hangar-h").textContent = p.callsign;
   $("pilotsum").textContent = pilotSummary(p);
   $("continuebtn").disabled = !on;
+  $("newbtn").disabled = !p.mechs.length;
   $("continuenote").textContent = on ? `Back to ${on}` : "No battle under way";
-  $("newnote").textContent = sharedSite ? `Get a briefing on ${siteName(sharedSite.seed)}, from your link`
+  $("newnote").textContent = !p.mechs.length ? "Build a mech first, under Mechs below"
+    : sharedSite ? `Get a briefing on ${siteName(sharedSite.seed)}, from your link`
     : on ? "A fresh battlefield. Deploying there gives up the battle under way" : "Get a briefing on a fresh battlefield";
   $("license").innerHTML = licenseHtml(p);
-  $("mechlist").innerHTML = p.mechs.map((m) => mechItem(m, p.mechs.length)).join("");
+  $("mechlist").innerHTML = p.mechs.map(mechItem).join("") || `<li class="none">No mechs yet.</li>`;
   $("newmech").disabled = p.mechs.length >= MECHS_MAX;
   $("pilotrow").innerHTML = pendingDelete === "pilot"
     ? `<button type="button" class="warn" data-menu="del-pilot">Delete ${escapeHtml(p.callsign)}</button><button type="button" data-menu="keep-pilot">Keep</button>`
@@ -3359,7 +3363,7 @@ function paintPilotForm() {
     <input type="text" id="callsign" data-f="callsign" maxlength="${CALLSIGN_MAX}" autocomplete="off" autocapitalize="words" spellcheck="false" value="${escapeHtml(draft.callsign)}" placeholder="Pilot">
     <p class="field">Stats</p>
     <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${max} in one stat</p>
-    <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls.${draft.id ? "" : " A new pilot starts at license 0 with a stock Halberd."} Stats change the mech you fly:</p>
+    <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls.${draft.id ? "" : " A new pilot starts at license 0 with no mechs, so build one in their hangar."} Stats change the mech you fly:</p>
     ${rows}
     <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">Save pilot</button></div>`);
 }
@@ -3432,20 +3436,23 @@ function saveMech() {
   if (!clean) return;
   const at = p.mechs.findIndex((x) => x.id === draft.id);
   if (at >= 0) p.mechs[at] = { ...clean, id: draft.id };
-  else if (p.mechs.length < MECHS_MAX) p.mechs.push({ ...clean, id: newId("m", p.mechs) });
+  else if (p.mechs.length < MECHS_MAX) {
+    p.mechs.push({ ...clean, id: newId("m", p.mechs) });
+    if (!p.mech) p.mech = p.mechs[0].id;
+  }
   saveRoster();
   draft = null;
   openScreen("hangar");
 }
 function deleteMech(id) {
-  const p = activePilot();
-  if (p.mechs.length <= 1) return;
-  p.mechs.splice(p.mechs.findIndex((x) => x.id === id), 1);
-  if (p.mech === id) p.mech = p.mechs[0].id;
+  const p = activePilot(), at = p.mechs.findIndex((x) => x.id === id);
+  if (at < 0) return;
+  p.mechs.splice(at, 1);
+  if (p.mech === id) p.mech = p.mechs[0]?.id ?? null;
   pendingDelete = null;
   saveRoster();
   paintHangar();
-  $("mechlist").querySelector("button:not(:disabled)")?.focus();
+  ($("mechlist").querySelector("button:not(:disabled)") || $("newmech")).focus();
 }
 
 // ---------- Back up and share ----------
