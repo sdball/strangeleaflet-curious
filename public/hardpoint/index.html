@@ -577,6 +577,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <button type="button" data-menu="continue" id="continuebtn">Continue<small id="continuenote"></small></button>
       <button type="button" class="go" data-menu="new" id="newbtn">New Game<small id="newnote"></small></button>
     </div>
+    <div id="newprompt" aria-live="polite"></div>
     <div id="license"></div>
     <h2 id="mechs-h">Mechs</h2>
     <p>Pick one of these in the briefing before each battle. A battle already under way keeps the mech it started with.</p>
@@ -3234,7 +3235,7 @@ function openScreen(kind) {
   scr.setAttribute("aria-labelledby", SHEETS[kind][1]);
   $("game").inert = true;
   if (kind === "title") paintTitle();
-  if (kind === "hangar") paintHangar();
+  if (kind === "hangar") { pendingNew = false; paintHangar(); }
   if (kind === "backup") paintBackup();
   if (kind === "soundtest") openRange();
   // with no battle under way, a link to the last one would only mislead a reload
@@ -3285,7 +3286,7 @@ function paintTitle() {
 }
 
 // ---------- Hangar ----------
-let pendingDelete = null, pendingReset = false, draft = null;
+let pendingDelete = null, pendingReset = false, pendingNew = false, draft = null;
 function pilotSummary(p) {
   const left = unspent(p);
   return `License ${levelOf(p)} · ` + STATS.map((x) => x.letter + p[x.key]).join(" ") + ` · grit +${gritAt(levelOf(p))}` + (left ? ` · ${plural(left, "point")} to spend` : "");
@@ -3309,6 +3310,7 @@ function licenseHtml(p) {
   return `<h2 id="license-h">License</h2>
     <p class="frame-facts">Level <b>${ll}</b> of ${MAX_LL} · ${nextLevelText(p.xp)}.${next}<br>
       ${plural(r.kills, "hostile")} destroyed.</p>
+    ${unspent(p) ? `<div class="btnrow"><button type="button" class="go" data-menu="edit-pilot">Level up · ${plural(unspent(p), "point")} to spend</button></div>` : ""}
     <div class="table-wrap"><table class="record" aria-labelledby="license-h"><caption>Battles won and lost</caption>
       <thead><tr><th scope="col">Threat</th><th scope="col">Won</th><th scope="col">Lost</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -3323,6 +3325,10 @@ function paintHangar() {
     : sharedSite ? `Get a briefing on ${siteName(sharedSite.seed)}, from your link`
     : on ? "A fresh battlefield. Deploying there gives up the battle under way" : "Get a briefing on a fresh battlefield";
   $("license").innerHTML = licenseHtml(p);
+  $("newprompt").innerHTML = pendingNew
+    ? `<p class="note">${escapeHtml(p.callsign)} has ${plural(left, "stat point")} to spend.</p>
+      <div class="btnrow"><button type="button" class="go" data-menu="spend-first">Level up first</button><button type="button" data-menu="new-anyway">Start anyway</button></div>`
+    : "";
   $("mechlist").innerHTML = p.mechs.map(mechItem).join("") || `<li class="none">No mechs yet.</li>`;
   $("newmech").disabled = p.mechs.length >= MECHS_MAX;
   $("pilotrow").innerHTML = pendingDelete === "pilot"
@@ -3365,7 +3371,7 @@ function paintPilotForm() {
     <p class="left" aria-live="polite">${left ? `${plural(left, "point")} left to spend` : "All points spent"} · no more than ${max} in one stat</p>
     <p>At license ${ll}, a pilot adds grit +${gritAt(ll)} to attack rolls.${draft.id ? "" : " A new pilot starts at license 0 with no mechs, so build one in their hangar."} Stats change the mech you fly:</p>
     ${rows}
-    <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">Save pilot</button></div>`);
+    <div class="btnrow"><button type="button" class="go" data-menu="save-pilot" data-f="save">${draft.thenNew ? "Save and get a briefing" : "Save pilot"}</button></div>`);
 }
 function savePilot() {
   const clean = cleanPilot(draft), p = roster.pilots.find((x) => x.id === draft.id);
@@ -3376,8 +3382,9 @@ function savePilot() {
     roster.active = fresh.id;
   }
   saveRoster();
+  const thenNew = draft.thenNew;
   draft = null;
-  openScreen("hangar");
+  if (thenNew) startNew(); else openScreen("hangar");
 }
 function deletePilot() {
   if (roster.pilots.length <= 1) return;
@@ -3770,7 +3777,17 @@ $("screen").addEventListener("click", (e) => {
   } else if (m === "continue") {
     continueBattle();
   } else if (m === "new") {
+    // points waiting to be spent get a reminder first
+    if (!unspent(activePilot())) { startNew(); return; }
+    pendingNew = true;
+    paintHangar();
+    $("newprompt").querySelector("button").focus();
+  } else if (m === "new-anyway") {
     startNew();
+  } else if (m === "spend-first") {
+    editPilot(roster.active);
+    draft.thenNew = true;
+    paintPilotForm();
   } else if (m === "help") {
     helpFrom = "title";
     openScreen("help");
@@ -3875,7 +3892,7 @@ addEventListener("resize", () => placeOrders());
 // the help's license notes come from the same tables the game uses
 function writeLicenseHelp() {
   const wins = LEVEL_AT.slice(1).map((n, k) => `level ${k + 1} at ${plural(n, "win")}`);
-  $("licensehelp").innerHTML = `<b>Wins raise a pilot's license.</b> A pilot starts at license 0 and reaches ${listText(wins)}. Light battles stop counting after level ${LIGHT_LL}, and a loss only goes on the record. Each level adds a stat point to spend, every second level adds +1 grit, and every third lets one stat take another point. Each pilot's hangar shows their level and record.`;
+  $("licensehelp").innerHTML = `<b>Wins raise a pilot's license.</b> A pilot starts at license 0 and reaches ${listText(wins)}. Light battles stop counting after level ${LIGHT_LL}, and a loss only goes on the record. Each level adds a stat point to spend, every second level adds +1 grit, and every third lets one stat take another point. Each pilot's hangar shows their level and record, with a Level up button while they have points to spend.`;
   const start = [...Object.keys(FRAMES), ...Object.keys(GEAR)].filter((k) => !needLL(k)).map(unlockName);
   const later = UNLOCKS.map((keys, ll) => (keys.length ? `level ${ll} adds ${listText(keys.map(unlockName))}` : "")).filter(Boolean);
   $("unlockhelp").innerHTML = `<b>Each level unlocks a frame or gear.</b> At license 0 a pilot can field the ${listText(start)}. Then ${listText(later)}. The mech editor only offers what the pilot has unlocked.`;
