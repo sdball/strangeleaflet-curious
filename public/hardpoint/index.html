@@ -646,7 +646,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 
     <h2 id="turn-h">A turn</h2>
     <ul>
-      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Systems (fire smoke, send a repair drone, and so on). Each quick action works once a turn, so to fire twice, spend both on one full action: Barrage (fire two different weapons). The other full action is Stabilize.</li>
+      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Systems (fire smoke, send a repair drone, and so on). Each quick action works once a turn, so to fire twice, spend both on one full action: Barrage (fire two different weapons). The other full actions are Stabilize and Haymaker.</li>
       <li><b>Overcharge and your core power are free.</b> Overcharge buys an extra quick action for heat. You take it right away, and it can be one you've already used this turn, like a second Skirmish. Your core power works once per battle.</li>
       <li><b>Ending your turn early asks first.</b> If you still have movement or actions left, you'll be asked to confirm.</li>
       <li><b>Then every hostile takes a turn.</b> Watch the log, or the bar under the map, to see what they did.</li>
@@ -676,6 +676,8 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <li><b>Moving next to a hostile engages you both.</b> Your movement stops there, and ranged attacks made while engaged take +1 difficulty.</li>
       <li><b>Leaving costs a swing.</b> If you start moving while inside a hostile's threat, it gets a free attack first (overwatch). A melee weapon on your mech does the same to them.</li>
       <li><b>Knockback shoves.</b> A hit from a weapon with Knockback pushes its target straight away from the attacker, unless something is in the way. If it happens as you start a move, the move is called off, but you keep your movement.</li>
+      <li><b>Your knockback is your choice.</b> When you aim a weapon with Knockback, the Knock back button, or <kbd>K</kbd>, turns it off and on. Turn it off to keep a hostile next to you for a second swing. The choice holds for the rest of the battle, overwatch swings included.</li>
+      <li><b>Any mech can throw a Haymaker.</b> It's a full action: a melee attack on a hostile next to you for 1d6 kinetic, with no weapon needed. It doesn't give you an overwatch swing, since there's no weapon to swing.</li>
     </ul>
 
     <h2 id="damage-h">Damage and heat</h2>
@@ -876,12 +878,15 @@ const GEAR = {
   cleaver: { name: "Breach Cleaver", mount: "main", weight: 2, kind: "melee", threat: 1, dmg: [1, 6, 3], type: "kinetic", knockback: 1, fx: "cleave" },
   lance: { name: "Arc Lance", mount: "heavy", weight: 3, kind: "ranged", range: 6, dmg: [2, 6, 0], type: "energy", heat: 2, fx: "beam" },
   mortar: { name: "Kettle Mortar", mount: "heavy", weight: 3, kind: "ranged", arcing: true, range: 10, minRange: 2, dmg: [2, 6, 0], type: "explosive", heat: 2, fx: "shell" },
+  hammer: { name: "Rivet Hammer", mount: "heavy", weight: 3, kind: "melee", threat: 1, dmg: [2, 6, 1], type: "kinetic", fx: "maul" },
   driver: { name: "Piledriver", mount: "heavy", weight: 4, kind: "melee", threat: 1, dmg: [2, 6, 2], type: "kinetic", knockback: 2, fx: "maul" },
   smoke: { name: "Smoke Launcher", mount: "system", weight: 1, kind: "system", use: "smoke", charges: 2, range: 5 },
   drone: { name: "Patch Drone", mount: "system", weight: 1, kind: "system", use: "patch", charges: 1, heal: [1, 6, 2] },
   plating: { name: "Spare Plating", mount: "system", weight: 2, kind: "system", hp: 4 },
   sink: { name: "Heat Sink", mount: "system", weight: 1, kind: "system", heatCap: 2 },
 };
+// any mech can throw a punch at something next to it, so the Haymaker isn't gear and fits no mount
+const HAYMAKER = { key: "haymaker", name: "Haymaker", kind: "melee", threat: 1, dmg: [1, 6, 0], type: "kinetic", fx: "punch" };
 const OC_COST = ["1", "1d3", "1d6", "1d6+4"];
 
 const HOSTILES = {
@@ -1052,6 +1057,8 @@ function buildBattle(seed, threat, crew) {
   }
   return {
     seed, threat, name, terrain, units, you: units[0], pilot: crew.pilot, mech: crew.mech,
+    // whether your hits knock back, for the rest of the battle. overwatch swings follow it too
+    knock: true,
     smoke: new Map(), round: 1, phase: "you", active: null,
     turn: null, ocCount: 0, coreUsed: false, over: null,
   };
@@ -1507,7 +1514,7 @@ async function attack(att, w, tgt, opts = {}) {
   if (p.usedLock) tgt.status.locked = false;
 
   const verb = att.side === "you"
-    ? (w.kind === "melee" ? `You swing your ${w.name} at ${tgt.name}` : `You fire your ${w.name} at ${tgt.name}`)
+    ? (w === HAYMAKER ? `You throw a haymaker at ${tgt.name}` : w.kind === "melee" ? `You swing your ${w.name} at ${tgt.name}` : `You fire your ${w.name} at ${tgt.name}`)
     : (w.kind === "melee" ? `${att.name} swings its ${w.name} at you` : `${att.name} fires its ${w.name} at you`);
   let line = `${verb}: ${rollText(d20, p.bonus, accRoll, p.net)} = ${total} vs Evasion ${evasion}. `;
   let raw = 0;
@@ -1554,7 +1561,9 @@ async function attack(att, w, tgt, opts = {}) {
     pop(tgt.pos, "miss", "miss");
   }
 
-  if (hit && w.knockback && tgt.alive) {
+  if (hit && w.knockback && tgt.alive && att.side === "you" && !B.knock) {
+    log(`Knockback off: ${tgt.name} stays next to you.`, "sys");
+  } else if (hit && w.knockback && tgt.alive) {
     if (hasTrait(tgt, "steady")) log(`Steady Footing: ${theMech()} doesn't budge.`, "sys");
     else {
       const from = tgt.pos, n = knockback(att, tgt, w.knockback);
@@ -1794,6 +1803,7 @@ const ORDERS = [
   { act: "lock", name: "Lock On", key: "L", cost: "quick" },
   { act: "systems", name: "Systems", key: "G", cost: "quick" },
   { act: "stabilize", name: "Stabilize", key: "T", cost: "full" },
+  { act: "haymaker", name: "Haymaker", key: "H", cost: "full" },
   { act: "overcharge", name: "Overcharge", key: "O", cost: "free" },
   { act: "core", name: "Core power", key: "C", cost: "free" },
   { act: "end", name: "End turn", key: "E", cost: "", wide: true },
@@ -1813,6 +1823,7 @@ function canDo(act) {
     case "lock": return (quickOk("lock") || t.freeLock) && lockTargets().length > 0;
     case "systems": return quickOk("systems") && systemsOf(you).some((x) => usable(you, x));
     case "stabilize": return t.fullOk && t.quick >= 2;
+    case "haymaker": return t.fullOk && t.quick >= 2 && validTargets(HAYMAKER).length > 0;
     case "overcharge": return !t.ocUsed && !t.limited;
     case "core": return !B.coreUsed && !t.limited;
     case "end": return true;
@@ -1851,6 +1862,9 @@ function orderNote(act) {
       return quickWhy("systems") || `${cost} · ${sys.map((x) => x.name.split(" ")[0]).join(", ")}`;
     }
     case "stabilize": return fullLeft ? "full · repair or vent" : "needs both quick actions";
+    case "haymaker":
+      if (!fullLeft) return "needs both quick actions";
+      return validTargets(HAYMAKER).length ? `full · ${dmgText(HAYMAKER.dmg)} to a hostile next to you` : "nothing next to you";
     case "overcharge": return t.limited ? "not after bracing" : t.ocUsed ? "used this turn" : `a quick action now · ${OC_COST[Math.min(B.ocCount, 3)]} heat`;
     case "core": return B.coreUsed ? "spent" : t.limited ? "not after bracing" : `${CORES[you.core].name}, once`;
     case "end": return "";
@@ -1889,15 +1903,33 @@ function doAction(act, viaKey) {
     case "lock": setMode("lock"); break;
     case "systems": setMode("systems"); break;
     case "stabilize": setMode("stabilize"); break;
+    case "haymaker": {
+      const targets = validTargets(HAYMAKER);
+      setMode("target", { weapon: HAYMAKER, barrage: null });
+      if (targets.length === 1) { ui.target = targets[0]; ui.inspect = targets[0].pos; paint(); }
+      break;
+    }
     case "overcharge": overcharge(); break;
     case "core": core(); break;
     case "end": askEnd(); return;
   }
   if (MENU_MODES.includes(ui.mode)) focusOrders();
   else if (PICK_MODES.includes(ui.mode)) {
-    if (viaKey) focusMap(ui.mode === "lock" ? lockTargets()[0]?.pos : you.pos);
+    if (viaKey) focusMap(ui.mode === "lock" ? lockTargets()[0]?.pos : ui.mode === "target" ? validTargets(ui.weapon)[0]?.pos : you.pos);
     else map.focus({ preventScroll: true });
   } else if (viaKey) focusMap(you.pos);
+}
+
+// a Haymaker came straight from the orders, a weapon from the weapon list
+function backFromTarget() {
+  if (ui.weapon === HAYMAKER) setMode("orders");
+  else setMode("weapon", { barrage: ui.barrage });
+  focusOrders();
+}
+function toggleKnock() {
+  B.knock = !B.knock;
+  log(B.knock ? "Knockback on: your hits push targets back." : "Knockback off: your hits leave targets where they stand.", "sys");
+  paint();
 }
 
 function askEnd() {
@@ -1976,7 +2008,8 @@ async function commitMove(dest) {
 
 async function fire(w, tgt) {
   const you = B.you;
-  if (ui.barrage) {
+  if (w === HAYMAKER) spendFull();
+  else if (ui.barrage) {
     if (!ui.barrage.committed) { spendFull(); ui.barrage.committed = true; }
     ui.barrage.used.push(w.key);
   } else spendQuick("skirmish");
@@ -2373,10 +2406,10 @@ const SOUNDS = {
   "hiss": { "name": "Smoke hiss", "use": "A smoke cloud spreading", "layers": [
     { "kind": "noise", "filter": "highpass", "freq": 2500, "q": 1, "gain": 0.12, "attack": 0.06, "dur": 1.1 }
   ] },
-  "whoosh": { "name": "Swing", "use": "A cleaver or claw swing", "layers": [
+  "whoosh": { "name": "Swing", "use": "A cleaver, claw, or Haymaker swing", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 1490, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
   ] },
-  "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul or your Piledriver swinging", "layers": [
+  "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul, your Rivet Hammer, or your Piledriver swinging", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 76.4, "to": 900, "q": 1.4, "gain": 1.6, "attack": 0.07, "dur": 0.22 }
   ] },
   "clang": { "name": "Cleaver clang", "use": "Your Breach Cleaver hitting", "layers": [
@@ -2389,9 +2422,13 @@ const SOUNDS = {
   "scratch": { "name": "Claw scratch", "use": "Each rake of a Hound's claws", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 3800, "to": 1600, "q": 5, "gain": 0.9, "attack": 0.003, "dur": 0.09 }
   ] },
-  "thud": { "name": "Maul thud", "use": "A Brute's maul or your Piledriver hitting", "layers": [
+  "thud": { "name": "Maul thud", "use": "A Brute's maul, your Rivet Hammer, or your Piledriver hitting", "layers": [
     { "kind": "tone", "wave": "sine", "freq": 120, "to": 38, "gain": 0.75, "attack": 0.003, "dur": 0.32 },
     { "kind": "noise", "filter": "lowpass", "freq": 700, "q": 1, "gain": 0.5, "attack": 0.003, "dur": 0.22 }
+  ] },
+  "smack": { "name": "Haymaker smack", "use": "Your Haymaker landing", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 170, "to": 55, "gain": 0.6, "attack": 0.002, "dur": 0.14 },
+    { "kind": "noise", "filter": "bandpass", "freq": 900, "to": 380, "q": 1.2, "gain": 0.8, "attack": 0.002, "dur": 0.08 }
   ] },
   "scrape": { "name": "Knockback scrape", "use": "A mech knocked back a hex", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 600, "to": 300, "q": 1, "gain": 1.2, "attack": 0.02, "dur": 0.18 }
@@ -2528,6 +2565,7 @@ const FX = {
   cleave: (att, tgt, hit) => meleeFx(att, tgt, hit, cleaveMark),
   claws: (att, tgt, hit) => meleeFx(att, tgt, hit, clawMarks),
   maul: (att, tgt, hit) => meleeFx(att, tgt, hit, maulMark),
+  punch: (att, tgt, hit) => meleeFx(att, tgt, hit, punchMark),
 };
 
 // ---------- Kinetic: a burst of tracer rounds ----------
@@ -2751,6 +2789,18 @@ function maulMark(at, d, hit, side) {
   }).then(() => fadeOut([ring, ...cracks], 220));
 }
 
+// a bare-handed blow: a small, quick shockwave
+function punchMark(at, d, hit, side) {
+  const ring = fxAdd("circle", { cx: at.x, cy: at.y, r: 3, class: `shock ${side}${hit ? "" : " whiff"}` });
+  if (hit) play("smack");
+  if (reduceMotion.matches) { ring.setAttribute("r", R * 0.45); return [ring]; }
+  if (hit) shake(1.5);
+  return tween(180, (q) => {
+    ring.setAttribute("r", (3 + R * 0.45 * easeOut(q)).toFixed(1));
+    ring.style.opacity = 1 - q;
+  }).then(() => fadeOut([ring], 160));
+}
+
 // knockback slides the token instead of jumping it
 async function slideFx(u, fromPos) {
   play("scrape");
@@ -2920,11 +2970,12 @@ function promptParts() {
       return [`<b>Move.</b> Tap a lit hex, then tap it again to go. ${plural(T().mp, "hex")} of movement left. Rough ground costs 2.`, cancel];
     case "target": {
       const w = ui.weapon;
+      const knockBtn = w.knockback ? `<button type="button" data-key="knock" aria-pressed="${B.knock}" aria-keyshortcuts="K">Knock back <kbd>K</kbd></button>` : "";
       if (ui.target) {
         const p = attackProfile(you, w, ui.target);
-        return [`<span class="big">${pct(p.chance)}</span>${w.name} at ${ui.target.name}. Tap it again to fire.`, btn("fire", "Fire", "warn") + btn("back", "Back")];
+        return [`<span class="big">${pct(p.chance)}</span>${w.name} at ${ui.target.name}. Tap it again to ${w === HAYMAKER ? "swing" : "fire"}.`, btn("fire", w === HAYMAKER ? "Swing" : "Fire", "warn") + knockBtn + btn("back", "Back")];
       }
-      return [`<b>${w.name}.</b> Tap a hostile ringed in amber.`, btn("back", "Back")];
+      return [`<b>${w.name}.</b> Tap a hostile ringed in amber.`, knockBtn + btn("back", "Back")];
     }
     case "lock":
       return [`<b>Lock On.</b> Tap a ringed hostile within ${you.sensors} hexes.`, cancel];
@@ -3106,7 +3157,7 @@ function saveBattle() {
   if (!B || B.phase !== "you" || B.over || busy) return;
   const data = {
     v: 3, seed: B.seed, threat: B.threat, name: B.name, round: B.round, crew: { pilot: B.pilot, mech: B.mech },
-    ocCount: B.ocCount, coreUsed: B.coreUsed, turn: B.turn, smoke: [...B.smoke],
+    ocCount: B.ocCount, coreUsed: B.coreUsed, knock: B.knock, turn: B.turn, smoke: [...B.smoke],
     units: B.units.map((u) => {
       const o = { id: u.id };
       for (const k of UNIT_FIELDS) if (k in u) o[k] = u[k];
@@ -3181,7 +3232,7 @@ function deploy() {
 function restoreBattle(s) {
   busy = false;
   B = buildBattle(s.seed, s.threat, s.crew);
-  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, turn: { oc: false, used: [], ...s.turn }, smoke: new Map(s.smoke), phase: "you", logLines: [] });
+  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, knock: s.knock !== false, turn: { oc: false, used: [], ...s.turn }, smoke: new Map(s.smoke), phase: "you", logLines: [] });
   for (const su of s.units) {
     const u = B.units.find((x) => x.id === su.id);
     if (!u) continue;
@@ -3543,6 +3594,7 @@ const FX_NOTE = {
   cleave: () => "A cleaving swing",
   claws: () => "Three raking claws",
   maul: () => "A heavy blow",
+  punch: () => "A bare-handed blow",
 };
 function testNote(w) {
   const bits = [FX_NOTE[w.fx](w)];
@@ -3551,7 +3603,7 @@ function testNote(w) {
   return bits.join(" · ");
 }
 const TESTS = [
-  ...Object.values(GEAR).filter((g) => g.kind === "ranged" || g.kind === "melee").map((g) => ({ list: "testyou", name: g.name, side: "you", w: g })),
+  ...[...Object.values(GEAR), HAYMAKER].filter((g) => g.kind === "ranged" || g.kind === "melee").map((g) => ({ list: "testyou", name: g.name, side: "you", w: g })),
   ...Object.values(GEAR).filter((g) => g.use === "smoke").map((g) => ({ list: "testsys", name: g.name, side: "you", smoke: true })),
   ...Object.values(HOSTILES).map((h) => ({ list: "testfoe", name: `${h.name} ${h.weapon.name}`, side: "foe", letter: h.letter, foe: h.name, w: h.weapon })),
 ];
@@ -3734,7 +3786,8 @@ function onKeyButton(k, viaKey) {
   if (k === "confirm-smoke" && ui.dest != null) return placeSmoke(ui.dest);
   if (k === "fire" && ui.target) return fire(ui.weapon, ui.target);
   if (k === "skip") { log("You hold the second shot.", "sys"); setMode("idle"); map.focus({ preventScroll: true }); return; }
-  if (k === "back") { setMode("weapon", { barrage: ui.barrage }); focusOrders(); return; }
+  if (k === "back") { backFromTarget(); return; }
+  if (k === "knock") { toggleKnock(); return; }
   if (k.startsWith("sys-")) {
     const sys = systemsOf(you).find((x) => x.key === Number(k.slice(4)));
     if (sys) useSystem(sys, viaKey);
@@ -3880,11 +3933,12 @@ document.addEventListener("keydown", (e) => {
     if (!yourTurn() || ui.mode === "idle") return;
     e.preventDefault();
     if (ui.mode === "weapon" && !(ui.barrage && ui.barrage.committed)) { setMode("orders"); focusOrders(); }
-    else if (ui.mode === "target") { setMode("weapon", { barrage: ui.barrage }); focusOrders(); }
+    else if (ui.mode === "target") backFromTarget();
     else { setMode("idle"); focusMap(B.you.pos); }
     return;
   }
-  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "systems", t: "stabilize", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
+  if ((e.key === "k" || e.key === "K") && yourTurn() && ui.mode === "target" && ui.weapon.knockback) { e.preventDefault(); toggleKnock(); return; }
+  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "systems", t: "stabilize", h: "haymaker", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
   if (act && canDo(act)) { e.preventDefault(); doAction(act, true); }
 });
 
