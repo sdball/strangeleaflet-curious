@@ -231,6 +231,7 @@ button.go kbd, button.warn kbd, button[aria-pressed="true"] kbd { color: inherit
 .hpbar-bg { fill: #000a; }
 .hpbar { fill: var(--foe); }
 .tok.you .hpbar { fill: var(--you); }
+.tether { stroke: var(--amber); stroke-width: 3; stroke-linecap: round; stroke-opacity: .8; }
 .lockring { fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-dasharray: 3 3; }
 .wreck { stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; opacity: .55; }
 /* weapon effects: kinetic slugs, an energy beam, lobbed shells, and melee strikes */
@@ -646,7 +647,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
 
     <h2 id="turn-h">A turn</h2>
     <ul>
-      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, and Systems (fire smoke, send a repair drone, and so on). Each quick action works once a turn, so to fire twice, spend both on one full action: Barrage (fire two different weapons). The other full actions are Stabilize and Haymaker.</li>
+      <li><b>You get a move and two quick actions.</b> Move up to your Speed in hexes. The quick actions are Boost (move again), Skirmish (fire one weapon), Lock On, Grapple, and Systems (fire smoke, send a repair drone, and so on). Each quick action works once a turn, so to fire twice, spend both on one full action: Barrage (fire two different weapons). The other full actions are Stabilize and Haymaker.</li>
       <li><b>Overcharge and your core power are free.</b> Overcharge buys an extra quick action for heat. You take it right away, and it can be one you've already used this turn, like a second Skirmish. Your core power works once per battle.</li>
       <li><b>Ending your turn early asks first.</b> If you still have movement or actions left, you'll be asked to confirm.</li>
       <li><b>Then every hostile takes a turn.</b> Watch the log, or the bar under the map, to see what they did.</li>
@@ -677,6 +678,10 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
       <li><b>Leaving costs a swing.</b> If you start moving while inside a hostile's threat, it gets a free attack first (overwatch). A melee weapon on your mech does the same to them.</li>
       <li><b>Knockback shoves.</b> A hit from a weapon with Knockback pushes its target straight away from the attacker, unless something is in the way. If it happens as you start a move, the move is called off, but you keep your movement.</li>
       <li><b>Your knockback is your choice.</b> When you aim a weapon with Knockback, the Knock back button, or <kbd>K</kbd>, turns it off and on. Turn it off to keep a hostile next to you for a second swing. The choice holds for the rest of the battle, overwatch swings included.</li>
+      <li><b>Grapple to hold a hostile.</b> It's a quick action, <kbd>P</kbd>: a melee attack on a hostile next to you that deals no damage but takes hold of it. While you're locked together, neither of you can Boost or take reactions, so there are no overwatch swings and no bracing.</li>
+      <li><b>The upper hand moves.</b> Whoever grabs starts with the upper hand. At the start of each turn, the side without it rolls a Hull contest to take it: a d20 plus Hull on each side, with a tie going to whoever rolled for it. With the upper hand you can move, dragging the other along. Without it you're held in place.</li>
+      <li><b>Let go or break free.</b> If you did the grabbing, Release lets go as a free action. If you're the one held, Break free is a quick action and another Hull contest, which you win on a tie. Anything that pushes you apart ends it too, including your own knockback.</li>
+      <li><b>Held hostiles act to type.</b> Pickets and Lobbers need room to shoot, so they spend their turn trying to break free. Hounds and Brutes fight back where they stand.</li>
       <li><b>Any mech can throw a Haymaker.</b> It's a full action: a melee attack on a hostile next to you for 1d6 kinetic, with no weapon needed. It doesn't give you an overwatch swing, since there's no weapon to swing.</li>
     </ul>
 
@@ -692,7 +697,7 @@ input[type=text]:focus-visible, textarea:focus-visible, select:focus-visible { b
     <ul>
       <li><b>Pickets are grunts.</b> Any damage destroys one, even a miss with Reliable damage. They hang back behind cover and plink at you with carbines.</li>
       <li><b>Hounds are fast and fragile.</b> They run you down with Speed 5 and are hard to hit, but six damage drops one.</li>
-      <li><b>Brutes hit hard and slowly.</b> A Brute's maul knocks lighter mechs back a hex. Stepping away from one gives it a free swing, so pick your moment.</li>
+      <li><b>Brutes hit hard and slowly.</b> A Brute's maul knocks lighter mechs back a hex. Stepping away from one gives it a free swing, so pick your moment. Now and then a Brute next to you grabs you instead, and while it holds you its maul stops shoving you away.</li>
       <li><b>Lobbers shoot over walls.</b> Their mortars arc over anything, so cover doesn't help against them. A Lobber has to spend a turn reloading after each shot, and it can't fire at a target right next to it.</li>
     </ul>
 
@@ -887,26 +892,31 @@ const GEAR = {
 };
 // any mech can throw a punch at something next to it, so the Haymaker isn't gear and fits no mount
 const HAYMAKER = { key: "haymaker", name: "Haymaker", kind: "melee", threat: 1, dmg: [1, 6, 0], type: "kinetic", fx: "punch" };
+// a grab is a melee attack that takes hold instead of dealing damage
+const GRAPPLE = { key: "grapple", name: "Grapple", kind: "melee", threat: 1, dmg: [0, 0, 0], grab: true, fx: "grab" };
+// now and then a Brute next to you grabs instead of swinging its maul
+const BRUTE_GRAB = { name: "grab", kind: "melee", threat: 1, bonus: 2, dmg: [0, 0, 0], grab: true, fx: "grab" };
+const GRAB_CHANCE = 0.25;
 const OC_COST = ["1", "1d3", "1d6", "1d6+4"];
 
 const HOSTILES = {
   picket: {
-    name: "Picket", letter: "P", cost: 1, grunt: true, hp: 1, armor: 0, evasion: 10, speed: 4, role: "ranged",
+    name: "Picket", letter: "P", cost: 1, grunt: true, hp: 1, armor: 0, evasion: 10, speed: 4, hull: 0, role: "ranged",
     blurb: "Grunt. Any damage destroys it.",
     weapon: { name: "carbine", kind: "ranged", range: 6, bonus: 1, dmg: [0, 0, 3], type: "kinetic", fx: "burst", shots: 2 },
   },
   hound: {
-    name: "Hound", letter: "H", cost: 2, hp: 6, armor: 0, evasion: 11, speed: 5, role: "melee",
+    name: "Hound", letter: "H", cost: 2, hp: 6, armor: 0, evasion: 11, speed: 5, hull: 0, role: "melee",
     blurb: "Fast and hard to hit, with little to spare.",
     weapon: { name: "shear claws", kind: "melee", threat: 1, bonus: 2, dmg: [0, 0, 3], type: "kinetic", fx: "claws" },
   },
   brute: {
-    name: "Brute", letter: "B", cost: 3, hp: 10, armor: 1, evasion: 6, speed: 3, role: "melee",
+    name: "Brute", letter: "B", cost: 3, hp: 10, armor: 1, evasion: 6, speed: 3, hull: 2, role: "melee",
     blurb: "Slow, armored, and its maul knocks targets back.",
     weapon: { name: "maul", kind: "melee", threat: 1, bonus: 2, dmg: [1, 6, 2], type: "kinetic", knockback: 1, fx: "maul" },
   },
   lobber: {
-    name: "Lobber", letter: "L", cost: 2, hp: 8, armor: 0, evasion: 7, speed: 3, role: "artillery",
+    name: "Lobber", letter: "L", cost: 2, hp: 8, armor: 0, evasion: 7, speed: 3, hull: 1, role: "artillery",
     blurb: "Arcing mortar ignores cover. Reloads after each shot.",
     weapon: { name: "mortar", kind: "ranged", arcing: true, range: 10, minRange: 2, bonus: 1, dmg: [0, 0, 4], type: "explosive", reloads: true, fx: "shell" },
   },
@@ -1059,6 +1069,7 @@ function buildBattle(seed, threat, crew) {
     seed, threat, name, terrain, units, you: units[0], pilot: crew.pilot, mech: crew.mech,
     // whether your hits knock back, for the rest of the battle. overwatch swings follow it too
     knock: true,
+    grapple: null,
     smoke: new Map(), round: 1, phase: "you", active: null,
     turn: null, ocCount: 0, coreUsed: false, over: null,
   };
@@ -1330,7 +1341,9 @@ function reachWithPrev(u, mp) {
   const open = [u.pos];
   const enemies = hostilesOf(u);
   const hostileAt = new Set(enemies.map((h) => h.pos));
-  const stopAt = (i) => enemies.some((h) => dist(h.pos, i) === 1);
+  // with the upper hand you drag the one you hold along, so it never ends your move
+  const dragged = isLarger(u) ? partnerOf(u) : null;
+  const stopAt = (i) => enemies.some((h) => h !== dragged && dist(h.pos, i) === 1);
   while (open.length) {
     open.sort((a, b) => full.get(a).cost - full.get(b).cost);
     const i = open.shift();
@@ -1366,7 +1379,7 @@ async function overwatch(mover) {
   if (hasTrait(mover, "slipstream")) return;
   for (const h of hostilesOf(mover)) {
     if (!mover.alive || !h.alive) break;
-    if (!h.reaction || h.status.stunned) continue;
+    if (!h.reaction || h.status.stunned || grappled(h)) continue;
     const w = threatWeapon(h);
     if (!w || dist(h.pos, mover.pos) > w.threat) continue;
     h.reaction = false;
@@ -1381,7 +1394,10 @@ async function moveUnit(u, path) {
   const start = u.pos;
   await overwatch(u);
   if (!u.alive || u.status.stunned || B.over || u.pos !== start) return false;
+  // the one held follows into each hex you leave
+  const drag = isLarger(u) ? partnerOf(u) : null;
   for (const step of path) {
+    if (drag) drag.pos = u.pos;
     u.pos = step;
     if (!reduceMotion.matches) { paint(); await sleep(120); }
   }
@@ -1411,6 +1427,7 @@ function destroy(u, msg) {
   u.alive = false;
   u.hp = 0;
   if (u.side === "foe") u.status.locked = false;
+  if (grappled(u)) B.grapple = null;
   log(msg, "bad");
   if (ui.target === u) ui.target = null;
 }
@@ -1493,6 +1510,45 @@ function overheatCheck(u) {
   }
 }
 
+// ---------- Grappling ----------
+// B.grapple is { by, on, larger }: the ids of who grabbed, who's held, and who has the upper hand.
+// every unit is the same size, so the upper hand is what LANCER calls counting as larger
+const unitById = (id) => B.units.find((u) => u.id === id);
+const grappled = (u) => !!B.grapple && (B.grapple.by === u.id || B.grapple.on === u.id);
+const partnerOf = (u) => (grappled(u) ? unitById(B.grapple.by === u.id ? B.grapple.on : B.grapple.by) : null);
+const isLarger = (u) => grappled(u) && B.grapple.larger === u.id;
+const hullOf = (u) => (u.side === "you" ? u.hull : HOSTILES[u.kind].hull);
+
+// d20 + Hull each. a tie goes to whoever started the contest
+function hullContest(a, b) {
+  const ra = d(20), rb = d(20), ta = ra + hullOf(a), tb = rb + hullOf(b);
+  return { won: ta >= tb, text: `${who(a)} d20 ${ra} +${hullOf(a)} = ${ta} vs ${who(b)} d20 ${rb} +${hullOf(b)} = ${tb}` };
+}
+// at the start of its turn the side without the upper hand contests for it. it costs nothing, so it always does
+function upperHand(u) {
+  if (!grappled(u) || isLarger(u) || u.status.stunned) return;
+  const other = partnerOf(u), c = hullContest(u, other);
+  if (c.won) B.grapple.larger = u.id;
+  const won = c.won ? `${Who(u)} ${u.side === "you" ? "take" : "takes"} the upper hand.` : `${Who(other)} ${other.side === "you" ? "keep" : "keeps"} the upper hand.`;
+  log(`Hull contest for the upper hand: ${c.text}. ${won}`, u.side === "you" ? "you" : "foe");
+}
+// only the one held can break free; the one who grabbed just lets go
+function breakFree(u) {
+  const c = hullContest(u, partnerOf(u));
+  log(`${Who(u)} ${u.side === "you" ? "try" : "tries"} to break free: ${c.text}. ${c.won ? "Free." : "Still held."}`, u.side === "you" ? "you" : "foe");
+  if (c.won) B.grapple = null;
+  return c.won;
+}
+// anything that pushes the pair apart ends it
+function checkGrapple() {
+  if (!B.grapple) return;
+  const a = unitById(B.grapple.by), b = unitById(B.grapple.on);
+  if (dist(a.pos, b.pos) !== 1) {
+    B.grapple = null;
+    log("Pushed apart, the grapple breaks.", "sys");
+  }
+}
+
 // ---------- Attacks ----------
 function rollText(d20, bonus, accRoll, net) {
   let s = `d20 ${d20}`;
@@ -1510,12 +1566,13 @@ async function attack(att, w, tgt, opts = {}) {
   const total = d20 + p.bonus + accRoll;
   const evasion = evasionOf(tgt);
   const hit = total >= evasion;
-  const crit = hit && att.side === "you" && total >= 20;
+  // a grab deals no damage, so it has nothing to crit
+  const crit = hit && att.side === "you" && total >= 20 && !w.grab;
   if (p.usedLock) tgt.status.locked = false;
 
   const verb = att.side === "you"
-    ? (w === HAYMAKER ? `You throw a haymaker at ${tgt.name}` : w.kind === "melee" ? `You swing your ${w.name} at ${tgt.name}` : `You fire your ${w.name} at ${tgt.name}`)
-    : (w.kind === "melee" ? `${att.name} swings its ${w.name} at you` : `${att.name} fires its ${w.name} at you`);
+    ? (w === HAYMAKER ? `You throw a haymaker at ${tgt.name}` : w.grab ? `You grab at ${tgt.name}` : w.kind === "melee" ? `You swing your ${w.name} at ${tgt.name}` : `You fire your ${w.name} at ${tgt.name}`)
+    : (w.grab ? `${att.name} grabs at you` : w.kind === "melee" ? `${att.name} swings its ${w.name} at you` : `${att.name} fires its ${w.name} at you`);
   let line = `${verb}: ${rollText(d20, p.bonus, accRoll, p.net)} = ${total} vs Evasion ${evasion}. `;
   let raw = 0;
   if (hit) {
@@ -1529,6 +1586,14 @@ async function attack(att, w, tgt, opts = {}) {
   }
   await shotFx(att, w, tgt, hit);
 
+  if (w.grab) {
+    log(line + (hit ? `${Who(att)} ${att.side === "you" ? "have" : "has"} hold of ${who(tgt)}.` : ""), att.side);
+    pop(tgt.pos, hit ? "held" : "miss", hit ? (tgt.side === "you" ? "hurt" : "dealt") : "miss");
+    if (hit) B.grapple = { by: att.id, on: tgt.id, larger: att.id };
+    paint();
+    await sleep(reduceMotion.matches ? 250 : 420);
+    return;
+  }
   if (raw > 0) {
     let dmg = Math.max(0, raw - tgt.armor);
     const bits = [`${raw} ${w.type}`];
@@ -1541,7 +1606,7 @@ async function attack(att, w, tgt, opts = {}) {
       dmg -= soak;
       bits.push(`−${soak} Aegis (${tgt.shield} left)`);
     }
-    if (tgt.side === "you" && hit && dmg >= tgt.hp && tgt.reaction && !tgt.status.stunned && tgt.alive) {
+    if (tgt.side === "you" && hit && dmg >= tgt.hp && tgt.reaction && !grappled(tgt) && !tgt.status.stunned && tgt.alive) {
       log(line + `${dmg} damage is coming.`, att.side);
       line = "";
       if (await askBrace(dmg)) {
@@ -1561,9 +1626,11 @@ async function attack(att, w, tgt, opts = {}) {
     pop(tgt.pos, "miss", "miss");
   }
 
-  if (hit && w.knockback && tgt.alive && att.side === "you" && !B.knock) {
+  // a hostile locked in a grapple with you keeps you close instead of shoving you off
+  const shove = hit && w.knockback && tgt.alive && !(att.side === "foe" && partnerOf(att) === tgt);
+  if (shove && att.side === "you" && !B.knock) {
     log(`Knockback off: ${tgt.name} stays next to you.`, "sys");
-  } else if (hit && w.knockback && tgt.alive) {
+  } else if (shove) {
     if (hasTrait(tgt, "steady")) log(`Steady Footing: ${theMech()} doesn't budge.`, "sys");
     else {
       const from = tgt.pos, n = knockback(att, tgt, w.knockback);
@@ -1573,6 +1640,7 @@ async function attack(att, w, tgt, opts = {}) {
       }
     }
   }
+  checkGrapple();
   if (w.heat) gainHeat(att, w.heat, `the ${w.name}`);
   if (w.reloads) att.loaded = false;
   paint();
@@ -1627,6 +1695,7 @@ function startPlayerTurn() {
     B.turn.mp = 0; B.turn.quick = 0; B.turn.fullOk = false; B.turn.limited = true;
     log("You're stunned and can't act this turn.", "bad");
   }
+  upperHand(u);
   setMode("idle");
 }
 
@@ -1659,7 +1728,7 @@ async function endPlayerTurn() {
     await sleep(reduceMotion.matches ? 200 : 380);
     if (B !== battle) return;
     if (e.status.stunned) log(`${e.name} is stunned.`, "foe");
-    else await foeAct(e);
+    else { upperHand(e); await foeAct(e); }
     if (B !== battle) return;
     endTurnTicks(e);
     if (checkOver()) break;
@@ -1746,7 +1815,7 @@ function scoreHex(e, i, cost, field) {
 function bestMove(e) {
   const full = reachWithPrev(e, e.speed);
   const field = stepDistances(B.you.pos);
-  const threatened = B.you.reaction && threatWeapon(B.you) && dist(e.pos, B.you.pos) <= threatWeapon(B.you).threat;
+  const threatened = B.you.reaction && !grappled(B.you) && threatWeapon(B.you) && dist(e.pos, B.you.pos) <= threatWeapon(B.you).threat;
   let best = e.pos, bestScore = -Infinity;
   for (const [i, info] of full) {
     if (i !== e.pos && occupant(i)) continue;
@@ -1760,6 +1829,22 @@ function bestMove(e) {
 
 async function foeAct(e) {
   const you = B.you, w = e.weapon;
+  // held: pickets and lobbers need room to shoot, so they try to get loose. the rest fight where they stand
+  if (grappled(e)) {
+    if (e.role !== "melee" && B.grapple.on === e.id) {
+      if (!breakFree(e)) return;
+      const path = bestMove(e);
+      if (path.length) await moveUnit(e, path);
+      if (e.alive && w.reloads && !e.loaded) { e.loaded = true; log(`${e.name} reloads its ${w.name}.`, "foe"); }
+      return;
+    }
+    if (attackProfile(e, w, you).ok) await attack(e, w, you);
+    return;
+  }
+  if (e.kind === "brute" && !B.grapple && dist(e.pos, you.pos) === 1 && Math.random() < GRAB_CHANCE) {
+    await attack(e, BRUTE_GRAB, you);
+    return;
+  }
   if (w.reloads && !e.loaded) {
     const path = bestMove(e);
     if (path.length) await moveUnit(e, path);
@@ -1804,9 +1889,10 @@ const ORDERS = [
   { act: "systems", name: "Systems", key: "G", cost: "quick" },
   { act: "stabilize", name: "Stabilize", key: "T", cost: "full" },
   { act: "haymaker", name: "Haymaker", key: "H", cost: "full" },
+  { act: "grapple", name: "Grapple", key: "P", cost: "quick" },
   { act: "overcharge", name: "Overcharge", key: "O", cost: "free" },
   { act: "core", name: "Core power", key: "C", cost: "free" },
-  { act: "end", name: "End turn", key: "E", cost: "", wide: true },
+  { act: "end", name: "End turn", key: "E", cost: "" },
 ];
 
 function canDo(act) {
@@ -1814,16 +1900,19 @@ function canDo(act) {
   const t = T(), you = B.you;
   if (you.status.stunned) return act === "end";
   // an overcharged action can't wait, so only quick actions until it's spent
-  if (t.oc && !["boost", "skirmish", "lock", "systems", "end"].includes(act)) return false;
+  if (t.oc && !["boost", "skirmish", "lock", "systems", "grapple", "end"].includes(act)) return false;
   switch (act) {
-    case "move": return t.mp > 0;
-    case "boost": return quickOk("boost");
+    case "move": return t.mp > 0 && !(grappled(you) && !isLarger(you));
+    case "boost": return quickOk("boost") && !grappled(you);
     case "skirmish": return quickOk("skirmish") && firing().length > 0;
     case "barrage": return t.fullOk && t.quick >= 2 && firing().length >= 2;
     case "lock": return (quickOk("lock") || t.freeLock) && lockTargets().length > 0;
     case "systems": return quickOk("systems") && systemsOf(you).some((x) => usable(you, x));
     case "stabilize": return t.fullOk && t.quick >= 2;
     case "haymaker": return t.fullOk && t.quick >= 2 && validTargets(HAYMAKER).length > 0;
+    case "grapple":
+      if (!grappled(you)) return quickOk("grapple") && validTargets(GRAPPLE).length > 0;
+      return B.grapple.by === you.id || quickOk("grapple");
     case "overcharge": return !t.ocUsed && !t.limited;
     case "core": return !B.coreUsed && !t.limited;
     case "end": return true;
@@ -1839,10 +1928,14 @@ function orderNote(act) {
   // why a quick action is out, or null when it's open
   const quickWhy = (a) => quickOk(a) ? null : t.used.includes(a) && t.quick >= 1 ? "used this turn" : "no quick actions left";
   const cost = t.oc ? "overcharged" : "quick";
-  if (t.oc && !["boost", "skirmish", "lock", "systems", "overcharge", "end"].includes(act)) return "use the overcharge first";
+  if (t.oc && !["boost", "skirmish", "lock", "systems", "grapple", "overcharge", "end"].includes(act)) return "use the overcharge first";
   switch (act) {
-    case "move": return t.mp > 0 ? `${t.mp} movement left` : "no movement left";
-    case "boost": return quickWhy("boost") || `${cost} · +${you.speed} movement`;
+    case "move":
+      if (grappled(you) && !isLarger(you)) return "held in place";
+      return t.mp > 0 ? `${t.mp} movement left` : "no movement left";
+    case "boost":
+      if (grappled(you)) return "not while grappling";
+      return quickWhy("boost") || `${cost} · +${you.speed} movement`;
     case "skirmish": {
       if (quickWhy("skirmish")) return quickWhy("skirmish");
       const n = foes().filter((f) => weaponsOf(you).some((w) => attackProfile(you, w, f).ok)).length;
@@ -1865,6 +1958,10 @@ function orderNote(act) {
     case "haymaker":
       if (!fullLeft) return "needs both quick actions";
       return validTargets(HAYMAKER).length ? `full · ${dmgText(HAYMAKER.dmg)} to a hostile next to you` : "nothing next to you";
+    case "grapple":
+      if (!grappled(you)) return quickWhy("grapple") || (validTargets(GRAPPLE).length ? `${cost} · hold a hostile next to you` : "nothing next to you");
+      if (B.grapple.by === you.id) return `free · let go of ${partnerOf(you).name}`;
+      return quickWhy("grapple") || `${cost} · Hull contest to get loose`;
     case "overcharge": return t.limited ? "not after bracing" : t.ocUsed ? "used this turn" : `a quick action now · ${OC_COST[Math.min(B.ocCount, 3)]} heat`;
     case "core": return B.coreUsed ? "spent" : t.limited ? "not after bracing" : `${CORES[you.core].name}, once`;
     case "end": return "";
@@ -1903,9 +2000,20 @@ function doAction(act, viaKey) {
     case "lock": setMode("lock"); break;
     case "systems": setMode("systems"); break;
     case "stabilize": setMode("stabilize"); break;
-    case "haymaker": {
-      const targets = validTargets(HAYMAKER);
-      setMode("target", { weapon: HAYMAKER, barrage: null });
+    case "haymaker": case "grapple": {
+      if (act === "grapple" && grappled(you)) {
+        if (B.grapple.by === you.id) {
+          log(`You let go of ${partnerOf(you).name}.`, "you");
+          B.grapple = null;
+        } else {
+          spendQuick("grapple");
+          breakFree(you);
+        }
+        setMode("idle");
+        break;
+      }
+      const w = act === "grapple" ? GRAPPLE : HAYMAKER, targets = validTargets(w);
+      setMode("target", { weapon: w, barrage: null });
       if (targets.length === 1) { ui.target = targets[0]; ui.inspect = targets[0].pos; paint(); }
       break;
     }
@@ -1920,9 +2028,9 @@ function doAction(act, viaKey) {
   } else if (viaKey) focusMap(you.pos);
 }
 
-// a Haymaker came straight from the orders, a weapon from the weapon list
+// a Haymaker or Grapple came straight from the orders, a weapon from the weapon list
 function backFromTarget() {
-  if (ui.weapon === HAYMAKER) setMode("orders");
+  if (ui.weapon === HAYMAKER || ui.weapon === GRAPPLE) setMode("orders");
   else setMode("weapon", { barrage: ui.barrage });
   focusOrders();
 }
@@ -2009,6 +2117,7 @@ async function commitMove(dest) {
 async function fire(w, tgt) {
   const you = B.you;
   if (w === HAYMAKER) spendFull();
+  else if (w === GRAPPLE) spendQuick("grapple");
   else if (ui.barrage) {
     if (!ui.barrage.committed) { spendFull(); ui.barrage.committed = true; }
     ui.barrage.used.push(w.key);
@@ -2159,6 +2268,7 @@ function describeHex(i) {
     bits.push(`${occ.name}, ${occ.grunt ? "grunt" : `${occ.hp} of ${occ.maxHp} HP`}, ${plural(dist(B.you.pos, i), "hex")} away.`);
     const cv = coverAt(B.you.pos, i);
     bits.push(!cv ? "You have no line of sight." : cv.level ? `It has ${cv.why}.` : "It has no cover from you.");
+    if (grappled(occ)) bits.push(isLarger(occ) ? "It's grappling you, with the upper hand." : "It's grappling you, held in place.");
     if (ui.mode === "target" && ui.weapon) {
       const p = attackProfile(B.you, ui.weapon, occ);
       bits.push(p.ok ? `${pct(p.chance)} to hit with your ${ui.weapon.name}.` : `Your ${ui.weapon.name}: ${p.reason}.`);
@@ -2281,6 +2391,11 @@ function tokBody(u, cls = "") {
 function drawUnits() {
   const g = layers.units;
   g.replaceChildren();
+  // a grapple ties the two tokens together
+  if (B.grapple) {
+    const [x1, y1] = center(unitById(B.grapple.by).pos), [x2, y2] = center(unitById(B.grapple.on).pos);
+    g.append(svgEl("line", { x1, y1, x2, y2, class: "tether" }));
+  }
   for (const u of B.units) {
     const [x, y] = center(u.pos);
     if (!u.alive) {
@@ -2294,7 +2409,7 @@ function drawUnits() {
       t.append(svgEl("rect", { x: -w / 2, y: R * 0.66, width: (w * Math.max(0, u.hp) / u.maxHp).toFixed(1), height: 4, class: "hpbar" }));
     }
     if (u.status.locked) t.append(svgEl("circle", { r: R * 0.82, class: "lockring" }));
-    const tag = u.status.stunned ? "STUN" : u.weapon && u.weapon.reloads && !u.loaded ? "RELOAD" : u.status.braced ? "BRACED" : u.status.exposed ? "EXPOSED" : "";
+    const tag = u.status.stunned ? "STUN" : u.weapon && u.weapon.reloads && !u.loaded ? "RELOAD" : grappled(u) && !isLarger(u) ? "HELD" : u.status.braced ? "BRACED" : u.status.exposed ? "EXPOSED" : "";
     if (tag) t.append(svgEl("text", { y: -R * 0.82, class: "tag" }, tag));
     g.append(t);
     tokEl.set(u, t);
@@ -2406,7 +2521,7 @@ const SOUNDS = {
   "hiss": { "name": "Smoke hiss", "use": "A smoke cloud spreading", "layers": [
     { "kind": "noise", "filter": "highpass", "freq": 2500, "q": 1, "gain": 0.12, "attack": 0.06, "dur": 1.1 }
   ] },
-  "whoosh": { "name": "Swing", "use": "A cleaver, claw, or Haymaker swing", "layers": [
+  "whoosh": { "name": "Swing", "use": "A cleaver, claw, Haymaker, or grab swing", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 1490, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
   ] },
   "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul, your Rivet Hammer, or your Piledriver swinging", "layers": [
@@ -2429,6 +2544,11 @@ const SOUNDS = {
   "smack": { "name": "Haymaker smack", "use": "Your Haymaker landing", "layers": [
     { "kind": "tone", "wave": "sine", "freq": 170, "to": 55, "gain": 0.6, "attack": 0.002, "dur": 0.14 },
     { "kind": "noise", "filter": "bandpass", "freq": 900, "to": 380, "q": 1.2, "gain": 0.8, "attack": 0.002, "dur": 0.08 }
+  ] },
+  "clamp": { "name": "Grapple clamp", "use": "A grab taking hold, yours or a Brute's", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 220, "to": 180, "gain": 0.12, "attack": 0.002, "dur": 0.09 },
+    { "kind": "tone", "wave": "triangle", "freq": 660, "to": 520, "gain": 0.12, "attack": 0.002, "dur": 0.12, "at": 0.05 },
+    { "kind": "noise", "filter": "highpass", "freq": 2400, "q": 0.7, "gain": 0.5, "attack": 0.001, "dur": 0.05 }
   ] },
   "scrape": { "name": "Knockback scrape", "use": "A mech knocked back a hex", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 600, "to": 300, "q": 1, "gain": 1.2, "attack": 0.02, "dur": 0.18 }
@@ -2566,6 +2686,7 @@ const FX = {
   claws: (att, tgt, hit) => meleeFx(att, tgt, hit, clawMarks),
   maul: (att, tgt, hit) => meleeFx(att, tgt, hit, maulMark),
   punch: (att, tgt, hit) => meleeFx(att, tgt, hit, punchMark),
+  grab: (att, tgt, hit) => meleeFx(att, tgt, hit, clampMark),
 };
 
 // ---------- Kinetic: a burst of tracer rounds ----------
@@ -2801,6 +2922,14 @@ function punchMark(at, d, hit, side) {
   }).then(() => fadeOut([ring], 160));
 }
 
+// a grab: a ring that closes in on the target and holds
+function clampMark(at, d, hit, side) {
+  const ring = fxAdd("circle", { cx: at.x, cy: at.y, r: R * 0.9, class: `shock ${side}${hit ? "" : " whiff"}` });
+  if (hit) play("clamp");
+  if (reduceMotion.matches) { ring.setAttribute("r", R * 0.55); return [ring]; }
+  return tween(200, (q) => ring.setAttribute("r", (R * (0.9 - 0.35 * easeOut(q))).toFixed(1))).then(() => fadeOut([ring], 260));
+}
+
 // knockback slides the token instead of jumping it
 async function slideFx(u, fromPos) {
   play("scrape");
@@ -2850,6 +2979,7 @@ function foeInfo(f) {
   if (f.status.locked) st.push("locked on");
   if (f.weapon.reloads && !f.loaded) st.push("reloading");
   if (f.status.stunned) st.push("stunned");
+  if (grappled(f)) st.push(isLarger(f) ? "grappling you, with the upper hand" : "grappling you, held in place");
   let top = "";
   if (ui.mode === "target" && ui.weapon && ui.target === f) {
     const p = attackProfile(you, ui.weapon, f);
@@ -2862,7 +2992,7 @@ function foeInfo(f) {
   return `<p class="kind">Hostile · ${h.role}</p><h3 class="foe">${f.name}</h3>${top}
     <p>${h.blurb}</p>
     <ul>
-      <li>${f.grunt ? "<b>Grunt</b>" : `HP <b>${f.hp}/${f.maxHp}</b>`} · Evasion <b>${f.evasion}</b> · Armor <b>${f.armor}</b> · Speed <b>${f.speed}</b></li>
+      <li>${f.grunt ? "<b>Grunt</b>" : `HP <b>${f.hp}/${f.maxHp}</b>`} · Evasion <b>${f.evasion}</b> · Armor <b>${f.armor}</b> · Speed <b>${f.speed}</b> · Hull <b>+${h.hull}</b></li>
       <li>${f.weapon.name}: ${weaponLine(f.weapon)}</li>
       <li>${plural(dist(you.pos, f.pos), "hex")} from you${st.length ? " · " + st.join(", ") : ""}</li>
     </ul>
@@ -2913,6 +3043,7 @@ function mechCard() {
   if (u.status.exposed) chips.push(["Exposed", "bad"]);
   if (u.status.meltdown) chips.push(["Meltdown!", "bad"]);
   if (u.status.braced) chips.push(["Braced", "good"]);
+  if (grappled(u)) chips.push([`Grappling ${partnerOf(u).name}`, "amb"], isLarger(u) ? ["Upper hand", "good"] : ["Held in place", "bad"]);
   const c = CORES[u.core], f = FRAMES[u.frame], t = TRAITS[u.trait], p = B.pilot;
   if (u.status[c.status]) chips.push([c.name + (u.shield ? ` ${u.shield}` : ""), "good"]);
   const pipRow = (n, max, cls) => `<span class="pips ${cls}">${Array.from({ length: max }, (_, k) => `<i class="${k < n ? "" : "gone"}"></i>`).join("")}</span>`;
@@ -2945,7 +3076,7 @@ function budgetHtml() {
   const parts = [`<b>Round ${B.round}</b> · <span class="on">Your turn</span>`];
   parts.push(`<span class="vitals">HP <b>${you.hp}/${you.maxHp}</b> · Structure <b>${you.structure}</b> · Heat <b>${you.heat}/${you.heatCap}</b> · </span>Move <b>${t.mp}</b>`);
   parts.push(`Quick <b>${t.quick}</b>${t.fullOk && t.quick >= 2 ? " (or 1 full)" : ""}${t.oc ? " + <b>1</b> overcharged" : ""}`);
-  return parts.join(" · ") + `<span class="extra"> · Overcharge ${t.limited ? "not this turn" : t.oc ? "take it now" : t.ocUsed ? "used" : "ready"} · Reaction ${you.reaction ? "ready" : "spent"}</span>`;
+  return parts.join(" · ") + `<span class="extra"> · Overcharge ${t.limited ? "not this turn" : t.oc ? "take it now" : t.ocUsed ? "used" : "ready"} · Reaction ${grappled(you) ? "none while grappling" : you.reaction ? "ready" : "spent"}</span>`;
 }
 
 function promptParts() {
@@ -2973,7 +3104,9 @@ function promptParts() {
       const knockBtn = w.knockback ? `<button type="button" data-key="knock" aria-pressed="${B.knock}" aria-keyshortcuts="K">Knock back <kbd>K</kbd></button>` : "";
       if (ui.target) {
         const p = attackProfile(you, w, ui.target);
-        return [`<span class="big">${pct(p.chance)}</span>${w.name} at ${ui.target.name}. Tap it again to ${w === HAYMAKER ? "swing" : "fire"}.`, btn("fire", w === HAYMAKER ? "Swing" : "Fire", "warn") + knockBtn + btn("back", "Back")];
+        const verb = w === HAYMAKER ? "swing" : w === GRAPPLE ? "grab" : "fire";
+        const breaks = w.knockback && B.knock && partnerOf(you) === ui.target ? " A knockback would break your grapple." : "";
+        return [`<span class="big">${pct(p.chance)}</span>${w.name} at ${ui.target.name}. Tap it again to ${verb}.${breaks}`, btn("fire", verb[0].toUpperCase() + verb.slice(1), "warn") + knockBtn + btn("back", "Back")];
       }
       return [`<b>${w.name}.</b> Tap a hostile ringed in amber.`, knockBtn + btn("back", "Back")];
     }
@@ -2994,8 +3127,9 @@ function ordersHtml() {
     const items = ORDERS.map((o) => {
       const ok = canDo(o.act);
       const note = orderNote(o.act);
+      const name = o.act === "grapple" && grappled(you) ? (B.grapple.by === you.id ? "Release" : "Break free") : o.name;
       return `<button type="button" role="menuitem" data-key="act-${o.act}" class="${o.wide ? "wide" : ""}" ${ok ? "" : "disabled"} aria-keyshortcuts="${o.key}">
-        <span>${o.name} <kbd>${o.key}</kbd></span>${note ? `<small>${note}</small>` : ""}</button>`;
+        <span>${name} <kbd>${o.key}</kbd></span>${note ? `<small>${note}</small>` : ""}</button>`;
     }).join("");
     return head("Orders", `<button type="button" data-key="close">Close <kbd>Esc</kbd></button>`) + `<div class="orders-grid" role="menu" aria-label="Orders">${items}</div>`;
   }
@@ -3157,7 +3291,7 @@ function saveBattle() {
   if (!B || B.phase !== "you" || B.over || busy) return;
   const data = {
     v: 3, seed: B.seed, threat: B.threat, name: B.name, round: B.round, crew: { pilot: B.pilot, mech: B.mech },
-    ocCount: B.ocCount, coreUsed: B.coreUsed, knock: B.knock, turn: B.turn, smoke: [...B.smoke],
+    ocCount: B.ocCount, coreUsed: B.coreUsed, knock: B.knock, grapple: B.grapple, turn: B.turn, smoke: [...B.smoke],
     units: B.units.map((u) => {
       const o = { id: u.id };
       for (const k of UNIT_FIELDS) if (k in u) o[k] = u[k];
@@ -3232,7 +3366,7 @@ function deploy() {
 function restoreBattle(s) {
   busy = false;
   B = buildBattle(s.seed, s.threat, s.crew);
-  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, knock: s.knock !== false, turn: { oc: false, used: [], ...s.turn }, smoke: new Map(s.smoke), phase: "you", logLines: [] });
+  Object.assign(B, { round: s.round, ocCount: s.ocCount, coreUsed: s.coreUsed, knock: s.knock !== false, grapple: s.grapple || null, turn: { oc: false, used: [], ...s.turn }, smoke: new Map(s.smoke), phase: "you", logLines: [] });
   for (const su of s.units) {
     const u = B.units.find((x) => x.id === su.id);
     if (!u) continue;
@@ -3595,6 +3729,7 @@ const FX_NOTE = {
   claws: () => "Three raking claws",
   maul: () => "A heavy blow",
   punch: () => "A bare-handed blow",
+  grab: () => "A grab",
 };
 function testNote(w) {
   const bits = [FX_NOTE[w.fx](w)];
@@ -3603,9 +3738,10 @@ function testNote(w) {
   return bits.join(" · ");
 }
 const TESTS = [
-  ...[...Object.values(GEAR), HAYMAKER].filter((g) => g.kind === "ranged" || g.kind === "melee").map((g) => ({ list: "testyou", name: g.name, side: "you", w: g })),
+  ...[...Object.values(GEAR), HAYMAKER, GRAPPLE].filter((g) => g.kind === "ranged" || g.kind === "melee").map((g) => ({ list: "testyou", name: g.name, side: "you", w: g })),
   ...Object.values(GEAR).filter((g) => g.use === "smoke").map((g) => ({ list: "testsys", name: g.name, side: "you", smoke: true })),
   ...Object.values(HOSTILES).map((h) => ({ list: "testfoe", name: `${h.name} ${h.weapon.name}`, side: "foe", letter: h.letter, foe: h.name, w: h.weapon })),
+  { list: "testfoe", name: `Brute ${BRUTE_GRAB.name}`, side: "foe", letter: "B", foe: "Brute", w: BRUTE_GRAB },
 ];
 let testing = false, queued = null, lastTest = null, heard = new Map();
 
@@ -3692,7 +3828,8 @@ async function fireTest(t, hit) {
       await shotFx(att, w, tgt, hit);
       // the damage number and knockback follow the shot, the way an attack resolves in battle
       const dmg = hit ? rollDamage(w.dmg, false) : w.reliable || 0;
-      pop(tgt.pos, dmg ? `−${dmg}` : "miss", dmg ? (tgt.side === "you" ? "hurt" : "dealt") : "miss");
+      if (w.grab) pop(tgt.pos, hit ? "held" : "miss", hit ? (tgt.side === "you" ? "hurt" : "dealt") : "miss");
+      else pop(tgt.pos, dmg ? `−${dmg}` : "miss", dmg ? (tgt.side === "you" ? "hurt" : "dealt") : "miss");
       if (hit && w.knockback) {
         const from = tgt.pos, step = Math.sign(colOf(tgt.pos) - colOf(att.pos));
         tgt.pos = idxOf(colOf(from) + step * w.knockback, RANGE_ROW);
@@ -3938,7 +4075,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if ((e.key === "k" || e.key === "K") && yourTurn() && ui.mode === "target" && ui.weapon.knockback) { e.preventDefault(); toggleKnock(); return; }
-  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "systems", t: "stabilize", h: "haymaker", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
+  const act = { m: "move", b: "boost", s: "skirmish", r: "barrage", l: "lock", g: "systems", t: "stabilize", h: "haymaker", p: "grapple", o: "overcharge", c: "core", e: "end" }[e.key.toLowerCase()];
   if (act && canDo(act)) { e.preventDefault(); doAction(act, true); }
 });
 

@@ -519,7 +519,7 @@ const HARDPOINT_SOUNDS = {
   "hiss": { "name": "Smoke hiss", "use": "A smoke cloud spreading", "layers": [
     { "kind": "noise", "filter": "highpass", "freq": 2500, "q": 1, "gain": 0.12, "attack": 0.06, "dur": 1.1 }
   ] },
-  "whoosh": { "name": "Swing", "use": "A cleaver, claw, or Haymaker swing", "layers": [
+  "whoosh": { "name": "Swing", "use": "A cleaver, claw, Haymaker, or grab swing", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 1490, "to": 2200, "q": 1.4, "gain": 0.9, "attack": 0.07, "dur": 0.16 }
   ] },
   "whoosh-heavy": { "name": "Heavy swing", "use": "A Brute's maul, your Rivet Hammer, or your Piledriver swinging", "layers": [
@@ -542,6 +542,11 @@ const HARDPOINT_SOUNDS = {
   "smack": { "name": "Haymaker smack", "use": "Your Haymaker landing", "layers": [
     { "kind": "tone", "wave": "sine", "freq": 170, "to": 55, "gain": 0.6, "attack": 0.002, "dur": 0.14 },
     { "kind": "noise", "filter": "bandpass", "freq": 900, "to": 380, "q": 1.2, "gain": 0.8, "attack": 0.002, "dur": 0.08 }
+  ] },
+  "clamp": { "name": "Grapple clamp", "use": "A grab taking hold, yours or a Brute's", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 220, "to": 180, "gain": 0.12, "attack": 0.002, "dur": 0.09 },
+    { "kind": "tone", "wave": "triangle", "freq": 660, "to": 520, "gain": 0.12, "attack": 0.002, "dur": 0.12, "at": 0.05 },
+    { "kind": "noise", "filter": "highpass", "freq": 2400, "q": 0.7, "gain": 0.5, "attack": 0.001, "dur": 0.05 }
   ] },
   "scrape": { "name": "Knockback scrape", "use": "A mech knocked back a hex", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 600, "to": 300, "q": 1, "gain": 1.2, "attack": 0.02, "dur": 0.18 }
