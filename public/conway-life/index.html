@@ -1,0 +1,1739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conway's Game of Life — The Cabinet of Curios</title>
+<meta name="description" content="Place stones on a Go board and watch Conway's four rules decide which live, which die, and which are born. Step through the few lines of code that run it, then set gliders, guns, and long-lived seeds loose on a big board.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚫</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: washi paper and sumi ink */
+  --bg: #F2EDE3;
+  --paper: #FBF8F1;
+  --ink: #1D1B18;
+  --muted: #655E57;
+  --edge: #D9D0C0;
+  --seal: #B03A25;
+  --seal-ink: #FFF8F0;
+  --focus: #1D5BA6;
+  --code: #F5F0E5;
+  --mark: #F2D9A2;
+
+  /* Code: inks for each kind of token */
+  --syn-kw: #9C2F1A;
+  --syn-str: #2E6A35;
+  --syn-num: #8A4B00;
+  --syn-def: #1D4F91;
+  --syn-atom: #74368A;
+  --syn-type: #155F6B;
+
+  /* Boards: kaya wood in either theme, a little dimmer at night */
+  --wood: #DDB36D;
+  --wood-edge: #B98A45;
+  --wood-line: rgba(45, 28, 10, .62);
+  --wood-ink: #2A1C0C;
+  --stone: #151412;
+  --stone-hi: #5A5650;
+  --born: #0F5B40;
+  --dies: #A5240F;
+
+  --head: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  --text: "Zen Kaku Gothic New", "Hiragino Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "Fira Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15120F; --paper: #1E1A16; --ink: #EDE6DA; --muted: #A99F92; --edge: #3A332B;
+    --seal: #E36A50; --seal-ink: #1A0D08; --focus: #8AB4F8; --code: #191612; --mark: #4C3B18;
+    --syn-kw: #F08A70; --syn-str: #8FD19E; --syn-num: #E6B566; --syn-def: #8AB4F8; --syn-atom: #D6A3E6; --syn-type: #78CFD9;
+    --wood: #BC9050; --wood-edge: #8E6A35; --wood-line: rgba(30, 18, 6, .7); --wood-ink: #1E1408;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15120F; --paper: #1E1A16; --ink: #EDE6DA; --muted: #A99F92; --edge: #3A332B;
+  --seal: #E36A50; --seal-ink: #1A0D08; --focus: #8AB4F8; --code: #191612; --mark: #4C3B18;
+    --syn-kw: #F08A70; --syn-str: #8FD19E; --syn-num: #E6B566; --syn-def: #8AB4F8; --syn-atom: #D6A3E6; --syn-type: #78CFD9;
+  --wood: #BC9050; --wood-edge: #8E6A35; --wood-line: rgba(30, 18, 6, .7); --wood-ink: #1E1408;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 500 .82em var(--mono); border: 1px solid var(--edge); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3em; background: var(--paper); }
+code { font: 400 .9em var(--mono); }
+
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1 {
+  font: 800 clamp(2.1rem, 7vw, 3.5rem)/1.08 var(--head);
+  letter-spacing: -0.01em;
+  margin: 0 0 .7rem;
+}
+.lede { margin: 0 0 .6rem; max-width: 64ch; }
+.howto { margin: 0 0 1.6rem; color: var(--muted); font-size: .95rem; max-width: 64ch; }
+h2 { font: 800 1.55rem/1.25 var(--head); margin: 0 0 .75rem; }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 1.1rem 1.1rem 1.2rem;
+  margin-bottom: 1.6rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03), 0 16px 30px -26px rgba(40,25,10,.55);
+}
+.station {
+  display: inline-block;
+  font: 700 .74rem/1 var(--text);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--seal);
+  border: 1.5px solid var(--seal);
+  border-radius: 3px;
+  padding: .3rem .45rem .25rem .55rem;
+  margin: 0 0 .5rem;
+}
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .45rem 0 0; max-width: 68ch; }
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+@media (max-width: 820px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .85rem; align-content: start; min-width: 0; }
+
+/* ---------- Go boards ---------- */
+.goban {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--wood-edge), 0 10px 22px -14px rgba(40,25,10,.8);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.goban:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.goban .wood { fill: var(--wood); }
+.goban .lines line { stroke: var(--wood-line); stroke-width: 1.4; }
+.goban .star { fill: var(--wood-line); }
+.goban .lbl { font: 500 15px var(--mono); fill: var(--wood-ink); opacity: .75; }
+.goban .st-hi { stop-color: var(--stone-hi); }
+.goban .st-lo { stop-color: var(--stone); }
+.goban .stone { transition: opacity .2s; }
+.goban .stone.dim { opacity: .35; }
+.goban .born { fill: none; stroke: var(--born); stroke-width: 3; stroke-dasharray: 5 4; }
+.goban .keep { fill: none; stroke: var(--born); stroke-width: 3.5; }
+.goban .ring { fill: none; stroke: var(--seal); stroke-width: 3.5; }
+.goban .hot-pt { fill: var(--seal); opacity: .16; }
+.goban .x { stroke: var(--dies); stroke-width: 3.5; stroke-linecap: round; }
+.goban .x-bg { fill: var(--wood); stroke: var(--dies); stroke-width: 2; }
+.goban .n { font: 700 17px var(--mono); fill: var(--wood-ink); text-anchor: middle; dominant-baseline: central; }
+.goban .n.on { fill: #F4EFE6; }
+.goban .n.hot { fill: var(--seal); }
+.goban .n.on.hot { fill: #FFB4A0; }
+.goban .n.dim { opacity: .35; }
+.goban .cursor { fill: none; stroke: var(--focus); stroke-width: 3; }
+
+/* ---------- Controls ---------- */
+.btns { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.btn {
+  font: 700 .95rem var(--text);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: .4rem .85rem;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.go { background: var(--seal); border-color: var(--seal); color: var(--seal-ink); }
+.btn kbd { margin-left: .45rem; font-size: .75rem; }
+.btn.go kbd { background: transparent; color: inherit; border-color: currentColor; }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; background: var(--paper); }
+.seg button {
+  font: 500 .92rem var(--text);
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  padding: .35rem .75rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--edge); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; }
+.ctl > span { font-size: .9rem; color: var(--muted); }
+
+.check { display: flex; align-items: center; gap: .55rem; min-height: 40px; cursor: pointer; font-size: .98rem; }
+.check input { width: 22px; height: 22px; margin: 0; accent-color: var(--seal); }
+
+.stats { font: 500 .9rem var(--mono); color: var(--muted); margin: 0; }
+.caption { margin: 0; min-height: 5.4em; }
+.caption .sub { display: block; color: var(--muted); font-size: .95rem; margin-top: .2rem; }
+.caption b { color: var(--seal); }
+
+/* ---------- Station 1: the rules ---------- */
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
+.rules li {
+  display: grid;
+  grid-template-columns: 2.1rem 1fr;
+  gap: .5rem;
+  align-items: center;
+  padding: .3rem .5rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: .97rem;
+  line-height: 1.4;
+}
+.rules li[aria-current="true"] { border-color: var(--seal); background: var(--code); }
+.rules .glyph { width: 2.1rem; height: 2.1rem; }
+.rules .muted { color: var(--muted); }
+.g-stone { fill: var(--stone); }
+.g-x { stroke: var(--dies); stroke-width: 3; stroke-linecap: round; }
+.g-keep { fill: none; stroke: var(--born); stroke-width: 3; }
+.g-born { fill: none; stroke: var(--born); stroke-width: 3; stroke-dasharray: 5 4; }
+.g-pt { stroke: var(--muted); stroke-width: 1.5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .g-stone { fill: #050505; stroke: #6A6258; stroke-width: 1.5; } }
+:root[data-theme="dark"] .g-stone { fill: #050505; stroke: #6A6258; stroke-width: 1.5; }
+
+/* ---------- Station 2: the step ---------- */
+.stagebar { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0; padding: 0; list-style: none; counter-reset: st; }
+.stagebar li {
+  counter-increment: st;
+  font-size: .82rem;
+  color: var(--muted);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: .1rem .6rem;
+}
+.stagebar li::before { content: counter(st) ". "; }
+.stagebar li[aria-current="step"] { background: var(--seal); border-color: var(--seal); color: var(--seal-ink); }
+.listing { margin: 0; }
+.listing .lbl { font: 500 .85rem var(--mono); color: var(--muted); display: block; margin-bottom: .25rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .25rem .35rem; font: 400 .84rem/1.5 var(--mono); }
+.chip { border: 1px solid var(--edge); border-radius: 4px; padding: 0 .3rem; background: var(--code); white-space: nowrap; }
+.chip.keep { border-color: var(--born); color: var(--born); font-weight: 500; }
+.chip.gone { opacity: .45; text-decoration: line-through; }
+.group { display: inline-flex; flex-wrap: wrap; gap: .25rem .35rem; padding: .15rem; border-radius: 6px; }
+.group.cur { outline: 2px solid var(--seal); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip.keep { color: #6FD3A6; border-color: #6FD3A6; } }
+:root[data-theme="dark"] .chip.keep { color: #6FD3A6; border-color: #6FD3A6; }
+
+.codebox { margin-top: 1rem; }
+.codebox .seg { margin-bottom: .5rem; }
+pre.code {
+  margin: 0;
+  padding: .8rem .9rem;
+  background: var(--code);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  overflow-x: auto;
+  font: 400 .84rem/1.55 var(--mono);
+  font-variant-ligatures: none;
+  tab-size: 2;
+}
+pre.code mark { background: var(--mark); color: inherit; border-radius: 3px; box-shadow: 0 0 0 2px var(--mark); }
+.t-kw { color: var(--syn-kw); }
+.t-str { color: var(--syn-str); }
+.t-num { color: var(--syn-num); }
+.t-def { color: var(--syn-def); font-weight: 500; }
+.t-atom { color: var(--syn-atom); }
+.t-type { color: var(--syn-type); }
+.t-com { color: var(--muted); font-style: italic; }
+.codenote { font-size: .9rem; color: var(--muted); margin: .45rem 0 0; }
+
+/* ---------- Station 3: five languages ---------- */
+.panel-head + .ctl { margin-top: 1rem; }
+.langs { display: grid; gap: 1.1rem; margin-top: 1rem; }
+/* one language per row, so even the longest lines fit beside their note */
+.lang {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  grid-template-areas: "head head" "code idiom";
+  gap: .35rem 1.1rem;
+}
+@media (max-width: 820px) { .lang { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "code" "idiom"; } }
+.lang h3 { grid-area: head; display: flex; gap: .7rem; align-items: baseline; font: 800 1.15rem/1.3 var(--head); margin: 0; }
+.lang h3 span { font: 400 .8rem var(--mono); color: var(--muted); }
+.lang pre.code { grid-area: code; font-size: .8rem; }
+.lang .idiom { grid-area: idiom; font-size: .92rem; color: var(--muted); margin: 0; }
+.why { max-width: 68ch; margin: 1.4rem 0 0; padding-left: 1.2rem; }
+.why li { margin-bottom: .55rem; }
+.why q { font-style: italic; }
+details.contrast { margin-top: 1rem; border: 1px solid var(--edge); border-radius: 8px; padding: 0 .9rem; }
+details.contrast summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+details.contrast[open] { padding-bottom: .9rem; }
+details.contrast p { max-width: 68ch; }
+
+/* ---------- Station 4: the big board ---------- */
+.bigwrap {
+  margin-top: 1rem;
+  padding: 8px;
+  background: var(--wood);
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--wood-edge), 0 12px 26px -16px rgba(40,25,10,.85);
+  text-align: center;
+  line-height: 0;
+}
+#big {
+  display: inline-block;
+  max-width: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  border-radius: 3px;
+}
+#big:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1rem; align-items: center; margin-top: .8rem; }
+.patterns { display: grid; gap: .55rem; margin-top: 1rem; }
+.pgroup { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.pgroup > span { font-size: .85rem; color: var(--muted); min-width: 7.5rem; }
+.pgroup button {
+  font: 500 .92rem var(--text);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: .3rem .8rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.pgroup button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.pnote { margin: .8rem 0 0; min-height: 3.3em; max-width: 70ch; }
+.pnote b { font-weight: 700; }
+
+/* ---------- Notes ---------- */
+.notes, .sources { max-width: 68ch; margin-top: 2.2rem; }
+.notes li { margin-bottom: .6rem; }
+.sources li { margin-bottom: .45rem; font-size: .95rem; }
+footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 68ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Conway's Game of Life</h1>
+  <p class="lede">Put stones on a board. Each turn, every stone counts the stones around it. With too few it dies alone, with too many it's crowded out, and an empty point with exactly three stones around it gets a new stone. From four rules like these come blinkers, gliders that crawl across the board, and guns that fire them forever.</p>
+  <p class="howto">Tap a point to place or take away a stone. Every board also works from the keyboard: Tab to it, move with the arrow keys (<kbd>Shift</kbd> moves further), and press <kbd>Space</kbd> to place or take away a stone. <kbd>N</kbd> steps forward and <kbd>B</kbd> steps back. On the big board <kbd>P</kbd> plays and pauses.</p>
+
+  <!-- 1. The rules -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="s1-h">Eight neighbors, four rules</h2>
+      <p>Every point on the board has eight neighbors: the points above, below, beside it, and on the four diagonals. A stone is a living cell. Each step, every point counts its living neighbors and follows one of the rules beside the board, and <b>every point changes at the same moment</b>. Turn on the counts, tap any point to see which rule it follows, and press Step.</p>
+    </div>
+    <div class="split">
+      <svg class="goban" id="b1" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 1 board, 9 by 9 points" aria-describedby="s1-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space N B"></svg>
+      <div class="side">
+        <ol class="rules" id="s1-rules">
+          <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><circle class="g-stone" cx="20" cy="20" r="14"/><path class="g-x" d="M27 7l8 8M35 7l-8 8"/></svg><span>A living cell with <b>fewer than 2</b> living neighbors dies, as if lonely.</span></li>
+          <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><circle class="g-stone" cx="20" cy="20" r="14"/><circle class="g-keep" cx="20" cy="20" r="18"/></svg><span>A living cell with <b>2 or 3</b> living neighbors stays alive.</span></li>
+          <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><circle class="g-stone" cx="20" cy="20" r="14"/><path class="g-x" d="M27 7l8 8M35 7l-8 8"/></svg><span>A living cell with <b>more than 3</b> living neighbors dies, as if crowded.</span></li>
+          <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><circle class="g-born" cx="20" cy="20" r="15"/></svg><span>An empty point with <b>exactly 3</b> living neighbors gets a new stone.</span></li>
+          <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><path class="g-pt" d="M8 20h24M20 8v24"/></svg><span class="muted">Every other empty point stays empty.</span></li>
+        </ol>
+        <div class="btns">
+          <button type="button" class="btn" id="s1-back">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s1-step">Step<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s1-clear">Clear</button>
+        </div>
+        <label class="check"><input type="checkbox" id="s1-counts" checked> Count each point's living neighbors</label>
+        <label class="check"><input type="checkbox" id="s1-next" checked> Mark what happens next</label>
+        <div class="ctl" role="group" aria-label="Load a pattern">
+          <span>Try</span>
+          <div class="seg" id="s1-pats"></div>
+        </div>
+        <p class="stats" id="s1-stats"></p>
+        <p class="caption" id="s1-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. The step function -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="s2-h">Count the neighbors, not the board</h2>
+      <p>You could store the whole board and check every point on it, empty or not. This page keeps only a list of the living cells, as row and column pairs, and works out the next step from that list in three moves. <b>Each living cell names its eight neighbors. Count how often each point was named. Keep the points named 3 times, and the living ones named 2 times.</b> A point's count is exactly its number of living neighbors, because only living cells do the naming. Press Next to watch it happen one move at a time. Station 3 lines the same function up in five languages, and Station 4 runs it on a much bigger board.</p>
+    </div>
+    <div class="split">
+      <svg class="goban" id="b2" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 2 board, rows and columns −2 to 4" aria-describedby="s2-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space N B"></svg>
+      <div class="side">
+        <ol class="stagebar" id="s2-stages" aria-label="Moves in one step">
+          <li>The living</li>
+          <li>Name neighbors</li>
+          <li>Count</li>
+          <li>Keep</li>
+          <li>Next generation</li>
+        </ol>
+        <div class="btns">
+          <button type="button" class="btn" id="s2-back">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s2-next">Next<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s2-reset">Start over</button>
+        </div>
+        <div class="ctl" role="group" aria-label="Start from">
+          <span>Start from</span>
+          <div class="seg" id="s2-pats"></div>
+        </div>
+        <p class="caption" id="s2-cap" aria-live="polite"></p>
+        <div class="listing" id="s2-list"></div>
+      </div>
+    </div>
+    <div class="codebox">
+      <div class="seg" role="group" aria-label="Language" id="s2-langs">
+        <button type="button" data-lang="js">JavaScript</button>
+        <button type="button" data-lang="clj">Clojure</button>
+        <button type="button" data-lang="ex">Elixir</button>
+        <button type="button" data-lang="py">Python</button>
+        <button type="button" data-lang="rb">Ruby</button>
+      </div>
+      <pre class="code" id="s2-code" tabindex="0" aria-label="The step function, with the part for the current move highlighted"></pre>
+      <p class="codenote" id="s2-codenote"></p>
+    </div>
+  </section>
+
+  <!-- 3. Five languages -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s3-h">One idea, five languages</h2>
+      <p>Here is Station 2's step written five ways. Each one takes a set of living cells and makes the same three moves: name the neighbors, count them, keep the 3s and the living 2s. None of them loops over the board, checks for edges, or keeps a second board to write into. Pick a part of the step to light it up in all five at once.</p>
+    </div>
+    <div class="ctl" role="group" aria-label="Highlight a part of the step">
+      <span>Highlight</span>
+      <div class="seg" id="s3-parts">
+        <button type="button" data-part="neighbors">The eight neighbors</button>
+        <button type="button" data-part="name">Name</button>
+        <button type="button" data-part="count">Count</button>
+        <button type="button" data-part="keep">Keep</button>
+        <button type="button" data-part="collect">Collect</button>
+      </div>
+    </div>
+    <p class="caption" id="s3-cap" aria-live="polite"></p>
+    <div class="langs" id="s3-langs"></div>
+    <ul class="why">
+      <li><b>Data in, data out.</b> <code>step</code> takes a set and returns a new one. It reads nothing else and changes nothing, so every board on this page shares it, and the Back buttons work by keeping the old sets.</li>
+      <li><b>The rules fit in one line.</b> Four rules become <code>n == 3 or (n == 2 and alive)</code>, in every language here.</li>
+      <li><b>One test says a lot.</b> Step a blinker twice and you're back where you started: <code>step(step(blinker)) == blinker</code>. Each of the five versions passes it.</li>
+      <li><b>The data structure does the work.</b> As the <a href="https://strangeleaflet.com/conways-game-of-life-a-functional-approach/">blog post</a> puts it, <q>The wrong data structure has to be supported by code. The right data structure supports the code.</q> Open the whole-board version below to see the code it saves.</li>
+    </ul>
+    <details class="contrast">
+      <summary>Compare: the whole-board version</summary>
+      <p>Store every point as a 0 or a 1 and the step has to visit every one of them, empty or not, and check each neighbor against the edges so the counting doesn't run off the board. It still returns a new board, so it's just as pure. It also needs a board size chosen up front, and a glider that reaches the edge stops being a glider.</p>
+      <pre class="code" id="s3-grid" tabindex="0" aria-label="A whole-board step function in JavaScript, for comparison"></pre>
+    </details>
+  </section>
+
+  <!-- 4. The big board -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="s4-h">Gliders, guns, and long lives</h2>
+      <p>Same rules, same step function, on a board big enough to watch patterns travel. Pick a pattern and press Play, or drag across the board to draw your own. A few cells can keep busy for thousands of generations. The board is only a window: cells that drift past its edge keep living, and zooming out shows them again.</p>
+    </div>
+    <div class="bigwrap" id="b3-wrap">
+      <canvas id="big" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 4 big board" aria-describedby="s4-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space N B P"></canvas>
+    </div>
+    <div class="bar">
+      <div class="btns">
+        <button type="button" class="btn go" id="s4-play">Play<kbd>P</kbd></button>
+        <button type="button" class="btn" id="s4-step">Step<kbd>N</kbd></button>
+        <button type="button" class="btn" id="s4-rewind">Back to start<kbd>B</kbd></button>
+        <button type="button" class="btn" id="s4-random">Random</button>
+        <button type="button" class="btn" id="s4-clear">Clear</button>
+      </div>
+      <p class="stats" id="s4-stats"></p>
+    </div>
+    <div class="bar">
+      <div class="ctl" role="group" aria-label="Speed">
+        <span>Speed</span>
+        <div class="seg" id="s4-speeds">
+          <button type="button" data-speed="4">Slow</button>
+          <button type="button" data-speed="12">Normal</button>
+          <button type="button" data-speed="30">Fast</button>
+          <button type="button" data-speed="60">Fastest</button>
+        </div>
+      </div>
+      <div class="ctl" role="group" aria-label="Zoom">
+        <span>Zoom</span>
+        <div class="seg" id="s4-zooms">
+          <button type="button" data-px="14">Close</button>
+          <button type="button" data-px="8">Middle</button>
+          <button type="button" data-px="4">Far</button>
+        </div>
+      </div>
+    </div>
+    <div class="patterns" id="s4-pats"></div>
+    <p class="pnote" id="s4-note"></p>
+    <p class="caption" id="s4-cap" aria-live="polite"></p>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <ul>
+      <li><b>Every point changes at once.</b> The step function reads the old list and builds a brand new one, so no point ever sees a neighbor that has already changed. Update the board in place, one point at a time, and the points you reach later would count neighbors from two different generations.</li>
+      <li><b>There's no code for dying.</b> Look at Station 2's Keep move. Only the points that live are kept, and everything else is left out. A living cell with no living neighbors is never even named, so it disappears without being checked.</li>
+      <li><b>Only the living take up room.</b> Because the list holds living cells and nothing else, the board has no size. A glider can fly as far as it likes. On the big board, cells that get hundreds of points past the window are let go so a gun can run all day without slowing down, which is the one place this page bends the rules.</li>
+      <li><b>Nothing in the rules says move.</b> Each rule talks about one point and its neighbors, yet the glider's five cells rebuild themselves one point over every 4 generations. Movement is something you see in the pattern, not something any cell does.</li>
+      <li><b>Birth is picky.</b> An empty point needs exactly 3 living neighbors. With 2 it stays empty and with 4 it stays empty. Try Station 1's Block: every empty point around it has at most 2 living neighbors, so it never grows.</li>
+      <li><b>Small seeds, long lives.</b> The R-pentomino is 5 cells and takes 1103 generations to settle. There's no shortcut for knowing what a pattern will do: in general the only way to find out is to run it and watch.</li>
+    </ul>
+  </section>
+
+  <section class="notes" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <ul>
+      <li><b>A rule hunted for by hand.</b> John Horton Conway, a mathematician at Cambridge, started trying rules for cells on a grid in 1968. He wanted patterns that seemed able to grow forever but where that would be hard to prove. He worked them out on a Go board with stones for the living cells, which was slow and easy to get wrong.</li>
+      <li><b>The glider.</b> Richard K. Guy spotted the first glider in 1969, while Conway's group was following the R-pentomino.</li>
+      <li><b>Martin Gardner's column.</b> Life reached the world in Gardner's Mathematical Games column in <i>Scientific American</i> in October 1970. Conway offered $50 to the first person who could settle whether any pattern grows without limit before the end of the year.</li>
+      <li><b>The gun.</b> In November 1970 a team at MIT led by Bill Gosper won the prize with the glider gun in Station 4. It fires a new glider every 30 generations, so it never stops growing.</li>
+      <li><b>Computers joined in early.</b> The first interactive Life program ran on a PDP-7, written by M. J. T. Guy and S. R. Bourne.</li>
+      <li><b>Life can compute.</b> In <i>Winning Ways for Your Mathematical Plays</i> (1982), Elwyn Berlekamp, Conway, and Guy showed that gliders, guns, and patterns that eat gliders can be wired together into a computer. So Life can work out anything a computer can.</li>
+      <li><b>Mixed feelings.</b> Conway came to dislike that Life overshadowed work he thought deeper, though he stayed proud of it. He died on 11 April 2020, of COVID-19.</li>
+      <li><b>The code on this page.</b> Christophe Grand wrote the two-function Clojure version in 2011. Stephen Ball translated it to Elixir for this page's first version, a Phoenix LiveView app, and walks through it in <a href="https://strangeleaflet.com/conways-game-of-life-a-functional-approach/">Conway's Game of Life: A Functional Approach</a>. This version is the same idea in JavaScript, running in your browser.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>Martin Gardner, <a href="https://doi.org/10.1038/scientificamerican1070-120">"Mathematical Games: The fantastic combinations of John Conway's new solitaire game 'life'"</a>, <i>Scientific American</i> 223, no. 4 (October 1970), pp. 120–123.</li>
+      <li>Elwyn R. Berlekamp, John H. Conway, and Richard K. Guy, <i>Winning Ways for Your Mathematical Plays</i>, vol. 2 (Academic Press, 1982), chapter 25, "What Is Life?"</li>
+      <li><a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">"Conway's Game of Life"</a>, Wikipedia.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Glider_(Conway%27s_Game_of_Life)">"Glider (Conway's Game of Life)"</a>, Wikipedia.</li>
+      <li><a href="https://en.wikipedia.org/wiki/John_Horton_Conway">"John Horton Conway"</a>, Wikipedia.</li>
+      <li>Christophe Grand, <a href="http://clj-me.cgrand.net/2011/08/19/conways-game-of-life/">"Conway's Game of Life"</a>, clj-me (19 August 2011).</li>
+      <li>Stephen Ball, <a href="https://strangeleaflet.com/conways-game-of-life-a-functional-approach/">"Conway's Game of Life: A Functional Approach"</a>, Strange Leaflet (23 August 2024).</li>
+      <li>Pattern names and shapes follow <a href="https://conwaylife.com/wiki/">LifeWiki</a>. The generation counts in Station 4's notes were checked by running each pattern with this page's step function.</li>
+    </ul>
+  </section>
+
+  <footer>The big board's pattern lives in the address bar whenever it's paused, so you can share a link to it. It's written in RLE, the run-length format most Life programs can read.</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NS = "http://www.w3.org/2000/svg";
+
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+// ---------- Life ----------
+
+// a cell is a "row,col" string and a generation is the Set of living cells.
+// Station 2 shows these three functions as written, and every board runs them.
+const neighbors = (cell) => {
+  const [r, c] = cell.split(",").map(Number);
+  return [-1, 0, 1].flatMap((dr) => [-1, 0, 1]
+    .filter((dc) => dr || dc)
+    .map((dc) => `${r + dr},${c + dc}`));
+};
+
+const frequencies = (xs) =>
+  xs.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map());
+
+function step(cells) {
+  const named = [...cells].flatMap(neighbors);
+  const counts = frequencies(named);
+  return new Set([...counts]
+    .filter(([cell, n]) => n === 3 || (n === 2 && cells.has(cell)))
+    .map(([cell]) => cell));
+}
+
+const key = (r, c) => `${r},${c}`;
+const unkey = (cell) => cell.split(",").map(Number);
+const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+const byPlace = (a, b) => { const [ar, ac] = unkey(a), [br, bc] = unkey(b); return ar - br || ac - bc; };
+
+function sameSet(a, b) {
+  if (!b || a.size !== b.size) return false;
+  for (const x of a) if (!b.has(x)) return false;
+  return true;
+}
+
+// ---------- RLE ----------
+
+// the run-length format Life programs share patterns in: b is empty, o is alive, $ ends a row
+function parseRLE(text) {
+  const cells = new Set();
+  const body = text.split("\n").filter((l) => !/^\s*(#|x\s*=)/.test(l)).join("");
+  let r = 0, c = 0, n = "";
+  for (const ch of body) {
+    if (/\d/.test(ch)) { n += ch; continue; }
+    const k = n ? +n : 1;
+    n = "";
+    if (ch === "o") for (let i = 0; i < k; i++) cells.add(key(r, c++));
+    else if (ch === "b") c += k;
+    else if (ch === "$") { r += k; c = 0; }
+    else if (ch === "!") break;
+  }
+  return cells;
+}
+
+function toRLE(cells) {
+  if (!cells.size) return "!";
+  const pts = [...cells].map(unkey);
+  const r0 = Math.min(...pts.map((p) => p[0])), r1 = Math.max(...pts.map((p) => p[0]));
+  const c0 = Math.min(...pts.map((p) => p[1]));
+  const rows = new Map();
+  for (const [r, c] of pts) (rows.get(r) || rows.set(r, []).get(r)).push(c);
+  const run = (k, ch) => (k > 1 ? k : "") + ch;
+  let out = "", gap = 0;
+  for (let r = r0; r <= r1; r++) {
+    const cs = (rows.get(r) || []).sort((a, b) => a - b);
+    if (!cs.length) { gap++; continue; }
+    if (r > r0) out += run(gap + 1, "$");
+    gap = 0;
+    let c = c0;
+    for (let i = 0; i < cs.length;) {
+      let j = i;
+      while (j + 1 < cs.length && cs[j + 1] === cs[j] + 1) j++;
+      if (cs[i] > c) out += run(cs[i] - c, "b");
+      out += run(j - i + 1, "o");
+      c = cs[j] + 1;
+      i = j + 1;
+    }
+  }
+  return out + "!";
+}
+
+// move a pattern so the middle of its bounding box sits on (r, c)
+function centerOn(cells, r, c) {
+  if (!cells.size) return new Set();
+  const pts = [...cells].map(unkey);
+  const rs = pts.map((p) => p[0]), cs = pts.map((p) => p[1]);
+  const dr = r - Math.floor((Math.min(...rs) + Math.max(...rs)) / 2);
+  const dc = c - Math.floor((Math.min(...cs) + Math.max(...cs)) / 2);
+  return new Set(pts.map(([pr, pc]) => key(pr + dr, pc + dc)));
+}
+
+// ---------- Go boards ----------
+
+let boards = 0;
+
+class Goban {
+  constructor(svg, { rows, cols, r0 = 0, c0 = 0, labels = false, stars = [] }) {
+    Object.assign(this, { svg, rows, cols, r0, c0 });
+    this.gap = 40;
+    this.m = labels ? 50 : 26;
+    this.w = this.m * 2 + (cols - 1) * this.gap;
+    this.h = this.m * 2 + (rows - 1) * this.gap;
+    this.cursor = [r0 + (rows >> 1), c0 + (cols >> 1)];
+    this.showCursor = false;
+    this.onToggle = () => {};
+    this.onCursor = () => {};
+    this.onKey = () => false;
+
+    const id = `stone${++boards}`;
+    this.fill = `url(#${id})`;
+    svg.setAttribute("viewBox", `0 0 ${this.w} ${this.h}`);
+    const grad = svgEl("radialGradient", { id, cx: "36%", cy: "30%", r: "72%" });
+    grad.append(svgEl("stop", { offset: "0%", class: "st-hi" }), svgEl("stop", { offset: "100%", class: "st-lo" }));
+    const defs = svgEl("defs");
+    defs.append(grad);
+    svg.append(defs, svgEl("rect", { class: "wood", width: this.w, height: this.h, rx: 10 }));
+
+    const lines = svgEl("g", { class: "lines" });
+    for (let i = 0; i < rows; i++) {
+      const y = this.m + i * this.gap;
+      lines.append(svgEl("line", { x1: this.m, x2: this.w - this.m, y1: y, y2: y }));
+    }
+    for (let i = 0; i < cols; i++) {
+      const x = this.m + i * this.gap;
+      lines.append(svgEl("line", { x1: x, x2: x, y1: this.m, y2: this.h - this.m }));
+    }
+    svg.append(lines);
+    for (const [r, c] of stars) {
+      const p = this.pt(r, c);
+      svg.append(svgEl("circle", { class: "star", cx: p.x, cy: p.y, r: 4.5 }));
+    }
+    if (labels) {
+      for (let i = 0; i < rows; i++) {
+        const p = this.pt(r0 + i, c0);
+        svg.append(svgEl("text", { class: "lbl", x: p.x - 30, y: p.y + 5, "text-anchor": "middle" }, String(r0 + i).replace("-", "−")));
+      }
+      for (let i = 0; i < cols; i++) {
+        const p = this.pt(r0, c0 + i);
+        svg.append(svgEl("text", { class: "lbl", x: p.x, y: p.y - 24, "text-anchor": "middle" }, String(c0 + i).replace("-", "−")));
+      }
+    }
+    this.layer = svgEl("g");
+    this.cur = svgEl("rect", { class: "cursor", width: this.gap, height: this.gap, rx: 7 });
+    svg.append(this.layer, this.cur);
+    this.place();
+
+    svg.addEventListener("click", (e) => {
+      const cell = this.cellAt(e);
+      if (!cell) return;
+      this.cursor = unkey(cell);
+      this.showCursor = false;
+      this.place();
+      this.onToggle(cell);
+    });
+    svg.addEventListener("keydown", (e) => this.keydown(e));
+    svg.addEventListener("focus", () => { if (svg.matches(":focus-visible")) { this.showCursor = true; this.place(); } });
+    svg.addEventListener("blur", () => { this.showCursor = false; this.place(); });
+  }
+
+  pt(r, c) { return { x: this.m + (c - this.c0) * this.gap, y: this.m + (r - this.r0) * this.gap }; }
+  inside(r, c) { return r >= this.r0 && r < this.r0 + this.rows && c >= this.c0 && c < this.c0 + this.cols; }
+
+  cellAt(e) {
+    const ctm = this.svg.getScreenCTM();
+    if (!ctm) return null;
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+    const r = Math.round((p.y - this.m) / this.gap) + this.r0;
+    const c = Math.round((p.x - this.m) / this.gap) + this.c0;
+    return this.inside(r, c) ? key(r, c) : null;
+  }
+
+  keydown(e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+    if (moves[e.key]) {
+      e.preventDefault();
+      const [dr, dc] = moves[e.key], by = e.shiftKey ? 3 : 1;
+      const [r, c] = this.cursor;
+      this.cursor = [clamp(r + dr * by, this.r0, this.r0 + this.rows - 1), clamp(c + dc * by, this.c0, this.c0 + this.cols - 1)];
+      this.showCursor = true;
+      this.place();
+      this.onCursor(key(...this.cursor));
+    } else if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      this.showCursor = true;
+      this.place();
+      this.onToggle(key(...this.cursor));
+    } else if (this.onKey(e.key.toLowerCase())) {
+      e.preventDefault();
+    }
+  }
+
+  place() {
+    const p = this.pt(...this.cursor);
+    this.cur.setAttribute("x", p.x - this.gap / 2);
+    this.cur.setAttribute("y", p.y - this.gap / 2);
+    this.cur.setAttribute("visibility", this.showCursor ? "visible" : "hidden");
+  }
+
+  // o holds optional marks: counts (Map), born, dies, keep, ring, hot, dim (Sets)
+  paint(cells, o = {}) {
+    const g = this.layer;
+    g.replaceChildren();
+    const has = (set, cell) => set && set.has(cell);
+    const at = (cell) => { const [r, c] = unkey(cell); return this.inside(r, c) ? this.pt(r, c) : null; };
+    if (o.hot) for (const cell of o.hot) { const p = at(cell); if (p) g.append(svgEl("circle", { class: "hot-pt", cx: p.x, cy: p.y, r: 19 })); }
+    for (const cell of cells) {
+      const p = at(cell);
+      if (p) g.append(svgEl("circle", { class: "stone" + (has(o.dim, cell) ? " dim" : ""), cx: p.x, cy: p.y, r: 17.5, fill: this.fill }));
+    }
+    for (const [set, cls, rad] of [[o.born, "born", 15], [o.keep, "keep", 19.5], [o.ring, "ring", 20.5]]) {
+      if (set) for (const cell of set) { const p = at(cell); if (p) g.append(svgEl("circle", { class: cls, cx: p.x, cy: p.y, r: rad })); }
+    }
+    if (o.counts) {
+      for (const [cell, n] of o.counts) {
+        const p = at(cell);
+        if (!p) continue;
+        const cls = "n" + (cells.has(cell) ? " on" : "") + (has(o.hot, cell) ? " hot" : "") + (has(o.dim, cell) ? " dim" : "");
+        g.append(svgEl("text", { class: cls, x: p.x, y: p.y + 1 }, String(n)));
+      }
+    }
+    // the stones that die get a small cross on their shoulder, clear of the count
+    if (o.dies) {
+      for (const cell of o.dies) {
+        const p = at(cell);
+        if (!p) continue;
+        const x = p.x + 13, y = p.y - 13;
+        g.append(svgEl("circle", { class: "x-bg", cx: x, cy: y, r: 7 }));
+        g.append(svgEl("path", { class: "x", d: `M${x - 3.5} ${y - 3.5}l7 7M${x + 3.5} ${y - 3.5}l-7 7` }));
+      }
+    }
+  }
+}
+
+function patternButtons(el, list, onPick) {
+  el.replaceChildren(...Object.entries(list).map(([name, p]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.name = name;
+    b.textContent = p.label;
+    b.addEventListener("click", () => onPick(name));
+    return b;
+  }));
+}
+
+function pressOnly(el, attr, value) {
+  el.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset[attr] === String(value)));
+}
+
+// ---------- Station 1: the rules ----------
+
+const S1_PATTERNS = {
+  blinker: { label: "Blinker", rle: "3o!" },
+  toad: { label: "Toad", rle: "b3o$3o!" },
+  block: { label: "Block", rle: "2o$2o!" },
+  glider: { label: "Glider", rle: "bo$2bo$3o!" },
+};
+
+const s1 = { cells: new Set(), gen: 0, history: [], pattern: null, looked: null };
+const b1 = new Goban($("b1"), { rows: 9, cols: 9, stars: [[2, 2], [2, 6], [6, 2], [6, 6], [4, 4]] });
+const s1cap = $("s1-cap");
+const say1 = (main, sub) => { s1cap.innerHTML = main + (sub ? `<span class="sub">${sub}</span>` : ""); };
+
+function s1Counts() { return frequencies([...s1.cells].flatMap(neighbors)); }
+
+// which of the five rules a point follows: 0 lonely, 1 stays, 2 crowded, 3 born, 4 stays empty
+function ruleFor(cell, counts) {
+  const n = counts.get(cell) || 0;
+  if (s1.cells.has(cell)) return n < 2 ? 0 : n <= 3 ? 1 : 2;
+  return n === 3 ? 3 : 4;
+}
+
+function paint1() {
+  const counts = s1Counts();
+  const o = {};
+  if ($("s1-counts").checked) o.counts = counts;
+  if ($("s1-next").checked) {
+    const next = step(s1.cells);
+    o.born = new Set([...next].filter((c) => !s1.cells.has(c)));
+    o.dies = new Set([...s1.cells].filter((c) => !next.has(c)));
+  }
+  b1.paint(s1.cells, o);
+  const rule = s1.looked ? ruleFor(s1.looked, counts) : -1;
+  $("s1-rules").querySelectorAll("li").forEach((li, i) => li.setAttribute("aria-current", i === rule));
+  const off = [...s1.cells].filter((c) => !b1.inside(...unkey(c))).length;
+  $("s1-stats").textContent = `Generation ${s1.gen} · ${plural(s1.cells.size, "living cell")}` + (off ? ` · ${off} off the board` : "");
+  $("s1-back").disabled = !s1.history.length;
+  pressOnly($("s1-pats"), "name", s1.pattern);
+}
+
+function explain1(cell) {
+  const counts = s1Counts();
+  const [r, c] = unkey(cell);
+  const n = counts.get(cell) || 0;
+  const where = `Row ${r + 1}, column ${c + 1}`;
+  const has = plural(n, "living neighbor");
+  return [
+    `${where} is alive with ${has}. Fewer than 2, so next step it dies.`,
+    `${where} is alive with ${has}, so it stays alive.`,
+    `${where} is alive with ${has}. More than 3, so next step it dies.`,
+    `${where} is empty with exactly 3 living neighbors, so next step a stone appears.`,
+    `${where} is empty with ${has}. Only exactly 3 brings it to life, so it stays empty.`,
+  ][ruleFor(cell, counts)];
+}
+
+function load1(name) {
+  s1.cells = centerOn(parseRLE(S1_PATTERNS[name].rle), 4, 4);
+  s1.gen = 0;
+  s1.history = [];
+  s1.pattern = name;
+  s1.looked = null;
+  paint1();
+  say1(`Loaded the ${S1_PATTERNS[name].label.toLowerCase()}.`, "Press Step or <kbd>N</kbd> to move to the next generation, or tap a point to see which rule it follows.");
+}
+
+function step1() {
+  const before = s1.cells, next = step(before);
+  s1.history.push({ cells: before, gen: s1.gen });
+  if (s1.history.length > 300) s1.history.shift();
+  s1.cells = next;
+  s1.gen++;
+  const born = [...next].filter((c) => !before.has(c)).length;
+  const died = [...before].filter((c) => !next.has(c)).length;
+  paint1();
+  const sum = `Generation ${s1.gen}: ${born} born, ${died} died, ${next.size - born} stayed alive.`;
+  if (!before.size) say1("The board is empty, so nothing happens.", "Tap a few points to place stones.");
+  else if (!next.size) say1(sum, "Every cell is gone. Press Back to undo.");
+  else if (sameSet(next, before)) say1(sum, "Nothing changed. A pattern like this is called a still life.");
+  else if (s1.history.length > 1 && sameSet(next, s1.history[s1.history.length - 2].cells)) say1(sum, "It's back to how it looked two steps ago, so it will keep blinking between the two.");
+  else say1(sum, s1.looked ? explain1(s1.looked) : "");
+}
+
+function back1() {
+  if (!s1.history.length) return;
+  ({ cells: s1.cells, gen: s1.gen } = s1.history.pop());
+  paint1();
+  say1(`Back to generation ${s1.gen}.`);
+}
+
+b1.onToggle = (cell) => {
+  const placed = !s1.cells.has(cell);
+  s1.cells = new Set(s1.cells);
+  if (placed) s1.cells.add(cell); else s1.cells.delete(cell);
+  s1.pattern = null;
+  s1.looked = cell;
+  paint1();
+  say1(placed ? "Placed a stone." : "Took the stone away.", explain1(cell));
+};
+b1.onCursor = (cell) => {
+  s1.looked = cell;
+  paint1();
+  say1(explain1(cell));
+};
+b1.onKey = (k) => {
+  if (k === "n") { step1(); return true; }
+  if (k === "b") { back1(); return true; }
+  return false;
+};
+
+patternButtons($("s1-pats"), S1_PATTERNS, load1);
+$("s1-step").addEventListener("click", step1);
+$("s1-back").addEventListener("click", back1);
+$("s1-clear").addEventListener("click", () => {
+  s1.history.push({ cells: s1.cells, gen: s1.gen });
+  s1.cells = new Set();
+  s1.gen = 0;
+  s1.pattern = null;
+  paint1();
+  say1("Cleared the board.", "Tap points to place stones, or press Back to bring them back.");
+});
+$("s1-counts").addEventListener("change", paint1);
+$("s1-next").addEventListener("change", paint1);
+
+// ---------- Station 2: the step ----------
+
+const S2_PATTERNS = {
+  blinker: { label: "Blinker", cells: ["1,0", "1,1", "1,2"] },
+  glider: { label: "Glider", cells: ["0,1", "1,2", "2,0", "2,1", "2,2"] },
+  block: { label: "Block", cells: ["1,1", "1,2", "2,1", "2,2"] },
+};
+
+// each language's step, how it writes a cell, and where each part of the step sits in its code.
+// a part lists exact pieces of the code to highlight
+const LANGS = {
+  clj: {
+    label: "Clojure",
+    cell: (cell) => `[${unkey(cell).join(" ")}]`,
+    names: { cells: "cells", named: "(mapcat neighbours cells)", counts: "(frequencies …)", next: "(step cells)" },
+    fn: { flat: "mapcat", freq: "frequencies" },
+    note: "Christophe Grand's Clojure, from 2011. The whole step is one expression read from the inside out.",
+    idiom: "The original, by Christophe Grand. <code>for</code> with <code>:when</code> filters and builds in one go, and a set doubles as a function: <code>(cells loc)</code> asks whether <code>loc</code> is alive.",
+    code: `(defn neighbours [[x y]]
+  (for [dx [-1 0 1] dy (if (zero? dx) [-1 1] [-1 0 1])]
+    [(+ dx x) (+ dy y)]))
+
+(defn step [cells]
+  (set (for [[loc n] (frequencies (mapcat neighbours cells))
+             :when (or (= n 3) (and (= n 2) (cells loc)))]
+         loc)))`,
+    parts: {
+      sig: ["(defn step [cells]"],
+      neighbors: ["(for [dx [-1 0 1] dy (if (zero? dx) [-1 1] [-1 0 1])]", "[(+ dx x) (+ dy y)]"],
+      name: ["(mapcat neighbours cells)"],
+      count: ["frequencies"],
+      keep: ["(or (= n 3) (and (= n 2) (cells loc)))"],
+      collect: ["(set "],
+    },
+  },
+  ex: {
+    label: "Elixir",
+    cell: (cell) => `{${unkey(cell).join(", ")}}`,
+    names: { cells: "cells", named: "Enum.flat_map(&neighbors/1)", counts: "Enum.frequencies()", next: "step(cells)" },
+    fn: { flat: "Enum.flat_map", freq: "Enum.frequencies" },
+    note: "The Elixir translation that ran this page's first version. The pipeline reads top to bottom in the same order as the moves.",
+    idiom: "Stephen Ball's translation, which ran this page's first version. Guards can't call <code>MapSet.member?</code>, so the keeping happens inside a <code>reduce</code>, and the pipeline reads top to bottom.",
+    code: `def neighbors({x, y}) do
+  for dx <- -1..1, dy <- -1..1, {dx, dy} !== {0, 0} do
+    {dx + x, dy + y}
+  end
+end
+
+def step(cells) do
+  cells
+  |> Enum.flat_map(&neighbors/1)
+  |> Enum.frequencies()
+  |> Enum.reduce(MapSet.new(), fn {cell, neighbors}, acc ->
+    if neighbors == 3 or (neighbors == 2 && MapSet.member?(cells, cell)) do
+      MapSet.put(acc, cell)
+    else
+      acc
+    end
+  end)
+end`,
+    parts: {
+      sig: ["def step(cells) do"],
+      neighbors: ["for dx <- -1..1, dy <- -1..1, {dx, dy} !== {0, 0} do", "{dx + x, dy + y}"],
+      name: ["|> Enum.flat_map(&neighbors/1)"],
+      count: ["|> Enum.frequencies()"],
+      keep: ["neighbors == 3 or (neighbors == 2 && MapSet.member?(cells, cell))"],
+      collect: ["Enum.reduce(MapSet.new()", "MapSet.put(acc, cell)"],
+    },
+  },
+  js: {
+    label: "JavaScript",
+    cell: (cell) => `"${cell}"`,
+    names: { cells: "cells", named: "named", counts: "counts", next: "step(cells)" },
+    fn: { flat: "flatMap", freq: "frequencies" },
+    note: "This is the code running on this page, read straight from the script, so it can't drift from what you see on the boards.",
+    idiom: "The version running on this page. JavaScript has no <code>frequencies</code>, so a one-line <code>reduce</code> stands in. A Set only matches the very same array object, so cells are <code>\"row,col\"</code> strings.",
+    parts: {
+      sig: ["function step(cells) {"],
+      neighbors: ["[-1, 0, 1].flatMap((dr) => [-1, 0, 1]", ".filter((dc) => dr || dc)", ".map((dc) => `${r + dr},${c + dc}`)"],
+      name: ["[...cells].flatMap(neighbors)"],
+      count: ["frequencies(named)", "xs.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map())"],
+      keep: ["n === 3 || (n === 2 && cells.has(cell))"],
+      collect: ["new Set(", ".map(([cell]) => cell)"],
+    },
+  },
+  py: {
+    label: "Python",
+    cell: (cell) => `(${unkey(cell).join(", ")})`,
+    names: { cells: "cells", named: "(n for cell in cells for n in neighbors(cell))", counts: "Counter(…)", next: "step(cells)" },
+    fn: { flat: "for cell in cells for n in neighbors(cell)", freq: "Counter" },
+    note: "Python's Counter does the counting, and a set comprehension does the keeping.",
+    idiom: "<code>Counter</code> does the counting and a set comprehension does the keeping. Tuples can go in a set as they are, so cells stay pairs.",
+    code: `from collections import Counter
+
+def neighbors(cell):
+    r, c = cell
+    return [(r + dr, c + dc)
+            for dr in (-1, 0, 1)
+            for dc in (-1, 0, 1)
+            if (dr, dc) != (0, 0)]
+
+def step(cells):
+    counts = Counter(n for cell in cells for n in neighbors(cell))
+    return {cell for cell, n in counts.items()
+            if n == 3 or (n == 2 and cell in cells)}`,
+    parts: {
+      sig: ["def step(cells):"],
+      neighbors: ["(r + dr, c + dc)", "for dr in (-1, 0, 1)", "for dc in (-1, 0, 1)", "if (dr, dc) != (0, 0)"],
+      name: ["n for cell in cells for n in neighbors(cell)"],
+      count: ["Counter("],
+      keep: ["n == 3 or (n == 2 and cell in cells)"],
+      collect: ["{cell for cell, n in counts.items()"],
+    },
+  },
+  rb: {
+    label: "Ruby",
+    cell: (cell) => `[${unkey(cell).join(", ")}]`,
+    names: { cells: "cells", named: "cells.flat_map { … }", counts: ".tally", next: "step(cells)" },
+    fn: { flat: "flat_map", freq: "tally" },
+    note: "Ruby's tally counts, and the chain reads top to bottom like the Elixir pipeline.",
+    idiom: "<code>tally</code> counts, <code>product</code> makes the nine offsets, and the chain reads top to bottom like the Elixir pipeline.",
+    code: `def neighbors((r, c))
+  [-1, 0, 1].product([-1, 0, 1])
+    .reject { |dr, dc| dr == 0 && dc == 0 }
+    .map { |dr, dc| [r + dr, c + dc] }
+end
+
+def step(cells)
+  cells.flat_map { |cell| neighbors(cell) }
+    .tally
+    .select { |cell, n| n == 3 || (n == 2 && cells.include?(cell)) }
+    .keys
+    .to_set
+end`,
+    parts: {
+      sig: ["def step(cells)"],
+      neighbors: ["[-1, 0, 1].product([-1, 0, 1])", ".reject { |dr, dc| dr == 0 && dc == 0 }", ".map { |dr, dc| [r + dr, c + dc] }"],
+      name: ["cells.flat_map { |cell| neighbors(cell) }"],
+      count: [".tally"],
+      keep: ["n == 3 || (n == 2 && cells.include?(cell))"],
+      collect: [".keys", ".to_set"],
+    },
+  },
+};
+LANGS.js.code = `const neighbors = ${neighbors};\n\nconst frequencies = ${frequencies};\n\n${step}`;
+
+// Station 2's five moves, as parts of the code
+const STAGE_PARTS = [["sig"], ["name", "neighbors"], ["count"], ["keep"], ["collect"]];
+
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// ---------- Syntax colors ----------
+
+// just enough of each language to tell keywords, names, strings, and numbers apart.
+// rules are tried in order at each position; a word not caught by a rule may be a keyword
+const STRINGS = /"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/y;
+const SYNTAX = {
+  clj: { words: "defn for if let", word: /[A-Za-z_][\w?!-]*/y,
+    rules: [["com", /;.*/y], ["def", /(?<=\(defn )[\w?!-]+/y], ["atom", /:[\w?!-]+/y]] },
+  ex: { words: "def do end for if else fn or and", word: /[A-Za-z_]\w*[?!]?/y,
+    rules: [["com", /#.*/y], ["def", /(?<=\bdef )\w+/y], ["atom", /:\w+/y], ["type", /[A-Z]\w*/y]] },
+  js: { words: "const let function return for if else continue new", word: /[A-Za-z_$][\w$]*/y,
+    rules: [["com", /\/\/.*/y], ["def", /(?<=\bfunction )\w+|(?<=\bconst )\w+(?= = \()/y], ["type", /[A-Z]\w*/y]] },
+  py: { words: "from import def return for in if and or not", word: /[A-Za-z_]\w*/y,
+    rules: [["com", /#.*/y], ["def", /(?<=\bdef )\w+/y], ["type", /[A-Z]\w*/y]] },
+  rb: { words: "def end", word: /[A-Za-z_]\w*[?!]?/y,
+    rules: [["com", /#.*/y], ["def", /(?<=\bdef )\w+/y], ["type", /[A-Z]\w*/y], ["atom", /:\w+/y]] },
+};
+
+// the token kind of every character in code ("" for plain)
+function tokenKinds(code, id) {
+  const S = SYNTAX[id], words = new Set(S.words.split(" "));
+  const rules = [S.rules[0], ["str", STRINGS], ...S.rules.slice(1)];
+  const kinds = new Array(code.length).fill("");
+  const at = (re, i) => { re.lastIndex = i; const m = re.exec(code); return m && m[0].length ? m[0].length : 0; };
+  for (let i = 0; i < code.length;) {
+    let len = 0, kind = "";
+    for (const [k, re] of rules) if ((len = at(re, i))) { kind = k; break; }
+    if (!len && (len = at(S.word, i))) kind = words.has(code.slice(i, i + len)) ? "kw" : "";
+    if (!len && (len = at(/\d+/y, i))) kind = "num";
+    if (!len) len = 1;
+    kinds.fill(kind, i, i + len);
+    i += len;
+  }
+  return kinds;
+}
+
+// color the code, and wrap each of the given pieces of it in a <mark>
+function highlight(code, id, pieces = []) {
+  const kinds = tokenKinds(code, id);
+  const marked = new Array(code.length).fill(false);
+  for (const piece of pieces) { const at = code.indexOf(piece); if (at >= 0) marked.fill(true, at, at + piece.length); }
+  let html = "", inMark = false;
+  for (let i = 0; i < code.length;) {
+    if (marked[i] !== inMark) { html += marked[i] ? "<mark>" : "</mark>"; inMark = marked[i]; }
+    let j = i + 1;
+    while (j < code.length && kinds[j] === kinds[i] && marked[j] === marked[i]) j++;
+    const text = esc(code.slice(i, j));
+    html += kinds[i] ? `<span class="t-${kinds[i]}">${text}</span>` : text;
+    i = j;
+  }
+  return html + (inMark ? "</mark>" : "");
+}
+
+let lang = "js";
+try { if (LANGS[localStorage.getItem("conway-life-lang")]) lang = localStorage.getItem("conway-life-lang"); } catch (e) {}
+
+const s2 = { cells: new Set(), gen: 0, stage: 0, i: 0, history: [], start: "blinker", pattern: null };
+const b2 = new Goban($("b2"), { rows: 7, cols: 7, r0: -2, c0: -2, labels: true, stars: [[1, 1]] });
+const s2cap = $("s2-cap");
+const say2 = (main, sub) => { s2cap.innerHTML = main + (sub ? `<span class="sub">${sub}</span>` : ""); };
+
+function paintCode() {
+  const L = LANGS[lang];
+  $("s2-code").innerHTML = highlight(L.code, lang, STAGE_PARTS[s2.stage].flatMap((part) => L.parts[part]));
+  $("s2-codenote").textContent = L.note;
+  pressOnly($("s2-langs"), "lang", lang);
+}
+
+function chip(text, cls = "") { return `<span class="chip ${cls}">${esc(text)}</span>`; }
+
+function paint2() {
+  const L = LANGS[lang], fmt = L.cell;
+  const living = [...s2.cells].sort(byPlace);
+  const groups = living.map(neighbors);
+  const counts = frequencies(groups.flat());
+  const next = step(s2.cells);
+  const list = $("s2-list");
+  const label = (t) => `<span class="lbl">${esc(t)}</span>`;
+  let main = "", sub = "";
+
+  if (s2.stage === 0) {
+    b2.paint(s2.cells);
+    list.innerHTML = label(L.names.cells) + `<span class="chips">${living.map((c) => chip(fmt(c))).join("") || "(empty)"}</span>`;
+    main = `Generation ${s2.gen}. All the step function gets is this list of ${plural(living.length, "living cell")}. It never looks at the empty points.`;
+    sub = living.length ? "Press Next to watch each living cell name its neighbors." : "Tap the board to place some stones first.";
+  } else if (s2.stage === 1) {
+    const upto = groups.slice(0, s2.i + 1).flat();
+    b2.paint(s2.cells, { counts: frequencies(upto), hot: new Set(groups[s2.i]), ring: new Set([living[s2.i]]) });
+    list.innerHTML = label(L.names.named) + `<span class="chips">${groups.slice(0, s2.i + 1)
+      .map((g, k) => `<span class="group${k === s2.i ? " cur" : ""}">${g.map((c) => chip(fmt(c))).join("")}</span>`).join("")}</span>`;
+    main = `${esc(fmt(living[s2.i]))} names its eight neighbors, and each one it names gets a tally. That's <code>${L.fn.flat}</code>: one list of neighbors per cell, joined end to end.`;
+    sub = s2.i < living.length - 1 ? `${plural(living.length - s2.i - 1, "living cell")} still to go.` : "That's every living cell. Next, count the tallies.";
+  } else if (s2.stage === 2) {
+    b2.paint(s2.cells, { counts });
+    list.innerHTML = label(L.names.counts) + `<span class="chips">${[...counts].sort((a, b) => byPlace(a[0], b[0]))
+      .map(([c, n]) => chip(`${fmt(c)} ${n}`)).join("")}</span>`;
+    main = `<code>${L.fn.freq}</code> counts how many times each point was named: ${plural(counts.size, "point")} in all. A point named 3 times has 3 living neighbors.`;
+    const lonely = living.filter((c) => !counts.has(c));
+    sub = lonely.length
+      ? `${lonely.map(fmt).map(esc).join(", ")} ${lonely.length === 1 ? "wasn't" : "weren't"} named by anyone, so ${lonely.length === 1 ? "it isn't" : "they aren't"} in the counts at all.`
+      : "Points nobody named have no living neighbors, so they aren't in the counts at all.";
+  } else if (s2.stage === 3) {
+    const dim = new Set([...counts.keys(), ...s2.cells].filter((c) => !next.has(c)));
+    b2.paint(s2.cells, { counts, keep: next, dim });
+    list.innerHTML = label(L.names.counts) + `<span class="chips">${[...counts].sort((a, b) => byPlace(a[0], b[0]))
+      .map(([c, n]) => chip(`${fmt(c)} ${n}`, next.has(c) ? "keep" : "gone")).join("")}</span>`;
+    main = `Keep the points counted 3 times, and the points counted 2 times that are already alive. That's ${plural(next.size, "point")}.`;
+    sub = "There's no code for dying. Whatever isn't kept is left out of the new set.";
+  } else {
+    b2.paint(next);
+    list.innerHTML = label(L.names.next) + `<span class="chips">${[...next].sort(byPlace).map((c) => chip(fmt(c))).join("") || "(empty)"}</span>`;
+    main = `That's generation ${s2.gen + 1}: ${plural(next.size, "living cell")}, in a brand new set.`;
+    sub = sameSet(next, s2.cells) ? "It's the same as before, so this pattern is a still life."
+      : next.size ? "Press Next to start again from this list." : "Nothing survived.";
+  }
+  say2(main, sub);
+  $("s2-stages").querySelectorAll("li").forEach((li, k) => (k === s2.stage ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current")));
+  $("s2-back").disabled = s2.stage === 0 && !s2.history.length;
+  pressOnly($("s2-pats"), "name", s2.pattern);
+  paintCode();
+}
+
+function next2() {
+  if (s2.stage === 0) {
+    if (!s2.cells.size) { say2("There's nothing to name yet.", "Tap the board to place some stones."); return; }
+    s2.stage = 1;
+    s2.i = 0;
+  } else if (s2.stage === 1) {
+    if (s2.i < s2.cells.size - 1) s2.i++; else s2.stage = 2;
+  } else if (s2.stage < 4) {
+    s2.stage++;
+  } else {
+    s2.history.push(s2.cells);
+    s2.cells = step(s2.cells);
+    s2.gen++;
+    s2.stage = 0;
+  }
+  paint2();
+}
+
+function back2() {
+  if (s2.stage === 0) {
+    if (!s2.history.length) return;
+    s2.cells = s2.history.pop();
+    s2.gen--;
+    s2.stage = 4;
+  } else if (s2.stage === 1 && s2.i > 0) {
+    s2.i--;
+  } else if (s2.stage === 2) {
+    s2.stage = 1;
+    s2.i = s2.cells.size - 1;
+  } else {
+    s2.stage--;
+  }
+  paint2();
+}
+
+function load2(name) {
+  s2.start = name;
+  s2.pattern = name;
+  s2.cells = new Set(S2_PATTERNS[name].cells);
+  s2.gen = 0;
+  s2.stage = 0;
+  s2.history = [];
+  paint2();
+}
+
+b2.onToggle = (cell) => {
+  // an edit mid-step starts the step over from the edited list
+  if (s2.stage === 4) {
+    s2.history.push(s2.cells);
+    s2.cells = step(s2.cells);
+    s2.gen++;
+  }
+  const cells = new Set(s2.cells);
+  if (cells.has(cell)) cells.delete(cell); else cells.add(cell);
+  s2.cells = cells;
+  s2.stage = 0;
+  s2.pattern = null;
+  paint2();
+};
+b2.onCursor = (cell) => {
+  const [r, c] = unkey(cell);
+  say2(`Row ${r}, column ${c}: ${s2.cells.has(cell) ? "a living cell" : "empty"}.`, "Press Space to place or take away a stone.");
+};
+b2.onKey = (k) => {
+  if (k === "n") { next2(); return true; }
+  if (k === "b") { back2(); return true; }
+  return false;
+};
+
+patternButtons($("s2-pats"), S2_PATTERNS, load2);
+$("s2-next").addEventListener("click", next2);
+$("s2-back").addEventListener("click", back2);
+$("s2-reset").addEventListener("click", () => load2(s2.start));
+$("s2-langs").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  lang = b.dataset.lang;
+  try { localStorage.setItem("conway-life-lang", lang); } catch (e) {}
+  paint2();
+}));
+
+// ---------- Station 3: five languages ----------
+
+const PART_NOTES = {
+  neighbors: ["The eight neighbors.", "Add −1, 0, or 1 to the row and to the column, and skip the cell itself. Clojure skips it by giving the middle column only −1 and 1."],
+  name: ["Name.", "Every living cell's neighbors, joined into one long list: <code>mapcat</code>, <code>Enum.flat_map</code>, <code>flatMap</code>, a two-level generator, and <code>flat_map</code>."],
+  count: ["Count.", "How many times each point was named. Clojure and Elixir have <code>frequencies</code>, Ruby has <code>tally</code>, Python has <code>Counter</code>, and JavaScript gets by with a one-line <code>reduce</code>."],
+  keep: ["Keep.", "All four rules in one test: 3 living neighbors, or 2 and already alive."],
+  collect: ["Collect.", "Gather what's kept into a new set. Elixir builds it up with <code>reduce</code>, and the others turn the kept cells straight into a set."],
+};
+const LANG_ORDER = ["clj", "ex", "js", "py", "rb"];
+let part = null;
+
+// a whole board of 0s and 1s, for comparison. it isn't run anywhere on the page
+const GRID_CODE = `function stepGrid(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  const next = grid.map((row) => row.map(() => 0));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let n = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const rr = r + dr, cc = c + dc;
+          if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) continue;
+          n += grid[rr][cc];
+        }
+      }
+      if (n === 3 || (n === 2 && grid[r][c] === 1)) next[r][c] = 1;
+    }
+  }
+  return next;
+}`;
+
+const lineCount = (code) => code.split("\n").filter((l) => l.trim()).length;
+
+$("s3-langs").replaceChildren(...LANG_ORDER.map((id) => {
+  const L = LANGS[id], card = document.createElement("article");
+  card.className = "lang";
+  card.setAttribute("aria-labelledby", `s3-${id}-h`);
+  card.innerHTML = `<h3 id="s3-${id}-h">${L.label}<span>${lineCount(L.code)} lines</span></h3>
+    <pre class="code" tabindex="0" aria-label="The step function in ${L.label}"></pre>
+    <p class="idiom">${L.idiom}</p>`;
+  return card;
+}));
+$("s3-grid").innerHTML = highlight(GRID_CODE, "js");
+
+function paint3() {
+  $("s3-langs").querySelectorAll(".lang pre").forEach((pre, i) => {
+    const L = LANGS[LANG_ORDER[i]];
+    pre.innerHTML = highlight(L.code, LANG_ORDER[i], part ? L.parts[part] : []);
+  });
+  $("s3-parts").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.part === part));
+  const note = PART_NOTES[part];
+  $("s3-cap").innerHTML = note
+    ? `<b>${note[0]}</b> ${note[1]}<span class="sub">Press it again to clear the highlight.</span>`
+    : `The whole-board version below takes ${lineCount(GRID_CODE)} lines and four nested loops.<span class="sub">Pick a part of the step to see where each language does it.</span>`;
+}
+
+$("s3-parts").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  part = part === b.dataset.part ? null : b.dataset.part;
+  paint3();
+}));
+
+// ---------- Station 4: the big board ----------
+
+const PATTERNS = {
+  glider: { group: "Spaceships", label: "Glider", rle: "bo$2bo$3o!",
+    note: "<b>Glider.</b> Five cells that crawl one point diagonally every 4 generations. Richard Guy found it in 1969." },
+  lwss: { group: "Spaceships", label: "Lightweight spaceship", rle: "bo2bo$o4b$o3bo$4o!",
+    note: "<b>Lightweight spaceship.</b> Nine cells that fly sideways 2 points every 4 generations, twice as fast as a glider." },
+  pulsar: { group: "Oscillators", label: "Pulsar", rle: "2b3o3b3o2b2$o4bobo4bo$o4bobo4bo$o4bobo4bo$2b3o3b3o2b2$2b3o3b3o2b$o4bobo4bo$o4bobo4bo$o4bobo4bo2$2b3o3b3o!",
+    note: "<b>Pulsar.</b> 48 cells that cycle through 3 shapes and come back to the first, forever." },
+  penta: { group: "Oscillators", label: "Pentadecathlon", rle: "2bo4bo2b$2ob4ob2o$2bo4bo!",
+    note: "<b>Pentadecathlon.</b> Twelve cells that take 15 generations to come back to where they started." },
+  r: { group: "Long lives", label: "R-pentomino", rle: "b2o$2o$bo!",
+    note: "<b>R-pentomino.</b> Only 5 cells, but they churn for 1103 generations before settling into 116 cells, throwing off six gliders on the way. Try Fast and Zoom: Far." },
+  acorn: { group: "Long lives", label: "Acorn", rle: "bo5b$3bo3b$2o2b3o!",
+    note: "<b>Acorn.</b> Seven cells that take 5206 generations to settle, ending as 633 cells. Try Fastest and Zoom: Far." },
+  diehard: { group: "Long lives", label: "Diehard", rle: "6bob$2o6b$bo3b3o!",
+    note: "<b>Diehard.</b> Seven cells that keep going for 130 generations and then vanish, every last one." },
+  gun: { group: "Guns", label: "Gosper glider gun", rle: "24bo11b$22bobo11b$12b2o6b2o12b2o$11bo3bo4b2o12b2o$2o8bo5bo3b2o14b$2o8bo3bob2o4bobo11b$10bo5bo7bo11b$11bo3bo20b$12b2o!",
+    note: "<b>Gosper glider gun.</b> Two shuttles bounce back and forth and fire a new glider every 30 generations, so the population grows forever. It won Conway's $50 prize in 1970." },
+  spacefaring: { group: "Guns", label: "Spacefaring", rle: "b3o$o3bo$o3bo$b2obo$4bo$4bo!",
+    note: "<b>Spacefaring.</b> The seed from this page's first version, a Phoenix LiveView app. It churns for about 970 generations and sends five gliders off into space." },
+};
+
+const canvas = $("big"), ctx = canvas.getContext("2d");
+const s4 = {
+  cells: new Set(), seed: null, gen: 0, prev: null, prev2: null,
+  running: false, speed: reduced ? 4 : 12, px: 8, rows: 0, cols: 0,
+  center: [0, 0], cursor: [0, 0], showCursor: false, painting: null, pattern: null,
+};
+const s4cap = $("s4-cap");
+const say4 = (main, sub) => { s4cap.innerHTML = main + (sub ? `<span class="sub">${sub}</span>` : ""); };
+const origin = () => [s4.center[0] - (s4.rows >> 1), s4.center[1] - (s4.cols >> 1)];
+
+let C = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (n) => cs.getPropertyValue(n).trim();
+  C = { wood: v("--wood"), line: v("--wood-line"), stone: v("--stone"), hi: v("--stone-hi"), focus: v("--focus") };
+}
+
+function size4() {
+  const wrap = $("b3-wrap");
+  const w = wrap.clientWidth - 16;
+  const tall = Math.min(w * (w < 600 ? 0.95 : 0.6), innerHeight * 0.62);
+  s4.cols = Math.max(12, Math.floor(w / s4.px));
+  s4.rows = Math.max(12, Math.floor(tall / s4.px));
+  const dpr = devicePixelRatio || 1;
+  canvas.style.width = `${s4.cols * s4.px}px`;
+  canvas.style.height = `${s4.rows * s4.px}px`;
+  canvas.width = Math.round(s4.cols * s4.px * dpr);
+  canvas.height = Math.round(s4.rows * s4.px * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const [r0, c0] = origin();
+  s4.cursor = [clamp(s4.cursor[0], r0, r0 + s4.rows - 1), clamp(s4.cursor[1], c0, c0 + s4.cols - 1)];
+  draw4();
+}
+
+function draw4() {
+  const { px, rows, cols } = s4, W = cols * px, H = rows * px;
+  const [r0, c0] = origin();
+  ctx.fillStyle = C.wood;
+  ctx.fillRect(0, 0, W, H);
+  if (px >= 6) {
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = px >= 10 ? 1 : 0.6;
+    // close-packed lines read as a texture, so let them fade back
+    ctx.globalAlpha = px >= 10 ? 1 : 0.45;
+    ctx.beginPath();
+    for (let r = 0; r < rows; r++) { const y = r * px + px / 2; ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    for (let c = 0; c < cols; c++) { const x = c * px + px / 2; ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  const seen = [];
+  for (const cell of s4.cells) {
+    const [r, c] = unkey(cell);
+    const y = r - r0, x = c - c0;
+    if (y >= 0 && y < rows && x >= 0 && x < cols) seen.push(x * px + px / 2, y * px + px / 2);
+  }
+  ctx.fillStyle = C.stone;
+  if (px < 6) {
+    for (let i = 0; i < seen.length; i += 2) ctx.fillRect(seen[i] - px / 2, seen[i + 1] - px / 2, px, px);
+  } else {
+    const rad = px * 0.46;
+    ctx.beginPath();
+    for (let i = 0; i < seen.length; i += 2) { ctx.moveTo(seen[i] + rad, seen[i + 1]); ctx.arc(seen[i], seen[i + 1], rad, 0, Math.PI * 2); }
+    ctx.fill();
+    // a soft highlight up and to the left, so the stones read as round
+    if (px >= 10) {
+      ctx.fillStyle = C.hi;
+      ctx.globalAlpha = 0.55;
+      const h = rad * 0.34;
+      ctx.beginPath();
+      for (let i = 0; i < seen.length; i += 2) { const x = seen[i] - rad * 0.32, y = seen[i + 1] - rad * 0.36; ctx.moveTo(x + h, y); ctx.arc(x, y, h, 0, Math.PI * 2); }
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  if (s4.showCursor) {
+    ctx.strokeStyle = C.focus;
+    ctx.lineWidth = 2;
+    ctx.strokeRect((s4.cursor[1] - c0) * px + 1, (s4.cursor[0] - r0) * px + 1, px - 2, px - 2);
+  }
+  stats4(seen.length / 2);
+}
+
+function stats4(shown) {
+  const off = s4.cells.size - shown;
+  $("s4-stats").textContent = `Generation ${s4.gen} · ${plural(s4.cells.size, "living cell")}` + (off ? ` · ${off} off the board` : "");
+  $("s4-rewind").disabled = !s4.gen;
+}
+
+// cells that fly far past the window are let go, so a gun can run all day
+function cull() {
+  const [cr, cc] = s4.center, far = 400 + Math.max(s4.rows, s4.cols);
+  for (const cell of s4.cells) {
+    const [r, c] = unkey(cell);
+    if (Math.abs(r - cr) > far || Math.abs(c - cc) > far) s4.cells.delete(cell);
+  }
+}
+
+// one generation; says how it settled, if it did
+function advance4() {
+  if (s4.gen === 0) s4.seed = new Set(s4.cells);
+  s4.prev2 = s4.prev;
+  s4.prev = s4.cells;
+  s4.cells = step(s4.cells);
+  s4.gen++;
+  if (s4.gen % 64 === 0) cull();
+  if (!s4.cells.size) return `Every cell died at generation ${s4.gen}.`;
+  if (sameSet(s4.cells, s4.prev)) return `Settled at generation ${s4.gen - 1}: nothing changes any more.`;
+  if (sameSet(s4.cells, s4.prev2)) return `Settled by generation ${s4.gen - 2}: what's left blinks between the same two shapes.`;
+  return null;
+}
+
+let lastT = 0, acc = 0;
+function tick(t) {
+  if (!s4.running) return;
+  const every = 1000 / s4.speed;
+  acc += t - lastT;
+  lastT = t;
+  let n = 0, end = null;
+  while (acc >= every && n < 3 && !end) { end = advance4(); acc -= every; n++; }
+  if (acc > every * 3) acc = 0;
+  if (n) draw4();
+  if (end) { play4(false, end); return; }
+  requestAnimationFrame(tick);
+}
+
+function play4(on, why) {
+  if (on && !s4.cells.size) { say4("There's nothing to play yet.", "Drag across the board to draw some cells, or pick a pattern."); return; }
+  s4.running = on;
+  $("s4-play").firstChild.textContent = on ? "Pause" : "Play";
+  if (on) {
+    lastT = performance.now();
+    acc = 1000 / s4.speed;
+    requestAnimationFrame(tick);
+    say4("Running.", "Press Pause or <kbd>P</kbd> to stop and look. You can keep drawing while it runs.");
+  } else {
+    writeHash();
+    say4(why || `Paused at generation ${s4.gen}.`, why ? "Press Back to start to watch it again." : "");
+  }
+}
+
+function step4() {
+  if (s4.running) play4(false);
+  const end = advance4();
+  draw4();
+  writeHash();
+  say4(end || `Generation ${s4.gen}.`);
+}
+
+function rewind4() {
+  if (!s4.gen || !s4.seed) return;
+  const was = s4.running;
+  s4.running = false;
+  s4.cells = new Set(s4.seed);
+  s4.gen = 0;
+  s4.prev = s4.prev2 = null;
+  draw4();
+  if (was) play4(true); else { writeHash(); say4("Back to generation 0."); }
+}
+
+function load4(name, cells) {
+  if (s4.running) play4(false);
+  s4.cells = centerOn(cells || parseRLE(PATTERNS[name].rle), ...s4.center);
+  s4.gen = 0;
+  s4.seed = null;
+  s4.prev = s4.prev2 = null;
+  s4.pattern = name;
+  pressOnly($("s4-pats"), "name", name);
+  $("s4-note").innerHTML = name ? PATTERNS[name].note : "";
+  draw4();
+}
+
+function setCell(cell, alive) {
+  if (alive) s4.cells.add(cell); else s4.cells.delete(cell);
+}
+
+// edits: the drawing no longer matches a named pattern
+function edited() {
+  if (s4.pattern) {
+    s4.pattern = null;
+    pressOnly($("s4-pats"), "name", null);
+  }
+  s4.prev = s4.prev2 = null;
+}
+
+function cellAt4(e) {
+  const rect = canvas.getBoundingClientRect();
+  const [r0, c0] = origin();
+  const c = Math.floor((e.clientX - rect.left) / (rect.width / s4.cols));
+  const r = Math.floor((e.clientY - rect.top) / (rect.height / s4.rows));
+  return r >= 0 && r < s4.rows && c >= 0 && c < s4.cols ? [r + r0, c + c0] : null;
+}
+
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  const at = cellAt4(e);
+  if (!at) return;
+  canvas.setPointerCapture(e.pointerId);
+  const add = !s4.cells.has(key(...at));
+  s4.painting = { add, last: at };
+  s4.showCursor = false;
+  setCell(key(...at), add);
+  edited();
+  draw4();
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!s4.painting) return;
+  const at = cellAt4(e);
+  if (!at) return;
+  // fill in every point between the last one and this one, so quick strokes don't skip
+  const [r1, c1] = s4.painting.last, [r2, c2] = at;
+  const n = Math.max(Math.abs(r2 - r1), Math.abs(c2 - c1));
+  for (let i = 1; i <= n; i++) setCell(key(Math.round(r1 + (r2 - r1) * i / n), Math.round(c1 + (c2 - c1) * i / n)), s4.painting.add);
+  s4.painting.last = at;
+  if (n) draw4();
+});
+const endPaint = () => {
+  if (!s4.painting) return;
+  s4.painting = null;
+  if (!s4.running) { writeHash(); say4("Drew on the board.", "Press Play to see what it does."); }
+};
+canvas.addEventListener("pointerup", endPaint);
+canvas.addEventListener("pointercancel", endPaint);
+
+canvas.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+  const [r0, c0] = origin();
+  const where = () => `Row ${s4.cursor[0] - r0 + 1}, column ${s4.cursor[1] - c0 + 1}`;
+  const k = e.key.toLowerCase();
+  if (moves[e.key]) {
+    const [dr, dc] = moves[e.key], by = e.shiftKey ? 5 : 1;
+    s4.cursor = [clamp(s4.cursor[0] + dr * by, r0, r0 + s4.rows - 1), clamp(s4.cursor[1] + dc * by, c0, c0 + s4.cols - 1)];
+    s4.showCursor = true;
+    draw4();
+    say4(`${where()}: ${s4.cells.has(key(...s4.cursor)) ? "a living cell" : "empty"}.`);
+  } else if (e.key === " " || e.key === "Enter") {
+    const cell = key(...s4.cursor), add = !s4.cells.has(cell);
+    s4.showCursor = true;
+    setCell(cell, add);
+    edited();
+    draw4();
+    if (!s4.running) writeHash();
+    say4(`${where()}: ${add ? "placed a stone" : "took the stone away"}.`);
+  } else if (k === "p") play4(!s4.running);
+  else if (k === "n") step4();
+  else if (k === "b") rewind4();
+  else return;
+  e.preventDefault();
+});
+canvas.addEventListener("focus", () => { if (canvas.matches(":focus-visible")) { s4.showCursor = true; draw4(); } });
+canvas.addEventListener("blur", () => { s4.showCursor = false; draw4(); });
+
+// pattern buttons, grouped by kind
+(() => {
+  const groups = {};
+  for (const [name, p] of Object.entries(PATTERNS)) (groups[p.group] ||= []).push(name);
+  $("s4-pats").replaceChildren(...Object.entries(groups).map(([group, names]) => {
+    const row = document.createElement("div");
+    row.className = "pgroup";
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", group);
+    const lbl = document.createElement("span");
+    lbl.textContent = group;
+    row.append(lbl, ...names.map((name) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.name = name;
+      b.textContent = PATTERNS[name].label;
+      b.addEventListener("click", () => {
+        load4(name);
+        writeHash();
+        say4(`Loaded the ${PATTERNS[name].label.toLowerCase()}.`, "Press Play or <kbd>P</kbd> to set it going.");
+      });
+      return b;
+    }));
+    return row;
+  }));
+})();
+
+$("s4-play").addEventListener("click", () => play4(!s4.running));
+$("s4-step").addEventListener("click", step4);
+$("s4-rewind").addEventListener("click", rewind4);
+$("s4-clear").addEventListener("click", () => {
+  load4(null, new Set());
+  writeHash();
+  say4("Cleared the board.", "Drag across it to draw, or pick a pattern.");
+});
+$("s4-random").addEventListener("click", () => {
+  const [r0, c0] = origin(), cells = new Set();
+  for (let r = 0; r < s4.rows; r++) for (let c = 0; c < s4.cols; c++) if (Math.random() < 0.3) cells.add(key(r0 + r, c0 + c));
+  load4(null, cells);
+  s4.cells = cells;
+  draw4();
+  writeHash();
+  say4(`Scattered ${cells.size} living cells at random.`, "Press Play. Most of a random soup dies off fast, and what's left settles into blocks, blinkers, and the odd glider.");
+});
+$("s4-speeds").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  s4.speed = +b.dataset.speed;
+  pressOnly($("s4-speeds"), "speed", s4.speed);
+}));
+$("s4-zooms").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  s4.px = +b.dataset.px;
+  pressOnly($("s4-zooms"), "px", s4.px);
+  size4();
+}));
+
+// ---------- Sharing ----------
+
+// the big board's cells go in the address bar while it's paused
+function writeHash() {
+  if (s4.running) return;
+  // RLE's $ and ! are fine in a fragment, so it goes in unescaped and stays readable
+  const hash = s4.pattern && !s4.gen ? `pattern=${s4.pattern}` : `rle=${toRLE(s4.cells)}`;
+  history.replaceState(null, "", "#" + hash);
+}
+
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (PATTERNS[p.get("pattern")]) {
+    load4(p.get("pattern"));
+    say4(`Loaded the ${PATTERNS[p.get("pattern")].label.toLowerCase()} from the link.`, "Press Play or <kbd>P</kbd> to set it going.");
+    return true;
+  }
+  if (p.has("rle")) {
+    load4(null, parseRLE(p.get("rle")));
+    say4(`Loaded ${plural(s4.cells.size, "living cell")} from the link.`, "Press Play or <kbd>P</kbd> to set it going.");
+    return true;
+  }
+  return false;
+}
+
+// ---------- Start ----------
+
+readColors();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { readColors(); draw4(); });
+
+load1("blinker");
+say1("A blinker: three stones in a row.", "The middle stone has 2 living neighbors, so it stays. The end stones have 1 each, so they die. The points above and below the middle have 3, so they get new stones. Press Step to see it.");
+load2("blinker");
+paint3();
+pressOnly($("s4-speeds"), "speed", s4.speed);
+pressOnly($("s4-zooms"), "px", s4.px);
+size4();
+if (!readHash()) {
+  load4("gun");
+  say4("Press Play or <kbd>P</kbd> to fire the gun.", "Or pick another pattern, or drag across the board to draw your own.");
+}
+new ResizeObserver(() => size4()).observe($("b3-wrap"));
+addEventListener("hashchange", () => { if (!s4.running) readHash(); });
+</script>
+</body>
+</html>
