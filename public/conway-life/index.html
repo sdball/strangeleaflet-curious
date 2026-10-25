@@ -364,7 +364,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Conway's Game of Life</h1>
   <p class="lede">Put stones on a board. Each turn, every stone counts the stones around it. With too few it dies alone, with too many it's crowded out, and an empty point with exactly three stones around it gets a new stone. From four rules like these come blinkers, gliders that crawl across the board, and guns that fire them forever.</p>
-  <p class="howto">Tap a point to place or take away a stone. Every board also works from the keyboard: Tab to it, move with the arrow keys (<kbd>Shift</kbd> moves further), and press <kbd>Space</kbd> to place or take away a stone. <kbd>N</kbd> steps forward and <kbd>B</kbd> steps back. On the big board <kbd>P</kbd> plays and pauses.</p>
+  <p class="howto">Tap a point to place or take away a stone. Every board also works from the keyboard: Tab to it, move with the arrow keys (<kbd>Shift</kbd> moves further), and press <kbd>Space</kbd> to place or take away a stone. In whichever station you're using, <kbd>N</kbd> steps forward and <kbd>B</kbd> steps back, and on the big board <kbd>P</kbd> plays and pauses.</p>
 
   <!-- 1. The rules -->
   <section class="panel" aria-labelledby="s1-h">
@@ -374,7 +374,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
       <p>Every point on the board has eight neighbors: the points above, below, beside it, and on the four diagonals. A stone is a living cell. Each step, every point counts its living neighbors and follows one of the rules beside the board, and <b>every point changes at the same moment</b>. Turn on the counts, tap any point to see which rule it follows, and press Step.</p>
     </div>
     <div class="split">
-      <svg class="goban" id="b1" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 1 board, 9 by 9 points" aria-describedby="s1-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space N B"></svg>
+      <svg class="goban" id="b1" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 1 board, 9 by 9 points" aria-describedby="s1-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
       <div class="side">
         <ol class="rules" id="s1-rules">
           <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><circle class="g-stone" cx="20" cy="20" r="14"/><path class="g-x" d="M27 7l8 8M35 7l-8 8"/></svg><span>A living cell with <b>fewer than 2</b> living neighbors dies, as if lonely.</span></li>
@@ -384,8 +384,8 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
           <li><svg class="glyph" viewBox="0 0 40 40" aria-hidden="true"><path class="g-pt" d="M8 20h24M20 8v24"/></svg><span class="muted">Every other empty point stays empty.</span></li>
         </ol>
         <div class="btns">
-          <button type="button" class="btn" id="s1-back">Back<kbd>B</kbd></button>
-          <button type="button" class="btn go" id="s1-step">Step<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s1-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s1-step" aria-keyshortcuts="N">Step<kbd>N</kbd></button>
           <button type="button" class="btn" id="s1-clear">Clear</button>
         </div>
         <label class="check"><input type="checkbox" id="s1-counts" checked> Count each point's living neighbors</label>
@@ -408,7 +408,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
       <p>You could store the whole board and check every point on it, empty or not. This page keeps only a list of the living cells, as row and column pairs, and works out the next step from that list in three moves. <b>Each living cell names its eight neighbors. Count how often each point was named. Keep the points named 3 times, and the living ones named 2 times.</b> A point's count is exactly its number of living neighbors, because only living cells do the naming. Press Next to watch it happen one move at a time. Station 3 lines the same function up in five languages, and Station 4 runs it on a much bigger board.</p>
     </div>
     <div class="split">
-      <svg class="goban" id="b2" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 2 board, rows and columns −2 to 4" aria-describedby="s2-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space N B"></svg>
+      <svg class="goban" id="b2" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 2 board, rows and columns −2 to 4" aria-describedby="s2-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
       <div class="side">
         <ol class="stagebar" id="s2-stages" aria-label="Moves in one step">
           <li>The living</li>
@@ -418,8 +418,8 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
           <li>Next generation</li>
         </ol>
         <div class="btns">
-          <button type="button" class="btn" id="s2-back">Back<kbd>B</kbd></button>
-          <button type="button" class="btn go" id="s2-next">Next<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s2-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s2-next" aria-keyshortcuts="N">Next<kbd>N</kbd></button>
           <button type="button" class="btn" id="s2-reset">Start over</button>
         </div>
         <div class="ctl" role="group" aria-label="Start from">
@@ -483,13 +483,13 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
       <p>Same rules, same step function, on a board big enough to watch patterns travel. Pick a pattern and press Play, or drag across the board to draw your own. A few cells can keep busy for thousands of generations. The board is only a window: cells that drift past its edge keep living, and zooming out shows them again.</p>
     </div>
     <div class="bigwrap" id="b3-wrap">
-      <canvas id="big" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 4 big board" aria-describedby="s4-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space N B P"></canvas>
+      <canvas id="big" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 4 big board" aria-describedby="s4-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></canvas>
     </div>
     <div class="bar">
       <div class="btns">
-        <button type="button" class="btn go" id="s4-play">Play<kbd>P</kbd></button>
-        <button type="button" class="btn" id="s4-step">Step<kbd>N</kbd></button>
-        <button type="button" class="btn" id="s4-rewind">Back to start<kbd>B</kbd></button>
+        <button type="button" class="btn go" id="s4-play" aria-keyshortcuts="P">Play<kbd>P</kbd></button>
+        <button type="button" class="btn" id="s4-step" aria-keyshortcuts="N">Step<kbd>N</kbd></button>
+        <button type="button" class="btn" id="s4-rewind" aria-keyshortcuts="B">Back to start<kbd>B</kbd></button>
         <button type="button" class="btn" id="s4-random">Random</button>
         <button type="button" class="btn" id="s4-clear">Clear</button>
       </div>
@@ -679,7 +679,6 @@ class Goban {
     this.showCursor = false;
     this.onToggle = () => {};
     this.onCursor = () => {};
-    this.onKey = () => false;
 
     const id = `stone${++boards}`;
     this.fill = `url(#${id})`;
@@ -724,6 +723,8 @@ class Goban {
       if (!cell) return;
       this.cursor = unkey(cell);
       this.showCursor = false;
+      // Safari doesn't focus an svg on click, so do it here
+      svg.focus({ preventScroll: true });
       this.place();
       this.onToggle(cell);
     });
@@ -760,8 +761,6 @@ class Goban {
       this.showCursor = true;
       this.place();
       this.onToggle(key(...this.cursor));
-    } else if (this.onKey(e.key.toLowerCase())) {
-      e.preventDefault();
     }
   }
 
@@ -926,12 +925,6 @@ b1.onCursor = (cell) => {
   paint1();
   say1(explain1(cell));
 };
-b1.onKey = (k) => {
-  if (k === "n") { step1(); return true; }
-  if (k === "b") { back1(); return true; }
-  return false;
-};
-
 patternButtons($("s1-pats"), S1_PATTERNS, load1);
 $("s1-step").addEventListener("click", step1);
 $("s1-back").addEventListener("click", back1);
@@ -1282,12 +1275,6 @@ b2.onCursor = (cell) => {
   const [r, c] = unkey(cell);
   say2(`Row ${r}, column ${c}: ${s2.cells.has(cell) ? "a living cell" : "empty"}.`, "Press Space to place or take away a stone.");
 };
-b2.onKey = (k) => {
-  if (k === "n") { next2(); return true; }
-  if (k === "b") { back2(); return true; }
-  return false;
-};
-
 patternButtons($("s2-pats"), S2_PATTERNS, load2);
 $("s2-next").addEventListener("click", next2);
 $("s2-back").addEventListener("click", back2);
@@ -1582,6 +1569,7 @@ canvas.addEventListener("pointerdown", (e) => {
   const at = cellAt4(e);
   if (!at) return;
   canvas.setPointerCapture(e.pointerId);
+  canvas.focus({ preventScroll: true });
   const add = !s4.cells.has(key(...at));
   s4.painting = { add, last: at };
   s4.showCursor = false;
@@ -1613,7 +1601,6 @@ canvas.addEventListener("keydown", (e) => {
   const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
   const [r0, c0] = origin();
   const where = () => `Row ${s4.cursor[0] - r0 + 1}, column ${s4.cursor[1] - c0 + 1}`;
-  const k = e.key.toLowerCase();
   if (moves[e.key]) {
     const [dr, dc] = moves[e.key], by = e.shiftKey ? 5 : 1;
     s4.cursor = [clamp(s4.cursor[0] + dr * by, r0, r0 + s4.rows - 1), clamp(s4.cursor[1] + dc * by, c0, c0 + s4.cols - 1)];
@@ -1628,10 +1615,7 @@ canvas.addEventListener("keydown", (e) => {
     draw4();
     if (!s4.running) writeHash();
     say4(`${where()}: ${add ? "placed a stone" : "took the stone away"}.`);
-  } else if (k === "p") play4(!s4.running);
-  else if (k === "n") step4();
-  else if (k === "b") rewind4();
-  else return;
+  } else return;
   e.preventDefault();
 });
 canvas.addEventListener("focus", () => { if (canvas.matches(":focus-visible")) { s4.showCursor = true; draw4(); } });
@@ -1690,6 +1674,39 @@ $("s4-zooms").querySelectorAll("button").forEach((b) => b.addEventListener("clic
   pressOnly($("s4-zooms"), "px", s4.px);
   size4();
 }));
+
+// ---------- Keyboard ----------
+
+// N, B, and P go to the station holding focus, or with nothing focused, the one most in view.
+// arrows and Space stay with the focused board, so they never take over scrolling
+const STATION_KEYS = [
+  ["b1", { n: step1, b: back1 }],
+  ["b2", { n: next2, b: back2 }],
+  ["big", { n: step4, b: rewind4, p: () => play4(!s4.running) }],
+].map(([board, keys]) => [$(board).closest(".panel"), keys]);
+
+function stationInView() {
+  let best = null, most = 0;
+  for (const entry of STATION_KEYS) {
+    const r = entry[0].getBoundingClientRect();
+    const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+    if (seen > most) { most = seen; best = entry; }
+  }
+  return best;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // a checkbox takes no typing, so the station keys still work after clicking one
+  if (e.target.matches("input:not([type=range]):not([type=checkbox]), textarea, select")) return;
+  const action = { n: "n", b: "b", p: "p" }[e.key.toLowerCase()];
+  if (!action) return;
+  const inPanel = e.target.closest?.(".panel");
+  const entry = inPanel ? STATION_KEYS.find(([panel]) => panel === inPanel) : stationInView();
+  if (!entry || !entry[1][action]) return;
+  e.preventDefault();
+  entry[1][action]();
+});
 
 // ---------- Sharing ----------
 
