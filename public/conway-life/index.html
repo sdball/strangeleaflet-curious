@@ -977,35 +977,27 @@ const LANGS = {
   ex: {
     label: "Elixir",
     cell: (cell) => `{${unkey(cell).join(", ")}}`,
-    names: { cells: "cells", named: "Enum.flat_map(&neighbors/1)", counts: "Enum.frequencies()", next: "step(cells)" },
+    names: { cells: "cells", named: "Enum.flat_map(cells, &neighbors/1)", counts: "Enum.frequencies(…)", next: "step(cells)" },
     fn: { flat: "Enum.flat_map", freq: "Enum.frequencies" },
-    note: "The Elixir translation that ran this page's first version. The pipeline reads top to bottom in the same order as the moves.",
-    idiom: "Stephen Ball's translation, which ran this page's first version. Guards can't call <code>MapSet.member?</code>, so the keeping happens inside a <code>reduce</code>, and the pipeline reads top to bottom.",
+    note: "A for comprehension, like the Clojure: a generator over the counts, a filter that keeps the 3s and living 2s, and into: to collect a new MapSet.",
+    idiom: "A tighter take on the Elixir that ran this page's first version. A guard can't call <code>MapSet.member?</code>, but a comprehension's filters can be any expression, so it reads like the Clojure and collects with <code>into:</code>.",
     code: `def neighbors({x, y}) do
-  for dx <- -1..1, dy <- -1..1, {dx, dy} !== {0, 0} do
-    {dx + x, dy + y}
-  end
+  for dx <- -1..1, dy <- -1..1, {dx, dy} != {0, 0}, do: {x + dx, y + dy}
 end
 
 def step(cells) do
-  cells
-  |> Enum.flat_map(&neighbors/1)
-  |> Enum.frequencies()
-  |> Enum.reduce(MapSet.new(), fn {cell, neighbors}, acc ->
-    if neighbors == 3 or (neighbors == 2 && MapSet.member?(cells, cell)) do
-      MapSet.put(acc, cell)
-    else
-      acc
-    end
-  end)
+  for {cell, n} <- Enum.frequencies(Enum.flat_map(cells, &neighbors/1)),
+      n == 3 or (n == 2 and MapSet.member?(cells, cell)),
+      into: MapSet.new(),
+      do: cell
 end`,
     parts: {
       sig: ["def step(cells) do"],
-      neighbors: ["for dx <- -1..1, dy <- -1..1, {dx, dy} !== {0, 0} do", "{dx + x, dy + y}"],
-      name: ["|> Enum.flat_map(&neighbors/1)"],
-      count: ["|> Enum.frequencies()"],
-      keep: ["neighbors == 3 or (neighbors == 2 && MapSet.member?(cells, cell))"],
-      collect: ["Enum.reduce(MapSet.new()", "MapSet.put(acc, cell)"],
+      neighbors: ["for dx <- -1..1, dy <- -1..1, {dx, dy} != {0, 0}", "{x + dx, y + dy}"],
+      name: ["Enum.flat_map(cells, &neighbors/1)"],
+      count: ["Enum.frequencies("],
+      keep: ["n == 3 or (n == 2 and MapSet.member?(cells, cell))"],
+      collect: ["into: MapSet.new()", "do: cell"],
     },
   },
   js: {
@@ -1058,8 +1050,8 @@ def step(cells):
     cell: (cell) => `[${unkey(cell).join(", ")}]`,
     names: { cells: "cells", named: "cells.flat_map { … }", counts: ".tally", next: "step(cells)" },
     fn: { flat: "flat_map", freq: "tally" },
-    note: "Ruby's tally counts, and the chain reads top to bottom like the Elixir pipeline.",
-    idiom: "<code>tally</code> counts, <code>product</code> makes the nine offsets, and the chain reads top to bottom like the Elixir pipeline.",
+    note: "Ruby's tally counts, and the chain reads top to bottom in the same order as the moves.",
+    idiom: "<code>tally</code> counts, <code>product</code> makes the nine offsets, and the chain reads top to bottom in the same order as the moves.",
     code: `def neighbors((r, c))
   [-1, 0, 1].product([-1, 0, 1])
     .reject { |dr, dc| dr == 0 && dc == 0 }
@@ -1099,7 +1091,7 @@ const SYNTAX = {
   clj: { words: "defn for if let", word: /[A-Za-z_][\w?!-]*/y,
     rules: [["com", /;.*/y], ["def", /(?<=\(defn )[\w?!-]+/y], ["atom", /:[\w?!-]+/y]] },
   ex: { words: "def do end for if else fn or and", word: /[A-Za-z_]\w*[?!]?/y,
-    rules: [["com", /#.*/y], ["def", /(?<=\bdef )\w+/y], ["atom", /:\w+/y], ["type", /[A-Z]\w*/y]] },
+    rules: [["com", /#.*/y], ["def", /(?<=\bdef )\w+/y], ["atom", /:\w+|[a-z_]\w*:(?=\s)/y], ["type", /[A-Z]\w*/y]] },
   js: { words: "const let function return for if else continue new", word: /[A-Za-z_$][\w$]*/y,
     rules: [["com", /\/\/.*/y], ["def", /(?<=\bfunction )\w+|(?<=\bconst )\w+(?= = \()/y], ["type", /[A-Z]\w*/y]] },
   py: { words: "from import def return for in if and or not", word: /[A-Za-z_]\w*/y,
@@ -1292,7 +1284,7 @@ const PART_NOTES = {
   name: ["Name.", "Every living cell's neighbors, joined into one long list: <code>mapcat</code>, <code>Enum.flat_map</code>, <code>flatMap</code>, a two-level generator, and <code>flat_map</code>."],
   count: ["Count.", "How many times each point was named. Clojure and Elixir have <code>frequencies</code>, Ruby has <code>tally</code>, Python has <code>Counter</code>, and JavaScript gets by with a one-line <code>reduce</code>."],
   keep: ["Keep.", "All four rules in one test: 3 living neighbors, or 2 and already alive."],
-  collect: ["Collect.", "Gather what's kept into a new set. Elixir builds it up with <code>reduce</code>, and the others turn the kept cells straight into a set."],
+  collect: ["Collect.", "Gather what's kept into a new set: <code>set</code> in Clojure, <code>into: MapSet.new()</code> in Elixir, <code>new Set</code> in JavaScript, a set comprehension in Python, and <code>to_set</code> in Ruby."],
 };
 const LANG_ORDER = ["clj", "ex", "js", "py", "rb"];
 let part = null;
