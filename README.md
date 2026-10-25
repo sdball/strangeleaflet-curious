@@ -7,6 +7,7 @@ A cabinet of curiousities I can serve up from curious.strangeleaflet.com.
 ```sh
 scripts/serve        # http://localhost:8000/
 scripts/serve 9000   # or pick a port
+scripts/serve --list # Python servers still running, with their pids
 ```
 
 ## Analytics
