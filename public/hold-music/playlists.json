@@ -1,0 +1,235 @@
+[
+  {
+    "name": "text-adventures",
+    "description": "Twisty little passages, all alike",
+    "tags": [
+      "gaming",
+      "retro"
+    ],
+    "verbs": [
+      "Opening the mailbox",
+      "Reading the leaflet",
+      "Getting the lamp",
+      "Turning on the lamp",
+      "Getting all",
+      "Going north",
+      "Going south",
+      "Going west",
+      "Going east",
+      "In a maze of twisty little passages, all alike",
+      "Waving the sceptre",
+      "Echo (echo echo echo)",
+      "Checking inventory",
+      "Asking what is a grue?",
+      "Counting leaves (69,105)"
+    ]
+  },
+  {
+    "name": "infocom-spells",
+    "description": "Not all of them, but the classics.",
+    "tags": [
+      "gaming",
+      "retro"
+    ],
+    "verbs": [
+      "casting aimfiz (teleport caster)",
+      "casting bekdab (turn iron into rust)",
+      "casting blorb (protect a small object)",
+      "casting cleesh (change a creature into a small amphibian)",
+      "casting exex (make things move with greater speed)",
+      "casting filfre (create gratuituous fireworks)",
+      "casting frotz (cause something to give off light)",
+      "casting fweep (turn the caster into a bat)",
+      "casting gnusto (write a magic spell into your spellbook)",
+      "casting golmac (time travel)",
+      "casting gondar (extinguish a flame)",
+      "casting guncho (banish a creature to another plane)",
+      "casting izyuk (fly like a bird)",
+      "casting krebf (repair willful damage)",
+      "casting kulcad (dispell magic)",
+      "casting melbor (protection from evil)",
+      "casting nitfol (talk with creatures)",
+      "casting plugh (teleport caster)",
+      "casting rezrov (open locks)",
+      "casting xyzzy (teleport caster)",
+      "casting zifmia (magically summon a being)"
+    ]
+  },
+  {
+    "name": "videogames",
+    "description": "Inputs change pixels on the screen in cool ways",
+    "tags": [
+      "gaming"
+    ],
+    "verbs": [
+      "Speedrunning",
+      "Wall running",
+      "Rocket jumping",
+      "Respawning",
+      "Chaining combos",
+      "C-C-C-COMBO BREAKER",
+      "Parrying",
+      "Wall jumping",
+      "No clipping",
+      "360 no scoping",
+      "Buffering inputs",
+      "Punching bricks for coins",
+      "Unlocking the shortcut",
+      "Dodge rolling",
+      "Pixel hunting",
+      "Backtracking",
+      "Hoarding health potions",
+      "Chasing the high score",
+      "Getting a 1-UP",
+      "Getting tilted",
+      "Contemplating ludonarrative dissonance",
+      "Playing co-op",
+      "Inserting a quarter"
+    ]
+  },
+  {
+    "name": "rpgs",
+    "title": "RPGs",
+    "description": "Dice and stories",
+    "tags": [
+      "gaming",
+      "tabletop"
+    ],
+    "verbs": [
+      "Rolling initiative",
+      "Rolling for damage",
+      "Checking perception",
+      "Casting detect magic",
+      "Leveling up",
+      "Multiclassing",
+      "Consulting the DM",
+      "Splitting the party",
+      "Disarming the trap",
+      "Sneak attacking",
+      "Flanking",
+      "Taking cover",
+      "Grappling",
+      "Concentrating on the spell",
+      "Summoning familiar",
+      "Cutting words",
+      "Polymorphing"
+    ]
+  },
+  {
+    "name": "dice-rolls",
+    "description": "For when you want to find out if your prompt is lucky",
+    "tags": [
+      "tabletop",
+      "novelty"
+    ],
+    "verbs": [
+      "Rolling a D6: 1",
+      "Rolling a D6: 2",
+      "Rolling a D6: 3",
+      "Rolling a D6: 4",
+      "Rolling a D6: 5",
+      "Rolling a D6: 6",
+      "Rolling a D8: 1",
+      "Rolling a D8: 2",
+      "Rolling a D8: 3",
+      "Rolling a D8: 4",
+      "Rolling a D8: 5",
+      "Rolling a D8: 6",
+      "Rolling a D8: 7",
+      "Rolling a D8: 8",
+      "Rolling a D12: 1",
+      "Rolling a D12: 2",
+      "Rolling a D12: 3",
+      "Rolling a D12: 4",
+      "Rolling a D12: 5",
+      "Rolling a D12: 6",
+      "Rolling a D12: 7",
+      "Rolling a D12: 8",
+      "Rolling a D12: 9",
+      "Rolling a D12: 10",
+      "Rolling a D12: 11",
+      "Rolling a D12: 12",
+      "Rolling a D20: 1",
+      "Rolling a D20: 2",
+      "Rolling a D20: 3",
+      "Rolling a D20: 4",
+      "Rolling a D20: 5",
+      "Rolling a D20: 6",
+      "Rolling a D20: 7",
+      "Rolling a D20: 8",
+      "Rolling a D20: 9",
+      "Rolling a D20: 10",
+      "Rolling a D20: 11",
+      "Rolling a D20: 12",
+      "Rolling a D20: 13",
+      "Rolling a D20: 14",
+      "Rolling a D20: 15",
+      "Rolling a D20: 16",
+      "Rolling a D20: 17",
+      "Rolling a D20: 18",
+      "Rolling a D20: 19",
+      "Rolling a D20: 20"
+    ]
+  },
+  {
+    "name": "coffee",
+    "description": "The finest organic suspension ever devised",
+    "tags": [
+      "hobby"
+    ],
+    "verbs": [
+      "Percolating",
+      "Steaming milk",
+      "Grinding coffee beans",
+      "Roasting coffee beans",
+      "Getting great crema",
+      "Cold brewing",
+      "Brewing coffee",
+      "Drinking espresso (a concentrated shot of coffee)",
+      "Drinking ristretto (espresso made with less water)",
+      "Drinking lungo (espresso made with more water)",
+      "Drinking americano (espresso with hot water added)",
+      "Drinking macchiato (espresso with a small dollop of foam)",
+      "Drinking cortado (equal parts espresso and steamed milk)",
+      "Drinking cappuccino (equal parts espresso, steamed milk, and milk foam)",
+      "Drinking latte (espresso with large amount of steamed milk topped with milk foam)",
+      "Drinking flat white (espresso with some steamed milk and thin milk foam)",
+      "Drinking breve (espresso with steamed cream)",
+      "Sipping"
+    ]
+  },
+  {
+    "name": "movies",
+    "description": "Fun movie phrases and references",
+    "tags": [
+      "movies"
+    ],
+    "verbs": [
+      "Flux capacitor...fluxing",
+      "Not crossing the streams",
+      "Don't cross the streams",
+      "I looked at the light Ray",
+      "That is a big door",
+      "Drinking light from a frisbee",
+      "Writing too many tank programs",
+      "One ship against the entire armada!",
+      "Target lights?"
+    ]
+  },
+  {
+    "name": "computer-history",
+    "description": "Neat computer historical facts",
+    "tags": [
+      "history",
+      "computing"
+    ],
+    "verbs": [
+      "Blaise Pascal invented the mechanical calculator, known as the Pascaline (1642)",
+      "Douglas Engelbart invented the first computer mouse (1964)",
+      "The first computer virus, Creeper, began circulating on ARPANET (1971)",
+      "The first .com domain name (symbolics.com) registered (1985)",
+      "Tim Berners-Lee created the first website (1991)",
+      "Charles Babbage announced the difference engine (1822)"
+    ]
+  }
+]

@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hold Music — The Cabinet of Curios</title>
+<meta name="description" content="Pick playlists of themed spinner verbs for Claude Code, hear them play on hold, then copy one jq command that backs up your settings and writes them in.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☎️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@600;700&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: an office wall behind a beige key telephone */
+  --wall: #ECE5D5;
+  --ink: #2B2620;
+  --muted: #675D4E;
+  --line: #CFC4AE;
+  --plastic: #D8CDB6;
+  --plastic-hi: #E6DCC7;
+  --plastic-edge: #B3A68B;
+  --key: #F4EFE3;
+  --key-edge: #A39579;
+  --key-down: #E3DACA;
+  --lamp-off: #8C8270;
+  --lamp-on: #E5432B;
+  --lamp-glow: rgba(229, 67, 43, 0.55);
+  --label: #FBF8EF;
+  --label-ink: #2B2620;
+  --label-rule: #D9D0BD;
+  --focus: #2F5E9E;
+  --chip: #E9E1CF;
+
+  /* The terminal stays dark in either theme */
+  --term: #1C1B18;
+  --term-edge: #34312B;
+  --term-ink: #E9E3D6;
+  --term-dim: #8F887A;
+  --claude: #D97757;
+  --code: #24221E;
+  --code-ink: #EDE7DA;
+
+  --head: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+  --type: "Courier Prime", "Courier New", monospace;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --wall: #16140F; --ink: #ECE5D6; --muted: #A99F8B; --line: #3A352C;
+    --plastic: #2A2722; --plastic-hi: #33302A; --plastic-edge: #4A443A;
+    --key: #3A362F; --key-edge: #57503F; --key-down: #2F2C26;
+    --lamp-off: #5E574B; --lamp-on: #FF5C3E; --lamp-glow: rgba(255, 92, 62, 0.6);
+    --label: #ECE6D6; --label-rule: #CFC6B1; --focus: #8AB4F8; --chip: #2E2B25;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --wall: #16140F; --ink: #ECE5D6; --muted: #A99F8B; --line: #3A352C;
+  --plastic: #2A2722; --plastic-hi: #33302A; --plastic-edge: #4A443A;
+  --key: #3A362F; --key-edge: #57503F; --key-down: #2F2C26;
+  --lamp-off: #5E574B; --lamp-on: #FF5C3E; --lamp-glow: rgba(255, 92, 62, 0.6);
+  --label: #ECE6D6; --label-rule: #CFC6B1; --focus: #8AB4F8; --chip: #2E2B25;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--wall);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--body);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code, kbd { font-family: var(--mono); font-size: .88em; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3em; background: var(--chip); }
+
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1 {
+  font: 700 clamp(2.4rem, 7vw, 3.6rem)/1 var(--head);
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  margin: 0 0 .6rem;
+}
+.lede { margin: 0 0 .8rem; color: var(--muted); max-width: 64ch; }
+.howto { margin: 0 0 1.4rem; font-size: .95rem; color: var(--muted); max-width: 64ch; }
+h2 { font: 700 1.6rem/1.1 var(--head); text-transform: uppercase; letter-spacing: .02em; margin: 0; }
+
+/* ---------- Panels: the phone's housing ---------- */
+.panel {
+  background: linear-gradient(to bottom, var(--plastic-hi), var(--plastic));
+  border: 1px solid var(--plastic-edge);
+  border-radius: 18px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  margin: 0 0 1.5rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 18px 30px -24px rgba(0,0,0,.6);
+}
+.panel-head { margin-bottom: .6rem; }
+.station { margin: 0 0 .1rem; font: 700 .85rem/1 var(--head); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.panel p.hint { margin: 0 0 1rem; font-size: .95rem; color: var(--muted); max-width: 62ch; }
+
+/* ---------- Line buttons ---------- */
+.lines {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: .7rem;
+}
+.line {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .25rem .7rem;
+  align-items: start;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: var(--key);
+  border: 1px solid var(--key-edge);
+  border-bottom-width: 4px;
+  border-radius: 8px;
+  padding: .6rem .7rem .55rem;
+  min-height: 44px;
+  cursor: pointer;
+  transition: transform .08s ease, border-bottom-width .08s ease;
+}
+.line:hover { border-color: var(--muted); }
+.line[aria-pressed="true"] { background: var(--key-down); border-bottom-width: 2px; transform: translateY(2px); }
+.lamp {
+  grid-row: span 2;
+  width: 14px; height: 14px; margin-top: .3rem;
+  border-radius: 50%;
+  background: var(--lamp-off);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.4);
+}
+.line[aria-pressed="true"] .lamp { background: var(--lamp-on); box-shadow: 0 0 8px 2px var(--lamp-glow), inset 0 -1px 2px rgba(0,0,0,.25); }
+/* the paper strip under the clear key cap, typed on an office typewriter */
+.strip {
+  display: block;
+  font: 700 1rem/1.25 var(--type);
+  background: var(--label);
+  color: var(--label-ink);
+  border-bottom: 1px solid var(--label-rule);
+  padding: .1rem .35rem;
+  border-radius: 2px;
+}
+.line-desc { display: block; font-size: .88rem; line-height: 1.35; color: var(--muted); }
+.line[aria-pressed="true"] .line-desc { color: var(--ink); }
+.line-meta { grid-column: 2; display: block; font: 400 .78rem/1.3 var(--type); color: var(--muted); }
+
+/* ---------- Track list ---------- */
+.tracks { margin-top: 1rem; display: grid; gap: .5rem; }
+.tracks:empty { display: none; }
+.tracks details { background: var(--label); color: var(--label-ink); border: 1px solid var(--label-rule); border-radius: 6px; }
+.tracks summary {
+  cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .5rem;
+  padding: 0 .8rem; font: 700 1rem var(--type);
+}
+.tracks summary .of { font-weight: 400; color: #6B6151; margin-left: auto; font-size: .88rem; }
+.tracks ul { list-style: none; margin: 0; padding: 0 .5rem .5rem; columns: 2 18rem; column-gap: 1rem; }
+.tracks li { break-inside: avoid; }
+.tracks label { display: flex; align-items: center; gap: .55rem; min-height: 40px; padding: .15rem .3rem; font-size: .95rem; line-height: 1.3; cursor: pointer; }
+.tracks input[type=checkbox] { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #B5361F; }
+.tracks .all { display: flex; gap: .5rem; padding: 0 .8rem .4rem; }
+.tracks .all button { font: 400 .85rem var(--type); min-height: 40px; padding: 0 .7rem; background: transparent; color: var(--label-ink); border: 1px solid var(--label-rule); border-radius: 4px; cursor: pointer; }
+
+.own { margin-top: 1rem; }
+.own label { display: block; font: 700 1.05rem var(--head); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .3rem; }
+.own .sub { display: block; font: 400 .9rem var(--body); text-transform: none; letter-spacing: 0; color: var(--muted); }
+textarea {
+  width: 100%; min-height: 6.5rem; resize: vertical;
+  font: 400 16px/1.45 var(--type);
+  color: var(--label-ink); background: var(--label);
+  border: 1px solid var(--key-edge); border-radius: 6px; padding: .55rem .7rem;
+}
+/* the paper is light in both themes, so one faint ink does; a different face from what you type */
+textarea::placeholder { color: #8E8471; opacity: 1; font: italic 400 16px/1.45 var(--body); }
+.tally { margin: .8rem 0 0; font-weight: 700; }
+.nolines { grid-column: 1 / -1; margin: 0; padding: .8rem 1rem; background: var(--label); color: var(--label-ink); border-radius: 6px; font-family: var(--type); }
+
+/* ---------- Terminal ---------- */
+.term {
+  background: var(--term);
+  color: var(--term-ink);
+  border: 1px solid var(--term-edge);
+  border-radius: 10px;
+  overflow: hidden;
+  font: 400 clamp(.85rem, 2.6vw, 1rem)/1.6 var(--mono);
+}
+.tbar { display: flex; align-items: center; gap: 6px; padding: .45rem .7rem; background: #2A2824; }
+.tbar i { width: 11px; height: 11px; border-radius: 50%; background: #4A463F; }
+.tbar span { margin-left: .5rem; font-size: .8rem; color: var(--term-dim); }
+.tbody { padding: .9rem 1rem 1.1rem; min-height: 9.5rem; }
+.tbody p { margin: 0; }
+.tbody .you { color: var(--term-dim); margin-bottom: .8rem; }
+.tbody .you b { color: var(--term-ink); font-weight: 400; }
+.spin { display: flex; gap: .6ch; align-items: baseline; }
+.glyph { color: var(--claude); width: 1.2ch; flex: 0 0 auto; }
+.said { color: var(--claude); overflow-wrap: anywhere; }
+.tdim { color: var(--term-dim); white-space: nowrap; }
+
+.controls { display: flex; flex-wrap: wrap; gap: .7rem 1.2rem; align-items: center; margin-top: 1rem; }
+.ctl { display: flex; flex-wrap: wrap; gap: .4rem .7rem; align-items: center; }
+.ctl-lbl { font: 700 .95rem var(--head); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--key-edge); border-radius: 8px; overflow: hidden; background: var(--key); }
+.seg button {
+  font: 700 .95rem var(--body); color: var(--muted); background: transparent;
+  border: 0; padding: .4rem .85rem; min-height: 44px; cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--key-edge); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--wall); }
+.btn {
+  font: 700 .95rem var(--body); color: var(--ink); background: var(--key);
+  border: 1px solid var(--key-edge); border-bottom-width: 3px; border-radius: 8px;
+  padding: .4rem .9rem; min-height: 44px; cursor: pointer;
+}
+.btn:active { border-bottom-width: 1px; transform: translateY(2px); }
+.btn.go { background: var(--lamp-on); border-color: #8E2614; color: #fff; }
+.cap { margin: .8rem 0 0; font-size: .95rem; color: var(--muted); min-height: 1.5em; }
+.cap b { color: var(--ink); }
+
+/* ---------- Settings choices and commands ---------- */
+.choices { display: grid; gap: 1rem; }
+.choice > .ctl-lbl { display: block; margin-bottom: .35rem; }
+.choice .seg { display: flex; }
+.choice .seg button { flex: 1 1 auto; text-align: center; }
+@media (max-width: 560px) {
+  .choice .seg { flex-direction: column; }
+  .choice .seg button + button { border-left: 0; border-top: 1px solid var(--key-edge); }
+}
+.choice .why { margin: .35rem 0 0; font-size: .92rem; color: var(--muted); }
+.cmd { margin-top: 1.1rem; }
+.cmd-top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; justify-content: space-between; margin-bottom: .4rem; }
+.cmd-top h3 { margin: 0; font: 700 1.15rem var(--head); text-transform: uppercase; letter-spacing: .04em; }
+pre {
+  margin: 0;
+  background: var(--code);
+  color: var(--code-ink);
+  border-radius: 8px;
+  padding: .8rem .9rem;
+  font: 400 .84rem/1.5 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+pre:focus-visible { outline-offset: 3px; }
+.small { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; margin-top: 1.2rem; }
+.small .cmd { margin-top: 0; }
+.small p { margin: 0 0 .4rem; font-size: .92rem; color: var(--muted); }
+
+/* ---------- Notes ---------- */
+.notes, .sources { margin: 2rem 0 0; max-width: 70ch; }
+.notes h2, .sources h2 { margin-bottom: .6rem; }
+.notes ul { margin: 0; padding-left: 1.2rem; }
+.notes li { margin: 0 0 .7rem; }
+.sources ol { margin: 0; padding-left: 1.4rem; font-size: .95rem; }
+.sources li { margin: 0 0 .45rem; }
+.foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .9rem; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .line[aria-pressed="true"], .btn:active { transform: none; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Hold Music</h1>
+  <p class="lede">While Claude Code works, its spinner shows a rotating verb: Accomplishing, Architecting, Baking. Light up a few lines of themed verbs, listen to them play on hold, then copy one shell command that backs up your settings and writes the verbs in.</p>
+  <p class="howto">Press a line to pick its playlist. Open a playlist to leave out single verbs, or type your own. The command at the bottom needs <code>jq</code>, and nothing leaves your browser until you paste it into a terminal.</p>
+
+  <section class="panel" aria-labelledby="h-lines">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="h-lines">Pick the lines</h2>
+    </div>
+    <p class="hint">Each key is a playlist. Press one to light its lamp and put its verbs on hold. Press it again to hang up. Verbs play in the order you lit the lines.</p>
+    <div class="lines" id="lines" role="group" aria-label="Playlists"></div>
+    <div class="tracks" id="tracks"></div>
+    <div class="own">
+      <label for="own">Your own verbs <span class="sub">One per line. Claude Code adds the “…” itself, so leave it off.</span></label>
+      <textarea id="own" spellcheck="true" placeholder="For example:&#10;Reticulating splines&#10;Feeding the cat"></textarea>
+    </div>
+    <p class="tally" id="tally" aria-live="polite"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-hold">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="h-hold">Listen on hold</h2>
+    </div>
+    <p class="hint">This is roughly what the spinner looks like with your picks. Choose whether your verbs join Claude Code's own or play alone.</p>
+    <div class="term" aria-hidden="true">
+      <div class="tbar"><i></i><i></i><i></i><span>claude</span></div>
+      <div class="tbody">
+        <p class="you">&gt; <b>tidy up the README</b></p>
+        <p class="spin"><span class="glyph" id="glyph">✻</span><span><span class="said" id="said">Percolating…</span> <span class="tdim">(<span id="secs">0</span>s · esc to interrupt)</span></span></p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <span class="ctl-lbl" id="mode-lbl">Mode</span>
+        <div class="seg" id="mode" role="group" aria-labelledby="mode-lbl">
+          <button type="button" data-v="append" aria-pressed="true">Mix with Claude's own</button>
+          <button type="button" data-v="replace" aria-pressed="false">Only mine</button>
+        </div>
+      </div>
+      <button type="button" class="btn" id="next" aria-keyshortcuts="N">Next verb</button>
+    </div>
+    <p class="cap" id="now"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-patch">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="h-patch">Patch it in</h2>
+    </div>
+    <p class="hint">Pick which settings file to change and what happens to verbs it already has. The command below updates as you choose.</p>
+    <div class="choices">
+      <div class="choice">
+        <span class="ctl-lbl" id="file-lbl">Settings file</span>
+        <div class="seg" id="file" role="group" aria-labelledby="file-lbl">
+          <button type="button" data-v="user" aria-pressed="true">Everywhere</button>
+          <button type="button" data-v="project" aria-pressed="false">This project</button>
+          <button type="button" data-v="local" aria-pressed="false">This project, just me</button>
+        </div>
+        <p class="why" id="file-why"></p>
+      </div>
+      <div class="choice">
+        <span class="ctl-lbl" id="keep-lbl">Verbs already there</span>
+        <div class="seg" id="keep" role="group" aria-labelledby="keep-lbl">
+          <button type="button" data-v="keep" aria-pressed="true">Keep them</button>
+          <button type="button" data-v="swap" aria-pressed="false">Swap out Hold Music's</button>
+          <button type="button" data-v="clean" aria-pressed="false">Start clean</button>
+        </div>
+        <p class="why" id="keep-why"></p>
+      </div>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-top">
+        <h3 id="h-cmd">Your command</h3>
+        <button type="button" class="btn go" data-copy="cmd">Copy command</button>
+      </div>
+      <pre id="cmd" tabindex="0" aria-labelledby="h-cmd"></pre>
+    </div>
+    <p class="cap" id="copied" aria-live="polite"></p>
+
+    <div class="small">
+      <div class="cmd">
+        <div class="cmd-top"><h3 id="h-peek">See what's playing</h3><button type="button" class="btn" data-copy="peek">Copy</button></div>
+        <p>Prints the verbs the file has now, or <code>null</code> if it has none.</p>
+        <pre id="peek" tabindex="0" aria-labelledby="h-peek"></pre>
+      </div>
+      <div class="cmd">
+        <div class="cmd-top"><h3 id="h-stop">Stop the music</h3><button type="button" class="btn" data-copy="stop">Copy</button></div>
+        <p>Backs up the file, then removes <code>spinnerVerbs</code> so Claude Code's own verbs come back.</p>
+        <pre id="stop" tabindex="0" aria-labelledby="h-stop"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="h-notice">
+    <h2 id="h-notice">Things to notice</h2>
+    <ul>
+      <li><b>No restart needed.</b> Claude Code watches its settings files and reloads them when they change, so the next turn already plays the new verbs.</li>
+      <li><b>Mode and “verbs already there” are two different questions.</b> Mode decides whether Claude Code mixes your list with its own verbs. The other choice decides what happens to verbs your file already lists before the new ones are added.</li>
+      <li><b>Nothing is lost.</b> The command copies your settings to a <code>.bak</code> file stamped with the date and time before it changes anything, and prints the line that puts it back. It only writes when <code>jq</code> succeeds, so a file it can't read is left alone.</li>
+      <li><b>Every other setting stays put.</b> <code>jq</code> rewrites the <code>spinnerVerbs</code> key and nothing else. If your settings file is a symlink into a dotfiles repo, the write goes through the link instead of replacing it.</li>
+      <li><b>Swapping only knows these playlists.</b> “Swap out Hold Music's” removes any verb that appears on a line here, then adds your picks. Verbs you wrote yourself stay, and so do verbs from older versions of a playlist.</li>
+      <li><b>An empty list hands the spinner back.</b> In “only mine” mode with no verbs, Claude Code keeps its own. The command goes one step further and removes the key, so the file looks as if you never touched it.</li>
+      <li><b>Short verbs play best.</b> The verb shares a line with the timer, so a long one wraps or gets cut off in a narrow terminal. A gloss in parentheses, like the Infocom spells have, is fun but costs room.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="h-sources">
+    <h2 id="h-sources">Sources</h2>
+    <ol>
+      <li>Anthropic. “<a href="https://code.claude.com/docs/en/settings-reference#spinnerverbs">spinnerVerbs</a>.” <i>Claude Code: All settings</i>.</li>
+      <li>Anthropic. “<a href="https://code.claude.com/docs/en/settings#when-edits-take-effect">When edits take effect</a>.” <i>Claude Code: Settings files and precedence</i>.</li>
+      <li>Ball, Stephen. <a href="https://github.com/sdball/holdmusic"><i>holdmusic</i></a>. The command-line tool these playlists come from. The page reads them from <a href="playlists.json">playlists.json</a>.</li>
+      <li>jq contributors. <a href="https://jqlang.org/manual/"><i>jq Manual</i></a>.</li>
+    </ol>
+  </section>
+
+  <p class="foot">The link in your address bar remembers your lines and choices, so you can share it.</p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+// ---------- Playlists ----------
+// read from playlists.json beside this page, in holdmusic's playlist format
+let PLAYLISTS = [];
+let byName = {};
+// every verb any line can add, for "swap out"
+let ALL_VERBS = [];
+let loadFailed = false;
+const titleOf = (p) => p.title || p.name[0].toUpperCase() + p.name.slice(1).replace(/-/g, " ");
+
+async function loadPlaylists() {
+  try {
+    const res = await fetch("playlists.json");
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    // skip anything malformed rather than lose the whole shelf to one bad entry
+    PLAYLISTS = data.filter((p) => p && typeof p.name === "string" && Array.isArray(p.verbs))
+      .map((p) => ({ ...p, tags: Array.isArray(p.tags) ? p.tags : [], verbs: p.verbs.filter((v) => typeof v === "string" && v.trim()) }));
+  } catch (e) {
+    loadFailed = true;
+  }
+  byName = Object.fromEntries(PLAYLISTS.map((p) => [p.name, p]));
+  ALL_VERBS = [...new Set(PLAYLISTS.flatMap((p) => p.verbs))];
+}
+
+// the three the docs name; a stand-in for Claude Code's full built-in list
+const BUILTIN = ["Accomplishing", "Architecting", "Baking"];
+
+const FILES = {
+  user: { path: "~/.claude/settings.json", why: "~/.claude/settings.json changes the spinner in every project on this machine." },
+  project: { path: ".claude/settings.json", why: ".claude/settings.json, run from the project folder. Commit it and everyone on the project hears your hold music." },
+  local: { path: ".claude/settings.local.json", why: ".claude/settings.local.json, run from the project folder. Only you hear it, and only in this project." },
+};
+const KEEPS = {
+  keep: "Keep every verb the file already lists and add yours after them.",
+  swap: "Drop any verb that appears on a line here, keep ones you wrote yourself, then add yours.",
+  clean: "Throw out every verb the file lists and use only yours.",
+};
+
+// ---------- State ----------
+let picked = [];          // playlist names, in the order they were lit
+const dropped = new Set(); // verbs left out of a lit playlist
+let mode = "append";
+let file = "user";
+let keep = "keep";
+
+function ownVerbs() {
+  return $("own").value.split("\n").map((s) => s.trim().replace(/(…|\.\.\.)$/, "")).filter(Boolean);
+}
+
+function finalVerbs() {
+  const seen = new Set(), out = [];
+  const add = (v) => { if (!seen.has(v)) { seen.add(v); out.push(v); } };
+  for (const name of picked) for (const v of byName[name].verbs) if (!dropped.has(v)) add(v);
+  ownVerbs().forEach(add);
+  return out;
+}
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+// ---------- URL hash ----------
+function saveHash() {
+  // without playlists every pick looks unknown; leave the link alone so a reload can recover it
+  if (loadFailed) return;
+  const q = new URLSearchParams();
+  if (picked.length) q.set("p", picked.join(","));
+  if (mode !== "append") q.set("mode", mode);
+  if (file !== "user") q.set("file", file);
+  if (keep !== "keep") q.set("keep", keep);
+  for (const v of dropped) q.append("x", v);
+  for (const v of ownVerbs()) q.append("v", v);
+  const s = q.toString();
+  history.replaceState(null, "", s ? "#" + s : location.pathname + location.search);
+}
+
+function loadHash() {
+  const q = new URLSearchParams(location.hash.slice(1));
+  picked = (q.get("p") || "").split(",").filter((n) => byName[n]);
+  picked = [...new Set(picked)];
+  if (["append", "replace"].includes(q.get("mode"))) mode = q.get("mode");
+  if (FILES[q.get("file")]) file = q.get("file");
+  if (KEEPS[q.get("keep")]) keep = q.get("keep");
+  q.getAll("x").forEach((v) => dropped.add(v));
+  $("own").value = q.getAll("v").join("\n");
+}
+
+// ---------- Station 1: lines and tracks ----------
+function buildLines() {
+  const box = $("lines");
+  if (loadFailed) {
+    box.innerHTML = `<p class="nolines">The playlists didn't load. Reload to try again, or type your own verbs below.</p>`;
+    return;
+  }
+  for (const p of PLAYLISTS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "line";
+    b.dataset.name = p.name;
+    b.innerHTML = `<span class="lamp" aria-hidden="true"></span><span><span class="strip"></span><span class="line-desc"></span></span><span class="line-meta"></span>`;
+    b.querySelector(".strip").textContent = titleOf(p);
+    b.querySelector(".line-desc").textContent = p.description;
+    b.querySelector(".line-meta").textContent = `${plural(p.verbs.length, "verb")} · ${p.tags.join(", ")}`;
+    b.addEventListener("click", () => {
+      picked = picked.includes(p.name) ? picked.filter((n) => n !== p.name) : [...picked, p.name];
+      paint();
+    });
+    box.append(b);
+  }
+}
+
+// rebuilt only when the lit lines change, so ticking a box keeps its focus and its list open
+let tracksKey = null;
+function paintTracks() {
+  const box = $("tracks");
+  if (tracksKey !== picked.join(",")) {
+    tracksKey = picked.join(",");
+    const open = new Set([...box.querySelectorAll("details[open]")].map((d) => d.dataset.name));
+    box.textContent = "";
+    for (const name of picked) box.append(trackList(byName[name], open.has(name)));
+  }
+  for (const d of box.querySelectorAll("details")) {
+    const p = byName[d.dataset.name];
+    const on = p.verbs.filter((v) => !dropped.has(v)).length;
+    d.querySelector(".of").textContent = `${on} of ${p.verbs.length} verbs`;
+    d.querySelectorAll("input").forEach((c) => { c.checked = !dropped.has(c.value); });
+  }
+}
+
+function trackList(p, open) {
+  const d = document.createElement("details");
+  d.dataset.name = p.name;
+  d.open = open;
+  const s = document.createElement("summary");
+  s.innerHTML = `<span></span><span class="of"></span>`;
+  s.firstChild.textContent = titleOf(p);
+  d.append(s);
+
+  const all = document.createElement("div");
+  all.className = "all";
+  for (const [label, fn] of [["All", (v) => dropped.delete(v)], ["None", (v) => dropped.add(v)]]) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.setAttribute("aria-label", `${label} of ${titleOf(p)}`);
+    b.addEventListener("click", () => { p.verbs.forEach(fn); paint(); });
+    all.append(b);
+  }
+  d.append(all);
+
+  const ul = document.createElement("ul");
+  for (const v of p.verbs) {
+    const li = document.createElement("li");
+    const label = document.createElement("label");
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.value = v;
+    check.addEventListener("change", () => {
+      check.checked ? dropped.delete(v) : dropped.add(v);
+      paint();
+    });
+    label.append(check, document.createTextNode(v));
+    li.append(label);
+    ul.append(li);
+  }
+  d.append(ul);
+  return d;
+}
+
+// ---------- Station 2: the spinner ----------
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const FRAMES = ["·", "✢", "✳", "✶", "✻", "✽", "✻", "✶", "✳", "✢"];
+let frame = 0, secs = 0, current = null;
+
+function pool() {
+  const mine = finalVerbs().map((v) => ({ v, from: "mine" }));
+  const theirs = BUILTIN.map((v) => ({ v, from: "builtin" }));
+  // replace with nothing falls back to the built-ins, per the docs
+  if (mode === "replace") return mine.length ? mine : theirs;
+  return [...mine, ...theirs];
+}
+
+function sourceOf(v) {
+  for (const name of picked) if (byName[name].verbs.includes(v)) return titleOf(byName[name]);
+  return null;
+}
+
+function nextVerb() {
+  const all = pool();
+  const choices = all.length > 1 ? all.filter((c) => !current || c.v !== current.v) : all;
+  current = choices[Math.floor(Math.random() * choices.length)];
+  secs = 0;
+  paintSpinner();
+}
+
+function paintSpinner() {
+  if (!current || !pool().some((c) => c.v === current.v)) current = pool()[0];
+  $("said").textContent = current.v + "…";
+  $("secs").textContent = secs;
+  const mine = finalVerbs().length;
+  let where;
+  if (current.from === "builtin") {
+    where = mode === "replace"
+      ? "one of Claude Code's own. With no verbs of yours, “only mine” keeps the built-ins."
+      : "one of Claude Code's own.";
+  } else {
+    const src = sourceOf(current.v);
+    where = src ? `from ${src}.` : "one you wrote.";
+  }
+  $("now").innerHTML = `Now playing <b></b>, ${where} ${mode === "append" && mine ? `Your ${plural(mine, "verb")} take turns with Claude Code's.` : ""}`;
+  $("now").querySelector("b").textContent = current.v;
+}
+
+function tick() {
+  frame = (frame + 1) % FRAMES.length;
+  $("glyph").textContent = FRAMES[frame];
+}
+
+let timers = [];
+function startSpinner() {
+  timers.forEach(clearInterval);
+  timers = [];
+  if (reduceMotion.matches) { $("glyph").textContent = "✻"; return; }
+  timers.push(setInterval(tick, 120));
+  timers.push(setInterval(() => { secs++; $("secs").textContent = secs; }, 1000));
+  timers.push(setInterval(nextVerb, 3200));
+}
+reduceMotion.addEventListener("change", startSpinner);
+
+// ---------- Station 3: commands ----------
+// single-quote for the shell: close the quote, add an escaped one, reopen
+const sh = (s) => "'" + s.replace(/'/g, "'\\''") + "'";
+
+function backupLines(path) {
+  return [
+    `f=${path}`,
+    `b="$f.$(date +%Y%m%d-%H%M%S).bak"`,
+  ];
+}
+
+function writeCommand() {
+  const add = finalVerbs();
+  const args = [`--argjson add ${sh(JSON.stringify(add))}`];
+  let verbs;
+  if (keep === "keep") verbs = "(.verbs // []) + $add | dedupe";
+  else if (keep === "swap") {
+    args.push(`--argjson ours ${sh(JSON.stringify(ALL_VERBS))}`);
+    verbs = "(.verbs // []) - $ours + $add | dedupe";
+  } else verbs = "$add";
+  const said = add.length || keep === "keep"
+    ? "Hold music is playing."
+    : "No verbs left, so Claude Code's own are back.";
+  return [
+    "(",
+    ...backupLines(FILES[file].path),
+    `mkdir -p "$(dirname "$f")" && { [ -s "$f" ] || echo '{}' > "$f"; } &&`,
+    `cp "$f" "$b" &&`,
+    `out=$(jq ${args.join(" ")} '`,
+    `  def dedupe: reduce .[] as $v ([]; if any(.[]; . == $v) then . else . + [$v] end);`,
+    `  .spinnerVerbs = ((.spinnerVerbs // {}) | .mode = "${mode}" | .verbs = (${verbs}))`,
+    `  | if (.spinnerVerbs.verbs | length) == 0 then del(.spinnerVerbs) else . end`,
+    `' "$b") &&`,
+    `printf '%s\\n' "$out" > "$f" &&`,
+    `echo "${said} To undo: cp \\"$b\\" \\"$f\\""`,
+    ")",
+  ].join("\n");
+}
+
+function stopCommand() {
+  return [
+    "(",
+    ...backupLines(FILES[file].path),
+    `cp "$f" "$b" &&`,
+    `out=$(jq 'del(.spinnerVerbs)' "$b") &&`,
+    `printf '%s\\n' "$out" > "$f" &&`,
+    `echo "Claude Code's own verbs are back. To undo: cp \\"$b\\" \\"$f\\""`,
+    ")",
+  ].join("\n");
+}
+
+const peekCommand = () => `jq '.spinnerVerbs' ${FILES[file].path}`;
+
+const COPY_NAMES = { cmd: "the command", peek: "the peek command", stop: "the stop command" };
+document.querySelectorAll("[data-copy]").forEach((b) => {
+  b.addEventListener("click", async () => {
+    const pre = $(b.dataset.copy);
+    try {
+      await navigator.clipboard.writeText(pre.textContent);
+      $("copied").textContent = `Copied ${COPY_NAMES[b.dataset.copy]}. Paste it into a terminal and press Return.`;
+    } catch (e) {
+      // no clipboard access: select it so a keyboard copy works
+      const r = document.createRange();
+      r.selectNodeContents(pre);
+      getSelection().removeAllRanges();
+      getSelection().addRange(r);
+      pre.focus();
+      $("copied").textContent = "Your browser wouldn't let the page copy, so the text is selected. Copy it with your keyboard.";
+    }
+  });
+});
+
+// ---------- Segmented choices ----------
+function wireSeg(id, set) {
+  $(id).addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-v]");
+    if (!b) return;
+    set(b.dataset.v);
+    paint();
+  });
+}
+const pressSeg = (id, v) => $(id).querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === v));
+wireSeg("mode", (v) => { mode = v; });
+wireSeg("file", (v) => { file = v; });
+wireSeg("keep", (v) => { keep = v; });
+
+// ---------- Paint ----------
+function paint() {
+  document.querySelectorAll(".line").forEach((b) => b.setAttribute("aria-pressed", picked.includes(b.dataset.name)));
+  paintTracks();
+
+  const n = finalVerbs().length;
+  const lines = picked.length;
+  const own = ownVerbs().length;
+  const from = [lines && plural(lines, "line"), own && `${own} of your own`].filter(Boolean).join(" and ");
+  $("tally").textContent = n
+    ? `${plural(n, "verb")} on hold, from ${from}.`
+    : "No verbs on hold yet. Light a line or type one of your own.";
+
+  pressSeg("mode", mode);
+  pressSeg("file", file);
+  pressSeg("keep", keep);
+  $("file-why").textContent = "Writes " + FILES[file].why;
+  $("keep-why").textContent = KEEPS[keep];
+
+  $("cmd").textContent = writeCommand();
+  $("peek").textContent = peekCommand();
+  $("stop").textContent = stopCommand();
+
+  paintSpinner();
+  saveHash();
+}
+
+$("own").addEventListener("input", () => paint());
+$("next").addEventListener("click", nextVerb);
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  if (e.key === "n" || e.key === "N") { e.preventDefault(); nextVerb(); }
+});
+
+// ---------- Start ----------
+loadPlaylists().then(() => {
+  buildLines();
+  loadHash();
+  paint();
+  nextVerb();
+  startSpinner();
+});
+</script>
+</body>
+</html>
