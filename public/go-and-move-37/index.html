@@ -1,0 +1,1681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Go and Move 37 — The Cabinet of Curios</title>
+<meta name="description" content="Learn the game of Go by capturing stones, fighting a ko, making two eyes, and counting a finished game. Then replay AlphaGo's game against Lee Sedol and see why move 37 stunned the world's best players.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚪</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: celadon glaze and brush ink */
+  --bg: #EBEFE6;
+  --paper: #F9FAF4;
+  --ink: #1A201C;
+  --muted: #5B6660;
+  --edge: #CBD4C9;
+  --jade: #2B6A56;
+  --jade-ink: #F3FAF6;
+  --red: #B3361E;
+  --focus: #1F5FA8;
+  --tint: #DDE8DA;
+
+  /* Boards: kaya wood, slate and shell, in either theme */
+  --wood: #DDB36B;
+  --wood-edge: #B68943;
+  --wood-line: rgba(48, 30, 10, .64);
+  --wood-ink: #2A1C0C;
+  --band: rgba(32, 104, 84, .22);
+  --band-hot: rgba(179, 54, 30, .22);
+
+  --head: "Gowun Batang", "Nanum Myeongjo", Georgia, serif;
+  --text: "Nanum Gothic", "Apple SD Gothic Neo", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1311; --paper: #161D1A; --ink: #E3EAE5; --muted: #98A69E; --edge: #2E3934;
+    --jade: #7CC6AA; --jade-ink: #0A1912; --red: #F08268; --focus: #8AB4F8; --tint: #213530;
+    --wood: #B98D4D; --wood-edge: #8C6833; --wood-line: rgba(30, 18, 6, .72); --wood-ink: #1C1307;
+    --band: rgba(20, 90, 70, .3); --band-hot: rgba(150, 30, 10, .28);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1311; --paper: #161D1A; --ink: #E3EAE5; --muted: #98A69E; --edge: #2E3934;
+  --jade: #7CC6AA; --jade-ink: #0A1912; --red: #F08268; --focus: #8AB4F8; --tint: #213530;
+  --wood: #B98D4D; --wood-edge: #8C6833; --wood-line: rgba(30, 18, 6, .72); --wood-ink: #1C1307;
+  --band: rgba(20, 90, 70, .3); --band-hot: rgba(150, 30, 10, .28);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 500 .82em var(--mono); border: 1px solid var(--edge); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3em; background: var(--paper); }
+.pt { font: 500 .92em var(--mono); white-space: nowrap; }
+
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1 {
+  font: 700 clamp(2.2rem, 7.5vw, 3.6rem)/1.08 var(--head);
+  letter-spacing: -0.01em;
+  margin: 0 0 .7rem;
+}
+.lede { margin: 0 0 .6rem; max-width: 64ch; }
+.howto { margin: 0 0 1.6rem; color: var(--muted); font-size: .95rem; max-width: 64ch; }
+h2 { font: 700 1.6rem/1.25 var(--head); margin: 0 0 .75rem; }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  padding: 1.1rem 1.1rem 1.2rem;
+  margin-bottom: 1.6rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03), 0 18px 32px -28px rgba(20,50,40,.6);
+}
+.station {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font: 800 .74rem/1 var(--text);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--jade);
+  margin: 0 0 .5rem;
+}
+.station::before {
+  content: "";
+  width: .8rem;
+  height: .8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6a6660, #121110 70%);
+}
+.station.w::before { background: radial-gradient(circle at 35% 30%, #fff, #cfc9bc 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .45rem 0 0; max-width: 68ch; }
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+.split.wide { grid-template-columns: minmax(0, 580px) minmax(0, 1fr); }
+@media (max-width: 860px) { .split, .split.wide { grid-template-columns: minmax(0, 1fr); } }
+.side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .85rem; align-content: start; min-width: 0; }
+
+/* ---------- Go boards ---------- */
+.goban {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--wood-edge), 0 10px 22px -14px rgba(40,25,10,.8);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.goban.big { max-width: 580px; }
+.goban[tabindex] { cursor: pointer; }
+.goban:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.goban .wood { fill: var(--wood); }
+.goban .lines line { stroke: var(--wood-line); stroke-width: 1.4; }
+.goban .star { fill: var(--wood-line); }
+.goban .lbl { font: 500 15px var(--mono); fill: var(--wood-ink); opacity: .75; text-anchor: middle; }
+.goban .b-hi { stop-color: #67625B; }
+.goban .b-lo { stop-color: #121110; }
+.goban .w-hi { stop-color: #FFFFFF; }
+.goban .w-lo { stop-color: #D3CDBF; }
+.goban .stone.w { stroke: rgba(60, 42, 20, .45); stroke-width: 1; }
+.goban .stone.dead { opacity: .42; }
+.goban .stone.ghost { opacity: .45; }
+.goban .stone.drop { animation: drop .16s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes drop { from { transform: scale(1.18); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+.goban .band { fill: var(--band); }
+.goban .band.hot { fill: var(--band-hot); }
+.goban .tag { font: 700 15px var(--mono); fill: var(--wood-ink); text-anchor: middle; }
+.goban.big .lbl { font-size: 19px; }
+.goban.big .tag { font-size: 20px; }
+.goban .tag.hot { fill: #A3301A; }
+.goban .terr-b { fill: #151412; }
+.goban .terr-w { fill: #FBF9F3; stroke: rgba(40,25,10,.5); stroke-width: 1; }
+.goban .n { font: 700 16px var(--mono); text-anchor: middle; dominant-baseline: central; }
+.goban .n.small { font-size: 13px; }
+.goban .n.on-b { fill: #F2EEE6; }
+.goban .n.on-w { fill: #1B1A18; }
+.goban .n.alarm { fill: var(--red); }
+.goban .n.on-b.alarm { fill: #FF9C86; }
+.goban .last { fill: none; stroke: #D8432A; stroke-width: 3.2; }
+.goban .atari { fill: none; stroke: var(--red); stroke-width: 3; stroke-dasharray: 6 4; }
+.goban .lib { fill: var(--jade); stroke: var(--wood); stroke-width: 2; }
+.goban .hot-ring { fill: none; stroke: var(--focus); stroke-width: 3.5; }
+/* a cream badge with a dark red ring, so it stands out from the wood in either theme */
+/* a move that wasn't played: a faded stone of the color that would play it, ringed with dashes */
+.goban .stone.plan { opacity: .62; }
+.goban .plan-ring { fill: none; stroke: #A3301A; stroke-width: 2.5; stroke-dasharray: 5 4; }
+.goban .letter { font: 700 21px var(--head); text-anchor: middle; dominant-baseline: central; }
+.goban .letter.on-b { fill: #FFF8EC; }
+.goban .letter.on-w { fill: #1B1A18; }
+.goban .cursor { fill: none; stroke: var(--focus); stroke-width: 3; }
+
+/* ---------- Controls ---------- */
+.btns { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.btn {
+  font: 700 .95rem var(--text);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: .4rem .85rem;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.go { background: var(--jade); border-color: var(--jade); color: var(--jade-ink); }
+.btn kbd { margin-left: .45rem; font-size: .75rem; }
+.btn.go kbd { background: transparent; color: inherit; border-color: currentColor; }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; background: var(--paper); }
+.seg button {
+  font: 500 .92rem var(--text);
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  padding: .35rem .75rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--edge); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; }
+.ctl > span { font-size: .9rem; color: var(--muted); }
+
+.check { display: flex; align-items: center; gap: .55rem; min-height: 40px; cursor: pointer; font-size: .98rem; }
+.check input { width: 22px; height: 22px; margin: 0; accent-color: var(--jade); }
+
+.stats { font: 500 .9rem var(--mono); color: var(--muted); margin: 0; }
+.caption { margin: 0; min-height: 5.4em; }
+.caption .sub { display: block; color: var(--muted); font-size: .95rem; margin-top: .25rem; }
+.caption b { color: var(--jade); }
+.caption .no { color: var(--red); font-weight: 700; }
+
+/* ---------- Station 4: counting ---------- */
+.table-wrap { overflow-x: auto; }
+table.score { border-collapse: collapse; font-size: .95rem; width: 100%; min-width: 300px; }
+table.score th, table.score td { padding: .35rem .5rem; text-align: right; border-bottom: 1px solid var(--edge); }
+table.score th:first-child, table.score td:first-child { text-align: left; }
+table.score thead th { font-weight: 700; color: var(--muted); font-size: .85rem; }
+table.score td { font-family: var(--mono); }
+table.score td:first-child { font-family: var(--text); font-weight: 700; }
+table.score .total { font-weight: 500; color: var(--ink); }
+.verdict { margin: 0; font-weight: 700; }
+
+/* ---------- Station 5: corners ---------- */
+table.score .best td { background: var(--tint); }
+
+/* ---------- Station 6: height ---------- */
+.lines-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; font-size: .96rem; line-height: 1.45; }
+.lines-list li { display: grid; grid-template-columns: 4.4rem 1fr; gap: .5rem; padding: .3rem .5rem; border-radius: 6px; border: 1px solid transparent; }
+.lines-list li b { font-family: var(--mono); font-weight: 500; }
+.lines-list li[aria-current="true"] { border-color: var(--jade); background: var(--tint); }
+.stagebar { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.stagebar li { font-size: .82rem; color: var(--muted); border: 1px solid var(--edge); border-radius: 999px; padding: .1rem .6rem; }
+.stagebar li[aria-current="step"] { background: var(--jade); border-color: var(--jade); color: var(--jade-ink); }
+
+/* ---------- Station 7: the game ---------- */
+.scrub { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.scrub input[type=range] { width: 100%; min-height: 44px; accent-color: var(--jade); margin: 0; }
+.scrub output { font: 500 .92rem var(--mono); color: var(--muted); white-space: nowrap; }
+.players { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: 0; font-size: .95rem; }
+.players span { display: inline-flex; align-items: center; gap: .4rem; }
+.players i { width: .9rem; height: .9rem; border-radius: 50%; display: inline-block; background: radial-gradient(circle at 35% 30%, #6a6660, #121110 70%); }
+.players i.w { background: radial-gradient(circle at 35% 30%, #fff, #cfc9bc 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.caption.long { min-height: 9.5em; }
+blockquote.pull {
+  margin: 1.2rem 0 0;
+  padding: .2rem 0 .2rem 1rem;
+  border-left: 3px solid var(--jade);
+  font: 400 1.15rem/1.5 var(--head);
+  max-width: 60ch;
+}
+blockquote.pull footer { margin: .35rem 0 0; font: 400 .9rem var(--text); color: var(--muted); }
+
+/* ---------- Notes ---------- */
+.notes, .sources { max-width: 68ch; margin-top: 2.2rem; }
+.notes li { margin-bottom: .6rem; }
+.sources li { margin-bottom: .45rem; font-size: .95rem; }
+.wrap > footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 68ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Go and Move 37</h1>
+  <p class="lede">Go is two players taking turns putting black and white stones on a grid. Stones never move once they're down, but they can be surrounded and taken off, and whoever surrounds more of the board wins. Work through the first six stations and you'll know enough Go to see why, in 2016, one stone played by a computer program made professionals think it had been put on the wrong point.</p>
+  <p class="howto">Tap a point to play a stone there. Every board also works from the keyboard: Tab to it, move with the arrow keys (<kbd>Shift</kbd> moves further), and press <kbd>Space</kbd> to play. In whichever station you're using, <kbd>B</kbd> takes a move back and <kbd>N</kbd> steps forward where there's something to step through. In Station 7, <kbd>J</kbd> jumps to just before the famous move.</p>
+
+  <!-- 1. Liberties -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="s1-h">Liberties and capture</h2>
+      <p>The empty points right next to a stone, up, down, left, and right, are its <b>liberties</b>. Stones of one color that touch along the lines form a <b>group</b> and share their liberties. When you fill a group's last liberty, you capture it: every stone in it comes off the board. The number on each stone is its group's liberties, and a dashed red ring means a group is down to one, which is called <b>atari</b>.</p>
+    </div>
+    <div class="split">
+      <svg class="goban" id="s1-board" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 1 board, 9 by 9" aria-describedby="s1-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
+      <div class="side">
+        <div class="ctl" role="group" aria-label="Load a position">
+          <span>Try</span>
+          <div class="seg" id="s1-pats"></div>
+        </div>
+        <div class="ctl" role="group" aria-label="Who plays">
+          <span>Turns</span>
+          <div class="seg" id="s1-turns"></div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="s1-undo" aria-keyshortcuts="B">Take back<kbd>B</kbd></button>
+          <button type="button" class="btn" id="s1-reset">Start over</button>
+        </div>
+        <label class="check"><input type="checkbox" id="s1-counts" checked> Write each group's liberties on its stones</label>
+        <p class="stats" id="s1-stats"></p>
+        <p class="caption" id="s1-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Ko -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <p class="station w">Station 2</p>
+      <h2 id="s2-h">Ko: no taking straight back</h2>
+      <p>Sometimes a capture leaves the capturing stone in atari itself, and taking it back would put the board exactly as it was. The two players could swap stones forever. So there's one more rule: <b>you may not make a move that puts the whole board back the way it was before</b>. That shape is called a <b>ko</b>. Black captures first. Then try to take back with White, and see what it takes to be allowed.</p>
+    </div>
+    <div class="split">
+      <svg class="goban" id="s2-board" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 2 board, 9 by 9" aria-describedby="s2-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
+      <div class="side">
+        <div class="ctl" role="group" aria-label="Load a position">
+          <span>Try</span>
+          <div class="seg" id="s2-pats"></div>
+        </div>
+        <div class="ctl" role="group" aria-label="Who plays">
+          <span>Turns</span>
+          <div class="seg" id="s2-turns"></div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="s2-undo" aria-keyshortcuts="B">Take back<kbd>B</kbd></button>
+          <button type="button" class="btn" id="s2-reset">Start over</button>
+        </div>
+        <label class="check"><input type="checkbox" id="s2-counts" checked> Write each group's liberties on its stones</label>
+        <p class="stats" id="s2-stats"></p>
+        <p class="caption" id="s2-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Eyes -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s3-h">Two eyes live</h2>
+      <p>You can't play a stone where it would have no liberties at all, <b>unless it captures something</b>, because then the capture gives it room. An empty point surrounded by one color is an <b>eye</b>. A group with one eye can be captured: fill its outside liberties, then play in the eye. A group with <b>two separate eyes</b> can never be captured, because you'd have to fill both at once. Play White and try to capture Black.</p>
+    </div>
+    <div class="split">
+      <svg class="goban" id="s3-board" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 3 board, 9 by 9" aria-describedby="s3-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
+      <div class="side">
+        <div class="ctl" role="group" aria-label="Load a position">
+          <span>Try</span>
+          <div class="seg" id="s3-pats"></div>
+        </div>
+        <div class="ctl" role="group" aria-label="Who plays">
+          <span>Turns</span>
+          <div class="seg" id="s3-turns"></div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="s3-undo" aria-keyshortcuts="B">Take back<kbd>B</kbd></button>
+          <button type="button" class="btn" id="s3-reset">Start over</button>
+        </div>
+        <label class="check"><input type="checkbox" id="s3-counts" checked> Write each group's liberties on its stones</label>
+        <p class="stats" id="s3-stats"></p>
+        <p class="caption" id="s3-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Counting -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <p class="station w">Station 4</p>
+      <h2 id="s4-h">Counting a finished game</h2>
+      <p>The game ends when both players pass in a row. Then each side counts its <b>area</b>: its stones on the board, plus the empty points that touch only its own stones. Stones that are surrounded and can't make two eyes are <b>dead</b>, and come off before counting. White moved second, so White gets <b>komi</b>, extra points to make up for it: 7.5 under the rules AlphaGo and Lee Sedol played by. The half point means there's never a tie. Two stones on this 9 by 9 board are dead. Tap each to take it off and watch the count change.</p>
+      <p>Professional games often never get this far. A player who counts and sees no way to catch up <b>resigns</b>, and that ends the game on the spot, with no count at all. Both games in Station 7 ended that way.</p>
+    </div>
+    <div class="split">
+      <svg class="goban" id="s4-board" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 4 board, a finished 9 by 9 game" aria-describedby="s4-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
+      <div class="side">
+        <div class="table-wrap">
+          <table class="score" aria-describedby="s4-verdict">
+            <thead><tr><th scope="col"></th><th scope="col">Stones</th><th scope="col">Territory</th><th scope="col">Komi</th><th scope="col">Total</th></tr></thead>
+            <tbody id="s4-rows"></tbody>
+          </table>
+        </div>
+        <p class="verdict" id="s4-verdict" aria-live="polite"></p>
+        <label class="check"><input type="checkbox" id="s4-terr" checked> Mark whose territory each empty point is</label>
+        <div class="btns">
+          <button type="button" class="btn" id="s4-reset">Put the stones back</button>
+        </div>
+        <p class="caption" id="s4-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Corners -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
+      <h2 id="s5-h">Corners first</h2>
+      <p>Now the full 19 by 19 board. Territory has to be walled in, and the edge of the board is a wall you get for free. In a corner you have two edges, on a side one, and in the middle none. Here are three walls around the same number of points. Change the size and compare how many stones each one costs. This is why games open in the corners, then spread along the sides, and get to the middle last.</p>
+    </div>
+    <div class="split wide">
+      <svg class="goban big" id="s5-board" role="img" aria-describedby="s5-cap"></svg>
+      <div class="side">
+        <div class="ctl" role="group" aria-label="Size of the area">
+          <span>Wall in</span>
+          <div class="seg" id="s5-sizes"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="score">
+            <thead><tr><th scope="col">Where</th><th scope="col">Stones</th><th scope="col">Points</th><th scope="col">Points per stone</th></tr></thead>
+            <tbody id="s5-rows"></tbody>
+          </table>
+        </div>
+        <p class="caption" id="s5-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Height -->
+  <section class="panel" aria-labelledby="s6-h">
+    <div class="panel-head">
+      <p class="station w">Station 6</p>
+      <h2 id="s6-h">Third line, fourth line, and the shoulder hit</h2>
+      <p>Go players count lines in from the nearest edge: the edge itself is the first line. How far from the edge a stone sits decides what it's good for. Low stones are hard to dislodge and make territory you can count. High stones make less certain territory, but they reach toward the center and help everywhere it's still open. That reach is called <b>influence</b>.</p>
+      <p>A <b>shoulder hit</b> is a stone played diagonally next to an opponent's stone, on the side facing the center. It sits on the stone's shoulder rather than touching it, so it takes none of its liberties. What it does is get in the way: it stands between that stone and the open middle of the board. Step through one below and see what each side ends up with.</p>
+    </div>
+    <div class="split wide">
+      <svg class="goban big" id="s6-board" role="img" aria-describedby="s6-cap"></svg>
+      <div class="side">
+        <ul class="lines-list" id="s6-lines">
+          <li data-line="2"><b>Line 2</b><span>Too low. Stones here make too little territory.</span></li>
+          <li data-line="3"><b>Line 3</b><span>The line of territory: it takes the side for sure.</span></li>
+          <li data-line="4"><b>Line 4</b><span>The line of influence: it looks toward the center.</span></li>
+          <li data-line="5"><b>Line 5</b><span>Too high. A stone slipped in underneath on the third line takes the side from it.</span></li>
+        </ul>
+        <div class="ctl" role="group" aria-label="Which shoulder hit">
+          <span>Shoulder hit a stone on</span>
+          <div class="seg" id="s6-which">
+            <button type="button" data-line="3">Line 3</button>
+            <button type="button" data-line="4">Line 4</button>
+          </div>
+        </div>
+        <ol class="stagebar" id="s6-stages" aria-label="Steps"></ol>
+        <div class="btns">
+          <button type="button" class="btn" id="s6-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s6-next" aria-keyshortcuts="N">Next<kbd>N</kbd></button>
+        </div>
+        <p class="caption long" id="s6-cap" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. The game -->
+  <section class="panel" aria-labelledby="s7-h">
+    <div class="panel-head">
+      <p class="station">Station 7</p>
+      <h2 id="s7-h">Move 37</h2>
+      <p>On 10 March 2016, in a hotel in Seoul, the program AlphaGo played Lee Sedol, one of the strongest players in the world, in the second game of a five-game match. AlphaGo had won the first. This is the real game, move by move, from the first stone. Press Before move 37 to jump ahead, then Next to see it, and read what happened in the room. The other four games of the match are here too, each with notes from Fan Hui's commentary.</p>
+    </div>
+    <div class="split wide">
+      <svg class="goban big" id="s7-board" role="img" aria-describedby="s7-cap"></svg>
+      <div class="side">
+        <div class="ctl" role="group" aria-label="Game">
+          <span>Game</span>
+          <div class="seg" id="s7-games">
+            <button type="button" data-game="1" aria-label="Game 1">1</button>
+            <button type="button" data-game="2" aria-label="Game 2">2</button>
+            <button type="button" data-game="3" aria-label="Game 3">3</button>
+            <button type="button" data-game="4" aria-label="Game 4">4</button>
+            <button type="button" data-game="5" aria-label="Game 5">5</button>
+          </div>
+        </div>
+        <p class="players" id="s7-players"></p>
+        <div class="btns">
+          <button type="button" class="btn" id="s7-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s7-next" aria-keyshortcuts="N">Next<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s7-key" aria-keyshortcuts="J"></button>
+        </div>
+        <div class="scrub">
+          <input type="range" id="s7-range" min="0" max="211" value="36" aria-label="Move number">
+          <output id="s7-out" for="s7-range"></output>
+        </div>
+        <div class="ctl" role="group" aria-label="Number the stones">
+          <span>Numbers</span>
+          <div class="seg" id="s7-nums">
+            <button type="button" data-nums="off">Off</button>
+            <button type="button" data-nums="last">Last 10</button>
+            <button type="button" data-nums="all">All</button>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="s7-infl"> Shade each side's rough influence</label>
+        <p class="caption long" id="s7-cap" aria-live="polite"></p>
+      </div>
+    </div>
+    <blockquote class="pull">
+      <p>“A beginner plays the corners, an average player the sides; but a master controls the center.”</p>
+      <footer>The old Chinese saying Fan Hui says move 37 reminded him of, in his commentary on the game.</footer>
+    </blockquote>
+  </section>
+
+  <section class="notes" aria-labelledby="why-h">
+    <h2 id="why-h">Why move 37 was stunning</h2>
+    <ul>
+      <li><b>It broke a rule everyone could see.</b> Station 6's crawl is something every strong player has in their bones. A shoulder hit from the fifth line lets the other side run down the fourth line and keep a wide, solid strip of territory. Professionals gave that up only for something big, and here nothing on the board said there was anything big to get. Fan Hui writes that when it came up on the screen, many players thought the stone had been put in the wrong place.</li>
+      <li><b>It gave up the countable for the uncountable.</b> White's side territory after 37 is easy to count. Black's gain, a loose net over the center that worked with Black's stones along the bottom, isn't. People trust what they can count. AlphaGo had judged the whole board, and it was right: its own estimate of its chances rose over the next few moves, and Black went on to win.</li>
+      <li><b>AlphaGo knew no human would play it.</b> One part of AlphaGo had been trained on about 30 million positions from games between strong human players, to guess what such a player would do next. That part put the chance of a human choosing 37 at about 1 in 10,000. Another part, which plays games out and judges the results, liked it anyway. So the move was surprising by AlphaGo's own measure, and it played the move regardless.</li>
+      <li><b>It wasn't even the plan.</b> Fan Hui looked at AlphaGo's data after the match. A few moves earlier it had been planning a jump on the left side (point A at move 37). It found the shoulder hit only after White 36.</li>
+      <li><b>It came from a machine at the very top.</b> Ten years earlier, programs played Go like decent amateurs. The paper describing AlphaGo calls beating a top professional a feat thought to be at least a decade away. Move 37 wasn't a lucky glitch from a weak program. It was a strong program showing professionals something about Go they hadn't seen.</li>
+    </ul>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <ul>
+      <li><b>Stones don't move.</b> Once played, a stone stays put until it's captured. Every bit of strategy on this page comes from where stones are placed, and in what order.</li>
+      <li><b>A group lives or dies together.</b> Join two stones and they share every liberty. That's why connecting matters so much: two weak stones can become one strong group.</li>
+      <li><b>Two eyes is the whole secret of life.</b> Station 3's group with two eyes can't be captured by any number of moves, because each eye is a point the other side is never allowed to play. Almost every fight in Go comes down to whether a group can make two eyes.</li>
+      <li><b>Ko makes fights about tempo.</b> In Station 2, White can retake only after something else on the board changes. In a real game that something is a <i>ko threat</i>: a move elsewhere so dangerous that Black answers it, and then White may take the ko back.</li>
+      <li><b>Corners are cheapest.</b> In Station 5, walling in 25 points costs 10 stones in a corner, 15 on a side, and 20 in the middle. Both games in Station 7 open with all four corners taken before anything else.</li>
+      <li><b>Height is a trade.</b> A wall on the fourth line keeps 3 points per row behind it. The same wall on the third line keeps 2. In exchange, the higher wall leaves more room underneath for the other side to slip in. Players weigh that trade on every move.</li>
+      <li><b>The rules don't say any of this.</b> Station 1's rules, plus ko, are the whole game. Everything about corners, lines, and influence is something players found out over centuries of games, and AlphaGo found some of it out differently.</li>
+    </ul>
+  </section>
+
+  <section class="notes" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <ul>
+      <li><b>An old game.</b> Go began in China more than 2,500 years ago and is mentioned in the <i>Zuo Zhuan</i>, a chronicle from the 4th century BCE. It's called <i>weiqi</i> in Chinese, <i>baduk</i> in Korean, and <i>igo</i> in Japanese, which is where the English name comes from.</li>
+      <li><b>A hard game for computers.</b> A chess program can look at every move and reply a few turns deep. Go has around 250 legal moves a turn and games last over 200 moves, so that approach drowns. Until 2015 no program had beaten a professional on a full board without a head start.</li>
+      <li><b>AlphaGo.</b> DeepMind, a London lab owned by Google, built AlphaGo from neural networks, programs that learn patterns from examples, and a search that plays out possible futures. In October 2015 it beat the European champion Fan Hui 5–0. He later joined the team, and his commentary on the Lee Sedol games is what Station 7's notes draw on.</li>
+      <li><b>The match.</b> AlphaGo played Lee Sedol from 9 to 15 March 2016 at the Four Seasons Hotel in Seoul, under Chinese rules with 7.5 komi and two hours each. AlphaGo won 4–1, and DeepMind says over 200 million people watched.</li>
+      <li><b>Lee's reply.</b> In Game 4, with the match already lost, Lee played White 78, a wedge into the middle of Black's framework that AlphaGo had also rated as about a 1 in 10,000 move. Gu Li called it the divine move. AlphaGo lost its way and resigned. Choose Game 4 in Station 7 to see it.</li>
+      <li><b>Afterward.</b> Professionals began copying AlphaGo's ideas, such as invading a corner early at the point next to it. Zhou Ruiyang, a world champion, said players had more or less all been affected by "Professor Alpha." Lee Sedol retired in November 2019, saying that even if he became number one, there was "an entity that cannot be defeated."</li>
+      <li><b>Another use for the board.</b> John Conway worked out his Game of Life with Go stones on a Go board. <a href="../conway-life/">Conway's Game of Life</a> puts it back on one.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>Fan Hui, commentary on all five games of the Google DeepMind Challenge Match ("Dawn", "Invention", "Revolution", "Endurance", and "Renewal"), with analysis by Gu Li and Zhou Ruiyang, translated by Lucas Baker, Thomas Hubert, and Thore Graepel (DeepMind, 2016). Read as the annotated game records in Andries Brouwer's <a href="https://homepages.cwi.nl/~aeb/go/games/games/AlphaGo/">AlphaGo game archive</a>, which also holds the records Station 7 replays.</li>
+      <li>David Silver, Aja Huang, Chris J. Maddison, et al., <a href="https://doi.org/10.1038/nature16961">"Mastering the game of Go with deep neural networks and tree search"</a>, <i>Nature</i> 529 (28 January 2016), pp. 484–489.</li>
+      <li>Google DeepMind, <a href="https://deepmind.google/research/alphago/">"AlphaGo"</a> (for the 1 in 10,000 figures and the audience).</li>
+      <li>Lucas Baker and Fan Hui, <a href="https://deepmind.google/blog/innovations-of-alphago/">"Innovations of AlphaGo"</a>, Google DeepMind blog (10 April 2017).</li>
+      <li>Kim Young-won, <a href="https://www.koreaherald.com/article/897580">"AlphaGo wins match against Go champ Lee Se-dol 4-1"</a>, <i>The Korea Herald</i> (15 March 2016).</li>
+      <li><a href="https://en.wikipedia.org/wiki/AlphaGo_versus_Lee_Sedol">"AlphaGo versus Lee Sedol"</a>, Wikipedia.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Lee_Sedol">"Lee Sedol"</a>, Wikipedia, for his retirement and his interview with Yonhap.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Go_(game)">"Go (game)"</a> and <a href="https://en.wikipedia.org/wiki/Rules_of_Go">"Rules of Go"</a>, Wikipedia.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Go_strategy_and_tactics">"Go strategy and tactics"</a>, Wikipedia, for corners and the lines from the edge.</li>
+      <li>John Tromp, <a href="https://tromp.github.io/go.html">"The Game of Go"</a>, for a precise statement of the rules with area scoring and the no-repeat rule this page enforces.</li>
+      <li>The 9 by 9 positions in Stations 1–4 and the crawls in Station 6 were made for this page. The counts in Stations 4 and 5 are worked out by the page as you play.</li>
+    </ul>
+  </section>
+
+  <footer>Station 7's game and move live in the address bar, so you can share a link to any position in any of the five games.</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NS = "http://www.w3.org/2000/svg";
+
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+
+// ---------- Rules ----------
+
+// a board is a flat array of points, row by row from the top: 0 empty, 1 black, 2 white
+const EMPTY = 0, BLACK = 1, WHITE = 2;
+const other = (c) => 3 - c;
+const colorName = (c) => (c === BLACK ? "Black" : "White");
+// Go coordinates skip the letter I, so it can't be mistaken for J
+const LETTERS = "ABCDEFGHJKLMNOPQRST";
+const nameOf = (size, i) => LETTERS[i % size] + (size - Math.floor(i / size));
+const ptName = (size, i) => `<span class="pt">${nameOf(size, i)}</span>`;
+
+const ADJ = new Map();
+function adj(size) {
+  if (!ADJ.has(size)) {
+    const list = [];
+    for (let i = 0; i < size * size; i++) {
+      const r = Math.floor(i / size), c = i % size, n = [];
+      if (r > 0) n.push(i - size);
+      if (r < size - 1) n.push(i + size);
+      if (c > 0) n.push(i - 1);
+      if (c < size - 1) n.push(i + 1);
+      list.push(n);
+    }
+    ADJ.set(size, list);
+  }
+  return ADJ.get(size);
+}
+
+function groupAt(grid, size, i) {
+  const color = grid[i], stones = [i], seen = new Set(stones), libs = new Set();
+  for (let k = 0; k < stones.length; k++) {
+    for (const n of adj(size)[stones[k]]) {
+      if (grid[n] === EMPTY) libs.add(n);
+      else if (grid[n] === color && !seen.has(n)) { seen.add(n); stones.push(n); }
+    }
+  }
+  return { color, stones, libs };
+}
+
+function groupsOf(grid, size) {
+  const done = new Set(), groups = [];
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i] === EMPTY || done.has(i)) continue;
+    const g = groupAt(grid, size, i);
+    g.stones.forEach((s) => done.add(s));
+    groups.push(g);
+  }
+  return groups;
+}
+
+// place the stone, take off any enemy group left with no liberties,
+// then refuse it if its own group has none (suicide) or the board repeats (ko)
+function tryPlay(grid, size, i, color, seen) {
+  if (grid[i] !== EMPTY) return { ok: false, why: "taken" };
+  const g = grid.slice();
+  g[i] = color;
+  const captured = [];
+  for (const n of adj(size)[i]) {
+    if (g[n] !== other(color)) continue;
+    const enemy = groupAt(g, size, n);
+    if (enemy.libs.size) continue;
+    for (const s of enemy.stones) { g[s] = EMPTY; captured.push(s); }
+  }
+  if (!groupAt(g, size, i).libs.size) return { ok: false, why: "suicide" };
+  if (seen && seen.has(g.join(""))) return { ok: false, why: "repeat", captured };
+  return { ok: true, grid: g, captured };
+}
+
+class Game {
+  constructor(size, grid, toPlay = BLACK) {
+    this.size = size;
+    this.grid = grid.slice();
+    this.toPlay = toPlay;
+    this.caps = { [BLACK]: 0, [WHITE]: 0 };
+    this.moves = [];
+    this.past = [];
+    // every position so far, for the rule that the board may never repeat
+    this.seen = new Set([this.grid.join("")]);
+  }
+
+  play(i, color = this.toPlay) {
+    const r = tryPlay(this.grid, this.size, i, color, this.seen);
+    if (!r.ok) return r;
+    this.past.push({ grid: this.grid, toPlay: this.toPlay, caps: { ...this.caps } });
+    this.grid = r.grid;
+    this.caps[color] += r.captured.length;
+    this.moves.push({ i, color, captured: r.captured });
+    this.seen.add(r.grid.join(""));
+    this.toPlay = other(color);
+    return r;
+  }
+
+  undo() {
+    if (!this.past.length) return null;
+    this.seen.delete(this.grid.join(""));
+    const p = this.past.pop();
+    Object.assign(this, { grid: p.grid, toPlay: p.toPlay, caps: p.caps });
+    return this.moves.pop();
+  }
+}
+
+// rows of X (black), O (white) and . (empty), top row first
+function parseRows(rows) {
+  const size = rows.length, grid = [];
+  for (const row of rows) for (const ch of row.replace(/\s/g, "")) grid.push(ch === "X" ? BLACK : ch === "O" ? WHITE : EMPTY);
+  return { size, grid };
+}
+
+// SGF names points by column then row, each a letter from a
+const fromSgf = (size, s) => (s.charCodeAt(1) - 97) * size + (s.charCodeAt(0) - 97);
+
+// ---------- Go boards ----------
+
+let boards = 0;
+
+class Goban {
+  constructor(svg, { size, labels = true, interactive = false }) {
+    Object.assign(this, { svg, size });
+    this.gap = 40;
+    this.m = labels ? 50 : 28;
+    this.w = this.m * 2 + (size - 1) * this.gap;
+    this.cursor = (size * size) >> 1;
+    this.showCursor = false;
+    this.onPoint = () => {};
+    this.onCursor = () => {};
+
+    const id = ++boards;
+    this.fills = { [BLACK]: `url(#bk${id})`, [WHITE]: `url(#wh${id})` };
+    svg.setAttribute("viewBox", `0 0 ${this.w} ${this.w}`);
+    const defs = svgEl("defs");
+    for (const [name, hi, lo] of [["bk", "b-hi", "b-lo"], ["wh", "w-hi", "w-lo"]]) {
+      const grad = svgEl("radialGradient", { id: name + id, cx: "36%", cy: "30%", r: "72%" });
+      grad.append(svgEl("stop", { offset: "0%", class: hi }), svgEl("stop", { offset: "100%", class: lo }));
+      defs.append(grad);
+    }
+    svg.append(defs, svgEl("rect", { class: "wood", width: this.w, height: this.w, rx: 10 }));
+
+    this.under = svgEl("g");
+    svg.append(this.under);
+    const lines = svgEl("g", { class: "lines" });
+    const far = this.m + (size - 1) * this.gap;
+    for (let k = 0; k < size; k++) {
+      const v = this.m + k * this.gap;
+      lines.append(svgEl("line", { x1: this.m, x2: far, y1: v, y2: v }));
+      lines.append(svgEl("line", { x1: v, x2: v, y1: this.m, y2: far }));
+    }
+    svg.append(lines);
+    const stars = { 9: [2, 4, 6], 13: [3, 6, 9], 19: [3, 9, 15] }[size] || [];
+    for (const r of stars) for (const c of stars) {
+      if (size === 9 && (r === 4) !== (c === 4)) continue;
+      const p = this.pt(r * size + c);
+      svg.append(svgEl("circle", { class: "star", cx: p.x, cy: p.y, r: 4.5 }));
+    }
+    if (labels) {
+      for (let k = 0; k < size; k++) {
+        const v = this.m + k * this.gap;
+        svg.append(svgEl("text", { class: "lbl", x: v, y: this.m - 26 }, LETTERS[k]));
+        svg.append(svgEl("text", { class: "lbl", x: this.m - 30, y: v + 5 }, String(size - k)));
+      }
+    }
+    this.layer = svgEl("g");
+    this.cur = svgEl("rect", { class: "cursor", width: this.gap, height: this.gap, rx: 7 });
+    svg.append(this.layer, this.cur);
+    this.place();
+
+    if (!interactive) return;
+    svg.addEventListener("click", (e) => {
+      const i = this.pointAt(e);
+      if (i < 0) return;
+      this.cursor = i;
+      this.showCursor = false;
+      // Safari doesn't focus an svg on click, so do it here
+      svg.focus({ preventScroll: true });
+      this.place();
+      this.onPoint(i);
+    });
+    svg.addEventListener("keydown", (e) => this.keydown(e));
+    svg.addEventListener("focus", () => { if (svg.matches(":focus-visible")) { this.showCursor = true; this.place(); } });
+    svg.addEventListener("blur", () => { this.showCursor = false; this.place(); });
+  }
+
+  pt(i) { return { x: this.m + (i % this.size) * this.gap, y: this.m + Math.floor(i / this.size) * this.gap }; }
+
+  pointAt(e) {
+    const ctm = this.svg.getScreenCTM();
+    if (!ctm) return -1;
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+    const r = Math.round((p.y - this.m) / this.gap), c = Math.round((p.x - this.m) / this.gap);
+    return r >= 0 && r < this.size && c >= 0 && c < this.size ? r * this.size + c : -1;
+  }
+
+  keydown(e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+    if (moves[e.key]) {
+      e.preventDefault();
+      const [dr, dc] = moves[e.key], by = e.shiftKey ? 3 : 1, s = this.size;
+      const r = clamp(Math.floor(this.cursor / s) + dr * by, 0, s - 1);
+      const c = clamp((this.cursor % s) + dc * by, 0, s - 1);
+      this.cursor = r * s + c;
+      this.showCursor = true;
+      this.place();
+      this.onCursor(this.cursor);
+    } else if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      this.showCursor = true;
+      this.place();
+      this.onPoint(this.cursor);
+    }
+  }
+
+  place() {
+    const p = this.pt(this.cursor);
+    this.cur.setAttribute("x", p.x - this.gap / 2);
+    this.cur.setAttribute("y", p.y - this.gap / 2);
+    this.cur.setAttribute("visibility", this.showCursor ? "visible" : "hidden");
+  }
+
+  // o holds optional marks:
+  //   bands [{c, hot}] or [{r, hot}] shade a column or row, tags [{c, text, hot}] label columns below the board
+  //   terr Map(point, color), infl Map(point, signed strength), dead Set, ghost {i, color}
+  //   numbers Map(point, n), counts true, alarm Set, atari Set, libs Set, last point, hot Set, letters Map(point, [text, color])
+  paint(grid, o = {}) {
+    const g = this.layer, u = this.under, gap = this.gap, far = this.m + (this.size - 1) * gap;
+    g.replaceChildren();
+    u.replaceChildren();
+    for (const b of o.bands || []) {
+      const v = this.m + (b.c ?? b.r) * gap - gap / 2;
+      const a = b.c != null
+        ? { x: v, y: this.m - gap / 2, width: gap, height: far - this.m + gap }
+        : { x: this.m - gap / 2, y: v, width: far - this.m + gap, height: gap };
+      u.append(svgEl("rect", { class: "band" + (b.hot ? " hot" : ""), rx: 8, ...a }));
+    }
+    for (const t of o.tags || []) {
+      u.append(svgEl("text", { class: "tag" + (t.hot ? " hot" : ""), x: this.m + t.c * gap, y: this.w - this.m + 32 }, t.text));
+    }
+    if (o.infl) {
+      for (const [i, v] of o.infl) {
+        const p = this.pt(i), s = 18;
+        g.append(svgEl("rect", { class: v > 0 ? "terr-b" : "terr-w", x: p.x - s / 2, y: p.y - s / 2, width: s, height: s, rx: 2, opacity: Math.min(.8, Math.abs(v)).toFixed(2) }));
+      }
+    }
+    const fresh = o.fresh ?? -1;
+    for (let i = 0; i < grid.length; i++) {
+      const c = grid[i];
+      if (!c) continue;
+      const p = this.pt(i);
+      const cls = "stone" + (c === WHITE ? " w" : "") + (o.dead?.has(i) ? " dead" : "") + (i === fresh && !reduced ? " drop" : "");
+      g.append(svgEl("circle", { class: cls, cx: p.x, cy: p.y, r: 18.8, fill: this.fills[c] }));
+    }
+    if (o.ghost) {
+      const p = this.pt(o.ghost.i);
+      g.append(svgEl("circle", { class: "stone ghost" + (o.ghost.color === WHITE ? " w" : ""), cx: p.x, cy: p.y, r: 18.8, fill: this.fills[o.ghost.color] }));
+    }
+    if (o.terr) {
+      for (const [i, c] of o.terr) {
+        const p = this.pt(i), s = 14;
+        g.append(svgEl("rect", { class: c === BLACK ? "terr-b" : "terr-w", x: p.x - s / 2, y: p.y - s / 2, width: s, height: s, rx: 1.5 }));
+      }
+    }
+    const label = (i, text) => {
+      const p = this.pt(i), on = grid[i] === WHITE ? " on-w" : " on-b";
+      const cls = "n" + on + (String(text).length > 2 ? " small" : "") + (o.alarm?.has(i) ? " alarm" : "");
+      g.append(svgEl("text", { class: cls, x: p.x, y: p.y + 1 }, String(text)));
+    };
+    if (o.counts) {
+      for (const grp of groupsOf(grid, this.size)) for (const s of grp.stones) label(s, grp.libs.size);
+    }
+    if (o.numbers) for (const [i, n] of o.numbers) if (grid[i]) label(i, n);
+    if (o.last != null && o.last >= 0 && grid[o.last] && !(o.numbers?.has(o.last))) {
+      const p = this.pt(o.last);
+      g.append(svgEl("circle", { class: "last", cx: p.x, cy: p.y, r: o.counts ? 15 : 8 }));
+    }
+    for (const i of o.atari || []) {
+      const p = this.pt(i);
+      g.append(svgEl("circle", { class: "atari", cx: p.x, cy: p.y, r: 21.5 }));
+    }
+    for (const i of o.libs || []) {
+      const p = this.pt(i);
+      g.append(svgEl("circle", { class: "lib", cx: p.x, cy: p.y, r: 7 }));
+    }
+    for (const i of o.hot || []) {
+      const p = this.pt(i);
+      g.append(svgEl("circle", { class: "hot-ring", cx: p.x, cy: p.y, r: 23.5 }));
+    }
+    for (const [i, [text, color]] of o.letters || []) {
+      const p = this.pt(i);
+      g.append(svgEl("circle", { class: "stone plan" + (color === WHITE ? " w" : ""), cx: p.x, cy: p.y, r: 18.8, fill: this.fills[color] }));
+      g.append(svgEl("circle", { class: "plan-ring", cx: p.x, cy: p.y, r: 21.5 }));
+      g.append(svgEl("text", { class: "letter" + (color === WHITE ? " on-w" : " on-b"), x: p.x, y: p.y + 1 }, text));
+    }
+  }
+}
+
+function buttons(el, list, attr, onPick) {
+  el.replaceChildren(...list.map(([value, text]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset[attr] = value;
+    b.textContent = text;
+    b.addEventListener("click", () => onPick(value));
+    return b;
+  }));
+}
+
+function pressOnly(el, attr, value) {
+  el.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset[attr] === String(value)));
+}
+
+function say(el, main, sub) {
+  el.innerHTML = main + (sub ? `<span class="sub">${sub}</span>` : "");
+}
+
+// ---------- Stations 1 to 3: play on a small board ----------
+
+const TURNS = [["alternate", "Take turns"], ["black", "Black only"], ["white", "White only"]];
+
+// what a stone of `color` at point i just did, in a sentence or two
+function describe(game, r, i, color) {
+  const size = game.size, who = colorName(color), foe = colorName(other(color)).toLowerCase();
+  const main = r.captured.length
+    ? `${who} plays ${ptName(size, i)} and <b>captures ${plural(r.captured.length, `${foe} stone`)}</b>.`
+    : `${who} plays ${ptName(size, i)}.`;
+  const mine = groupAt(game.grid, size, i);
+  if (r.captured.length === 1 && mine.stones.length === 1 && mine.libs.size === 1 && mine.libs.has(r.captured[0])) {
+    return [main, `That's a ko: ${foe === "white" ? "White" : "Black"} could take back at ${ptName(size, r.captured[0])} at once, except that would put the board back the way it was. So the rule says not yet.`];
+  }
+  const inAtari = [];
+  for (const n of adj(size)[i]) {
+    if (game.grid[n] !== other(color)) continue;
+    const g = groupAt(game.grid, size, n);
+    if (g.libs.size === 1 && !inAtari.some((x) => x.stones.includes(n))) inAtari.push(g);
+  }
+  if (inAtari.length) {
+    const g = inAtari[0], [lib] = g.libs;
+    const what = g.stones.length === 1 ? `The ${foe} stone at ${ptName(size, g.stones[0])} is` : `The ${foe} group of ${g.stones.length} stones is`;
+    return [main, `${what} in atari: one liberty left, at ${ptName(size, lib)}.`];
+  }
+  if (mine.libs.size === 1) {
+    const [lib] = mine.libs;
+    return [main, `Careful: ${who}'s ${mine.stones.length === 1 ? "stone" : "group"} there has only one liberty, at ${ptName(size, lib)}.`];
+  }
+  return [main, `${who}'s ${mine.stones.length === 1 ? "stone there has" : `group of ${mine.stones.length} there has`} ${plural(mine.libs.size, "liberty", "liberties")}.`];
+}
+
+function refusal(game, r, i, color) {
+  const size = game.size, who = colorName(color);
+  if (r.why === "suicide") {
+    return [`<span class="no">${who} can't play at ${ptName(size, i)}.</span>`, `The stone would have no liberties, and it doesn't capture anything to make room. A move that takes its own last liberty isn't allowed.`];
+  }
+  return [`<span class="no">${who} can't take back at ${ptName(size, i)} yet.</span>`, `It would capture, but it would put the whole board back exactly as it was before. Play somewhere else first, let ${colorName(other(color))} answer, and then try again.`];
+}
+
+class PlayStation {
+  constructor(p, presets, first, turns = "alternate") {
+    Object.assign(this, { p, presets, turns, sel: -1, fresh: -1 });
+    this.board = new Goban($(`${p}-board`), { size: 9, interactive: true });
+    this.cap = $(`${p}-cap`);
+    buttons($(`${p}-pats`), Object.entries(presets).map(([k, v]) => [k, v.label]), "name", (name) => this.load(name));
+    buttons($(`${p}-turns`), TURNS, "turns", (t) => { this.turns = t; this.paint(); this.say(...this.turnHint()); });
+    $(`${p}-undo`).addEventListener("click", () => this.back());
+    $(`${p}-reset`).addEventListener("click", () => this.load(this.name));
+    $(`${p}-counts`).addEventListener("change", () => this.paint());
+    this.board.onPoint = (i) => this.tap(i);
+    this.board.onCursor = (i) => { this.sel = this.game.grid[i] ? i : -1; this.paint(); };
+    this.load(first);
+  }
+
+  load(name) {
+    const pre = this.presets[name], { size, grid } = parseRows(pre.rows);
+    Object.assign(this, { name, pre, sel: -1, fresh: -1 });
+    this.game = new Game(size, grid, pre.toPlay || BLACK);
+    if (pre.turns) this.turns = pre.turns;
+    pressOnly($(`${this.p}-pats`), "name", name);
+    this.paint();
+    this.say(...pre.say);
+  }
+
+  get color() { return this.turns === "black" ? BLACK : this.turns === "white" ? WHITE : this.game.toPlay; }
+
+  turnHint() { return [`${colorName(this.color)} to play.`, this.turns === "alternate" ? "Black and White take turns, as in a real game." : `Only ${colorName(this.color)} plays, so you can set up a position.`]; }
+
+  tap(i) {
+    const game = this.game;
+    if (game.grid[i]) {
+      const g = groupAt(game.grid, game.size, i);
+      this.sel = i;
+      this.paint();
+      const what = g.stones.length === 1 ? `This ${colorName(g.color).toLowerCase()} stone has` : `This ${colorName(g.color).toLowerCase()} group of ${g.stones.length} stones shares`;
+      this.say(`${what} ${plural(g.libs.size, "liberty", "liberties")}, marked with green dots.`, g.libs.size === 1 ? "One liberty left: it's in atari." : "Tap an empty point to play there.");
+      return;
+    }
+    const color = this.color, r = game.play(i, color);
+    if (!r.ok) { this.say(...(this.pre.refused?.(r, i, color) || refusal(game, r, i, color))); return; }
+    this.sel = -1;
+    this.fresh = i;
+    this.paint();
+    this.say(...(this.pre.after?.(r, i, color, game) || describe(game, r, i, color)));
+  }
+
+  back() {
+    const m = this.game.undo();
+    if (!m) { this.say("Nothing to take back.", "This is where the position starts."); return; }
+    this.sel = -1;
+    this.fresh = -1;
+    this.paint();
+    this.say(`Took back ${colorName(m.color)}'s stone at ${ptName(this.game.size, m.i)}.`, `${colorName(this.color)} to play.`);
+  }
+
+  say(main, sub) { say(this.cap, main, sub); }
+
+  paint() {
+    const game = this.game, atari = new Set(), alarm = new Set();
+    for (const g of groupsOf(game.grid, game.size)) {
+      if (g.libs.size === 1) g.stones.forEach((s) => { atari.add(s); alarm.add(s); });
+    }
+    const sel = this.sel >= 0 && game.grid[this.sel] ? groupAt(game.grid, game.size, this.sel).libs : null;
+    const last = game.moves.length ? game.moves[game.moves.length - 1].i : -1;
+    this.board.paint(game.grid, { counts: $(`${this.p}-counts`).checked, atari, alarm, libs: sel, last, fresh: this.fresh });
+    this.fresh = -1;
+    pressOnly($(`${this.p}-turns`), "turns", this.turns);
+    $(`${this.p}-stats`).textContent = `${colorName(this.color)} to play · captured: Black ${game.caps[BLACK]}, White ${game.caps[WHITE]}`;
+  }
+}
+
+// ---------- Station 1: liberties ----------
+
+const S1 = {
+  edges: {
+    label: "Middle, edge, corner",
+    rows: [
+      "X........",
+      ".........",
+      ".........",
+      ".........",
+      "....X....",
+      ".........",
+      ".........",
+      ".........",
+      "....X....",
+    ],
+    say: ["Three lone stones. The one in the middle has 4 liberties, the one on the edge 3, and the one in the corner 2.", "Edges take liberties away, which makes stones there easier to capture. Tap a stone to see its liberties."],
+  },
+  atari: {
+    label: "Atari",
+    rows: [
+      ".........",
+      ".........",
+      ".........",
+      "....X....",
+      "...XO....",
+      "....X....",
+      ".........",
+      ".........",
+      ".........",
+    ],
+    say: ["The white stone at <span class=\"pt\">E5</span> has one liberty left, at <span class=\"pt\">F5</span>.", "Black to play. Take it."],
+  },
+  group: {
+    label: "Capture a group",
+    rows: [
+      ".........",
+      ".........",
+      "...XX....",
+      "..XOOX...",
+      "..XO.....",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+    ],
+    say: ["Three white stones share two liberties, at <span class=\"pt\">E5</span> and <span class=\"pt\">D4</span>.", "Black to play. Fill one and White is in atari. Fill both and all three come off."],
+  },
+  empty: {
+    label: "Empty board",
+    rows: Array(9).fill("........."),
+    say: ["An empty 9 by 9 board. Black plays first.", "Try surrounding a stone, then try saving one by joining it to its friends."],
+  },
+};
+
+// ---------- Station 2: ko ----------
+
+const S2 = {
+  ko: {
+    label: "A ko",
+    rows: [
+      ".........",
+      ".........",
+      ".........",
+      "....XO...",
+      "...XO.O..",
+      "....XO...",
+      ".........",
+      ".........",
+      ".........",
+    ],
+    say: ["The white stone at <span class=\"pt\">E5</span> has one liberty, at <span class=\"pt\">F5</span>.", "Black to play. Capture it at <span class=\"pt\">F5</span>, then try to take back with White at <span class=\"pt\">E5</span>."],
+  },
+  edge: {
+    label: "On the edge",
+    rows: [
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      "...XO....",
+      "..XO.O...",
+    ],
+    say: ["The same shape against the bottom edge. The white stone at <span class=\"pt\">D1</span> has one liberty, at <span class=\"pt\">E1</span>.", "Black to play there. The edge stands in for the missing stones."],
+  },
+};
+
+// ---------- Station 3: eyes ----------
+
+const S3 = {
+  two: {
+    label: "Two eyes",
+    turns: "white",
+    toPlay: WHITE,
+    rows: [
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      "OOOOOO...",
+      "XXXXXO...",
+      "X.X.XO...",
+      "XXXXXO...",
+    ],
+    after: (r) => r.captured.length > 5 ? null : ["White plays outside the group.", "Black's liberties are still the two eyes. Try playing in one."],
+    say: ["White has Black surrounded from the outside. Black's only liberties are its two eyes, at <span class=\"pt\">B2</span> and <span class=\"pt\">D2</span>.", "White to play. Try to fill one."],
+    refused: (r, i) => r.why === "suicide" && (i === 64 || i === 66) ? [`<span class="no">White can't play in Black's eye.</span>`, `The stone would have no liberties, and Black would still have its other eye, so nothing is captured. White can never fill both at once. Black is alive for good.`] : null,
+  },
+  one: {
+    label: "One eye",
+    turns: "white",
+    toPlay: WHITE,
+    rows: [
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      "OOOOOO...",
+      "XXXXXO...",
+      "X.XXXO...",
+      "XXXXXO...",
+    ],
+    after: (r, i) => r.captured.length > 5 ? [`White plays in the eye and <b>captures all ${r.captured.length} black stones</b>.`, "With one eye, Black's last liberty was inside it. Filling it was a capture, so it was allowed."] : null,
+    say: ["The same group with one eye, at <span class=\"pt\">B2</span>. It's Black's last liberty.", "White to play there. It's a stone with no liberties, but it captures, so it's allowed."],
+  },
+  three: {
+    label: "Three in a row",
+    turns: "alternate",
+    toPlay: WHITE,
+    rows: [
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      "OOOOOO...",
+      "XXXXXO...",
+      "X...XO...",
+      "XXXXXO...",
+    ],
+    after: (r, i, color, game) => {
+      if (r.captured.length > 5) return [`White <b>captures all ${r.captured.length} black stones</b>.`, "Taking the middle first meant Black could never split the space into two eyes."];
+      if (i !== 65) return null;
+      return color === WHITE
+        ? ["White takes the middle, <span class=\"pt\">C2</span>.", "Now Black can't split the space in two. If Black fills a side point, White fills the other and captures."]
+        : ["Black takes the middle, <span class=\"pt\">C2</span>, and splits the space into two eyes.", "Black is alive for good. Try playing White in either eye."];
+    },
+    say: ["One eye three points long. Whoever plays the middle, <span class=\"pt\">C2</span>, decides it.", "White to play first. Take the middle and Black can't make two eyes. Then press Take back and let Black have the middle instead (Turns: Black only)."],
+  },
+};
+
+const st1 = new PlayStation("s1", S1, "edges");
+const st2 = new PlayStation("s2", S2, "ko");
+const st3 = new PlayStation("s3", S3, "two");
+
+// ---------- Station 4: counting ----------
+
+const S4_ROWS = [
+  "....XO...",
+  "....XO.X.",
+  ".O.XXO...",
+  "...XOO...",
+  "...XO....",
+  "...XOO...",
+  "...XXO...",
+  "....XOO..",
+  "....XXO..",
+];
+const KOMI = 7.5;
+const s4 = { ...parseRows(S4_ROWS), dead: new Set() };
+const b4 = new Goban($("s4-board"), { size: 9, interactive: true });
+
+// area scoring: stones on the board, plus empty points that reach only one color
+function areaScore(grid, size, dead) {
+  const g = grid.map((c, i) => (dead.has(i) ? EMPTY : c));
+  const owner = new Map(), seen = new Set();
+  const score = { [BLACK]: { stones: 0, terr: 0 }, [WHITE]: { stones: 0, terr: 0 } };
+  let neutral = 0;
+  for (let i = 0; i < g.length; i++) {
+    if (g[i]) { score[g[i]].stones++; continue; }
+    if (seen.has(i)) continue;
+    const region = [i], touches = new Set();
+    seen.add(i);
+    for (let k = 0; k < region.length; k++) {
+      for (const n of adj(size)[region[k]]) {
+        if (g[n]) touches.add(g[n]);
+        else if (!seen.has(n)) { seen.add(n); region.push(n); }
+      }
+    }
+    if (touches.size === 1) {
+      const [c] = touches;
+      score[c].terr += region.length;
+      region.forEach((p) => owner.set(p, c));
+    } else neutral += region.length;
+  }
+  return { score, owner, neutral };
+}
+
+function paint4() {
+  const { score, owner, neutral } = areaScore(s4.grid, s4.size, s4.dead);
+  b4.paint(s4.grid, { dead: s4.dead, terr: $("s4-terr").checked ? owner : null });
+  const total = (c) => score[c].stones + score[c].terr + (c === WHITE ? KOMI : 0);
+  const row = (c) => `<tr><td>${colorName(c)}</td><td>${score[c].stones}</td><td>${score[c].terr}</td><td>${c === WHITE ? KOMI : "–"}</td><td class="total">${total(c)}</td></tr>`;
+  $("s4-rows").innerHTML = row(BLACK) + row(WHITE);
+  const diff = total(BLACK) - total(WHITE);
+  $("s4-verdict").textContent = `${diff > 0 ? "Black" : "White"} wins by ${Math.abs(diff)}` + (neutral ? `, so far. ${plural(neutral, "empty point")} still touch both colors.` : ".");
+}
+
+// the two stones that can't live: White's at B7 and Black's at H8
+const S4_DEAD = new Set([19, 16]);
+
+function tap4(i) {
+  if (!s4.grid[i]) {
+    say($("s4-cap"), "That's an empty point.", "Tap a stone that's stuck alone inside the other side's area. It has no room to make two eyes there, so it's dead.");
+    return;
+  }
+  const g = groupAt(s4.grid, s4.size, i), was = s4.dead.has(i), name = colorName(g.color).toLowerCase();
+  const wall = colorName(other(g.color));
+  g.stones.forEach((s) => (was ? s4.dead.delete(s) : s4.dead.add(s)));
+  paint4();
+  if (was) say($("s4-cap"), `Put the ${g.stones.length === 1 ? `${name} stone at ${ptName(s4.size, i)}` : `${name} wall`} back.`, S4_DEAD.has(i) ? "With it on the board, the empty points around it touch both colors, so they count for nobody." : "");
+  else if (S4_DEAD.has(i)) say($("s4-cap"), `The ${name} stone at ${ptName(s4.size, i)} is dead: it's alone inside ${wall}'s area with no room for two eyes.`, `It comes off, and now that whole area touches only ${wall}, so it all counts as ${wall}'s territory.`);
+  else say($("s4-cap"), `You marked ${g.stones.length === 1 ? `the ${name} stone at ${ptName(s4.size, i)}` : `all ${g.stones.length} stones of the ${name} wall`} dead.`, `That wall has a big area behind it, plenty of room for two eyes, so it's alive. Its owner wouldn't agree to take it off. Tap it again to put it back.`);
+}
+
+b4.onPoint = tap4;
+$("s4-terr").addEventListener("change", paint4);
+$("s4-reset").addEventListener("click", () => {
+  s4.dead.clear();
+  paint4();
+  say($("s4-cap"), "Both dead stones are back on the board.", "Each one spoils a whole area: empty points that touch both colors count for nobody.");
+});
+
+// ---------- Station 5: corners ----------
+
+const s5 = { k: 3 };
+const b5 = new Goban($("s5-board"), { size: 19, labels: false });
+
+// the wall around a k by k square, using whatever board edges it touches
+function enclosure(r0, c0, k) {
+  const inside = [], wall = [];
+  for (let r = r0; r < r0 + k; r++) for (let c = c0; c < c0 + k; c++) inside.push([r, c]);
+  for (let t = 0; t < k; t++) wall.push([r0 - 1, c0 + t], [r0 + k, c0 + t], [r0 + t, c0 - 1], [r0 + t, c0 + k]);
+  const on = ([r, c]) => r >= 0 && r < 19 && c >= 0 && c < 19;
+  return { inside: inside.map(([r, c]) => r * 19 + c), wall: wall.filter(on).map(([r, c]) => r * 19 + c) };
+}
+
+function paint5() {
+  const k = s5.k, h = k >> 1;
+  const places = [
+    ["In the corner", enclosure(0, 0, k)],
+    ["On the side", enclosure(19 - k, 4 - h, k)],
+    ["In the middle", enclosure(9 - h, 11 - h, k)],
+  ];
+  const grid = Array(361).fill(EMPTY), terr = new Map();
+  for (const [, e] of places) {
+    e.wall.forEach((i) => (grid[i] = BLACK));
+    e.inside.forEach((i) => terr.set(i, BLACK));
+  }
+  b5.paint(grid, { terr });
+  const pts = k * k;
+  $("s5-rows").innerHTML = places.map(([name, e], n) =>
+    `<tr${n === 0 ? ' class="best"' : ""}><td>${name}</td><td>${e.wall.length}</td><td>${pts}</td><td>${(pts / e.wall.length).toFixed(2)}</td></tr>`).join("");
+  $("s5-board").setAttribute("aria-label", `Three ${k} by ${k} areas walled in by black stones: ${places.map(([name, e]) => `${name.toLowerCase()} with ${e.wall.length} stones`).join(", ")}.`);
+  pressOnly($("s5-sizes"), "k", k);
+  say($("s5-cap"), `${pts} points cost ${places[0][1].wall.length} stones in the corner, ${places[1][1].wall.length} on the side, and ${places[2][1].wall.length} in the middle.`,
+    k < 5 ? "Make the area bigger: the corner stays the bargain." : "That's the shape of every opening: corners, then sides, then the middle.");
+}
+
+buttons($("s5-sizes"), [2, 3, 4, 5].map((k) => [k, `${k} × ${k}`]), "k", (k) => { s5.k = +k; paint5(); });
+
+// ---------- Station 6: height ----------
+
+// White's stone on line L of the right side, then a shoulder hit and three pushes down the side
+const s6 = { line: 4, step: 0 };
+const b6 = new Goban($("s6-board"), { size: 19 });
+const S6_STEPS = ["Lines", "White's stone", "Shoulder hit", "Push", "Extend", "Push", "Extend", "Push", "Extend", "The trade"];
+$("s6-stages").replaceChildren(...S6_STEPS.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));
+
+function crawl(line) {
+  const cw = 19 - line, at = (r, c) => r * 19 + c;
+  return [
+    [WHITE, at(8, cw)], [BLACK, at(9, cw - 1)],
+    [WHITE, at(9, cw)], [BLACK, at(10, cw - 1)],
+    [WHITE, at(10, cw)], [BLACK, at(11, cw - 1)],
+    [WHITE, at(11, cw)], [BLACK, at(12, cw - 1)],
+  ];
+}
+
+function paint6() {
+  const L = s6.line, step = s6.step, cw = 19 - L, moves = crawl(L).slice(0, Math.min(step, 8));
+  const grid = Array(361).fill(EMPTY);
+  for (const [c, i] of moves) grid[i] = c;
+  const lineTags = [1, 2, 3, 4, 5].map((n) => ({ c: 19 - n, text: String(n), hot: n === L || (step >= 2 && n === L + 1) }));
+  const o = { tags: lineTags, last: moves.length ? moves[moves.length - 1][1] : -1, fresh: moves.length && step <= 8 ? moves[moves.length - 1][1] : -1 };
+  if (step === 0) o.bands = [3, 4, 5].map((n) => ({ c: 19 - n, hot: n === 5 }));
+  else o.bands = [{ c: cw }, ...(step >= 2 ? [{ c: cw - 1, hot: true }] : [])];
+  if (step === 2) {
+    o.hot = new Set([moves[0][1]]);
+    o.libs = groupAt(grid, 19, moves[0][1]).libs;
+  }
+  if (step === 9) {
+    o.bands = [];
+    o.terr = new Map();
+    for (let r = 8; r <= 11; r++) for (let c = cw + 1; c < 19; c++) o.terr.set(r * 19 + c, WHITE);
+    o.infl = new Map();
+    for (let r = 8; r <= 13; r++) for (let c = cw - 5; c <= cw - 2; c++) o.infl.set(r * 19 + c, .5 - (cw - 2 - c) * .1);
+  }
+  b6.paint(grid, o);
+  [...$("s6-stages").children].forEach((li, n) => (n === step ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current")));
+  $("s6-lines").querySelectorAll("li").forEach((li) => li.setAttribute("aria-current", step === 0 ? "false" : String(+li.dataset.line === L || (step >= 2 && +li.dataset.line === L + 1))));
+  pressOnly($("s6-which"), "line", L);
+  $("s6-back").disabled = step === 0;
+  $("s6-next").disabled = step === S6_STEPS.length - 1;
+  $("s6-board").setAttribute("aria-label", `The right side of a 19 by 19 board, step ${step + 1} of ${S6_STEPS.length}: ${S6_STEPS[step].toLowerCase()}.`);
+
+  const per = L - 1, hi = L + 1, [[, stone], [, hit]] = crawl(L);
+  const name = (n) => ["", "first", "second", "third", "fourth", "fifth"][n];
+  const text = [
+    ["The lines are counted in from the right edge, along the bottom of the board.", "The shaded columns are lines 3, 4, and 5. Pick which line White's stone sits on, then press Next."],
+    [`White has a stone on the ${name(L)} line, at ${ptName(19, stone)}.`, L === 4 ? "A fourth-line stone looks toward the center more than it guards the side." : "A third-line stone guards the side beneath it."],
+    [`Black plays a <b>shoulder hit</b> at ${ptName(19, hit)}: one point diagonally from White's ${ptName(19, stone)}, on the side toward the center.`, `It doesn't touch White's stone: the green dots are White's four liberties, all still open. But it sits between White and the middle of the board, one line higher, on the ${name(hi)} line. White can't head straight for the center any more.`],
+    ["White <b>pushes</b>: a stone right next to its own, alongside Black's.", `White's two stones are now joined and press back on Black's stone. Going the other way, up and around Black, would leave White's stones thin and easy to attack, so White stays low, beside the edge.`],
+    ["Black extends alongside, keeping White underneath.", "Each pair of moves adds a stone to both walls."],
+    ["White pushes again.", `White's stones are building a wall on the ${name(L)} line, with ${plural(per, "line")} of side behind it.`],
+    ["Black extends again.", `Black's stones are building a wall on the ${name(hi)} line, facing the open center.`],
+    ["White pushes a third time.", "Push, extend, push, extend: this is called crawling."],
+    ["Black extends a third time.", "Now look at what each side has."],
+    [`White's wall keeps about ${per} points per row, ${per * 4} points behind these four stones, and it's hard to take away.`,
+      L === 4
+        ? `That's the <b>fourth-line territory</b> a fifth-line shoulder hit hands over: half as much again as the ${2 * 4} points behind a third-line wall. Black gets a wall facing the center, worth nothing yet: its value depends on what happens there later. That's why professionals almost never played this shoulder hit, and why move 37 looked so wrong.`
+        : `Black gets a fourth-line wall facing the center for it. Two points per row is a cheap price, so this shoulder hit is an everyday move. Now switch to Line 4 and compare.`],
+  ][step];
+  say($("s6-cap"), ...text);
+}
+
+function next6() { if (s6.step < S6_STEPS.length - 1) { s6.step++; paint6(); } }
+function back6() { if (s6.step > 0) { s6.step--; paint6(); } }
+$("s6-next").addEventListener("click", next6);
+$("s6-back").addEventListener("click", back6);
+$("s6-which").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { s6.line = +b.dataset.line; s6.step = Math.max(s6.step, 1); paint6(); }));
+
+// ---------- Station 7: the game ----------
+
+// the game records, as SGF points: column letter then row letter, from the top left
+const GAMES = {
+  1: {
+    date: "9 March 2016",
+    black: "Lee Sedol", white: "AlphaGo",
+    key: 102,
+    moves:
+      "qd dd pq dp fc cf ql od ld qc rc pc re of pg og ph id lf oh " +
+      "pi lh kh ke le lg kg kf ne oe jc ic jd ie je jf if jg li mi " +
+      "hf ih mb gd ki mj kk ib ob ml lm nc nb kb lc mm ln kl ll lk " +
+      "jj jl hj hi gj gf ii jh ij mn lo mo lp mp lq mq im qo fq gg " +
+      "cn dn dm fp gp gq fr co en do ep cm dl lr kr rb jb ja mf mh " +
+      "nd qj pj qk pl pk ok rh rl qf ri rf pf qe qh cc bn bm bl bo " +
+      "rg mr po jr kq pn oo qp on pp op qq or pr oq pd qr rr ps rs " +
+      "rn ro qn so cl an ks om ol ci hh hg dr dj bq cq cr bp dq br " +
+      "cp ap ek fi bj bi pb qb sf rd ai ah aj bh gi fj fk oc mc cj " +
+      "al nm pm aq gh fh",
+    notes: {
+      0: ["Game 1, 9 March 2016, the first time AlphaGo and Lee Sedol met. Lee has Black, AlphaGo White.", "Chinese rules, 7.5 komi, two hours each. Press Next to play through, or jump to just before move 102."],
+      7: ["Black 7 is an extension no professional had played before.", "Fan Hui wonders if Lee hoped a new move would confuse a program that learned from human games. If so, it didn't work."],
+      14: ["When White jumped with 14, the mood in the commentary room changed.", "Black's stones along that side were too low. AlphaGo already felt the game had begun to lean White's way."],
+      77: ["After 77, Lee shook his head and left the room for his first smoking break of the match.", "The clock kept running while he was away."],
+      80: ["Commentators thought White 80 was far too soft, with bigger moves elsewhere.", "Fan Hui wrote \"Statement of victory!\" in his notebook. AlphaGo doesn't chase the biggest win, he says, only the most certain one."],
+      86: ["White 86 cuts straight through Black's wall, giving up a stone where Black is strong.", "The referee that day, an 8-dan professional, signaled under the table that he thought the game was already over for Lee."],
+      102: ["White 102 invades. Lee smiled and sank into his longest think of the game.", "Fan Hui calls it the incision after a run of small exchanges: the moment Lee had to fight as if his life depended on it."],
+      116: ["White 116 takes the 3-3 point, inside a corner.", "AlphaGo's estimate of its own chances rose to 82%, which Fan Hui says meant it considered the game won."],
+      186: ["Lee resigned after White 186, so the game was never counted. AlphaGo led the match 1–0.", "Fan Hui heard Lee tap two black stones against the bowl and knew it was over."],
+    },
+    marks: {},
+  },
+  2: {
+    date: "10 March 2016",
+    black: "AlphaGo", white: "Lee Sedol",
+    key: 37,
+    moves:
+      "pd dp cd qp op oq nq pq cn fq mp qn ic dj po qo cp cq bq co " +
+      "bp bo do bn dq ep dr cm jp cg ed qf qe pf nd pi oj oi nj mh " +
+      "gp gq dn dm fo hp ho eo en fn em el fm gn fl go ek dk dl cl " +
+      "eh di pj qi rf rg kd hn om re rd sf fi gk hm in hl ko kp gc " +
+      "df id jc ge dg cf ch bh dh bi hd he gd fd hc fe ec gh fc gi " +
+      "ii hk ik il im ij jl jj if km kl lj lk lo li kj ci cj mj nr " +
+      "mr lq lp mq np lr lm kh hg qc qd rc pc sd gg ce bd qb hi jg " +
+      "hj ob pb pa nb de ee gj hh ej nf mf me rk fh el nh ng lg lh " +
+      "mg og kg ni jh na ki mi ji nc mb od mc oc kr ms io ip jo jn " +
+      "ir hr ql rl qm rm ao bm ln kn mo be ae af ad ma la oa dd bg " +
+      "lb pn on er cr fp iq hq qj rj ks",
+    notes: {
+      0: ["Game 2, 10 March 2016, at the Four Seasons Hotel in Seoul. AlphaGo has Black, Lee Sedol has White.", "Chinese rules, 7.5 komi, two hours each. Press Next to play through, or jump to just before move 37."],
+      1: ["Black 1 takes the star point in the upper right corner.", "Fan Hui notes AlphaGo played it in under thirty seconds, which was rare for it."],
+      2: ["White 2 takes the opposite corner's star point.", "Fan Hui reads it as Lee choosing a quieter, more solid game than Game 1, which he lost."],
+      4: ["Two corners each, before anyone touches a side.", "Exactly what Station 5 would predict."],
+      13: ["Black 13 leaves the fight in the lower right unfinished and plays at the top.", "Fan Hui called it an enormous surprise. AlphaGo didn't think White even needed to finish that corner."],
+      15: ["Black 15 pokes at White's corner from outside.", "Fan Hui says any Go teacher would criticize a student for a move this crude. Since the match, more professionals have started playing it."],
+      29: ["Black 29 jumps two points along the bottom instead of the usual extension.", "It takes less territory, but faces the center and limits White's stones on the left."],
+      36: ["White 36 extends down the right side, on the fourth line.", "Through here, Fan Hui says, both sides played normally. Press Next for move 37."],
+      37: ["Black 37: a <b>shoulder hit from the fifth line</b> against White's fourth-line stone at Q11.",
+        "It invites White to crawl down the fourth line and keep the right side, the trade in Station 6. When it appeared on the screen, many players thought the stone had been put on the wrong point. AlphaGo put the chance of a human playing it at about 1 in 10,000. The faded black stone at A, E12, is the jump AlphaGo had been planning to play here until White 36 changed its mind. Turn on the influence shading and step between 36 and 37."],
+      38: ["Lee had stepped outside for a cigarette before 37. He came back, stared at the board, smiled, and sat down to think. Twelve minutes later he pushed at 38.",
+        "The faded white stone at A, Q10, is where AlphaGo thought Lee should have played: a push along the fourth line, the answer Station 6 shows. Fan Hui says 38 goes the wrong way: it helps Black build up the bottom."],
+      40: ["After 40, AlphaGo's estimate of its own chances reached 55%.", "Fan Hui thinks 37 threw Lee off balance as well as helping on the board."],
+      41: ["Black 41 cuts down White's left side and widens Black's center.", "Fan Hui says 37 casts an invisible net across the board: together with Black's bottom, it makes potential all over the center."],
+      62: ["White has taken two black stones at the bottom and looks fine.", "Fan Hui still counts it a strategic success for Black: Black shrank White's left side and kept the initiative to take the last big point at the top."],
+      67: ["Black 67 secures the top, and AlphaGo pulls clearly ahead.", "Many of the professionals commentating didn't understand Black's play, but after Game 1 they were wary of judging it."],
+      211: ["Lee resigned after Black 211, so the game was never counted. AlphaGo led the match 2–0.", "Fan Hui says that near the end Lee kept recounting the score, looking for a miracle that wasn't there. Lee said afterward that AlphaGo had played a nearly perfect game."],
+    },
+    marks: {
+      37: { letters: [["eh", "A", BLACK]], hot: ["pi"], bands: [{ c: 14, hot: true }, { c: 15 }], tags: [{ c: 14, text: "5", hot: true }, { c: 15, text: "4" }] },
+      38: { letters: [["pj", "A", WHITE]] },
+    },
+  },
+  3: {
+    date: "12 March 2016",
+    black: "Lee Sedol", white: "AlphaGo",
+    key: 32,
+    moves:
+      "pd pp cd dp cn fq id qf nc qm dj ed dc eg ef de df ce ec fd " +
+      "ff fc bd he ie hd ic hg if gg jh ci dg di ei bg bh be bi cj " +
+      "dh dk ej ck ch gi fh dm dn fg eh fm ek el gk ii cm fo en fl " +
+      "bk bj aj hm hj hi gj ji il jn cp cq dq dr bq eq pm pl qn om " +
+      "pn ql ol on rn oo ok qi ll hc qq qp rp pq rq qr rr ln qe re " +
+      "rd pe qd bb dd ee cb bc ad eb ba gb qk pk lo mn pj qj rl rk " +
+      "rm qk cr pf iq kq lq jq jo kn hr ip hp io jr kr ho gq hq in " +
+      "fn gn go gr gs fs is ib ks lr dq hn ds cq fp eo do ep er hs " +
+      "qh ph gs dq br hs pi oh gs bp hs co bo bn cp cs",
+    notes: {
+      0: ["Game 3, 12 March 2016. AlphaGo led 2–0, so one more win would take the match. Lee has Black.", "Press Next to play through, or jump to just before move 32."],
+      7: ["Black 7 sets up the high Chinese opening, a stance for taking the initiative.", "Fan Hui reads it as Lee done with waiting patiently."],
+      14: ["White 14 jumps two points.", "Fan Hui says it felt as if AlphaGo were looking down from above, taking in the whole board at a glance."],
+      15: ["Lee answers with an attachment that astonished the commentators.", "He was attacking at the first chance, trying to break AlphaGo's weak points before its lead across the board grew too big."],
+      31: ["Black 31 is an overplay, and Lee must have known it.", "Fan Hui thinks that since Lee couldn't out-judge AlphaGo over the whole board, he hoped to break it in a local fight."],
+      32: ["White 32. When it appeared on screen, everyone agreed it was a beautiful, perfect move.", "After his reply, Lee left the room for a smoke. From here, Fan Hui says, it was like punching cotton."],
+      61: ["Black 61 leaves the chance of a ko.", "There was a rumor that AlphaGo couldn't handle ko, since it had steered away from one late in Game 2. Lee may have wanted to test it."],
+      77: ["Lee admits he can't win by ordinary means and turns to wild, all-or-nothing fighting.", "It's a style that has saved him many lost games against people."],
+      148: ["Lee sets up a big ko, and White doesn't even answer it, taking a large point elsewhere.", "AlphaGo's estimate of its own chances was over 98%."],
+      170: ["The last ko fight of the game.", "It settled the rumor: AlphaGo had no trouble with ko."],
+      176: ["Lee resigned after White 176, so the game was never counted. AlphaGo had won the match, 3–0.", "The rules said all five games would be played anyway. Lee said his new aim was to win at least one."],
+    },
+    marks: {},
+  },
+  4: {
+    date: "13 March 2016",
+    black: "AlphaGo", white: "Lee Sedol",
+    key: 78,
+    moves:
+      "pd dp cd qp op oq nq pq cn fq mp po iq ec hd cg ed cj dc bp " +
+      "nc qi ep eo dk fp ck dj ej ei fi eh fh bj fk fg gg ff gf mc " +
+      "md lc nb id hc jg pj pi oj oi ni nh mh ng mg mi nj mf li ne " +
+      "nd mj lf mk me nf lh qj kk ik ji gh hj ge he fd fc ki jj lj " +
+      "kh jh ml nk ol ok pk pl qk nl kj ii rk om pg ql cp co oe rl " +
+      "sk rj hg ij km gi fj jl kl gl fl gm ch ee eb bg dg eg en fo " +
+      "df dh im hk bn if gd fe hf ih bh ci ho go or rg dn cq pr qr " +
+      "rf qg qf jc gr sf se sg rd bl bk ak cl hn in hp fr er es ds " +
+      "ah ai kd ie kc kb gk ib qh rh qs rs oh sl of sj ni nj oo jp",
+    notes: {
+      0: ["Game 4, 13 March 2016. AlphaGo had already won the match 3–0, and plays Black again.", "Press Next to play through, or jump to just before move 78."],
+      11: ["The first 11 moves are the same as Game 2.", "Fan Hui says AlphaGo is extremely consistent: once it thinks a move is good, its opinion doesn't change."],
+      77: ["Black has built a large framework across the middle of the board, which Fan Hui calls Black's fortress.", "Lee needs to break into it. Press Next for his answer."],
+      78: ["White 78, Lee's <b>wedge</b> into the middle of Black's framework. Watching in China, Gu Li shouted, \"The divine move!\"",
+        "Lee said later he hadn't calculated it much: he played what felt right. AlphaGo had put the chance of a human playing it at about 1 in 10,000, the same as move 37. Whether 78 really works is still argued over, but AlphaGo didn't find the answer."],
+      79: ["Black 79 is a poor reply, though AlphaGo still rated its chances at about 70%.", "Fan Hui says 78 threw AlphaGo into complete confusion."],
+      87: ["From here AlphaGo's play falls apart.", "Fan Hui calls the next run of moves senseless blunders, one after another. Nobody on the team could say why."],
+      92: ["By White 92, AlphaGo's estimate of its chances had fallen to 55%.", "Lee had taken the lead."],
+      180: ["AlphaGo resigned after White 180, so this game wasn't counted either. It resigned when its estimate of its own chances fell below 20%.", "It was Lee's only win of the match, which AlphaGo took 4–1."],
+    },
+    marks: {
+      78: { hot: ["ki"] },
+    },
+  },
+  5: {
+    date: "15 March 2016",
+    black: "Lee Sedol", white: "AlphaGo",
+    key: 40,
+    moves:
+      "qd dd pq dp oc po qo qn qp pm nq qe pe qf rd pf ql oe pl ol " +
+      "om ok nm qj rn gq cf fc bd ch dh di dg cc ci cj bi dj bh ml " +
+      "mm lm nl nk ln ll kn mn mo rm rl ro sn pn oo op no sm pp nc " +
+      "nb ob pb od pc mb oa mc gd gf gc fd ge ff hf hg if ig id jf " +
+      "jb jd jc je gh fb gg fe hc hi jl hb gb ga ib ha ia fa ka iq " +
+      "ii hh hj gi gj cn dq cq fq eq fp gp do co ep dr er dq gr fo " +
+      "eo fn hr in ir jq kr jr js kq lr lq mq mr nr ik fi fh jk ij " +
+      "jj il jm im eh fg mj lj li mi lk nj kj ei bk bj aj is hs so " +
+      "rn rk sl ai ah cl bl bm dm dn cm dl em en fl fj bn ak al fr " +
+      "mh ni lg ks ls bc bo bp og mf nh ph ce mk sg rg gl re se sf " +
+      "rf sh ld me ac ab ad cd bf kc kb oh nf lc bb cb aa gk hl hk " +
+      "jh kg lf kh lh le kf jg ao lj ki jn km sn on rp rq pk qm sf " +
+      "sd ma na ie he hq ms ko lp kp lo fs ks el fm hm am kk ne of " +
+      "de ap ee ed ke kd pd pg ng sk rn fk kl gm bm lk ck dk qk rj",
+    notes: {
+      0: ["Game 5, 15 March 2016, the last game. Lee has Black, fresh from his win in Game 4.", "Press Next to play through, or jump to just before move 40."],
+      3: ["Learning from Game 4, Lee opens for territory, taking two corners on the 3-4 points.", "Fan Hui says he carried himself as if destined to win."],
+      15: ["Lee has played the opening unusually fast, as if he'd prepared it.", "Fan Hui thinks he had anticipated AlphaGo's replies."],
+      40: ["White 40 jumps out. Fan Hui calls it outstanding, shining light across the whole board.", "Once again nobody had imagined it, and once they saw it, everyone agreed it was right. Lee's expression grew more serious."],
+      58: ["White 58 lets a group of its own stones die. Had AlphaGo blundered again, as in Game 4?", "Fan Hui checked the data afterward. AlphaGo wasn't confused this time: its estimate of its chances barely moved, because it was getting compensation elsewhere."],
+      68: ["White has sealed Black into a corner and built a strong wall outside.", "AlphaGo's estimate of its chances climbed above 70%."],
+      79: ["Lee turns back to make an eye instead of pushing his group out into the center.", "Fan Hui thinks that in nine games out of ten from here, Lee would have pushed out."],
+      150: ["Lee enters byo-yomi: his two hours are used up.", "From here each move has to be made within 60 seconds, and he can run over only three times."],
+      280: ["Lee resigned after White 280, the longest game of the match, so this one was never counted either.", "Fan Hui had just begun to think it would finally come down to a count. AlphaGo won the match 4–1."],
+    },
+    marks: {},
+  },
+};
+
+const s7 = { game: 2, n: 0, nums: "off", frames: {} };
+const b7 = new Goban($("s7-board"), { size: 19 });
+
+// replay a game once, keeping the board after every move
+function framesFor(id) {
+  if (s7.frames[id]) return s7.frames[id];
+  const spec = GAMES[id], pts = spec.moves.trim().split(/\s+/).map((s) => fromSgf(19, s));
+  let grid = Array(361).fill(EMPTY);
+  const frames = [{ grid, captured: [] }];
+  pts.forEach((i, n) => {
+    const color = n % 2 ? WHITE : BLACK, r = tryPlay(grid, 19, i, color, null);
+    grid = r.grid;
+    frames.push({ grid, captured: r.captured, i, color });
+  });
+  return (s7.frames[id] = { pts, frames });
+}
+
+// a crude picture of influence: every stone pushes on the points near it, less with distance
+const REACH = [0, 1, .6, .4, .28, .2, .14];
+const FAR = REACH.length - 1;
+function influence(grid) {
+  const v = new Float32Array(361);
+  for (let i = 0; i < 361; i++) {
+    if (!grid[i]) continue;
+    const sign = grid[i] === BLACK ? 1 : -1, r0 = Math.floor(i / 19), c0 = i % 19;
+    for (let dr = -FAR; dr <= FAR; dr++) for (let dc = -FAR; dc <= FAR; dc++) {
+      const d = Math.abs(dr) + Math.abs(dc), r = r0 + dr, c = c0 + dc;
+      if (d && d <= FAR && r >= 0 && r < 19 && c >= 0 && c < 19) v[r * 19 + c] += sign * REACH[d];
+    }
+  }
+  const out = new Map();
+  for (let i = 0; i < 361; i++) if (!grid[i] && Math.abs(v[i]) >= .5) out.set(i, Math.min(1, Math.abs(v[i]) / 2.5 + .12) * Math.sign(v[i]));
+  return out;
+}
+
+function paint7() {
+  const spec = GAMES[s7.game], { pts, frames } = framesFor(s7.game), n = s7.n, f = frames[n];
+  const o = { last: n ? f.i : -1 };
+  if (s7.nums !== "off") {
+    o.numbers = new Map();
+    const from = s7.nums === "last" ? Math.max(1, n - 9) : 1;
+    for (let k = from; k <= n; k++) if (frames[k].grid[pts[k - 1]]) o.numbers.set(pts[k - 1], k);
+  }
+  if ($("s7-infl").checked) o.infl = influence(f.grid);
+  const m = spec.marks[n];
+  if (m) {
+    if (m.letters) o.letters = new Map(m.letters.map(([s, t, c]) => [fromSgf(19, s), [t, c]]));
+    if (m.hot) o.hot = new Set(m.hot.map((s) => fromSgf(19, s)));
+    if (m.bands) o.bands = m.bands;
+    if (m.tags) o.tags = m.tags;
+  }
+  o.fresh = s7.fresh ? f.i : -1;
+  s7.fresh = false;
+  b7.paint(f.grid, o);
+
+  const total = pts.length;
+  $("s7-range").max = total;
+  $("s7-range").value = n;
+  $("s7-out").innerHTML = `Move ${n} of ${total}` + (n ? `: ${colorName(f.color)} ${ptName(19, f.i)}` : "");
+  $("s7-back").disabled = n === 0;
+  $("s7-next").disabled = n === total;
+  $("s7-key").textContent = `Before move ${spec.key}`;
+  $("s7-key").insertAdjacentHTML("beforeend", "<kbd>J</kbd>");
+  pressOnly($("s7-games"), "game", s7.game);
+  pressOnly($("s7-nums"), "nums", s7.nums);
+  $("s7-players").innerHTML = `<span><i></i>Black: ${spec.black}</span><span><i class="w"></i>White: ${spec.white}</span>`;
+
+  const took = f.captured.length ? ` ${colorName(f.color)} captures ${plural(f.captured.length, "stone")}.` : "";
+  $("s7-board").setAttribute("aria-label", `Game ${s7.game}, ${n ? `after move ${n}, ${colorName(f.color)} at ${nameOf(19, f.i)}` : "before the first move"}.`);
+  const note = spec.notes[n];
+  if (note) say($("s7-cap"), note[0] + took, note[1]);
+  else {
+    const ahead = Object.keys(spec.notes).map(Number).find((k) => k > n);
+    say($("s7-cap"), `${colorName(f.color)} plays ${ptName(19, f.i)}.${took}`, ahead === n + 1 ? `Press Next for move ${ahead}.` : ahead ? `The next note is at move ${ahead}.` : "No more notes in this game.");
+  }
+}
+
+function go7(n, fresh = false) {
+  s7.n = clamp(n, 0, framesFor(s7.game).pts.length);
+  s7.fresh = fresh;
+  paint7();
+  writeHash();
+}
+const next7 = () => go7(s7.n + 1, true);
+const back7 = () => go7(s7.n - 1);
+// stop just short of the famous move, so Next plays it
+const key7 = () => go7(GAMES[s7.game].key - 1);
+
+$("s7-next").addEventListener("click", next7);
+$("s7-back").addEventListener("click", back7);
+$("s7-key").addEventListener("click", key7);
+$("s7-range").addEventListener("input", (e) => go7(+e.target.value));
+$("s7-infl").addEventListener("change", paint7);
+$("s7-games").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  s7.game = +b.dataset.game;
+  go7(0);
+}));
+$("s7-nums").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { s7.nums = b.dataset.nums; paint7(); }));
+
+// ---------- Keys ----------
+
+const STATION_KEYS = [
+  ["s1-board", { b: () => st1.back() }],
+  ["s2-board", { b: () => st2.back() }],
+  ["s3-board", { b: () => st3.back() }],
+  ["s6-board", { n: next6, b: back6 }],
+  ["s7-board", { n: next7, b: back7, j: key7 }],
+].map(([board, keys]) => [$(board).closest(".panel"), keys]);
+
+function stationInView() {
+  let best = null, most = 0;
+  for (const entry of STATION_KEYS) {
+    const r = entry[0].getBoundingClientRect();
+    const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+    if (seen > most) { most = seen; best = entry; }
+  }
+  return best;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // a checkbox takes no typing, so the station keys still work after clicking one
+  if (e.target.matches("input:not([type=range]):not([type=checkbox]), textarea, select")) return;
+  const action = { n: "n", b: "b", j: "j" }[e.key.toLowerCase()];
+  if (!action) return;
+  const inPanel = e.target.closest?.(".panel");
+  const entry = inPanel ? STATION_KEYS.find(([panel]) => panel === inPanel) : stationInView();
+  if (!entry || !entry[1][action]) return;
+  e.preventDefault();
+  entry[1][action]();
+});
+
+// ---------- Sharing ----------
+
+function writeHash() {
+  history.replaceState(null, "", `#game=${s7.game}&move=${s7.n}`);
+}
+
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (!GAMES[p.get("game")]) return false;
+  s7.game = +p.get("game");
+  s7.n = clamp(parseInt(p.get("move"), 10) || 0, 0, framesFor(s7.game).pts.length);
+  paint7();
+  return true;
+}
+
+// ---------- Start ----------
+
+paint4();
+say($("s4-cap"), "With the dead stones still on the board, almost nothing counts as territory.", "The white stone at <span class=\"pt\">B7</span> sits alone in Black's area, and the black stone at <span class=\"pt\">H8</span> alone in White's. Tap each one.");
+paint5();
+paint6();
+if (!readHash()) paint7();
+addEventListener("hashchange", readHash);
+</script>
+</body>
+</html>
