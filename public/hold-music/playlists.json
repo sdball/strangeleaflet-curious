@@ -21,7 +21,8 @@
       "Echo (echo echo echo)",
       "Checking inventory",
       "Asking what is a grue?",
-      "Counting leaves (69,105)"
+      "Counting leaves (69,105)",
+      "Having tea and no tea"
     ]
   },
   {
@@ -84,7 +85,11 @@
       "Getting tilted",
       "Contemplating ludonarrative dissonance",
       "Playing co-op",
-      "Inserting a quarter"
+      "Inserting a quarter",
+      "Sailing to Monkey Island",
+      "Ball chasing",
+      "Flip resetting",
+      "Thanking you for playing Wing Commander"
     ]
   },
   {
@@ -230,6 +235,68 @@
       "The first .com domain name (symbolics.com) registered (1985)",
       "Tim Berners-Lee created the first website (1991)",
       "Charles Babbage announced the difference engine (1822)"
+    ]
+  },
+  {
+    "name": "computer-programming",
+    "description": "Remember when we did this by hand without syntax highlighting?",
+    "tags": [
+      "programming",
+      "computing"
+    ],
+    "verbs": [
+      "Wishing we were debugging Elixir",
+      "Following the promise chain",
+      "Contemplating the BEAM",
+      "Letting it crash",
+      "Restarting the supervisor",
+      "Piping into the next function",
+      "Spawning a million processes",
+      "Checking the mailbox",
+      "Hot swapping code",
+      "Pattern matching",
+      "Naming things (this is hard)",
+      "Invalidating the cache (this is hard)",
+      "Being off by one (this is easy)",
+      "Exiting vim (:q!)",
+      "Bikeshedding",
+      "Explaining to the rubber duck",
+      "Now having two problems (regex)",
+      "Parsing HTML with regex",
+      "Works on my machine",
+      "Shipping on a Friday",
+      "Adding one more console.log",
+      "Commenting out the failing test",
+      "Resolving merge conflicts",
+      "Dereferencing null",
+      "Segfaulting (core dumped)",
+      "Overflowing the stack",
+      "Collecting garbage",
+      "Counting from zero",
+      "Balancing the parentheses (((())))",
+      "Monkey patching because everyone loves surprises",
+      "Escaping the escape characters",
+      "Writing a monad tutorial",
+      "Recursing (see: Recursing)",
+      "Compiling (xkcd 303)",
+      "Untangling callback hell",
+      "Currying functions",
+      "Partially applying",
+      "Folding left",
+      "Folding right",
+      "Mapping over it",
+      "Composing functions",
+      "Optimizing tail calls",
+      "Lazily evaluating",
+      "Inferring types",
+      "Making illegal states unrepresentable",
+      "Unwrapping the Maybe",
+      "Avoiding the billion-dollar mistake (null)",
+      "Returning {:ok, result}",
+      "Handling {:error, reason}",
+      "Staying on the happy path",
+      "Enjoying code as data",
+      "Implementing half of Common Lisp"
     ]
   }
 ]
