@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hold Music — The Cabinet of Curios</title>
+<title>Claude Verbs — The Cabinet of Curios</title>
 <meta name="description" content="Pick playlists of themed spinner verbs for Claude Code, hear them play on hold, then copy one jq command that backs up your settings and writes them in.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☎️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -279,7 +279,7 @@ pre:focus-visible { outline-offset: 3px; }
 <body>
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
-  <h1>Hold Music</h1>
+  <h1>Claude Verbs</h1>
   <p class="lede">While Claude Code works, its spinner shows a rotating verb: Accomplishing, Architecting, Baking. Light up a few lines of themed verbs, listen to them play on hold, then copy one shell command that backs up your settings and writes the verbs in.</p>
   <p class="howto">Press a line to pick its playlist. Open a playlist to leave out single verbs, or type your own. The command at the bottom needs <code>jq</code>, and nothing leaves your browser until you paste it into a terminal.</p>
 
@@ -344,7 +344,7 @@ pre:focus-visible { outline-offset: 3px; }
         <span class="ctl-lbl" id="keep-lbl">Verbs already there</span>
         <div class="seg" id="keep" role="group" aria-labelledby="keep-lbl">
           <button type="button" data-v="keep" aria-pressed="true">Keep them</button>
-          <button type="button" data-v="swap" aria-pressed="false">Swap out Hold Music's</button>
+          <button type="button" data-v="swap" aria-pressed="false">Swap out ours</button>
           <button type="button" data-v="clean" aria-pressed="false">Start clean</button>
         </div>
         <p class="why" id="keep-why"></p>
@@ -381,7 +381,7 @@ pre:focus-visible { outline-offset: 3px; }
       <li><b>Mode and “verbs already there” are two different questions.</b> Mode decides whether Claude Code mixes your list with its own verbs. The other choice decides what happens to verbs your file already lists before the new ones are added.</li>
       <li><b>Nothing is lost.</b> The command copies your settings to a <code>.bak</code> file stamped with the date and time before it changes anything, and prints the line that puts it back. It only writes when <code>jq</code> succeeds, so a file it can't read is left alone.</li>
       <li><b>Every other setting stays put.</b> <code>jq</code> rewrites the <code>spinnerVerbs</code> key and nothing else. If your settings file is a symlink into a dotfiles repo, the write goes through the link instead of replacing it.</li>
-      <li><b>Swapping only knows these playlists.</b> “Swap out Hold Music's” removes any verb that appears on a line here, then adds your picks. Verbs you wrote yourself stay, and so do verbs from older versions of a playlist.</li>
+      <li><b>Swapping only knows these playlists.</b> “Swap out ours” removes any verb that appears on a line here, then adds your picks. Verbs you wrote yourself stay, and so do verbs from older versions of a playlist.</li>
       <li><b>An empty list hands the spinner back.</b> In “only mine” mode with no verbs, Claude Code keeps its own. The command goes one step further and removes the key, so the file looks as if you never touched it.</li>
       <li><b>Short verbs play best.</b> The verb shares a line with the timer, so a long one wraps or gets cut off in a narrow terminal. A gloss in parentheses, like the Infocom spells have, is fun but costs room.</li>
     </ul>
