@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Claude Verbs — The Cabinet of Curios</title>
-<meta name="description" content="Pick playlists of themed spinner verbs for Claude Code, hear them play on hold, then copy one jq command that backs up your settings and writes them in.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☎️</text></svg>">
+<meta name="description" content="Pick playlists of themed spinner verbs for Claude Code, watch them in a mock spinner, then copy one jq command that backs up your settings and writes them in.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✳️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@600;700&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -289,15 +289,15 @@ pre:focus-visible { outline-offset: 3px; }
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Claude Verbs</h1>
-  <p class="lede">While Claude Code works, its spinner shows a rotating verb: Accomplishing, Architecting, Baking. Light up a few lines of themed verbs, listen to them play on hold, then copy one shell command that backs up your settings and writes the verbs in.</p>
-  <p class="howto">Press a line to pick its playlist. Open a playlist to leave out single verbs, or type your own. The command at the bottom needs <code>jq</code>, and nothing leaves your browser until you paste it into a terminal.</p>
+  <p class="lede">While Claude Code works, its spinner shows a rotating verb: Accomplishing, Architecting, Baking. Pick a few playlists of themed verbs, watch them in a mock spinner, then copy one shell command that backs up your settings and writes the verbs in.</p>
+  <p class="howto">Press a playlist to pick it. Open it to leave out single verbs, or type your own. The command at the bottom needs <code>jq</code>, and nothing leaves your browser until you paste it into a terminal.</p>
 
   <section class="panel" aria-labelledby="h-lines">
     <div class="panel-head">
       <p class="station">Station 1</p>
-      <h2 id="h-lines">Pick the lines</h2>
+      <h2 id="h-lines">Pick the playlists</h2>
     </div>
-    <p class="hint">Each key is a playlist. Press one to light its lamp and put its verbs on hold. Press it again to hang up. Verbs play in the order you lit the lines.</p>
+    <p class="hint">Each key is a playlist. Press one to light it and add its verbs. Press it again to take them back out. Verbs go in the order you picked them.</p>
     <div class="lines" id="lines" role="group" aria-label="Playlists"></div>
     <div class="tracks" id="tracks"></div>
     <div class="own">
@@ -310,9 +310,9 @@ pre:focus-visible { outline-offset: 3px; }
   <section class="panel" aria-labelledby="h-hold">
     <div class="panel-head">
       <p class="station">Station 2</p>
-      <h2 id="h-hold">Listen on hold</h2>
+      <h2 id="h-hold">Preview the spinner</h2>
     </div>
-    <p class="hint">This is roughly what the spinner looks like with your picks. Choose whether your verbs join Claude Code's own or play alone.</p>
+    <p class="hint">This is roughly what the spinner looks like with your picks. Choose whether your verbs join Claude Code's own or run alone.</p>
     <div class="term" aria-hidden="true">
       <div class="tbar"><i></i><i></i><i></i><span>claude</span></div>
       <div class="tbody">
@@ -336,7 +336,7 @@ pre:focus-visible { outline-offset: 3px; }
   <section class="panel" aria-labelledby="h-patch">
     <div class="panel-head">
       <p class="station">Station 3</p>
-      <h2 id="h-patch">Patch it in</h2>
+      <h2 id="h-patch">Write it in</h2>
     </div>
     <p class="hint">Pick which settings file to change and what happens to verbs it already has. The command below updates as you choose.</p>
     <div class="choices">
@@ -371,12 +371,12 @@ pre:focus-visible { outline-offset: 3px; }
 
     <div class="small">
       <div class="cmd">
-        <div class="cmd-top"><h3 id="h-peek">See what's playing</h3><button type="button" class="btn" data-copy="peek">Copy</button></div>
+        <div class="cmd-top"><h3 id="h-peek">See what's there</h3><button type="button" class="btn" data-copy="peek">Copy</button></div>
         <p>Prints the verbs the file has now, or <code>null</code> if it has none.</p>
         <pre id="peek" tabindex="0" aria-labelledby="h-peek"></pre>
       </div>
       <div class="cmd">
-        <div class="cmd-top"><h3 id="h-stop">Stop the music</h3><button type="button" class="btn" data-copy="stop">Copy</button></div>
+        <div class="cmd-top"><h3 id="h-stop">Go back to the defaults</h3><button type="button" class="btn" data-copy="stop">Copy</button></div>
         <p>Backs up the file, then removes <code>spinnerVerbs</code> so Claude Code's own verbs come back.</p>
         <pre id="stop" tabindex="0" aria-labelledby="h-stop"></pre>
       </div>
@@ -386,13 +386,13 @@ pre:focus-visible { outline-offset: 3px; }
   <section class="notes" aria-labelledby="h-notice">
     <h2 id="h-notice">Things to notice</h2>
     <ul>
-      <li><b>No restart needed.</b> Claude Code watches its settings files and reloads them when they change, so the next turn already plays the new verbs.</li>
+      <li><b>No restart needed.</b> Claude Code watches its settings files and reloads them when they change, so the next turn already shows the new verbs.</li>
       <li><b>Mode and “verbs already there” are two different questions.</b> Mode decides whether Claude Code mixes your list with its own verbs. The other choice decides what happens to verbs your file already lists before the new ones are added.</li>
       <li><b>Nothing is lost.</b> The command copies your settings to a <code>.bak</code> file stamped with the date and time before it changes anything, and prints the line that puts it back. It only writes when <code>jq</code> succeeds, so a file it can't read is left alone.</li>
       <li><b>Every other setting stays put.</b> <code>jq</code> rewrites the <code>spinnerVerbs</code> key and nothing else. If your settings file is a symlink into a dotfiles repo, the write goes through the link instead of replacing it.</li>
-      <li><b>Swapping only knows these playlists.</b> “Swap out ours” removes any verb that appears on a line here, then adds your picks. Verbs you wrote yourself stay, and so do verbs from older versions of a playlist.</li>
+      <li><b>Swapping only knows these playlists.</b> “Swap out ours” removes any verb that appears in a playlist here, then adds your picks. Verbs you wrote yourself stay, and so do verbs from older versions of a playlist.</li>
       <li><b>An empty list hands the spinner back.</b> In “only mine” mode with no verbs, Claude Code keeps its own. The command goes one step further and removes the key, so the file looks as if you never touched it.</li>
-      <li><b>Short verbs play best.</b> The verb shares a line with the timer, so a long one wraps or gets cut off in a narrow terminal. A gloss in parentheses, like the Infocom spells have, is fun but costs room.</li>
+      <li><b>Short verbs fit best.</b> The verb shares a line with the timer, so a long one wraps or gets cut off in a narrow terminal. A gloss in parentheses, like the Infocom spells have, is fun but costs room.</li>
     </ul>
   </section>
 
@@ -406,7 +406,7 @@ pre:focus-visible { outline-offset: 3px; }
     </ol>
   </section>
 
-  <p class="foot">The link in your address bar remembers your lines and choices, so you can share it.</p>
+  <p class="foot">The link in your address bar remembers your playlists and choices, so you can share it.</p>
 </div>
 
 <script>
@@ -416,7 +416,7 @@ const $ = (id) => document.getElementById(id);
 // read from playlists.json beside this page, in holdmusic's playlist format
 let PLAYLISTS = [];
 let byName = {};
-// every verb any line can add, for "swap out"
+// every verb any playlist can add, for "swap out"
 let ALL_VERBS = [];
 let loadFailed = false;
 const titleOf = (p) => p.title || p.name[0].toUpperCase() + p.name.slice(1).replace(/-/g, " ");
@@ -441,17 +441,17 @@ const BUILTIN = ["Accomplishing", "Architecting", "Baking"];
 
 const FILES = {
   user: { path: "~/.claude/settings.json", why: "~/.claude/settings.json changes the spinner in every project on this machine." },
-  project: { path: ".claude/settings.json", why: ".claude/settings.json, run from the project folder. Commit it and everyone on the project hears your hold music." },
-  local: { path: ".claude/settings.local.json", why: ".claude/settings.local.json, run from the project folder. Only you hear it, and only in that project." },
+  project: { path: ".claude/settings.json", why: ".claude/settings.json, run from the project folder. Commit it and everyone on the project gets your verbs." },
+  local: { path: ".claude/settings.local.json", why: ".claude/settings.local.json, run from the project folder. Only you get them, and only in that project." },
 };
 const KEEPS = {
   keep: "Keep every verb the file already lists and add yours after them.",
-  swap: "Drop any verb that appears on a line here, keep ones you wrote yourself, then add yours.",
+  swap: "Drop any verb that appears in a playlist here, keep ones you wrote yourself, then add yours.",
   clean: "Throw out every verb the file lists and use only yours.",
 };
 
 // ---------- State ----------
-let picked = [];          // playlist names, in the order they were lit
+let picked = [];          // playlist names, in the order they were picked
 const dropped = new Set(); // verbs left out of a lit playlist
 let mode = "append";
 let file = "user";
@@ -619,7 +619,7 @@ function paintSpinner() {
     const src = sourceOf(current.v);
     where = src ? `from ${src}.` : "one you wrote.";
   }
-  $("now").innerHTML = `Now playing <b></b>, ${where} ${mode === "append" && mine ? `Your ${plural(mine, "verb")} take turns with Claude Code's.` : ""}`;
+  $("now").innerHTML = `Showing <b></b>, ${where} ${mode === "append" && mine ? `Your ${plural(mine, "verb")} take turns with Claude Code's.` : ""}`;
   $("now").querySelector("b").textContent = current.v;
 }
 
@@ -660,7 +660,7 @@ function writeCommand() {
     verbs = "(.verbs // []) - $ours + $add | dedupe";
   } else verbs = "$add";
   const said = add.length || keep === "keep"
-    ? "Hold music is playing."
+    ? "Your verbs are in."
     : "No verbs left, so Claude Code's own are back.";
   return [
     "(",
@@ -733,10 +733,10 @@ function paint() {
   const n = finalVerbs().length;
   const lines = picked.length;
   const own = ownVerbs().length;
-  const from = [lines && plural(lines, "line"), own && `${own} of your own`].filter(Boolean).join(" and ");
+  const from = [lines && plural(lines, "playlist"), own && `${own} of your own`].filter(Boolean).join(" and ");
   $("tally").textContent = n
-    ? `${plural(n, "verb")} on hold, from ${from}.`
-    : "No verbs on hold yet. Light a line or type one of your own.";
+    ? `${plural(n, "verb")} picked, from ${from}.`
+    : "No verbs picked yet. Press a playlist or type one of your own.";
 
   pressSeg("mode", mode);
   pressSeg("file", file);
