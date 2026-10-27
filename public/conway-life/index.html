@@ -152,12 +152,12 @@ h2 { font: 800 1.55rem/1.25 var(--head); margin: 0 0 .75rem; }
 .goban .born { fill: none; stroke: var(--born); stroke-width: 3; stroke-dasharray: 5 4; }
 .goban .keep { fill: none; stroke: var(--born); stroke-width: 3.5; }
 .goban .ring { fill: none; stroke: var(--seal); stroke-width: 3.5; }
-.goban .hot-pt { fill: var(--seal); opacity: .16; }
+.goban .hot-pt { fill: var(--seal); }
 .goban .x { stroke: var(--dies); stroke-width: 3.5; stroke-linecap: round; }
 .goban .x-bg { fill: var(--wood); stroke: var(--dies); stroke-width: 2; }
 .goban .n { font: 700 17px var(--mono); fill: var(--wood-ink); text-anchor: middle; dominant-baseline: central; }
 .goban .n.on { fill: #F4EFE6; }
-.goban .n.hot { fill: var(--seal); }
+.goban .n.hot { fill: var(--seal-ink); }
 .goban .n.on.hot { fill: #FFB4A0; }
 .goban .n.dim { opacity: .35; }
 .goban .cursor { fill: none; stroke: var(--focus); stroke-width: 3; }
@@ -777,7 +777,8 @@ class Goban {
     g.replaceChildren();
     const has = (set, cell) => set && set.has(cell);
     const at = (cell) => { const [r, c] = unkey(cell); return this.inside(r, c) ? this.pt(r, c) : null; };
-    if (o.hot) for (const cell of o.hot) { const p = at(cell); if (p) g.append(svgEl("circle", { class: "hot-pt", cx: p.x, cy: p.y, r: 19 })); }
+    // a solid seal behind each just-named count, small enough that neighboring seals don't merge
+    if (o.hot) for (const cell of o.hot) { const p = at(cell); if (p) g.append(svgEl("circle", { class: "hot-pt", cx: p.x, cy: p.y, r: 14 })); }
     for (const cell of cells) {
       const p = at(cell);
       if (p) g.append(svgEl("circle", { class: "stone" + (has(o.dim, cell) ? " dim" : ""), cx: p.x, cy: p.y, r: 17.5, fill: this.fill }));
