@@ -977,27 +977,30 @@ const LANGS = {
   ex: {
     label: "Elixir",
     cell: (cell) => `{${unkey(cell).join(", ")}}`,
-    names: { cells: "cells", named: "Enum.flat_map(cells, &neighbors/1)", counts: "Enum.frequencies(…)", next: "step(cells)" },
+    names: { cells: "cells", named: "Enum.flat_map(&neighbors/1)", counts: "Enum.frequencies()", next: "step(cells)" },
     fn: { flat: "Enum.flat_map", freq: "Enum.frequencies" },
-    note: "A for comprehension, like the Clojure: a generator over the counts, a filter that keeps the 3s and living 2s, and into: to collect a new MapSet.",
-    idiom: "A tighter take on the Elixir that ran this page's first version. A guard can't call <code>MapSet.member?</code>, but a comprehension's filters can be any expression, so it reads like the Clojure and collects with <code>into:</code>.",
+    note: "A pipeline: each line after cells is one move, in order. Name the neighbors, count them, keep the 3s and living 2s, and collect what's kept into a new MapSet.",
+    idiom: "The pipeline that ran this page's first version, with a shorter ending. <code>Enum.filter</code> does the keeping, and <code>MapSet.new/2</code> drops the counts as it builds the set, where the first version used a <code>reduce</code>.",
     code: `def neighbors({x, y}) do
   for dx <- -1..1, dy <- -1..1, {dx, dy} != {0, 0}, do: {x + dx, y + dy}
 end
 
 def step(cells) do
-  for {cell, n} <- Enum.frequencies(Enum.flat_map(cells, &neighbors/1)),
-      n == 3 or (n == 2 and MapSet.member?(cells, cell)),
-      into: MapSet.new(),
-      do: cell
+  cells
+  |> Enum.flat_map(&neighbors/1)
+  |> Enum.frequencies()
+  |> Enum.filter(fn {cell, n} ->
+    n == 3 or (n == 2 and MapSet.member?(cells, cell))
+  end)
+  |> MapSet.new(fn {cell, _n} -> cell end)
 end`,
     parts: {
       sig: ["def step(cells) do"],
       neighbors: ["for dx <- -1..1, dy <- -1..1, {dx, dy} != {0, 0}", "{x + dx, y + dy}"],
-      name: ["Enum.flat_map(cells, &neighbors/1)"],
-      count: ["Enum.frequencies("],
+      name: ["|> Enum.flat_map(&neighbors/1)"],
+      count: ["|> Enum.frequencies()"],
       keep: ["n == 3 or (n == 2 and MapSet.member?(cells, cell))"],
-      collect: ["into: MapSet.new()", "do: cell"],
+      collect: ["|> MapSet.new(fn {cell, _n} -> cell end)"],
     },
   },
   js: {
@@ -1284,7 +1287,7 @@ const PART_NOTES = {
   name: ["Name.", "Every living cell's neighbors, joined into one long list: <code>mapcat</code>, <code>Enum.flat_map</code>, <code>flatMap</code>, a two-level generator, and <code>flat_map</code>."],
   count: ["Count.", "How many times each point was named. Clojure and Elixir have <code>frequencies</code>, Ruby has <code>tally</code>, Python has <code>Counter</code>, and JavaScript gets by with a one-line <code>reduce</code>."],
   keep: ["Keep.", "All four rules in one test: 3 living neighbors, or 2 and already alive."],
-  collect: ["Collect.", "Gather what's kept into a new set: <code>set</code> in Clojure, <code>into: MapSet.new()</code> in Elixir, <code>new Set</code> in JavaScript, a set comprehension in Python, and <code>to_set</code> in Ruby."],
+  collect: ["Collect.", "Gather what's kept into a new set: <code>set</code> in Clojure, <code>MapSet.new</code> in Elixir, <code>new Set</code> in JavaScript, a set comprehension in Python, and <code>to_set</code> in Ruby."],
 };
 const LANG_ORDER = ["clj", "ex", "js", "py", "rb"];
 let part = null;
