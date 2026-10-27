@@ -160,7 +160,16 @@ h2 { font: 700 1.6rem/1.1 var(--head); text-transform: uppercase; letter-spacing
 .tracks summary {
   cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .5rem;
   padding: 0 .8rem; font: 700 1rem var(--type);
+  list-style: none;
 }
+.tracks summary::-webkit-details-marker { display: none; }
+/* a drawn chevron, so it looks the same in every browser and turns on open */
+.tracks summary::before {
+  content: ""; flex: 0 0 auto; width: .45rem; height: .45rem; margin: 0 .15rem 0 .05rem;
+  border: solid currentColor; border-width: 0 2px 2px 0;
+  transform: rotate(-45deg); transition: transform .15s ease;
+}
+.tracks details[open] > summary::before { transform: rotate(45deg); }
 .tracks summary .of { font-weight: 400; color: #6B6151; margin-left: auto; font-size: .88rem; }
 .tracks ul { list-style: none; margin: 0; padding: 0 .5rem .5rem; columns: 2 18rem; column-gap: 1rem; }
 .tracks li { break-inside: avoid; }
