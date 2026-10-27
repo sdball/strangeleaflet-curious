@@ -344,8 +344,8 @@ pre:focus-visible { outline-offset: 3px; }
         <span class="ctl-lbl" id="file-lbl">Settings file</span>
         <div class="seg" id="file" role="group" aria-labelledby="file-lbl">
           <button type="button" data-v="user" aria-pressed="true">Everywhere</button>
-          <button type="button" data-v="project" aria-pressed="false">This project</button>
-          <button type="button" data-v="local" aria-pressed="false">This project, just me</button>
+          <button type="button" data-v="project" aria-pressed="false">Project</button>
+          <button type="button" data-v="local" aria-pressed="false">Project, just me</button>
         </div>
         <p class="why" id="file-why"></p>
       </div>
@@ -442,7 +442,7 @@ const BUILTIN = ["Accomplishing", "Architecting", "Baking"];
 const FILES = {
   user: { path: "~/.claude/settings.json", why: "~/.claude/settings.json changes the spinner in every project on this machine." },
   project: { path: ".claude/settings.json", why: ".claude/settings.json, run from the project folder. Commit it and everyone on the project hears your hold music." },
-  local: { path: ".claude/settings.local.json", why: ".claude/settings.local.json, run from the project folder. Only you hear it, and only in this project." },
+  local: { path: ".claude/settings.local.json", why: ".claude/settings.local.json, run from the project folder. Only you hear it, and only in that project." },
 };
 const KEEPS = {
   keep: "Keep every verb the file already lists and add yours after them.",
