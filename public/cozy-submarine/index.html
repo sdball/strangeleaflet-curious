@@ -51,7 +51,7 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 .chip:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--edge); }
 .chip[aria-pressed="true"] { background: var(--lamp); border-color: var(--lamp); color: var(--ink); }
 .chip:focus-visible, #show:focus-visible, #head a:focus-visible, #sea:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
-#speed { min-width: 8.5em; text-align: center; font-size: 12px; }
+#speed { min-width: 7em; text-align: center; font-size: 12px; }
 .foot { margin-top: 7px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 10px; color: var(--muted); align-items: center; }
 .foot .chip { min-height: 32px; font-size: 11px; padding: 4px 8px; }
 kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px; margin: 0 1px; color: var(--paper); }
@@ -64,7 +64,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   #zone, #floor, #weather, #seen { font-size: 10px; }
   .row { gap: 6px 8px; }
   .chip { font-size: 12px; padding: 6px 8px; }
-  #speed { min-width: 7.2em; font-size: 11px; }
+  #speed { min-width: 5.8em; font-size: 11px; }
   .tip { display: none; }
 }
 @media (max-height: 480px) {
@@ -100,10 +100,10 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
 <p id="said" class="sr" aria-live="polite"></p>
 <section id="tray" class="panel" aria-label="Submarine controls">
   <div class="row">
-    <div class="group" role="group" aria-label="Speed and heading">
-      <button type="button" class="chip" id="left" aria-label="Steer left" aria-keyshortcuts="ArrowLeft">◀</button>
-      <span id="speed" role="status">Slow →</span>
-      <button type="button" class="chip" id="right" aria-label="Steer right" aria-keyshortcuts="ArrowRight">▶</button>
+    <div class="group" role="group" aria-label="Heading and speed">
+      <button type="button" class="chip" id="left" aria-label="Go left" aria-pressed="false" aria-keyshortcuts="ArrowLeft">◀</button>
+      <span id="speed" role="status">Dead slow</span>
+      <button type="button" class="chip" id="right" aria-label="Go right" aria-pressed="true" aria-keyshortcuts="ArrowRight">▶</button>
       <button type="button" class="chip" id="stop" aria-keyshortcuts="Space">■ Stop</button>
     </div>
     <div class="group" role="group" aria-label="Depth">
@@ -120,7 +120,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <div class="foot">
     <span>The link shares this ocean.</span>
     <button type="button" class="chip" id="newsea">New ocean</button>
-    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> speed · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
+    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> faster, or turn · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
   </div>
 </section>
 <button type="button" class="chip panel" id="show" hidden aria-keyshortcuts="H">Show controls</button>
@@ -610,7 +610,7 @@ const SPECIES = [
 for (const sp of SPECIES) sp.spr = ART[sp.art];
 
 // ---------- State ----------
-const sub = { x: 0, y: 2, vx: 0, vy: 0, step: 1, face: 1, sx: 0, hold: 0, brake: false, follow: false };
+const sub = { x: 0, y: 2, vx: 0, vy: 0, speed: 1, face: 1, sx: 0, hold: 0, brake: false, follow: false };
 const cam = { x: 0, y: 0 };
 const lamp = { on: false, sx: 0, sy: 0, dx: 1, dy: 0.12, r: 84 };
 const keys = { up: false, down: false };
@@ -636,13 +636,13 @@ function startWorld(seed) {
   SEED = seed;
   floorCache.clear(); isleCache.clear(); ventCache.clear();
   actors = []; parts = [];
-  sub.x = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0; sub.step = 1; sub.face = 1;
+  sub.x = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0;
   setFollow(false, true);
   sub.sx = LW * 0.33; cam.x = sub.x - sub.sx; cam.y = -LH * 0.47;
   spawnIn = 1; rareAt = 0;
   seedSnow();
   lastZone = ''; zoneSince = 0;
-  setStep(1, true);
+  sub.face = 1; setSpeed(1, true); showHeading();
 }
 
 // ---------- Layout ----------
@@ -664,20 +664,30 @@ function layout() {
 }
 
 // ---------- Movement ----------
-function setStep(st, quiet) {
-  sub.step = clamp(st, -4, 4);
+function setSpeed(n, quiet) {
+  sub.speed = clamp(n, 0, 4);
   sub.brake = false;
-  const n = Math.abs(sub.step), name = SPEED_NAMES[n];
-  $('speed').textContent = n === 0 ? name : sub.step > 0 ? `${name} →` : `← ${name}`;
+  $('speed').textContent = SPEED_NAMES[sub.speed];
   if (!quiet) describe();
+}
+// a press the way you're facing is one step faster. a press the other way turns the sub round on
+// the spot and stops it there, ready to set off the new way
+function go(d, quiet) {
+  if (d === sub.face) setSpeed(sub.speed + 1, true);
+  else { sub.face = d; setSpeed(0, true); sub.vx = 0; }
+  showHeading();
+  if (!quiet) describe();
+}
+function showHeading() {
+  $('left').setAttribute('aria-pressed', sub.face < 0);
+  $('right').setAttribute('aria-pressed', sub.face > 0);
 }
 function tick(dt) {
   T += dt;
-  const want = Math.sign(sub.step) * SPEEDS[Math.abs(sub.step)];
+  const want = sub.face * SPEEDS[sub.speed];
   // Stop brakes hard; changing speed eases
   const accel = sub.brake ? 150 : 30;
   sub.vx += clamp(want - sub.vx, -accel * dt, accel * dt);
-  if (sub.step) sub.face = Math.sign(sub.step);
   sub.x += sub.vx * dt;
 
   if (nudge.left > 0) nudge.left -= dt; else nudge.v = 0;
@@ -1314,8 +1324,7 @@ function seen(text) {
 function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
-  const n = Math.abs(sub.step);
-  const going = (n === 0 ? 'stopped' : `heading ${sub.step > 0 ? 'east' : 'west'}, ${SPEED_NAMES[n].toLowerCase()}`) + (sub.follow ? ', following the floor' : '');
+  const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
   canvas.setAttribute('aria-label', `A little yellow submarine ${where}, ${going}, lights ${lamp.on ? 'on' : 'off'}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
 }
 let hudIn = 0, labelIn = 5;
@@ -1404,29 +1413,21 @@ const SOUNDS = {
     { "kind": "tone", "wave": "sine", "freq": 165, "gain": 0.015, "attack": 0.4, "dur": 1.5 },
     { "kind": "noise", "filter": "lowpass", "freq": 240, "q": 1.5, "gain": 0.12, "attack": 0.4, "dur": 1.5 }
   ] },
-  "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
+  "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones, held", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
   ] },
-  "hum": { "name": "Deep hum", "use": "The low hum of the deep sea, below the twilight zone", "layers": [
+  "hum": { "name": "Deep hum", "use": "The low hum of the deep sea, below the twilight zone, held", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 110, "to": 80, "q": 2, "gain": 0.35, "attack": 1.4, "dur": 3.6 },
     { "kind": "tone", "wave": "sine", "freq": 46, "to": 44, "gain": 0.05, "attack": 1.4, "dur": 3.6, "vary": 0.03 }
   ] },
-  "wave-calm": { "name": "Calm wave", "use": "A small wave lapping at the hull on a calm sea", "layers": [
-    { "kind": "noise", "filter": "lowpass", "freq": 700, "to": 260, "q": 0.8, "gain": 0.12, "attack": 0.9, "dur": 2.4 },
-    { "kind": "noise", "filter": "highpass", "freq": 2600, "q": 0.7, "gain": 0.015, "attack": 0.8, "dur": 1.6, "at": 0.4 }
+  "wind": { "name": "Wind", "use": "Wind over the sea while you're at the surface, held, louder and higher as the weather worsens and in gusts", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 500, "q": 0.8, "gain": 0.14, "attack": 1.5, "dur": 3 },
+    { "kind": "noise", "filter": "bandpass", "freq": 1400, "q": 2.5, "gain": 0.05, "attack": 1.5, "dur": 3 },
+    { "kind": "noise", "filter": "lowpass", "freq": 180, "q": 0.7, "gain": 0.1, "attack": 1.5, "dur": 3 }
   ] },
-  "wave-rough": { "name": "Rough wave", "use": "A wave breaking on a rough sea", "layers": [
-    { "kind": "noise", "filter": "lowpass", "freq": 1100, "to": 220, "q": 0.8, "gain": 0.3, "attack": 0.6, "dur": 2.6 },
-    { "kind": "noise", "filter": "bandpass", "freq": 2400, "to": 900, "q": 0.6, "gain": 0.08, "attack": 0.5, "dur": 1.8, "at": 0.3 }
-  ] },
-  "wave-storm": { "name": "Storm wave", "use": "A big wave crashing in a storm", "layers": [
-    { "kind": "noise", "filter": "lowpass", "freq": 1600, "to": 160, "q": 0.9, "gain": 0.5, "attack": 0.4, "dur": 3 },
-    { "kind": "noise", "filter": "bandpass", "freq": 3000, "to": 700, "q": 0.5, "gain": 0.14, "attack": 0.35, "dur": 2.2, "at": 0.2 },
-    { "kind": "tone", "wave": "sine", "freq": 60, "to": 38, "gain": 0.08, "attack": 0.3, "dur": 1.6 }
-  ] },
-  "rain": { "name": "Rain", "use": "Rain on the sea in a storm", "layers": [
+  "rain": { "name": "Rain", "use": "Rain on the sea in a storm, held", "layers": [
     { "kind": "noise", "filter": "highpass", "freq": 3200, "q": 0.6, "gain": 0.05, "attack": 1.2, "dur": 3.6 },
-    { "kind": "noise", "filter": "bandpass", "freq": 5200, "q": 3, "gain": 0.02, "attack": 0.001, "dur": 0.012, "vary": 0.3, "repeat": 18, "spread": 3.2 }
+    { "kind": "noise", "filter": "bandpass", "freq": 1800, "q": 0.7, "gain": 0.025, "attack": 1.2, "dur": 3.6 }
   ] },
   "thunder": { "name": "Thunder", "use": "Thunder rolling after a lightning flash", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 900, "to": 70, "q": 0.8, "gain": 0.8, "attack": 0.04, "dur": 3.5 },
@@ -1527,33 +1528,36 @@ function sustain(id) {
 }
 
 // ---------- The sea's sounds ----------
-// waves, rain, and thunder at the surface, fading out over the first ten meters, so a storm still
+// wind, rain, and thunder at the surface, fading out over the first ten meters, so a storm still
 // rumbles overhead just under the waves. below, a wash of water turns to a low hum as you go down,
-// and the engine hums while you move
+// and the engine hums while you move, sinking in pitch the deeper you are
 const atSurface = () => 1 - smooth(0.5, 10, subDepth());
-const ambient = { wave: 0, bed: 0, rain: 0, creak: 30 };
-let engine = null;
+const ambient = { creak: 30 };
+// the steady sounds run the whole time, each turned up and down as you go. restarting them on a
+// timer would swell and fade on every restart, and that beat is what steady sounds avoid
+const held = {};
+const steady = (id, level, pitch = 1) => { held[id] ||= sustain(id); if (held[id]) held[id].set(level, pitch); };
 function listenTick(dt) {
   const a = live();
-  if (!a) { if (engine) { engine.stop(); engine = null; } return; }
+  if (!a) {
+    for (const id in held) { if (held[id]) held[id].stop(); delete held[id]; }
+    return;
+  }
   const m = subDepth(), up = atSurface(), moving = Math.min(1, (Math.abs(sub.vx) + Math.abs(sub.vy)) / 40);
   for (const k in ambient) ambient[k] -= dt;
-  if (ambient.wave <= 0) {
-    ambient.wave = 2.6 - SKY.wI * 0.9 + Math.random() * 0.8;
-    play(SKY.wI < 0.38 ? 'wave-calm' : SKY.wI < 0.66 ? 'wave-rough' : 'wave-storm', 0, 0, up);
-  }
-  if (ambient.bed <= 0) {
-    ambient.bed = 2.4;
-    const deep = smooth(150, 2500, m);
-    play('wash', 0, 0, (1 - deep) * (1 - up * 0.6) * (0.6 + moving * 0.4));
-    play('hum', 0, 0, deep);
-  }
-  if (ambient.rain <= 0) { ambient.rain = 3; play('rain', 0, 0, SKY.storm * up); }
+  // the wind gusts on its own slow noise, harder and higher in rough weather
+  const gust = n1(T * 0.35, 55);
+  steady('wind', up * (0.15 + 0.85 * SKY.wI) * (0.6 + 0.4 * gust), 0.7 + 0.6 * SKY.wI + 0.35 * gust);
+  steady('rain', SKY.storm * up);
+  const deep = smooth(150, 2500, m);
+  steady('wash', (1 - deep) * (1 - up * 0.6) * (0.6 + moving * 0.4));
+  steady('hum', deep);
   if (ambient.creak <= 0) { ambient.creak = rand(25, 60); if (m > 800) play('creak', 0, 0, 0.8); }
   // the engine is silent at rest and swells in as the sub gets going
   const pace = Math.min(1, Math.abs(sub.vx) / SPEEDS[4] + Math.abs(sub.vy) / 400);
-  if (!engine) engine = sustain('engine');
-  if (engine) engine.set(smooth(0, 0.04, pace) * (0.6 + 0.4 * pace) * (1 - up * 0.4), lerp(0.75, 1.6, pace));
+  // about a tenth lower by 200 m, a fifth by 1,000 m, and nearly half at the bottom of a trench
+  const sink = 1 - 0.45 * Math.log1p(m / 150) / Math.log1p(11000 / 150);
+  steady('engine', smooth(0, 0.04, pace) * (0.6 + 0.4 * pace) * (1 - up * 0.4), lerp(0.75, 1.6, pace) * sink);
 }
 
 // ---------- Controls ----------
@@ -1572,9 +1576,9 @@ function setFollow(on, quiet) {
 }
 // Stop halts everything: the screw, any rise or dive, and following the floor
 function allStop() {
-  setStep(0, true);
+  setSpeed(0, true);
   sub.brake = true; sub.vy = 0;
-  hold.v = 0; nudge.v = 0; nudge.left = 0; drag.v = 0; drag.step = 0;
+  hold.v = 0; nudge.v = 0; nudge.left = 0; drag.v = 0;
   if (sub.follow) setFollow(false, true);
   say('All stop.');
   describe();
@@ -1583,8 +1587,8 @@ function setHidden(h) {
   $('tray').hidden = h; $('head').hidden = h; $('show').hidden = !h;
   ($(h ? 'show' : 'hide')).focus({ preventScroll: true });
 }
-$('left').addEventListener('click', () => setStep(sub.step - 1));
-$('right').addEventListener('click', () => setStep(sub.step + 1));
+$('left').addEventListener('click', () => go(-1));
+$('right').addEventListener('click', () => go(1));
 $('stop').addEventListener('click', allStop);
 $('follow').addEventListener('click', () => setFollow(!sub.follow));
 $('lights').addEventListener('click', () => setLights(!lamp.on));
@@ -1602,17 +1606,18 @@ function holdButton(btn, v) {
 holdButton($('rise'), -1);
 holdButton($('dive'), 1);
 
-// drag anywhere: down dives, up rises, and sideways turns the speed up or down
+// drag anywhere: down dives and up rises. sideways works like the arrows: each stretch the way
+// you're facing is one step faster, and a pull the other way turns you round
 canvas.addEventListener('pointerdown', (e) => {
-  drag.on = true; drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY; drag.step = sub.step; drag.v = 0;
+  drag.on = true; drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY; drag.v = 0;
   canvas.setPointerCapture(e.pointerId); canvas.classList.add('dragging');
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!drag.on || e.pointerId !== drag.id) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   drag.v = Math.abs(dy) < 12 ? 0 : clamp((dy - Math.sign(dy) * 12) / 70, -1, 1);
-  const st = clamp(drag.step + Math.trunc(dx / 45), -4, 4);
-  if (st !== sub.step) setStep(st);
+  if (dx * sub.face > 45) { go(sub.face); drag.x += 45 * sub.face; }
+  else if (dx * sub.face < -30) { go(-sub.face); drag.x = e.clientX; }
 });
 const endDrag = () => { drag.on = false; drag.v = 0; canvas.classList.remove('dragging'); };
 ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => canvas.addEventListener(t, endDrag));
@@ -1623,8 +1628,8 @@ document.addEventListener('keydown', (e) => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (k === 'ArrowUp' || k === 'w') { keys.up = true; e.preventDefault(); }
   else if (k === 'ArrowDown' || k === 's') { keys.down = true; e.preventDefault(); }
-  else if (k === 'ArrowLeft' || k === 'a') { if (!e.repeat) setStep(sub.step - 1); e.preventDefault(); }
-  else if (k === 'ArrowRight' || k === 'd') { if (!e.repeat) setStep(sub.step + 1); e.preventDefault(); }
+  else if (k === 'ArrowLeft' || k === 'a') { if (!e.repeat) go(-1); e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd') { if (!e.repeat) go(1); e.preventDefault(); }
   // Space on a focused button presses that button, so it only means Stop elsewhere
   else if (k === ' ' && !e.target.matches('button, a')) { if (!e.repeat) allStop(); e.preventDefault(); }
   else if (k === 'f' && !e.repeat) setFollow(!sub.follow);
