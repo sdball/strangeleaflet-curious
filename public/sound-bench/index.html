@@ -555,13 +555,6 @@ const HARDPOINT_SOUNDS = {
 
 // Cozy Submarine's sounds, exactly as public/cozy-submarine/index.html has them
 const COZY_SUBMARINE_SOUNDS = {
-  "bubble": { "name": "Bubble", "use": "Bubbles rising past the hull in the shallows", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 520, "to": 1350, "gain": 0.045, "attack": 0.004, "dur": 0.07, "vary": 0.35 },
-    { "kind": "tone", "wave": "sine", "freq": 780, "to": 1900, "gain": 0.025, "attack": 0.003, "dur": 0.05, "at": 0.09, "vary": 0.35 }
-  ] },
-  "bubble-low": { "name": "Deep bubble", "use": "Slower, lower bubbles the deeper you go", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 170, "to": 420, "gain": 0.07, "attack": 0.008, "dur": 0.16, "vary": 0.3 }
-  ] },
   "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
   ] },
@@ -599,10 +592,6 @@ const COZY_SUBMARINE_SOUNDS = {
     { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
     { "kind": "noise", "filter": "highpass", "freq": 3000, "q": 0.7, "gain": 0.12, "attack": 0.001, "dur": 0.02 },
     { "kind": "tone", "wave": "sine", "freq": 120, "to": 110, "gain": 0.06, "attack": 0.05, "dur": 0.35, "at": 0.02 }
-  ] },
-  "ping": { "name": "Sonar ping", "use": "Turning sound on", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.12, "attack": 0.004, "dur": 1.6 },
-    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.03, "attack": 0.004, "dur": 1.2, "at": 0.45 }
   ] }
 };
 

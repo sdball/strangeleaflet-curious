@@ -1144,7 +1144,7 @@ function drawSub() {
   const m = subDepth();
   // the surge of a storm reaches a little way down
   const sway = reduced ? 0 : Math.sin(T * 1.3) * SKY.amp * 0.5 * Math.exp(-m / 25) * (m > 1 ? 1 : 0);
-  const sx = Math.round(sub.x - X0) - 10, sy = Math.round(sub.y + sway - Y0) - 6, flip = sub.face < 0;
+  const sx = Math.round(sub.sx) - 10, sy = Math.round(sub.y + sway - Y0) - 6, flip = sub.face < 0;
   blit(lamp.on ? SUB_ON : SUB_OFF, 0, sx, sy, flip);
   const px = flip ? sx + 20 : sx - 1, spin = Math.abs(sub.vx) > 0.5 ? Math.floor(T * 14) % 2 : 0, pc = hex('#6E6A62');
   if (spin) { put(px, sy + 5, pc); put(px, sy + 7, pc); put(px, sy + 9, pc); }
@@ -1253,7 +1253,8 @@ function light() {
 
 // ---------- A frame ----------
 function draw() {
-  X0 = Math.floor(cam.x); Y0 = Math.floor(cam.y);
+  // the sub holds a whole-pixel column and the world scrolls under it, so it doesn't shimmy
+  X0 = Math.round(sub.x) - Math.round(sub.sx); Y0 = Math.floor(cam.y);
   for (let i = 0; i < LW; i++) surfI[i] = Math.round(waveY(X0 + i, T));
   const cv = climV(X0 + LW / 2);
   const top = cv < 0.5 ? mix(C.seaCold, C.seaMild, smooth(0.32, 0.48, cv)) : mix(C.seaMild, C.seaWarm, smooth(0.52, 0.66, cv));
@@ -1359,7 +1360,7 @@ function setSound(on) {
   prefs.sound = on;
   savePrefs();
   $('sound').setAttribute('aria-pressed', on);
-  if (on && ac()) audio.resume().then(() => play('ping'));
+  if (on) ac();
 }
 
 // a gain that jumps up over attack seconds, then dies away by dur
@@ -1379,13 +1380,6 @@ function env(a, t, peak, attack, dur) {
 // and repeat scatters that many copies across spread seconds. the Sound Bench (../sound-bench/)
 // has an identical copy to play and edit, so a change here goes there too, and the other way round.
 const SOUNDS = {
-  "bubble": { "name": "Bubble", "use": "Bubbles rising past the hull in the shallows", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 520, "to": 1350, "gain": 0.045, "attack": 0.004, "dur": 0.07, "vary": 0.35 },
-    { "kind": "tone", "wave": "sine", "freq": 780, "to": 1900, "gain": 0.025, "attack": 0.003, "dur": 0.05, "at": 0.09, "vary": 0.35 }
-  ] },
-  "bubble-low": { "name": "Deep bubble", "use": "Slower, lower bubbles the deeper you go", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 170, "to": 420, "gain": 0.07, "attack": 0.008, "dur": 0.16, "vary": 0.3 }
-  ] },
   "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
   ] },
@@ -1423,10 +1417,6 @@ const SOUNDS = {
     { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
     { "kind": "noise", "filter": "highpass", "freq": 3000, "q": 0.7, "gain": 0.12, "attack": 0.001, "dur": 0.02 },
     { "kind": "tone", "wave": "sine", "freq": 120, "to": 110, "gain": 0.06, "attack": 0.05, "dur": 0.35, "at": 0.02 }
-  ] },
-  "ping": { "name": "Sonar ping", "use": "Turning sound on", "layers": [
-    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.12, "attack": 0.004, "dur": 1.6 },
-    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.03, "attack": 0.004, "dur": 1.2, "at": 0.45 }
   ] }
 };
 
@@ -1469,9 +1459,8 @@ function voice(a, L, t, dur, attack, v, vol) {
 }
 
 // ---------- The sea's sounds ----------
-// waves near the surface, a wash of water that turns to a low hum as you go down, and bubbles
-// that get slower and lower with depth
-const ambient = { wave: 0, bed: 0, bub: 0, rain: 0, creak: 30 };
+// waves near the surface, and a wash of water that turns to a low hum as you go down
+const ambient = { wave: 0, bed: 0, rain: 0, creak: 30 };
 function listenTick(dt) {
   if (!live()) return;
   const m = subDepth(), near = Math.exp(-m / 12), moving = Math.min(1, (Math.abs(sub.vx) + Math.abs(sub.vy)) / 40);
@@ -1485,11 +1474,6 @@ function listenTick(dt) {
     const deep = smooth(150, 2500, m);
     play('wash', 0, 0, (1 - deep) * (1 - near * 0.6) * (0.6 + moving * 0.4));
     play('hum', 0, 0, deep);
-  }
-  if (ambient.bub <= 0) {
-    const deep = smooth(60, 1800, m);
-    ambient.bub = (0.35 + deep * 1.3) / (0.5 + moving) * rand(0.5, 1.5);
-    if (m > 1) play(Math.random() < deep ? 'bubble-low' : 'bubble');
   }
   if (ambient.rain <= 0) { ambient.rain = 3; play('rain', 0, 0, SKY.storm * near); }
   if (ambient.creak <= 0) { ambient.creak = rand(25, 60); if (m > 800) play('creak', 0, 0, 0.8); }
