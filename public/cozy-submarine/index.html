@@ -120,7 +120,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <div class="foot">
     <span>The link shares this ocean.</span>
     <button type="button" class="chip" id="newsea">New ocean</button>
-    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> faster, or turn · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
+    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> faster (hold for more), or turn · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
   </div>
 </section>
 <button type="button" class="chip panel" id="show" hidden aria-keyshortcuts="H">Show controls</button>
@@ -616,6 +616,7 @@ const lamp = { on: false, sx: 0, sy: 0, dx: 1, dy: 0.12, r: 84 };
 const keys = { up: false, down: false };
 const drag = { on: false, x: 0, y: 0, step: 0, v: 0, id: null };
 const hold = { v: 0 }, nudge = { v: 0, left: 0 };
+const throttle = { d: 0, next: 0 };
 let actors = [], parts = [], snow = [], drops = [], bolt = null;
 let T = 0, flash = 0, spawnIn = 1, rareAt = 0;
 const SPEEDS = [0, 10, 24, 48, 90];
@@ -679,12 +680,25 @@ function go(d, quiet) {
   showHeading();
   if (!quiet) describe();
 }
+// holding an arrow keeps pressing it, one step every THROTTLE_STEP, until Full
+const THROTTLE_STEP = 0.5;
+function pressThrottle(d) {
+  go(d);
+  throttle.d = d; throttle.next = THROTTLE_STEP;
+}
+function releaseThrottle(d) {
+  if (d === undefined || throttle.d === d) throttle.d = 0;
+}
 function showHeading() {
   $('left').setAttribute('aria-pressed', sub.face < 0);
   $('right').setAttribute('aria-pressed', sub.face > 0);
 }
 function tick(dt) {
   T += dt;
+  if (throttle.d && !(throttle.d === sub.face && sub.speed === 4) && (throttle.next -= dt) <= 0) {
+    go(throttle.d);
+    throttle.next = THROTTLE_STEP;
+  }
   const want = sub.face * SPEEDS[sub.speed];
   // Stop brakes hard; changing speed eases; drifting backwards after a turn sheds its speed in TURN_COAST
   if (sub.vx * sub.face >= 0) sub.coast = 0;
@@ -1585,7 +1599,7 @@ function setFollow(on, quiet) {
 function allStop() {
   setSpeed(0, true);
   sub.brake = true; sub.vy = 0;
-  hold.v = 0; nudge.v = 0; nudge.left = 0; drag.v = 0;
+  hold.v = 0; nudge.v = 0; nudge.left = 0; drag.v = 0; releaseThrottle();
   if (sub.follow) setFollow(false, true);
   say('All stop.');
   describe();
@@ -1594,8 +1608,16 @@ function setHidden(h) {
   $('tray').hidden = h; $('head').hidden = h; $('show').hidden = !h;
   ($(h ? 'show' : 'hide')).focus({ preventScroll: true });
 }
-$('left').addEventListener('click', () => go(-1));
-$('right').addEventListener('click', () => go(1));
+// the arrows step up while held. a click from the keyboard is one press, and a held Enter doesn't
+// repeat, so it can't race to Full
+function throttleButton(btn, d) {
+  btn.addEventListener('pointerdown', (e) => { pressThrottle(d); btn.setPointerCapture(e.pointerId); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => btn.addEventListener(t, () => releaseThrottle(d)));
+  btn.addEventListener('click', (e) => { if (e.detail === 0) go(d); });
+  btn.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.repeat) e.preventDefault(); });
+}
+throttleButton($('left'), -1);
+throttleButton($('right'), 1);
 $('stop').addEventListener('click', allStop);
 $('follow').addEventListener('click', () => setFollow(!sub.follow));
 $('lights').addEventListener('click', () => setLights(!lamp.on));
@@ -1635,8 +1657,8 @@ document.addEventListener('keydown', (e) => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (k === 'ArrowUp' || k === 'w') { keys.up = true; e.preventDefault(); }
   else if (k === 'ArrowDown' || k === 's') { keys.down = true; e.preventDefault(); }
-  else if (k === 'ArrowLeft' || k === 'a') { if (!e.repeat) go(-1); e.preventDefault(); }
-  else if (k === 'ArrowRight' || k === 'd') { if (!e.repeat) go(1); e.preventDefault(); }
+  else if (k === 'ArrowLeft' || k === 'a') { if (!e.repeat) pressThrottle(-1); e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd') { if (!e.repeat) pressThrottle(1); e.preventDefault(); }
   // Space on a focused button presses that button, so it only means Stop elsewhere
   else if (k === ' ' && !e.target.matches('button, a')) { if (!e.repeat) allStop(); e.preventDefault(); }
   else if (k === 'f' && !e.repeat) setFollow(!sub.follow);
@@ -1648,8 +1670,10 @@ document.addEventListener('keyup', (e) => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (k === 'ArrowUp' || k === 'w') keys.up = false;
   if (k === 'ArrowDown' || k === 's') keys.down = false;
+  if (k === 'ArrowLeft' || k === 'a') releaseThrottle(-1);
+  if (k === 'ArrowRight' || k === 'd') releaseThrottle(1);
 });
-window.addEventListener('blur', () => { keys.up = keys.down = false; hold.v = 0; endDrag(); });
+window.addEventListener('blur', () => { keys.up = keys.down = false; hold.v = 0; releaseThrottle(); endDrag(); });
 window.addEventListener('hashchange', () => { const s = readSeed(); if (s && s !== SEED) startWorld(s); });
 let rz = 0;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
