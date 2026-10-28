@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sound Bench — The Cabinet of Curios</title>
-<meta name="description" content="Build game sound effects out of tones and noise in your browser, then take apart and retune the sounds from Hardpoint.">
+<meta name="description" content="Build game sound effects out of tones and noise in your browser, then take apart and retune the sounds from Hardpoint and Cozy Submarine.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔊</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -266,7 +266,7 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Sound Bench</h1>
-  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a>, or build your own.</p>
+  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a> and <a href="../cozy-submarine/">Cozy Submarine</a>, or build your own.</p>
   <p class="howto">Every station has a Play button. Change a control, press Play again, and listen for the difference. The pictures are drawn from the exact sound you'll hear. No sound on a phone? Check its volume.</p>
 
   <!-- ---------- Station 1 ---------- -->
@@ -553,8 +553,62 @@ const HARDPOINT_SOUNDS = {
   ] }
 };
 
+// Cozy Submarine's sounds, exactly as public/cozy-submarine/index.html has them
+const COZY_SUBMARINE_SOUNDS = {
+  "bubble": { "name": "Bubble", "use": "Bubbles rising past the hull in the shallows", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 520, "to": 1350, "gain": 0.045, "attack": 0.004, "dur": 0.07, "vary": 0.35 },
+    { "kind": "tone", "wave": "sine", "freq": 780, "to": 1900, "gain": 0.025, "attack": 0.003, "dur": 0.05, "at": 0.09, "vary": 0.35 }
+  ] },
+  "bubble-low": { "name": "Deep bubble", "use": "Slower, lower bubbles the deeper you go", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 170, "to": 420, "gain": 0.07, "attack": 0.008, "dur": 0.16, "vary": 0.3 }
+  ] },
+  "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
+  ] },
+  "hum": { "name": "Deep hum", "use": "The low hum of the deep sea, below the twilight zone", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 110, "to": 80, "q": 2, "gain": 0.35, "attack": 1.4, "dur": 3.6 },
+    { "kind": "tone", "wave": "sine", "freq": 46, "to": 44, "gain": 0.05, "attack": 1.4, "dur": 3.6, "vary": 0.03 }
+  ] },
+  "wave-calm": { "name": "Calm wave", "use": "A small wave lapping at the hull on a calm sea", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 700, "to": 260, "q": 0.8, "gain": 0.12, "attack": 0.9, "dur": 2.4 },
+    { "kind": "noise", "filter": "highpass", "freq": 2600, "q": 0.7, "gain": 0.015, "attack": 0.8, "dur": 1.6, "at": 0.4 }
+  ] },
+  "wave-rough": { "name": "Rough wave", "use": "A wave breaking on a rough sea", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1100, "to": 220, "q": 0.8, "gain": 0.3, "attack": 0.6, "dur": 2.6 },
+    { "kind": "noise", "filter": "bandpass", "freq": 2400, "to": 900, "q": 0.6, "gain": 0.08, "attack": 0.5, "dur": 1.8, "at": 0.3 }
+  ] },
+  "wave-storm": { "name": "Storm wave", "use": "A big wave crashing in a storm", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1600, "to": 160, "q": 0.9, "gain": 0.5, "attack": 0.4, "dur": 3 },
+    { "kind": "noise", "filter": "bandpass", "freq": 3000, "to": 700, "q": 0.5, "gain": 0.14, "attack": 0.35, "dur": 2.2, "at": 0.2 },
+    { "kind": "tone", "wave": "sine", "freq": 60, "to": 38, "gain": 0.08, "attack": 0.3, "dur": 1.6 }
+  ] },
+  "rain": { "name": "Rain", "use": "Rain on the sea in a storm", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 3200, "q": 0.6, "gain": 0.05, "attack": 1.2, "dur": 3.6 },
+    { "kind": "noise", "filter": "bandpass", "freq": 5200, "q": 3, "gain": 0.02, "attack": 0.001, "dur": 0.012, "vary": 0.3, "repeat": 18, "spread": 3.2 }
+  ] },
+  "thunder": { "name": "Thunder", "use": "Thunder rolling after a lightning flash", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 900, "to": 70, "q": 0.8, "gain": 0.8, "attack": 0.04, "dur": 3.5 },
+    { "kind": "noise", "filter": "lowpass", "freq": 300, "to": 60, "q": 1, "gain": 0.4, "attack": 0.3, "dur": 2.2, "at": 0.4, "repeat": 3, "spread": 1 },
+    { "kind": "tone", "wave": "sine", "freq": 52, "to": 30, "gain": 0.3, "attack": 0.05, "dur": 2.4 }
+  ] },
+  "creak": { "name": "Hull creak", "use": "The hull creaking now and then in the deep", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 92, "to": 71, "gain": 0.018, "attack": 0.25, "dur": 0.9, "vary": 0.15 },
+    { "kind": "noise", "filter": "bandpass", "freq": 380, "to": 300, "q": 9, "gain": 0.12, "attack": 0.3, "dur": 0.8 }
+  ] },
+  "lights": { "name": "Lamp switch", "use": "Switching the lights on or off", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
+    { "kind": "noise", "filter": "highpass", "freq": 3000, "q": 0.7, "gain": 0.12, "attack": 0.001, "dur": 0.02 },
+    { "kind": "tone", "wave": "sine", "freq": 120, "to": 110, "gain": 0.06, "attack": 0.05, "dur": 0.35, "at": 0.02 }
+  ] },
+  "ping": { "name": "Sonar ping", "use": "Turning sound on", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.12, "attack": 0.004, "dur": 1.6 },
+    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.03, "attack": 0.004, "dur": 1.2, "at": 0.45 }
+  ] }
+};
+
 const GROUPS = [
   { id: "hardpoint", name: "Hardpoint", href: "../hardpoint/", sounds: HARDPOINT_SOUNDS },
+  { id: "cozy-submarine", name: "Cozy Submarine", href: "../cozy-submarine/", sounds: COZY_SUBMARINE_SOUNDS },
 ];
 const FORMAT = "sound-bench/1";
 const LAYER_KEYS = ["kind", "wave", "filter", "freq", "to", "q", "gain", "attack", "dur", "at", "vary", "repeat", "spread"];

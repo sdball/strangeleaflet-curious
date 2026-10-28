@@ -1,0 +1,1587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cozy Submarine — The Cabinet of Curios</title>
+<meta name="description" content="Pilot a little submarine across an endless pixel ocean, from sunny shallows and small islands down to the black smokers at the bottom of the deepest trenches. Park anywhere, switch on the lights, and watch what swims by.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: dark;
+  --ink: #0A1820; --panel: rgba(8, 21, 30, 0.8); --edge: #03090D; --brass: #B99556;
+  --paper: #EEE6D2; --muted: #A3B2B0; --lamp: #F2C14E; --hover: #6E8E96;
+  --font: 'Silkscreen', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { background: #06121C; color: var(--paper); font-family: var(--font); -webkit-font-smoothing: antialiased; touch-action: none; }
+#sea { position: fixed; left: 0; top: 0; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: none; cursor: grab; }
+#sea.dragging { cursor: grabbing; }
+.panel {
+  background: var(--panel); border: 2px solid var(--edge);
+  box-shadow: inset 0 0 0 1px rgba(185, 149, 86, 0.5), 0 3px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+#head { position: fixed; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; }
+#head h1 { margin: 0; font-size: 17px; font-weight: 700; color: var(--lamp); line-height: 1.1; letter-spacing: 0.3px; }
+#head a { display: inline-block; margin-top: 5px; font-size: 11px; color: var(--paper); text-underline-offset: 2px; }
+#head[hidden], #tray[hidden], #show[hidden] { display: none; }
+#gauge { position: fixed; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; text-align: right; pointer-events: none; }
+#depth { display: block; font-size: 26px; font-weight: 700; color: var(--lamp); line-height: 1; font-variant-numeric: tabular-nums; }
+#zone, #floor, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
+#floor, #weather { color: var(--muted); }
+#seen { display: block; font-size: 11px; margin-top: 5px; color: var(--lamp); opacity: 0; transition: opacity 0.6s; white-space: nowrap; }
+#seen.on { opacity: 1; }
+#tray {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: max(10px, env(safe-area-inset-bottom));
+  width: min(780px, calc(100% - 16px)); padding: 8px 10px 7px;
+}
+.row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: center; }
+.group { display: flex; gap: 6px; align-items: center; }
+.chip {
+  font: inherit; font-size: 13px; line-height: 1; color: var(--paper); background: #14303C;
+  border: 2px solid #2D5562; min-height: 40px; min-width: 40px; padding: 6px 10px; cursor: pointer; border-radius: 0;
+  box-shadow: 0 2px 0 var(--edge); touch-action: manipulation; -webkit-user-select: none; user-select: none;
+}
+.chip:hover { border-color: var(--hover); }
+.chip:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--edge); }
+.chip[aria-pressed="true"] { background: var(--lamp); border-color: var(--lamp); color: var(--ink); }
+.chip:focus-visible, #show:focus-visible, #head a:focus-visible, #sea:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+#speed { min-width: 8.5em; text-align: center; font-size: 12px; }
+.foot { margin-top: 7px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 10px; color: var(--muted); align-items: center; }
+.foot .chip { min-height: 32px; font-size: 11px; padding: 4px 8px; }
+kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px; margin: 0 1px; color: var(--paper); }
+#show { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 600px) {
+  #head h1 { font-size: 14px; }
+  #head a { font-size: 10px; }
+  #depth { font-size: 20px; }
+  #zone, #floor, #weather, #seen { font-size: 10px; }
+  .row { gap: 6px 8px; }
+  .chip { font-size: 12px; padding: 6px 8px; }
+  #speed { min-width: 7.2em; font-size: 11px; }
+  .tip { display: none; }
+}
+@media (max-height: 480px) {
+  .tip { display: none; }
+  #tray { padding: 6px 8px 5px; }
+  .foot { margin-top: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<canvas id="sea" role="img" aria-label="A little yellow submarine at sea"></canvas>
+<header id="head" class="panel">
+  <h1>Cozy Submarine</h1>
+  <a href="/">The Cabinet of Curios</a>
+</header>
+<div id="gauge" class="panel" aria-hidden="true">
+  <b id="depth">0 m</b>
+  <span id="zone">At the surface</span>
+  <span id="floor">Sea floor 40 m</span>
+  <span id="weather">Day, calm</span>
+  <span id="seen"></span>
+</div>
+<p id="said" class="sr" aria-live="polite"></p>
+<section id="tray" class="panel" aria-label="Submarine controls">
+  <div class="row">
+    <div class="group" role="group" aria-label="Speed and heading">
+      <button type="button" class="chip" id="left" aria-label="Steer left" aria-keyshortcuts="ArrowLeft">◀</button>
+      <span id="speed" role="status">Slow →</span>
+      <button type="button" class="chip" id="right" aria-label="Steer right" aria-keyshortcuts="ArrowRight">▶</button>
+    </div>
+    <div class="group" role="group" aria-label="Depth">
+      <button type="button" class="chip" id="rise" aria-keyshortcuts="ArrowUp">▲ Rise</button>
+      <button type="button" class="chip" id="dive" aria-keyshortcuts="ArrowDown">▼ Dive</button>
+    </div>
+    <div class="group">
+      <button type="button" class="chip" id="lights" aria-pressed="false" aria-keyshortcuts="L">Lights</button>
+      <button type="button" class="chip" id="sound" aria-pressed="false" aria-keyshortcuts="M">Sound</button>
+      <button type="button" class="chip" id="hide" aria-keyshortcuts="H">Hide</button>
+    </div>
+  </div>
+  <div class="foot">
+    <span>The link shares this ocean.</span>
+    <button type="button" class="chip" id="newsea">New ocean</button>
+    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> speed · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
+  </div>
+</section>
+<button type="button" class="chip panel" id="show" hidden aria-keyshortcuts="H">Show controls</button>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+
+// ---------- Utilities ----------
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const hex = (s) => parseInt(s.slice(1), 16);
+const R8 = (c) => (c >> 16) & 255, G8 = (c) => (c >> 8) & 255, B8 = (c) => c & 255;
+const rgb = (r, g, b) => (clamp(r | 0, 0, 255) << 16) | (clamp(g | 0, 0, 255) << 8) | clamp(b | 0, 0, 255);
+const mix = (a, b, t) => rgb(R8(a) + (R8(b) - R8(a)) * t, G8(a) + (G8(b) - G8(a)) * t, B8(a) + (B8(b) - B8(a)) * t);
+const shade = (c, k) => rgb(R8(c) * k, G8(c) * k, B8(c) * k);
+const rand = (a, b) => a + Math.random() * (b - a);
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+function h3(x, y, z) {
+  let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(z | 0, 1442695041);
+  h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+// smooth 1d value noise, 0..1
+function n1(x, s, z = 0) {
+  const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f);
+  const a = h3(i, s, z), b = h3(i + 1, s, z);
+  return a + (b - a) * u;
+}
+const fbm = (x, s) => n1(x, s, 0) * 0.6 + n1(x * 2.17 + 5.3, s, 1) * 0.3 + n1(x * 4.9 + 1.7, s, 2) * 0.1;
+
+let reduced = false;
+const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+reduced = motionQuery.matches;
+motionQuery.addEventListener('change', (e) => { reduced = e.matches; });
+
+// ---------- The ocean's seed ----------
+// the hash holds only the seed, so a shared link opens the same ocean from its beginning
+let SEED = 1;
+function readSeed() {
+  const v = parseInt(new URLSearchParams(location.hash.slice(1)).get('ocean') || '', 36);
+  return Number.isFinite(v) && v > 0 ? v >>> 0 : 0;
+}
+function writeSeed(s) {
+  const p = new URLSearchParams(location.hash.slice(1));
+  p.set('ocean', s.toString(36));
+  history.replaceState(null, '', '#' + p);
+}
+const freshSeed = () => ((Math.random() * 4294967295) >>> 0) || 1;
+
+// ---------- Depth scale ----------
+// real meters, squashed: half a meter per pixel at the surface, about three at the bottom of a trench.
+// above the surface it stays at half a meter per pixel
+const KY = 4000, D0 = 2000;
+const yOf = (m) => m >= 0 ? KY * Math.log1p(m / D0) : m * 2;
+const mOf = (y) => y >= 0 ? D0 * Math.expm1(y / KY) : y / 2;
+const MIN_FLOOR = yOf(8), SHORE_Y = yOf(9);
+
+// ---------- The sea floor ----------
+// broad basins and shallow seas, continental slopes between them, seamounts, and now and then a trench
+function baseFloor(x) {
+  const m = fbm(x / 10000, SEED + 1);
+  const shallow = 16 + 130 * fbm(x / 1700, SEED + 2) ** 2;
+  const abyss = 3800 + 2400 * fbm(x / 2600, SEED + 3);
+  let y = lerp(yOf(shallow), yOf(abyss), smooth(0.42, 0.56, m));
+  const sm = n1(x / 1300, SEED + 4);
+  y = lerp(y, yOf(700 + 1500 * n1(x / 400, SEED + 5)), smooth(0.84, 0.94, sm) * smooth(0.58, 0.68, m));
+  const tr = fbm(x / 2200, SEED + 6);
+  y = lerp(y, yOf(6800 + 4100 * n1(x / 700, SEED + 7)), smooth(0.62, 0.69, tr) * smooth(0.54, 0.63, m));
+  return y;
+}
+const floorCache = new Map();
+function floorY(x) {
+  x = Math.round(x);
+  let y = floorCache.get(x);
+  if (y === undefined) {
+    if (floorCache.size > 60000) floorCache.clear();
+    y = baseFloor(x);
+    // the floor climbs to meet an island, though the island itself stands behind you
+    const c = Math.floor(x / ISLE);
+    for (let k = c - 1; k <= c + 1; k++) {
+      const f = isleAt(k);
+      if (!f || f.kind !== 'isle') continue;
+      const d = Math.abs(x - f.cx), u = Math.min(1, d / f.w);
+      y = Math.min(y, SHORE_Y + 4 + 9 * u * u + Math.max(0, d - f.w) * 0.8);
+    }
+    // rougher the deeper it goes
+    y += (n1(x / 31, SEED + 8) - 0.5) * (5 + y * 0.004) + (n1(x / 6.5, SEED + 9) - 0.5) * (1.6 + y * 0.0008);
+    y = Math.max(y, MIN_FLOOR);
+    floorCache.set(x, y);
+  }
+  return y;
+}
+const climV = (x) => fbm(x / 24000, SEED + 10);
+const climate = (x) => { const v = climV(x); return v < 0.4 ? 'cold' : v > 0.6 ? 'warm' : 'mild'; };
+
+// ---------- Islands and icebergs ----------
+const ISLE = 1700;
+const isleCache = new Map();
+function isleAt(c) {
+  if (isleCache.has(c)) return isleCache.get(c);
+  const r = (k) => h3(c, SEED, 100 + k);
+  const cx = Math.round(c * ISLE + 250 + r(1) * (ISLE - 500));
+  const cl = climate(cx);
+  let f = null;
+  if (cl === 'cold') {
+    if (r(0) < 0.5) f = { kind: 'berg', cx, w: 20 + r(2) * 60, h: 7 + r(3) * 20, peaked: r(4) < 0.4, s: c * 7 + 3 };
+  } else if (r(0) < 0.42 && mOf(baseFloor(cx)) < 130) {
+    const w = 36 + r(2) * 78;
+    f = { kind: 'isle', cx, w, h: 16 + r(3) * 34, warm: cl === 'warm', crater: r(5) < 0.6, smoke: r(5) < 0.22, s: c * 7 + 5, houses: [], palms: [] };
+    if (r(4) < 0.6 && w > 46) {
+      const side = r(6) < 0.5 ? -1 : 1, n = 2 + Math.floor(r(7) * 4);
+      for (let i = 0; i < n; i++) {
+        const u = 0.5 + 0.38 * (i / Math.max(1, n - 1)) + (r(10 + i) - 0.5) * 0.06;
+        f.houses.push({ dx: Math.round(side * u * w), w: 4 + Math.floor(r(20 + i) * 2), h: 3 + Math.floor(r(30 + i) * 2), roof: r(40 + i) });
+      }
+      f.jetty = side;
+    }
+    if (f.warm) for (let i = 0; i < 2 + Math.floor(r(8) * 3); i++) f.palms.push(Math.round((r(50 + i) * 2 - 1) * w * 0.8));
+  }
+  isleCache.set(c, f);
+  return f;
+}
+const isleProf = (f, u) => {
+  let p = (1 - u) ** 1.6;
+  if (f.crater && u < 0.07) p -= (0.07 - u) * 1.3;
+  return p;
+};
+
+// ---------- Black smokers ----------
+const VENT = 650;
+const ventCache = new Map();
+function ventAt(c) {
+  if (ventCache.has(c)) return ventCache.get(c);
+  const r = (k) => h3(c, SEED, 300 + k);
+  const cx = Math.round(c * VENT + 150 + r(1) * 350);
+  let f = null;
+  if (r(0) < 0.55 && mOf(baseFloor(cx)) > 5600) {
+    f = { cx, chimneys: [], worms: [], seen: false };
+    const n = 1 + Math.floor(r(2) * 3);
+    for (let i = 0; i < n; i++) f.chimneys.push({ dx: Math.round((i - (n - 1) / 2) * (14 + r(3 + i) * 10)), h: 16 + Math.floor(r(10 + i) * 26), w: 4 + Math.floor(r(20 + i) * 4) });
+    for (let i = 0; i < 26; i++) f.worms.push({ dx: Math.round((r(30 + i) - 0.5) * (n * 26 + 14)), h: 2 + Math.floor(r(60 + i) * 5) });
+    f.crab = Math.round((r(90) - 0.5) * 30);
+  }
+  ventCache.set(c, f);
+  return f;
+}
+
+// ---------- Sky clock ----------
+// day, night, and the weather come from the wall clock, not the seed, so everyone sees the same sky
+const DAY_S = 24 * 60;
+const SKY = { phase: 0, elev: 0, day: 1, glow: 0, wI: 0, storm: 0, dl: 1, above: 1, amp: 1 };
+function readSky(now) {
+  const t = now / 1000;
+  SKY.phase = (t % DAY_S) / DAY_S;
+  SKY.elev = Math.sin((SKY.phase - 0.25) * Math.PI * 2);
+  SKY.day = smooth(-0.12, 0.22, SKY.elev);
+  SKY.glow = Math.exp(-((SKY.elev / 0.13) ** 2));
+  SKY.wI = clamp((fbm(t / 420, 7331) - 0.28) / 0.6, 0, 1);
+  SKY.storm = smooth(0.6, 0.85, SKY.wI);
+  SKY.dl = (0.1 + 0.9 * SKY.day) * (1 - 0.45 * SKY.storm);
+  SKY.above = (0.3 + 0.7 * SKY.day) * (1 - 0.35 * SKY.storm);
+  SKY.amp = (0.6 + 5.4 * SKY.wI ** 1.7) * (reduced ? 0.45 : 1);
+}
+const weatherName = () => SKY.wI < 0.38 ? 'calm' : SKY.wI < 0.66 ? 'rough seas' : 'storm';
+function timeName() {
+  if (SKY.elev < -0.12) return 'Night';
+  if (SKY.elev < 0.2) return SKY.phase < 0.5 ? 'Dawn' : 'Dusk';
+  return 'Day';
+}
+function waveY(x, t) {
+  const a = SKY.amp, k = reduced ? 0.5 : 1;
+  return -a * (0.5 * Math.sin(x * 0.043 - t * 1.05 * k) + 0.32 * Math.sin(x * 0.097 + t * 1.6 * k + 1.3) + 0.18 * Math.sin(x * 0.21 - t * 2.4 * k + 0.4));
+}
+
+// ---------- Palette ----------
+const C = {
+  nightTop: hex('#0A1230'), nightHor: hex('#24365E'), dayTop: hex('#4F9BDB'), dayHor: hex('#BFE3F1'),
+  duskTop: hex('#4A4E8E'), duskHor: hex('#F2A46C'), stormTop: hex('#3A4450'), stormHor: hex('#6E7984'),
+  seaCold: hex('#3F8D94'), seaMild: hex('#2C8FB8'), seaWarm: hex('#2BB8C2'),
+  mid: hex('#1C5A9E'), deep: hex('#133D83'), abyss: hex('#0E2D66'),
+  sandWarm: hex('#E3CD95'), sandMild: hex('#C9B588'), sandCold: hex('#9C988C'),
+  ooze: hex('#8D8678'), abyssMud: hex('#6E6A66'), hadal: hex('#5A585C'), rock: hex('#5B5550'),
+  basalt: hex('#4E4642'), basalt2: hex('#3D3632'), lush: hex('#3F8F3E'), lush2: hex('#2F7434'),
+  scrub: hex('#6E8E47'), scrub2: hex('#5A7A3B'), beach: hex('#D9C48E'),
+  ice: hex('#F3F9FC'), ice2: hex('#CFE3EF'), ice3: hex('#A6CCE2'), iceDeep: hex('#86BCD8'),
+  cloudDay: hex('#F4F6F8'), cloudNight: hex('#39466A'), cloudDusk: hex('#F0C2AE'), cloudStorm: hex('#5E6873'),
+  foam: hex('#F2FAFB'), surf: hex('#DDF3F6'),
+};
+
+// ---------- Sprites ----------
+// art faces right. a palette value starting with * glows in the dark, and one starting with ~ is see-through
+function spr(pal, ...frames) {
+  const w = Math.max(...frames.flat().map((r) => r.length)), h = frames[0].length;
+  const P = {};
+  for (const [k, v] of Object.entries(pal)) {
+    const glow = v[0] === '*', thin = v[0] === '~';
+    P[k] = { c: hex(glow || thin ? v.slice(1) : v), f: (glow ? 1 : 0) | (thin ? 2 : 0) };
+  }
+  return {
+    w, h,
+    frames: frames.map((rows) => {
+      const c = new Int32Array(w * h).fill(-1), f = new Uint8Array(w * h);
+      rows.forEach((row, j) => [...row].forEach((ch, i) => { const p = P[ch]; if (p) { c[j * w + i] = p.c; f[j * w + i] = p.f; } }));
+      return { c, f };
+    }),
+  };
+}
+const SUB_ROWS = [
+  '           Dd       ',
+  '           DD       ',
+  '       DDDDDDDD     ',
+  '       DhYYYYYD     ',
+  '   DDDDYYYYYYYYDDD  ',
+  '  DhhYYYYYYYYYYYYYD ',
+  ' DYYPPYYYYPPYYYYYYYD',
+  ' DYYPPYYYYPPYYYYYYYL',
+  ' DyYYYYYYYYYYYYYYYD ',
+  '  DyyyyyyyyyyyyyyD  ',
+  '   DDDDDDDDDDDDDD   ',
+];
+const SUB_PAL = { D: '#3B2A1C', d: '#7A6A58', Y: '#F2C14E', h: '#FFE6A3', y: '#C98E32', P: '*#FFC56A' };
+const SUB_OFF = spr({ ...SUB_PAL, L: '#8A8676' }, SUB_ROWS);
+const SUB_ON = spr({ ...SUB_PAL, L: '*#FFF7DA' }, SUB_ROWS);
+
+const ART = {
+  sardine: spr({ b: '#9DB8C8', s: '#E4ECEF', t: '#7896A8', e: '#1A2028' }, [
+    't bb ',
+    'tbbbe',
+    't ss ']),
+  clown: spr({ o: '#F07A2A', W: '#F6F1E8', k: '#2A1A14' }, [
+    '  ooo  ',
+    'ooWoWoo',
+    'ooWoWok',
+    '  ooo  ']),
+  tang: spr({ y: '#F2D33A', k: '#2A2414' }, [
+    '   yy  ',
+    'y yyyy ',
+    'yyyyyyk',
+    'y yyyy ',
+    '   yy  ']),
+  shark: spr({ g: '#7F8C96', W: '#D9DEE0', k: '#1C2328' }, [
+    '         g        ',
+    '        gg        ',
+    'g     gggggggg    ',
+    'gg  gggggggggggg  ',
+    ' ggggggggggggggkgg',
+    'gg  WWWWWWWWWWWWW ',
+    'g      g    g     ']),
+  humpback: spr({ d: '#3E4A58', l: '#AEB8BF', L: '#87939C', f: '#E3E8EB', k: '#12161C' }, [
+    '                        dd                  ',
+    '            ddddddddddddddddddddd           ',
+    'dd      dddddddddddddddddddddddddddddd      ',
+    'ddd  dddddddddddddddddddddddddddddddddddd   ',
+    ' dddddddddddddddddddddddddddddddddddddddddd ',
+    'ddd  ddddddddddddddddddddddddddddddddddkddd ',
+    'dd     llllllllllllllllllllllllllllllllllldd',
+    '          lLlLlLlLlLlLlLlLlLlLlLlLlLlLll    ',
+    '                  fffffffffff               ',
+    '                     fffffff                ']),
+  sperm: spr({ d: '#4E4D52', l: '#8C8A8E', k: '#1A1A1E' }, [
+    '                 d                      ',
+    '      dddddddddddddddddddddddddddddddd  ',
+    'dd  dddddddddddddddddddddddddddddddddddd',
+    'ddddddddddddddddddddddddddddddddddddddd ',
+    'ddd  ddddddddddddddddddddddddkddddddddd ',
+    'd     ddddddddddddddddddddddddddddddddd ',
+    '          dddddddddddddddddddddd lllll  ',
+    '                   dd          ll       ']),
+  orca: spr({ k: '#1A1C22', W: '#F2F2EE', g: '#9A9EA6' }, [
+    '           k            ',
+    '          kk            ',
+    '         kkk            ',
+    'k      kkkkkkkkkkkkk    ',
+    'kk  kkkkkgkkkkkkkWWkkk  ',
+    ' kkkkkkkkkkkkkkkkkkkkkk ',
+    'kk   WWWWWkkkkkkWWWWWWk ',
+    'k        kk             ']),
+  dolphin: spr({ d: '#8494A3', l: '#D3DAE0', k: '#1C2228' }, [
+    '       dd       ',
+    'd   ddddddddd   ',
+    'dd ddddddddddkdd',
+    ' ddlllllllllll  ',
+    'd       ll      ']),
+  turtle: spr({ B: '#4E5E32', b: '#7E8C4A', s: '#A8A070', k: '#1E2014' }, [
+    '    bbbbb     ',
+    '  bbBbBbBbb   ',
+    ' bbBbBbBbBbbss',
+    'sbbbbbbbbbbsks',
+    's  ss    ss   ']),
+  seal: spr({ s: '#7A6E62', l: '#A99B8A', f: '#5E544A', k: '#1A1612' }, [
+    '       ssss ',
+    'ff sssssssks',
+    ' fsssllllss ',
+    '    ss  ss  ']),
+  jelly: spr({ b: '~#CFE3F0', m: '~#E6B0CC', t: '~#A9C9DA' }, [
+    ' bbbbb ',
+    'bbmmmbb',
+    'bbbbbbb',
+    ' t t t ',
+    ' t  t  ',
+    '  t  t ',
+    ' t  t  '], [
+    '  bbb  ',
+    ' bmmmb ',
+    ' bbbbb ',
+    ' t t t ',
+    '  t t  ',
+    ' t  t  ',
+    '  t  t ']),
+  atolla: spr({ r: '#6A1E28', R: '#8A2A34', a: '*#6FB7FF', t: '#5A2030' }, [
+    ' rrrrr ',
+    'rrRRRrr',
+    'arararr',
+    ' t t t ',
+    '  t t  '], [
+    ' rrrrr ',
+    'rrRRRrr',
+    'rararar',
+    ' t t t ',
+    ' t   t ']),
+  comb: spr({ b: '~#D8E8F0', a: '*#FF6FA8', c: '*#6FE8FF', d: '*#B8FF6F' }, [
+    ' bbb ',
+    'babcb',
+    'bcbdb',
+    'bdbab',
+    'babcb',
+    ' bbb '], [
+    ' bbb ',
+    'bcbdb',
+    'bdbab',
+    'babcb',
+    'bcbdb',
+    ' bbb ']),
+  squid: spr({ r: '#C8584A', R: '#E07A62', t: '#B04A3E', k: '#1E1414' }, [
+    '    rrrrrr ',
+    'ttkRRRRRRRr',
+    'tt rrrrrrr ',
+    't          ']),
+  giantsquid: spr({ r: '#B8483E', R: '#D86A56', t: '#A03E36', k: '#140E0E' }, [
+    '                    rrrrrrrrr   ',
+    't    tttttttttttrRRRRRRRRRRRRRr ',
+    'tttttttttttttttkRRRRRRRRRRRRRRRr',
+    't    tttttttttttrRRRRRRRRRRRRRr ',
+    '                    rrrrrrrrr   ']),
+  lantern: spr({ d: '#3A4048', t: '#2C3238', e: '#C9D6DE', g: '*#7FE0FF' }, [
+    'tddde',
+    'tgdg ']),
+  hatchet: spr({ s: '#B8C4CC', t: '#8C98A0', e: '#1C2228', g: '*#8FD8FF' }, [
+    ' ss  ',
+    'tssse',
+    ' ss  ',
+    ' gg  ']),
+  angler: spr({ d: '#3A2E2A', l: '#5A4A40', k: '#0E0A08', W: '#E8E0D0', g: '*#C8FFB0' }, [
+    '     lll   ',
+    '    l   l  ',
+    '  ddd    g ',
+    ' ddddddd   ',
+    'tddkddddd  ',
+    'tdddddWdW  ',
+    ' ddddddd   ',
+    '   dd      ']),
+  vampire: spr({ r: '#5A1E2C', e: '#7FB0FF', g: '*#7FC8FF' }, [
+    '   rrr   ',
+    ' rrrrrrr ',
+    'rrrrerrrr',
+    'grr r rrg',
+    ' r  r  r ',
+    'g   g   g']),
+  siphon: spr({ g: '*#8FE8FF', b: '~#9FD0E0', p: '*#FF9FD0' }, [
+    '  b   b   b   b   b   b     ',
+    'gbgbgbgbgbgbgbgbgbgbgbgbgbpp',
+    '   b   b   b   b   b   b    ']),
+  gulper: spr({ d: '#1E1C22', k: '#5A5060', p: '*#FF6FB0' }, [
+    '           ddddd  ',
+    'pdddddddddddddddd ',
+    '            ddddkd',
+    '             dddd ']),
+  dumbo: spr({ p: '#E7A08C', P: '#C97C6A', k: '#2A1612' }, [
+    'P  pppp  P',
+    'PPppppppPP',
+    '  pkppkp  ',
+    '  pppppp  ',
+    '  p pp p  ',
+    ' p  p  p  '], [
+    '   pppp   ',
+    '  pppppp  ',
+    'PPpkppkpPP',
+    'P pppppp P',
+    '  p pp p  ',
+    ' p  p  p  ']),
+  rattail: spr({ g: '#8A8F94', t: '#6E7378', k: '#1C1E22' }, [
+    '      ggggg ',
+    'tttggggggggk',
+    '     gggggg ']),
+  octopus: spr({ o: '#D0603A', O: '#E88A5A', k: '#1E0E08' }, [
+    '   OOO   ',
+    '  OoooO  ',
+    '  okook  ',
+    '  ooooo  ',
+    ' o o o o ',
+    'o o   o o'], [
+    '   OOO   ',
+    '  OoooO  ',
+    '  okook  ',
+    '  ooooo  ',
+    ' o o o o ',
+    ' o o o o ']),
+  crab: spr({ C: '#D8502E', c: '#B23E22', k: '#1E0E08' }, [
+    'C k k C',
+    'CC c CC',
+    ' CCCCC ',
+    'c c c c'], [
+    'C k k C',
+    'CC c CC',
+    ' CCCCC ',
+    ' c c c ']),
+  spidercrab: spr({ o: '#E07A3A', O: '#C8622A' }, [
+    '  o       o  ',
+    '   o OOO o   ',
+    ' o  OOOOO  o ',
+    'o  o o o o  o',
+    '  o       o  '], [
+    '  o       o  ',
+    '   o OOO o   ',
+    ' o  OOOOO  o ',
+    ' o o o o o o ',
+    'o  o     o  o']),
+  tripod: spr({ g: '#9A9590', t: '#7E7A76', l: '#6E6A66', k: '#1E1C1A' }, [
+    '    gggg  ',
+    'tggggggggk',
+    '   gggg   ',
+    '   l   l  ',
+    '   l   l  ',
+    '  l   l   ']),
+  seapig: spr({ p: '~#E8B4B8', P: '#D89AA0', k: '#4A2A2E' }, [
+    '  P P   ',
+    ' pppppp ',
+    'pppppppk',
+    ' P P P  ']),
+  snailfish: spr({ s: '~#F0D6D2', k: '#4A3A3A' }, [
+    '  ssss   ',
+    'sssssssk ',
+    '  sssss  ']),
+  amphipod: spr({ a: '#E8E4D8' }, ['aa']),
+  yeti: spr({ w: '#EDE8E0', y: '#D8D0C0' }, [
+    'y     y',
+    'yywwwyy',
+    ' wwwww ',
+    'w w w w']),
+};
+
+// ---------- Animals ----------
+// min and max are depths in meters. weight is how often each turns up among those that fit
+const SPECIES = [
+  { id: 'sardine', art: 'sardine', min: 0, max: 200, weight: 3, speed: [10, 16], school: [8, 16], bob: 3 },
+  { id: 'clown', art: 'clown', min: 0, max: 40, weight: 2, climate: 'warm', speed: [5, 9], school: [1, 3], bob: 2 },
+  { id: 'tang', art: 'tang', min: 0, max: 50, weight: 2, climate: 'warm mild', speed: [6, 10], school: [1, 4], bob: 2 },
+  { id: 'jelly', art: 'jelly', min: 0, max: 700, weight: 1.5, speed: [1, 3], bob: 5, fps: 1.5 },
+  { id: 'turtle', art: 'turtle', min: 0, max: 120, weight: 0.6, climate: 'warm mild', speed: [6, 9], bob: 2 },
+  { id: 'shark', art: 'shark', min: 0, max: 700, weight: 0.8, speed: [11, 16], bob: 2 },
+  { id: 'dolphin', art: 'dolphin', min: 0, max: 60, weight: 0.6, climate: 'warm mild', speed: [22, 30], school: [2, 4], bob: 6 },
+  { id: 'seal', art: 'seal', min: 0, max: 120, weight: 1.2, climate: 'cold', speed: [14, 20], bob: 5 },
+  { id: 'orca', art: 'orca', min: 0, max: 300, weight: 0.3, climate: 'cold mild', speed: [18, 24], school: [2, 3], bob: 3, rare: 'A pod of orcas!' },
+  { id: 'humpback', art: 'humpback', min: 5, max: 250, weight: 0.5, speed: [7, 10], bob: 2, rare: 'A humpback whale!' },
+  { id: 'sperm', art: 'sperm', min: 20, max: 2200, weight: 0.3, speed: [8, 11], bob: 2, rare: 'A sperm whale!' },
+  { id: 'squid', art: 'squid', min: 60, max: 900, weight: 1.4, speed: [8, 14], burst: true, school: [1, 4], bob: 2 },
+  { id: 'octopus', art: 'octopus', floor: true, min: 0, max: 200, weight: 1, speed: [1.5, 3], fps: 2 },
+  { id: 'crab', art: 'crab', floor: true, min: 0, max: 400, weight: 1.6, speed: [2, 5], fps: 6 },
+  { id: 'lantern', art: 'lantern', min: 200, max: 1200, weight: 3, speed: [6, 10], school: [6, 14], bob: 2 },
+  { id: 'hatchet', art: 'hatchet', min: 200, max: 1200, weight: 1.6, speed: [3, 6], school: [2, 6], bob: 2 },
+  { id: 'atolla', art: 'atolla', min: 400, max: 4000, weight: 1.2, speed: [1, 2], bob: 4, fps: 2 },
+  { id: 'comb', art: 'comb', min: 100, max: 3000, weight: 1, speed: [1, 2], bob: 3, fps: 4 },
+  { id: 'vampire', art: 'vampire', min: 600, max: 1500, weight: 0.8, speed: [3, 5], bob: 3 },
+  { id: 'siphon', art: 'siphon', min: 500, max: 3500, weight: 0.6, speed: [1.5, 3], bob: 2 },
+  { id: 'giantsquid', art: 'giantsquid', min: 300, max: 1200, weight: 0.25, speed: [6, 9], burst: true, bob: 2, rare: 'A giant squid!' },
+  { id: 'spidercrab', art: 'spidercrab', floor: true, min: 150, max: 1500, weight: 1, speed: [1, 2], fps: 3 },
+  { id: 'angler', art: 'angler', min: 900, max: 4000, weight: 1.4, speed: [2, 4], bob: 2 },
+  { id: 'gulper', art: 'gulper', min: 600, max: 3000, weight: 0.8, speed: [4, 7], bob: 2 },
+  { id: 'dumbo', art: 'dumbo', min: 1000, max: 7000, weight: 1.2, speed: [2, 4], bob: 6, fps: 2.5 },
+  { id: 'rattail', art: 'rattail', min: 1000, max: 6000, weight: 1.6, speed: [4, 7], bob: 1 },
+  { id: 'tripod', art: 'tripod', floor: true, min: 900, max: 6000, weight: 1.2, speed: [0, 0] },
+  { id: 'seapig', art: 'seapig', floor: true, min: 1000, max: 9500, weight: 1.4, speed: [0.5, 1.2], fps: 1 },
+  { id: 'snailfish', art: 'snailfish', min: 6000, max: 8300, weight: 2, speed: [3, 5], school: [1, 4], bob: 2 },
+  { id: 'amphipod', art: 'amphipod', min: 5000, max: 11500, weight: 1.6, speed: [3, 6], school: [8, 18], bob: 3 },
+];
+for (const sp of SPECIES) sp.spr = ART[sp.art];
+
+// ---------- State ----------
+const sub = { x: 0, y: 2, vx: 0, vy: 0, step: 1, face: 1, sx: 0, hold: 0 };
+const cam = { x: 0, y: 0 };
+const lamp = { on: false, sx: 0, sy: 0, dx: 1, dy: 0.12, r: 84 };
+const keys = { up: false, down: false };
+const drag = { on: false, x: 0, y: 0, step: 0, v: 0, id: null };
+const hold = { v: 0 }, nudge = { v: 0, left: 0 };
+let actors = [], parts = [], snow = [], drops = [], bolt = null;
+let T = 0, flash = 0, spawnIn = 1, rareAt = 0;
+const SPEEDS = [0, 10, 24, 48, 90];
+const SPEED_NAMES = ['Stopped', 'Dead slow', 'Slow', 'Half', 'Full'];
+
+let canvas = $('sea'), ctx = canvas.getContext('2d');
+let LW = 0, LH = 0, X0 = 0, Y0 = 0, img = null, out32 = null, colB = null, kindB = null;
+let surfI = null, rowAlb = null, rowAmb = null, rowM = null, skyRow = null;
+// rock is solid ground below the floor's skin, which the lamp doesn't reach into
+const K_SKY = 0, K_WATER = 1, K_SOLID = 2, K_GLOW = 3, K_ROCK = 4;
+
+// ---------- World start ----------
+function findStart() {
+  for (let x = 0; x < 600000; x += 150) if (mOf(baseFloor(x)) < 110) return x;
+  return 0;
+}
+function startWorld(seed) {
+  SEED = seed;
+  floorCache.clear(); isleCache.clear(); ventCache.clear();
+  actors = []; parts = [];
+  sub.x = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0; sub.step = 1; sub.face = 1;
+  sub.sx = LW * 0.33; cam.x = sub.x - sub.sx; cam.y = -LH * 0.47;
+  spawnIn = 1; rareAt = 0;
+  seedSnow();
+  lastZone = ''; zoneSince = 0;
+  setStep(1, true);
+}
+
+// ---------- Layout ----------
+function layout() {
+  const dpr = window.devicePixelRatio || 1, vw = window.innerWidth, vh = window.innerHeight;
+  const css = Math.max(2, Math.floor(Math.min(vw / 200, vh / 160)));
+  const s = Math.max(1, Math.round(css * dpr));
+  const oldW = LW;
+  LW = Math.ceil(vw * dpr / s); LH = Math.ceil(vh * dpr / s);
+  canvas.width = LW; canvas.height = LH;
+  canvas.style.width = (LW * s / dpr) + 'px'; canvas.style.height = (LH * s / dpr) + 'px';
+  img = ctx.createImageData(LW, LH);
+  out32 = new Uint32Array(img.data.buffer);
+  colB = new Int32Array(LW * LH); kindB = new Uint8Array(LW * LH);
+  surfI = new Int32Array(LW);
+  rowAlb = new Int32Array(LH); rowAmb = new Float32Array(LH); rowM = new Float32Array(LH); skyRow = new Int32Array(LH);
+  if (oldW) sub.sx = sub.sx * LW / oldW;
+  seedSnow(); seedRain();
+}
+
+// ---------- Movement ----------
+function setStep(st, quiet) {
+  sub.step = clamp(st, -4, 4);
+  const n = Math.abs(sub.step), name = SPEED_NAMES[n];
+  $('speed').textContent = n === 0 ? name : sub.step > 0 ? `${name} →` : `← ${name}`;
+  if (!quiet) describe();
+}
+function tick(dt) {
+  T += dt;
+  const want = Math.sign(sub.step) * SPEEDS[Math.abs(sub.step)];
+  sub.vx += clamp(want - sub.vx, -30 * dt, 30 * dt);
+  if (sub.step) sub.face = Math.sign(sub.step);
+  sub.x += sub.vx * dt;
+
+  if (nudge.left > 0) nudge.left -= dt; else nudge.v = 0;
+  const input = clamp((keys.down ? 1 : 0) - (keys.up ? 1 : 0) + drag.v + hold.v + nudge.v, -1, 1);
+  sub.hold = Math.abs(input) > 0.2 ? sub.hold + dt : 0;
+  // a long hold speeds up, so a trench dive takes a minute or two instead of ten
+  const vmax = 28 + 100 * smooth(0, 2.5, sub.hold);
+  sub.vy += clamp(input * vmax - sub.vy, -170 * dt, 170 * dt);
+  sub.y += sub.vy * dt;
+
+  // at the surface the sub floats and rides the waves
+  const float = waveY(sub.x, T) + 2;
+  if (sub.y < float || (sub.y < float + 2 && input <= 0)) { sub.y = float; if (sub.vy < 0) sub.vy = 0; }
+
+  // rise ahead of a climbing sea floor, and never sink into it
+  let hard = Infinity;
+  for (let dx = -10; dx <= 10; dx += 2) hard = Math.min(hard, floorY(sub.x + dx));
+  hard -= 6;
+  if (Math.abs(sub.vx) > 0.5) {
+    const d = Math.sign(sub.vx), reach = 12 + Math.abs(sub.vx) * 0.9;
+    let ahead = Infinity;
+    for (let s = 10; s <= 10 + reach; s += 2) ahead = Math.min(ahead, floorY(sub.x + d * s));
+    ahead -= 7;
+    if (sub.y > ahead) sub.y -= Math.min(sub.y - ahead, (30 + Math.abs(sub.vx) * 2.5) * dt);
+  }
+  if (sub.y > hard) { sub.y = hard; if (sub.vy > 0) sub.vy = 0; }
+
+  // camera: the sub sits back from the way it's heading, and the sky shows at most half the screen
+  sub.sx += (LW * (0.5 - 0.17 * sub.face) - sub.sx) * Math.min(1, dt * 1.2);
+  cam.x = sub.x - sub.sx;
+  const ty = Math.max(sub.y - LH * 0.5, -LH * 0.47);
+  cam.y += (ty - cam.y) * Math.min(1, dt * 4);
+  cam.y = clamp(cam.y, sub.y - LH * 0.8, sub.y - LH * 0.2);
+}
+const subDepth = () => Math.max(0, mOf(sub.y - 2));
+
+// ---------- Animals at work ----------
+function trySpawn() {
+  if (actors.length >= 3 + Math.floor(LW / 90)) return;
+  const moving = Math.abs(sub.vx) > 3;
+  const side = moving ? Math.sign(sub.vx) : (Math.random() < 0.5 ? -1 : 1);
+  const edge = side > 0 ? cam.x + LW + 6 : cam.x - 6;
+  const cl = climate(edge), fy = floorY(edge);
+  for (let tries = 0; tries < 4; tries++) {
+    const sy = cam.y - 10 + Math.random() * (LH + 20);
+    const cands = []; let tot = 0;
+    for (const sp of SPECIES) {
+      if (sp.climate && !sp.climate.includes(cl)) continue;
+      if (sp.rare && T < rareAt) continue;
+      if (!moving && sp.speed[1] === 0) continue;
+      let y;
+      if (sp.floor) {
+        if (fy < cam.y + 4 || fy > cam.y + LH + 2) continue;
+        y = fy - sp.spr.h;
+      } else {
+        y = sy;
+        if (y < SKY.amp + 5 || y + sp.spr.h + (sp.school ? 8 : 0) > fy - 2) continue;
+      }
+      const m = mOf(sp.floor ? fy : y + sp.spr.h / 2);
+      if (m < sp.min || m > sp.max) continue;
+      cands.push([sp, y]); tot += sp.weight;
+    }
+    if (!cands.length) continue;
+    let r = Math.random() * tot, pick = cands[0];
+    for (const c of cands) { r -= c[0].weight; if (r <= 0) { pick = c; break; } }
+    const [sp, y] = pick;
+    const v = rand(sp.speed[0], sp.speed[1]);
+    // it has to cross the screen, so it faces whichever way brings it into view
+    let dir = Math.random() < 0.5 ? -1 : 1;
+    if ((dir * v - sub.vx) * side >= -1) dir = -dir;
+    if (sp.speed[1] === 0) dir = Math.random() < 0.5 ? -1 : 1;
+    const members = [];
+    const n = sp.school ? Math.floor(rand(sp.school[0], sp.school[1] + 1)) : 1;
+    for (let i = 0; i < n; i++) members.push(i === 0 ? { dx: 0, dy: 0, ph: 0 } : { dx: rand(0, 10 + n * 2), dy: rand(-8, 8), ph: rand(0, 6) });
+    const span = sp.spr.w + (n > 1 ? 10 + n * 2 : 0);
+    actors.push({ sp, x: side > 0 ? edge : edge - span, y, v: v * dir, face: dir, t: rand(0, 5), ph: rand(0, 6), members, span });
+    if (sp.rare) { rareAt = T + 40; seen(sp.rare); }
+    return;
+  }
+}
+function moveActors(dt) {
+  spawnIn -= dt;
+  if (spawnIn <= 0) { spawnIn = rand(1.6, 3.2) / (1 + Math.abs(sub.vx) / 50); trySpawn(); }
+  for (const a of actors) {
+    const sp = a.sp;
+    a.t += dt;
+    if (sp.floor) {
+      a.x += a.v * dt * (Math.sin(a.t * 0.7 + a.ph) > -0.3 ? 1 : 0);
+      a.y = floorY(a.x + sp.spr.w / 2) - sp.spr.h;
+    } else {
+      const push = sp.burst ? 0.3 + 1.1 * Math.max(0, Math.sin(a.t * 2.2)) : 1;
+      a.x += a.v * dt * push;
+      a.y += Math.sin(a.t * 0.9 + a.ph) * (sp.bob || 0) * dt;
+      const lo = floorY(a.x + a.span / 2) - sp.spr.h - (a.members.length > 1 ? 9 : 2);
+      if (a.y > lo) a.y = lo;
+      const hi = SKY.amp + 4 + (a.members.length > 1 ? 8 : 0);
+      if (a.y < hi) a.y = hi;
+    }
+  }
+  actors = actors.filter((a) => a.x > cam.x - 260 - a.span && a.x < cam.x + LW + 260 && a.y > cam.y - LH * 1.5 && a.y < cam.y + LH * 2.5);
+}
+
+// ---------- Particles ----------
+function seedSnow() {
+  if (!LW) return;
+  snow = [];
+  const n = Math.round(LW * LH / 330);
+  for (let i = 0; i < n; i++) snow.push({ x: cam.x + Math.random() * LW, y: cam.y + Math.random() * LH, s: Math.random() });
+}
+function seedRain() {
+  drops = [];
+  const n = Math.round(LW * LH / 160);
+  for (let i = 0; i < n; i++) drops.push({ x: Math.random() * LW, y: Math.random() * LH, v: rand(120, 190), on: Math.random() });
+}
+function moveParts(dt) {
+  const m = subDepth(), under = sub.y > waveY(sub.x, T) + 3;
+  // bubbles off the propeller, and deep down a glow of stirred-up plankton
+  const stern = sub.x - sub.face * 11;
+  const churn = Math.abs(sub.vx) / 14 + Math.abs(sub.vy) / 30;
+  if (under && Math.random() < churn * dt * 3) parts.push({ type: 'bub', x: stern + rand(-1, 1), y: sub.y + rand(0, 3), vx: -sub.face * rand(2, 6), vy: -rand(10, 18), life: 5 });
+  if (m > 250 && Math.random() < churn * dt * 6) parts.push({ type: 'spark', x: stern - sub.face * rand(0, 6), y: sub.y + rand(-3, 4), vx: -sub.face * rand(1, 4), vy: rand(-2, 2), life: rand(0.4, 0.9) });
+  if (m > 300 && Math.random() < dt * 0.6) parts.push({ type: 'spark', x: cam.x + Math.random() * LW, y: cam.y + Math.random() * LH, vx: 0, vy: 0, life: rand(0.3, 0.7) });
+  // smoke from black smokers and from a few volcanoes
+  for (let c = Math.floor((cam.x - 60) / VENT); c <= Math.floor((cam.x + LW + 60) / VENT); c++) {
+    const f = ventAt(c);
+    if (!f) continue;
+    for (const ch of f.chimneys) {
+      if (Math.random() < dt * 9) {
+        const x = f.cx + ch.dx, top = floorY(x) - ch.h;
+        if (top > cam.y - 40 && top < cam.y + LH + 20) parts.push({ type: 'smoke', x: x + rand(-1, 1), y: top - 1, vx: rand(-1.5, 1.5), vy: -rand(6, 11), life: rand(3, 5) });
+      }
+    }
+  }
+  for (let c = Math.floor((cam.x - 200) / ISLE); c <= Math.floor((cam.x + LW + 200) / ISLE); c++) {
+    const f = isleAt(c);
+    if (f && f.smoke && Math.random() < dt * 2.5) parts.push({ type: 'ash', x: f.cx + rand(-2, 2), y: -f.h - 2, vx: rand(1, 4) + SKY.wI * 6, vy: -rand(3, 6), life: rand(4, 7) });
+  }
+  for (const p of parts) {
+    p.life -= dt;
+    if (p.type === 'bub') { p.x += (p.vx + Math.sin(p.life * 7) * 4) * dt; p.vx *= 1 - dt; p.y += p.vy * dt; if (p.y < waveY(p.x, T) + 1) p.life = 0; }
+    else if (p.type === 'smoke') { p.x += p.vx * dt; p.y += p.vy * dt; p.vx += rand(-3, 3) * dt; p.vy *= 1 - dt * 0.25; }
+    else { p.x += p.vx * dt; p.y += p.vy * dt; }
+  }
+  parts = parts.filter((p) => p.life > 0);
+  if (parts.length > 900) parts.splice(0, parts.length - 900);
+  // marine snow drifts down, and wraps around the screen as you travel
+  const k = reduced ? 0.5 : 1;
+  for (const s of snow) {
+    s.y += (1.5 + s.s * 2) * dt * k;
+    s.x += Math.sin(T * 0.3 + s.s * 20) * 0.6 * dt;
+    if (s.x < cam.x - 4) s.x += LW + 8; else if (s.x > cam.x + LW + 4) s.x -= LW + 8;
+    if (s.y < cam.y - 4) s.y += LH + 8; else if (s.y > cam.y + LH + 4) s.y -= LH + 8;
+  }
+  // rain falls in screen space
+  if (SKY.storm > 0.05) for (const d of drops) { d.y += d.v * dt * (reduced ? 0.5 : 1); d.x -= d.v * dt * 0.35 * (reduced ? 0.5 : 1); if (d.y > LH) { d.y -= LH; d.x = Math.random() * LW; } if (d.x < 0) d.x += LW; }
+  // lightning, and thunder a moment later
+  flash = Math.max(0, flash - dt * 4);
+  if (bolt) { bolt.life -= dt; if (bolt.life <= 0) bolt = null; }
+  if (!reduced && SKY.wI > 0.74 && Math.random() < dt * (SKY.wI - 0.72) * 1.4) {
+    flash = 1;
+    const pts = [];
+    let x = Math.random() * LW;
+    for (let y = -120; y < 0; y += 2) { x += rand(-1.6, 1.6); pts.push([Math.round(x), y]); }
+    bolt = { pts, life: 0.18 };
+    play('thunder', rand(0.4, 1.8), 0, Math.exp(-m / 14));
+  }
+}
+
+// ---------- Drawing helpers ----------
+function put(i, j, c, k = K_SOLID) {
+  if (i < 0 || j < 0 || i >= LW || j >= LH) return;
+  const p = j * LW + i;
+  colB[p] = c; kindB[p] = k;
+}
+function blend(i, j, c, t) {
+  if (i < 0 || j < 0 || i >= LW || j >= LH) return;
+  const p = j * LW + i;
+  colB[p] = mix(colB[p], c, t);
+}
+function blit(s, f, x0, y0, flip) {
+  const fr = s.frames[f % s.frames.length], w = s.w;
+  for (let j = 0; j < s.h; j++) {
+    const y = y0 + j;
+    if (y < 0 || y >= LH) continue;
+    for (let i = 0; i < w; i++) {
+      const c = fr.c[j * w + i];
+      if (c < 0) continue;
+      const x = x0 + (flip ? w - 1 - i : i);
+      if (x < 0 || x >= LW) continue;
+      const p = y * LW + x, fl = fr.f[j * w + i];
+      if (fl & 2) colB[p] = mix(colB[p], c, 0.5);
+      else { colB[p] = c; kindB[p] = fl & 1 ? K_GLOW : K_SOLID; }
+    }
+  }
+}
+const above = (i, j) => Y0 + j < surfI[i];
+
+// ---------- Drawing the sky ----------
+const STARS = Array.from({ length: 90 }, (_, i) => ({ x: h3(i, 1, 1), h: 6 + h3(i, 2, 1) * 170, b: h3(i, 3, 1) }));
+const CLOUDS = Array.from({ length: 16 }, (_, i) => {
+  const r = (k) => h3(i, k, 77);
+  const n = 3 + Math.floor(r(1) * 3), w = 14 + r(2) * 30, puffs = [];
+  for (let k = 0; k < n; k++) puffs.push({ dx: (k / (n - 1) - 0.5) * w, dy: -r(10 + k) * 4, r: 4 + r(20 + k) * 6 });
+  return { i, x: r(3) * 1600, h: 18 + r(4) * 70, puffs, bottom: 2 + r(5) * 2 };
+});
+function skyColor(hy) {
+  const t = clamp(hy / 110, 0, 1) ** 0.8;
+  let top = mix(C.nightTop, C.dayTop, SKY.day), hor = mix(C.nightHor, C.dayHor, SKY.day);
+  top = mix(top, C.duskTop, SKY.glow * 0.4); hor = mix(hor, C.duskHor, SKY.glow * 0.8);
+  const st = SKY.storm * 0.85, dim = 0.35 + 0.65 * SKY.day;
+  top = mix(top, shade(C.stormTop, dim), st); hor = mix(hor, shade(C.stormHor, dim), st);
+  return mix(hor, top, t);
+}
+function disc(cx, cy, r, c, halo) {
+  for (let dy = -r - 3; dy <= r + 3; dy++) for (let dx = -r - 3; dx <= r + 3; dx++) {
+    const i = cx + dx, j = cy + dy;
+    if (i < 0 || j < 0 || i >= LW || j >= LH || kindB[j * LW + i] !== K_SKY) continue;
+    const d2 = dx * dx + dy * dy;
+    if (d2 <= r * r + 1) colB[j * LW + i] = c;
+    else if (halo && d2 <= (r + 3) * (r + 3)) blend(i, j, c, halo);
+  }
+}
+function drawSky() {
+  if (Y0 > 8) return;
+  const clear = 1 - SKY.storm, night = 1 - SKY.day;
+  if (night > 0.05 && clear > 0.1) for (const s of STARS) {
+    const i = Math.floor(s.x * LW), j = Math.round(-s.h) - Y0;
+    if (i < 0 || j < 0 || j >= LH || kindB[j * LW + i] !== K_SKY) continue;
+    const tw = reduced ? 0.8 : 0.5 + 0.5 * h3(s.x * 1e4, Math.floor(T * 2 + s.b * 10), 5);
+    blend(i, j, hex('#F4F1DC'), night * clear * tw * (0.4 + 0.6 * s.b));
+  }
+  // the sun crosses the sky by day and the moon by night
+  const arc = (ph) => ({ i: Math.round(LW * (0.08 + 0.84 * clamp((ph - 0.2) / 0.6, 0, 1))), e: Math.sin((ph - 0.25) * Math.PI * 2) });
+  const sun = arc(SKY.phase), moon = arc((SKY.phase + 0.5) % 1);
+  if (sun.e > -0.1 && clear > 0.05) disc(sun.i, Math.round(-sun.e * 80 + 2) - Y0, 4, mix(hex('#F6A24E'), hex('#FFF4C8'), smooth(0, 0.35, sun.e)), 0.25 * clear);
+  if (moon.e > -0.1 && clear > 0.05) disc(moon.i, Math.round(-moon.e * 80 + 2) - Y0, 3, hex('#E6E4D4'), 0.12 * clear);
+  // clouds
+  const cover = 0.35 + 0.65 * SKY.wI, wind = (reduced ? 1 : 3) + SKY.wI * (reduced ? 2 : 9), span = LW + 160;
+  let cc = mix(C.cloudNight, C.cloudDay, SKY.day);
+  cc = mix(cc, C.cloudDusk, SKY.glow * 0.6);
+  cc = mix(cc, shade(C.cloudStorm, 0.4 + 0.6 * SKY.day), SKY.storm);
+  const under = shade(cc, 0.82);
+  for (const cl of CLOUDS) {
+    if (cl.i / CLOUDS.length > cover) continue;
+    const cx = (((cl.x - cam.x * 0.3 - T * wind) % span) + span) % span - 80;
+    const cy = -cl.h - SKY.storm * 25;
+    for (const p of cl.puffs) {
+      const r = p.r * (1 + SKY.storm * 0.5);
+      for (let dy = -r; dy <= cl.bottom; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dy * dy > r * r) continue;
+        const i = Math.round(cx + p.dx + dx), j = Math.round(cy + p.dy + dy) - Y0;
+        if (i < 0 || j < 0 || i >= LW || j >= LH || kindB[j * LW + i] !== K_SKY) continue;
+        colB[j * LW + i] = dy > cl.bottom - 2 ? under : cc;
+      }
+    }
+  }
+}
+
+// ---------- Drawing islands and icebergs ----------
+function drawBackdrop() {
+  for (let c = Math.floor((X0 - 200) / ISLE); c <= Math.floor((X0 + LW + 200) / ISLE); c++) {
+    const f = isleAt(c);
+    if (f && f.kind === 'isle') drawIsle(f); else if (f) drawBerg(f);
+  }
+}
+function hazed(c, j) { return mix(c, rowAlb[j], 0.55 + 0.4 * smooth(0, 60, Y0 + j)); }
+function drawIsle(f) {
+  const i0 = Math.max(0, Math.floor(f.cx - f.w * 1.8 - X0)), i1 = Math.min(LW - 1, Math.ceil(f.cx + f.w * 1.8 - X0));
+  const veg = f.warm ? [C.lush, C.lush2] : [C.scrub, C.scrub2];
+  for (let i = i0; i <= i1; i++) {
+    const wx = X0 + i, dx = wx - f.cx, u = Math.abs(dx) / f.w;
+    let top = u < 1 ? -f.h * isleProf(f, u) : (u - 1) * f.w * 0.9;
+    top = Math.round(top + (n1(wx / 5, f.s) - 0.5) * 2);
+    const bottom = Math.min(Math.round(floorY(wx)), Y0 + LH - 1);
+    for (let wy = Math.max(top, Y0); wy <= bottom; wy++) {
+      const j = wy - Y0, d = wy - top, h = h3(wx, wy, 11);
+      let c = h < 0.5 ? C.basalt : C.basalt2;
+      if (wy < surfI[i]) {
+        if (wy > -3 && u > 0.8) c = C.beach;
+        else if (d < 3 + (h < 0.3 ? 1 : 0) && u > 0.22) c = h < 0.6 ? veg[0] : veg[1];
+        put(i, j, dx < 0 ? c : shade(c, 0.88), K_SOLID);
+      } else put(i, j, hazed(c, j), K_WATER);
+    }
+  }
+  const night = SKY.day < 0.45;
+  const groundAt = (x) => Math.round(-f.h * isleProf(f, Math.min(1, Math.abs(x - f.cx) / f.w)));
+  for (const px of f.palms) {
+    const x = f.cx + px, g = groundAt(x), sway = reduced ? 0 : Math.round(Math.sin(T * 1.3 + px) * SKY.wI * 1.5);
+    for (let k = 1; k <= 6; k++) put(x - X0 + (k > 4 ? 1 : 0), g - k - Y0, hex('#7A5A3A'));
+    const tx = x + 1 + sway - X0, ty = g - 7 - Y0;
+    for (const [a, b] of [[-3, 1], [-2, 0], [-1, 0], [0, -1], [1, 0], [2, 0], [3, 1], [-3, 2], [3, 2], [0, 0]]) put(tx + a, ty + b, hex('#3E9A44'));
+  }
+  for (const hs of f.houses) {
+    const x = f.cx + hs.dx;
+    let g = -Infinity;
+    for (let k = 0; k < hs.w; k++) g = Math.max(g, groundAt(x + k));
+    const wall = hs.roof < 0.5 ? hex('#EDE3CF') : hex('#D9B27A'), roof = hs.roof < 0.33 ? hex('#B4483A') : hs.roof < 0.66 ? hex('#6B4A36') : hex('#3E6A8A');
+    for (let k = 0; k < hs.w; k++) {
+      for (let r = 1; r <= hs.h; r++) put(x + k - X0, g - r - Y0, wall);
+      put(x + k - X0, g - hs.h - 1 - Y0, roof);
+    }
+    for (let k = 1; k < hs.w - 1; k++) put(x + k - X0, g - hs.h - 2 - Y0, roof);
+    // houses on a slope get a foundation down to the ground
+    for (let k = 0; k < hs.w; k++) for (let r = groundAt(x + k); r > g; r--) put(x + k - X0, r - 1 - Y0, C.basalt2);
+    const wi = x + Math.floor(hs.w / 2) - X0, wj = g - 2 - Y0;
+    const lit = night && h3(hs.dx, Math.floor(T * 0.2), 9) > 0.1;
+    put(wi, wj, lit ? hex('#FFD27A') : hex('#2A2E3A'), lit ? K_GLOW : K_SOLID);
+    // a warm wobble of window light on the water
+    if (lit) for (let r = 1; r <= 4; r++) {
+      const i = wi + Math.round(Math.sin(T * 2 + r * 1.7) * 1.2), j = surfI[clamp(wi, 0, LW - 1)] - Y0 + r;
+      if (i >= 0 && i < LW && j >= 0 && j < LH && h3(i, r, Math.floor(T * 4)) > 0.35) put(i, j, mix(hex('#8A6A30'), hex('#FFD27A'), 0.6 - r * 0.12), K_GLOW);
+    }
+  }
+  if (f.jetty) {
+    const x0 = f.cx + f.jetty * (f.w - 3);
+    for (let k = 0; k < 10; k++) {
+      const x = x0 + f.jetty * k;
+      put(x - X0, -2 - Y0, hex('#7A5A3A'));
+      if (k % 3 === 0) for (let r = -1; r <= 3; r++) put(x - X0, r - Y0, hex('#5A4028'), r >= 0 ? K_WATER : K_SOLID);
+    }
+  }
+}
+function drawBerg(f) {
+  const i0 = Math.max(0, Math.floor(f.cx - f.w * 1.5 - X0)), i1 = Math.min(LW - 1, Math.ceil(f.cx + f.w * 1.5 - X0));
+  const bob = Math.round(Math.sin(T * 0.6 + f.s) * Math.min(1.5, SKY.amp * 0.4));
+  for (let i = i0; i <= i1; i++) {
+    const wx = X0 + i, dx = wx - f.cx, u = Math.abs(dx) / f.w;
+    const deep = Math.round(f.h * 3.2 * Math.sqrt(Math.max(0, 1 - (dx / (f.w * 1.45)) ** 2)) * (0.75 + 0.5 * n1(wx / 9, f.s, 1))) + bob;
+    if (deep <= bob) continue;
+    let top = 1 + bob;
+    if (u < 1) {
+      const p = f.peaked ? (1 - u) ** 0.8 : u < 0.72 ? 1 - 0.16 * Math.round(n1(wx / 7, f.s) * 3) / 3 : (1 - u) / 0.28;
+      top = Math.round(-f.h * p) + bob;
+    }
+    const bottom = Math.min(deep, Math.round(floorY(wx)), Y0 + LH - 1);
+    for (let wy = Math.max(top, Y0); wy <= bottom; wy++) {
+      const j = wy - Y0, h = h3(wx, wy, 13);
+      if (wy < surfI[i]) {
+        let c = dx < f.w * 0.15 ? C.ice : C.ice2;
+        if (wy - top < 1) c = C.ice;
+        else if (h3(wx, f.s, 14) < 0.12) c = C.ice3;
+        put(i, j, c, K_SOLID);
+      } else put(i, j, mix(C.iceDeep, rowAlb[j], 0.3 + 0.5 * smooth(0, 70, wy) + (u > 1.25 ? 0.1 : 0)), K_WATER);
+    }
+  }
+}
+
+// ---------- Drawing the sea floor ----------
+function sediment(m, cv) {
+  const sand = cv < 0.4 ? mix(C.sandCold, C.sandMild, smooth(0.32, 0.4, cv)) : cv < 0.6 ? mix(C.sandMild, C.sandWarm, smooth(0.52, 0.6, cv)) : C.sandWarm;
+  if (m < 90) return sand;
+  if (m < 1500) return mix(sand, C.ooze, smooth(90, 1500, m));
+  if (m < 5000) return mix(C.ooze, C.abyssMud, smooth(1500, 5000, m));
+  return mix(C.abyssMud, C.hadal, smooth(5000, 8000, m));
+}
+function drawFloor() {
+  for (let i = 0; i < LW; i++) {
+    const wx = X0 + i, fy = Math.round(floorY(wx)), j0 = fy - Y0;
+    if (j0 >= LH) continue;
+    const top = sediment(mOf(fy), climV(wx));
+    for (let j = Math.max(0, j0); j < LH; j++) {
+      const d = j - j0, h = h3(wx, Y0 + j, 3);
+      let c = d === 0 ? shade(top, 1.12) : d < 3 + (h < 0.3 ? 1 : 0) ? top : mix(top, C.rock, smooth(2, 10, d));
+      if (h > 0.55) c = shade(c, 0.9);
+      put(i, j, c, d < 3 ? K_SOLID : K_ROCK);
+    }
+  }
+}
+function drawDecor() {
+  const sw0 = reduced ? 0.3 : 1;
+  for (let wx = X0 - 14; wx < X0 + LW + 14; wx++) {
+    const h = h3(wx, SEED, 7);
+    if (h > 0.135) continue;
+    const fy = Math.round(floorY(wx)), j = fy - Y0;
+    if (j < -50 || j > LH + 2) continue;
+    const m = mOf(fy), cv = climV(wx), i = wx - X0, h2 = h3(wx, SEED, 8);
+    if (m < 70 && cv < 0.6 && h < 0.035) {
+      // kelp, swaying harder near the surface in rough weather
+      const H = 12 + Math.floor(h2 * 32), sw = (0.8 + SKY.amp * 0.5 * Math.exp(-m / 25)) * sw0;
+      for (let k = 1; k <= H; k++) {
+        if (fy - k < 4) break;
+        const x = i + Math.round(Math.sin(T * 0.9 + wx * 0.3 + k * 0.12) * sw * (k / H) * 2);
+        put(x, j - k, k % 7 < 4 ? hex('#6E7A2E') : hex('#5A6626'));
+        if (k % 4 === 2) put(x + (k % 8 < 4 ? 1 : -1), j - k, hex('#8A963A'));
+      }
+    } else if (m < 50 && cv >= 0.56 && h < 0.05) {
+      const cols = [hex('#E46F8A'), hex('#F08A3C'), hex('#9A5CC6'), hex('#E9C846')], c = cols[Math.floor(h2 * 4)];
+      const kind = Math.floor(h3(wx, SEED, 9) * 3);
+      if (kind === 0) for (const [a, b] of [[0, 1], [0, 2], [0, 3], [-1, 3], [-2, 4], [1, 4], [1, 5], [-2, 5], [2, 6]]) put(i + a, j - b, c);
+      else if (kind === 1) for (let a = -2; a <= 2; a++) for (let b = 1; b <= (Math.abs(a) < 2 ? 3 : 2); b++) put(i + a, j - b, (a + b) % 2 ? c : shade(c, 0.85));
+      else for (let a = -2; a <= 2; a++) for (let b = 1; b <= 5 - Math.abs(a); b++) if ((a + b) % 2 === 0 || b === 1) put(i + a, j - b, c);
+    } else if (m < 60 && h < 0.08) {
+      for (let k = 1; k <= 2 + Math.floor(h2 * 3); k++) put(i + (k > 2 && !reduced && Math.sin(T + wx) > 0 ? 1 : 0), j - k, hex('#4E8E3E'));
+    } else if (m < 250 && h > 0.1 && h < 0.118) {
+      const w = 2 + Math.floor(h2 * 4);
+      for (let a = 0; a < w; a++) for (let b = 1; b <= 1 + Math.floor((1 - Math.abs(a / w - 0.5) * 2) * 3); b++) put(i + a, j - b + 1, b === 1 ? hex('#5E5852') : hex('#77716A'));
+    } else if (m < 250 && h >= 0.118 && h < 0.126) {
+      const c = h2 < 0.5 ? hex('#E06A3A') : hex('#D84A6A');
+      put(i, j - 1, c); put(i - 1, j, c); put(i + 1, j, c); put(i, j, c); put(i - 2, j, c); put(i + 2, j, c);
+    } else if (m < 250 && h >= 0.126 && h < 0.135) {
+      const c = h2 < 0.5 ? hex('#F08AA0') : hex('#F0A050');
+      for (let a = -1; a <= 1; a++) for (let b = 1; b <= 2; b++) put(i + a + (b === 2 && !reduced ? Math.round(Math.sin(T * 1.5 + wx)) : 0), j - b, c);
+    } else if (m >= 250 && m < 3500 && h < 0.026) {
+      if (h < 0.012) for (let b = 1; b <= 3 + Math.floor(h2 * 4); b++) { put(i, j - b, hex('#D9A54A')); put(i + 1, j - b, hex('#C08A3A')); }
+      else if (h < 0.02) { for (let b = 1; b <= 6; b++) put(i, j - b, hex('#E8D7C0')); for (let b = 3; b <= 6; b++) { put(i - 1, j - b, hex('#D8C0A8')); put(i + 1, j - b, hex('#D8C0A8')); } }
+      else for (const [a, b] of [[0, 1], [0, 2], [0, 3], [0, 4], [-1, 4], [-2, 5], [1, 5], [1, 6], [0, 5], [-2, 6], [2, 7]]) put(i + a, j - b, b % 2 ? hex('#EDE6DA') : hex('#8A7A6A'));
+    } else if (m >= 3500 && h < 0.013) {
+      if (h < 0.008) for (let b = 1; b <= 6; b++) for (let a = -1; a <= 1; a++) if (b < 3 ? a === 0 : true) put(i + a, j - b, hex('#CFD8D2'));
+      else { for (let b = 1; b <= 6; b++) put(i, j - b, hex('#A8889A')); for (const [a, b] of [[-1, 7], [1, 7], [-2, 8], [2, 8], [0, 7]]) put(i + a, j - b, hex('#C9A0D0')); }
+    } else if (m >= 250 && h > 0.1 && h < 0.11) {
+      for (let a = 0; a < 3; a++) { put(i + a, j, hex('#4A4644')); if (a === 1) put(i + a, j - 1, hex('#5A5654')); }
+    }
+  }
+}
+function drawVents() {
+  for (let c = Math.floor((X0 - 60) / VENT); c <= Math.floor((X0 + LW + 60) / VENT); c++) {
+    const f = ventAt(c);
+    if (!f) continue;
+    const span = (f.chimneys.length * 26 + 14) / 2 + 6;
+    // pale bacterial mats on the floor around the vents
+    for (let dx = -span; dx <= span; dx++) {
+      const x = f.cx + dx, j = Math.round(floorY(x)) - Y0, h = h3(x, SEED, 31);
+      if (h < 0.75 - Math.abs(dx) / span * 0.6) put(x - X0, j, h < 0.3 ? hex('#E9DFC0') : hex('#D9A441'));
+    }
+    for (const w of f.worms) {
+      const x = f.cx + w.dx, j = Math.round(floorY(x)) - Y0, sway = reduced ? 0 : Math.round(Math.sin(T * 1.1 + w.dx) * 0.6);
+      for (let k = 1; k <= w.h; k++) put(x - X0 + (k === w.h ? sway : 0), j - k, hex('#E8E2D0'));
+      put(x - X0 + sway, j - w.h - 1, hex('#D2283A')); if (w.h > 3) put(x - X0 + sway + 1, j - w.h - 1, hex('#B81E30'));
+    }
+    for (const ch of f.chimneys) {
+      const x = f.cx + ch.dx, base = Math.round(floorY(x)) - Y0;
+      for (let k = 0; k <= ch.h; k++) {
+        const w = Math.max(2, ch.w - Math.floor(k / ch.h * (ch.w - 2)) + (k % 5 === 2 ? 1 : 0));
+        for (let a = 0; a < w; a++) {
+          const h = h3(x + a, k, 37);
+          const edge = a === 0 ? 0.8 : a === w - 1 ? 1.15 : 1;
+          put(x - X0 - Math.floor(w / 2) + a, base - k, shade(h < 0.2 ? hex('#8A6A44') : h < 0.32 ? hex('#A88450') : hex('#54443A'), edge));
+        }
+      }
+      // the mouth is hot, and the water shimmers above it
+      const hot = 0.6 + 0.4 * Math.sin(T * 3 + x);
+      put(x - X0, base - ch.h - 1, mix(hex('#3A1408'), hex('#E0602A'), hot), K_GLOW);
+      put(x - X0 - 1, base - ch.h, hex('#7A3418'), K_GLOW);
+      put(x - X0 + 1, base - ch.h, hex('#5A2410'), K_GLOW);
+      // shrimp milling about the chimney top
+      for (let k = 0; k < 10; k++) {
+        const sx = x - X0 + Math.round(Math.sin(T * 0.7 + k * 2.1 + x) * (4 + k % 3 * 2));
+        const sy = base - ch.h + 2 - Math.round(Math.abs(Math.cos(T * 0.5 + k * 1.7)) * 6) + (k % 4);
+        put(sx, sy, hex('#E8B0A0'));
+      }
+    }
+    const cx = f.cx + f.crab;
+    blit(ART.yeti, 0, cx - X0 - 3, Math.round(floorY(cx)) - Y0 - 4, false);
+    if (!f.seen && Math.abs(f.cx - (X0 + LW / 2)) < LW / 2 && Math.round(floorY(f.cx)) - Y0 < LH) { f.seen = true; seen('Black smokers!'); }
+  }
+}
+
+// ---------- Drawing creatures and the sub ----------
+function drawActors() {
+  for (const a of actors) {
+    const sp = a.sp, f = sp.fps ? Math.floor(a.t * sp.fps) : 0, flip = a.face < 0;
+    for (const mb of a.members) {
+      const dx = a.face > 0 ? mb.dx : a.span - sp.spr.w - mb.dx;
+      const wob = mb.ph ? Math.sin(a.t * 1.3 + mb.ph) * 1.5 : 0;
+      blit(sp.spr, f, Math.round(a.x + dx - X0), Math.round(a.y + mb.dy + wob - Y0), flip);
+    }
+  }
+}
+function drawSub() {
+  const m = subDepth();
+  // the surge of a storm reaches a little way down
+  const sway = reduced ? 0 : Math.sin(T * 1.3) * SKY.amp * 0.5 * Math.exp(-m / 25) * (m > 1 ? 1 : 0);
+  const sx = Math.round(sub.x - X0) - 10, sy = Math.round(sub.y + sway - Y0) - 6, flip = sub.face < 0;
+  blit(lamp.on ? SUB_ON : SUB_OFF, 0, sx, sy, flip);
+  const px = flip ? sx + 20 : sx - 1, spin = Math.abs(sub.vx) > 0.5 ? Math.floor(T * 14) % 2 : 0, pc = hex('#6E6A62');
+  if (spin) { put(px, sy + 5, pc); put(px, sy + 7, pc); put(px, sy + 9, pc); }
+  else { put(px, sy + 6, pc); put(px, sy + 8, pc); }
+  put(px + (flip ? -1 : 1), sy + 7, hex('#4A463E'));
+  lamp.sx = flip ? sx : sx + 19; lamp.sy = sy + 7; lamp.dx = flip ? -0.97 : 0.97; lamp.dy = 0.24;
+}
+function drawParts() {
+  for (const s of snow) {
+    const i = Math.round(s.x - X0), j = Math.round(s.y - Y0);
+    if (i < 0 || j < 0 || i >= LW || j >= LH || Y0 + j < surfI[i] + 3 || rowM[j] < 15) continue;
+    if (kindB[j * LW + i] === K_WATER) put(i, j, s.s < 0.5 ? hex('#C8CEC8') : hex('#E4E8E0'));
+  }
+  for (const p of parts) {
+    const i = Math.round(p.x - X0), j = Math.round(p.y - Y0);
+    if (i < 0 || j < 0 || i >= LW || j >= LH) continue;
+    if (p.type === 'bub') { put(i, j, hex('#CFEFF5')); if (p.life < 2.5 && p.life > 1.5) put(i + 1, j, hex('#A8DCE6')); }
+    else if (p.type === 'spark') put(i, j, mix(hex('#0A2030'), hex('#6FE6F0'), clamp(p.life * 2, 0, 1)), K_GLOW);
+    else if (p.type === 'smoke') { put(i, j, hex('#1A1614')); if (p.life < 3.5) put(i + 1, j, hex('#24201C')); }
+    else if (p.type === 'ash' && above(i, j)) blend(i, j, mix(hex('#3A3634'), hex('#B8B4AE'), SKY.day), clamp(p.life / 4, 0, 0.8));
+  }
+}
+function drawSurface() {
+  if (Y0 > 10) return;
+  const foam = SKY.wI > 0.35;
+  for (let i = 0; i < LW; i++) {
+    const j = surfI[i] - Y0;
+    if (j < 0 || j >= LH) continue;
+    const crest = surfI[i] <= -SKY.amp * 0.7;
+    if (foam && crest && h3(X0 + i, Math.floor(T * 3), 41) < SKY.wI) put(i, j, C.foam, K_WATER);
+    else blend(i, j, C.surf, 0.55);
+  }
+  if (SKY.storm > 0.05) {
+    const rc = mix(hex('#8C99A6'), hex('#D8E2EA'), SKY.day);
+    for (const d of drops) {
+      if (d.on > SKY.storm) continue;
+      const i = Math.round(d.x), j = Math.round(d.y);
+      for (let k = 0; k < 3; k++) {
+        const a = i + Math.round(k * 0.4), b = j - k;
+        if (a >= 0 && b >= 0 && a < LW && b < LH && above(a, b)) { blend(a, b, rc, 0.55); kindB[b * LW + a] = K_SKY; }
+      }
+    }
+  }
+  if (bolt) for (const [i, y] of bolt.pts) {
+    const j = y - Y0;
+    if (i >= 0 && i < LW && j >= 0 && j < LH && above(i, j)) put(i, j, hex('#F4F6FF'), K_SKY);
+  }
+}
+
+// ---------- Light ----------
+// everything is drawn flat, then lit: sunlight fades with depth, the lamp throws a cone, and glowing
+// things shine on their own
+function waterColor(m, top) {
+  if (m < 60) return mix(top, C.mid, m / 60);
+  if (m < 400) return mix(C.mid, C.deep, (m - 60) / 340);
+  return mix(C.deep, C.abyss, clamp((m - 400) / 3000, 0, 1));
+}
+// most light is gone by 200 m, a dim blue lasts through the twilight zone, and below 1,000 m it's black
+const ambAt = (m, dl) => Math.pow(dl * (0.82 * Math.exp(-m / 50) + 0.18 * Math.exp(-m / 300)), 0.7);
+function light() {
+  const on = lamp.on, lx = lamp.sx, ly = lamp.sy, lr = lamp.r, ldx = lamp.dx, ldy = lamp.dy;
+  const bx0 = on ? Math.max(0, Math.floor(lx - lr)) : 1, bx1 = on ? Math.min(LW - 1, Math.ceil(lx + lr)) : 0;
+  const by0 = on ? Math.floor(ly - lr) : 1, by1 = on ? Math.ceil(ly + lr) : 0;
+  const F = flash, sunny = SKY.day * (1 - SKY.storm), ab = SKY.above, t = reduced ? 0 : T;
+  for (let j = 0; j < LH; j++) {
+    const wy = Y0 + j, m = rowM[j], amb = rowAmb[j];
+    const caK = m < 45 && sunny > 0.05 ? 0.3 * sunny * Math.exp(-m / 12) : 0;
+    const shK = m < 120 && sunny > 0.05 ? 0.14 * sunny * Math.exp(-m / 40) : 0;
+    const fl = F ? F * 70 * Math.exp(-m / 15) : 0;
+    const fog = rowAlb[j], fR = R8(fog) * amb * 0.12, fG = G8(fog) * amb * 0.12, fB = B8(fog) * amb * 0.12;
+    const inY = j >= by0 && j <= by1, ddy = j - ly;
+    let p = j * LW;
+    for (let i = 0; i < LW; i++, p++) {
+      const k = kindB[p], c = colB[p];
+      let r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+      if (k === K_SKY) { if (F) { r += F * 110; g += F * 110; b += F * 120; } }
+      else if (wy < surfI[i]) {
+        if (k !== K_GLOW) { r *= ab; g *= ab; b *= ab; }
+        if (F) { r += F * 60; g += F * 60; b += F * 70; }
+      } else if (k !== K_GLOW) {
+        let L = amb;
+        if (caK || shK) {
+          // caustics: thin wandering lines where two ripples cancel out, and broad slanting shafts
+          const wx = X0 + i;
+          const cs = caK ? Math.abs(Math.sin(wx * 0.19 + Math.sin(wy * 0.13 + t * 0.9) * 1.6 + t * 0.6) + Math.sin(wx * 0.11 - wy * 0.21 + Math.sin(wx * 0.05 - t * 0.7) * 2)) : 9;
+          L *= 1 + caK * (1 - smooth(0, 0.3, cs)) + shK * Math.sin(wx * 0.045 + wy * 0.02 + t * 0.15);
+        }
+        let lv = 0;
+        if (inY && k !== K_ROCK && i >= bx0 && i <= bx1) {
+          const ddx = i - lx, d2 = ddx * ddx + ddy * ddy;
+          if (d2 < lr * lr) {
+            const d = Math.sqrt(d2) || 1, cone = smooth(0.74, 0.9, (ddx * ldx + ddy * ldy) / d);
+            lv = cone * (1 - d / lr) ** 1.4;
+            if (d < 18) lv += (1 - d / 18) ** 2 * 0.5;
+          }
+        }
+        if (k === K_WATER) { r = r * L + 200 * lv * 0.2 + fl; g = g * L + 228 * lv * 0.22 + fl; b = b * L + 220 * lv * 0.21 + fl; }
+        // solid things keep a faint silhouette even in the deep, so you can see where the floor is
+        else { const e = Math.max(L, 0.06) + lv * 1.25; r = r * e * 0.88 + fR + fl; g = g * e * 0.88 + fG + fl; b = b * e * 0.88 + fB + fl; }
+        r += 1; g += 3; b += 7;
+      }
+      out32[p] = 0xFF000000 | ((b > 255 ? 255 : b | 0) << 16) | ((g > 255 ? 255 : g | 0) << 8) | (r > 255 ? 255 : r | 0);
+    }
+  }
+}
+
+// ---------- A frame ----------
+function draw() {
+  X0 = Math.floor(cam.x); Y0 = Math.floor(cam.y);
+  for (let i = 0; i < LW; i++) surfI[i] = Math.round(waveY(X0 + i, T));
+  const cv = climV(X0 + LW / 2);
+  const top = cv < 0.5 ? mix(C.seaCold, C.seaMild, smooth(0.32, 0.48, cv)) : mix(C.seaMild, C.seaWarm, smooth(0.52, 0.66, cv));
+  for (let j = 0; j < LH; j++) {
+    const wy = Y0 + j, m = mOf(Math.max(0, wy));
+    rowM[j] = m; rowAlb[j] = waterColor(m, top); rowAmb[j] = ambAt(m, SKY.dl);
+    skyRow[j] = wy < 8 ? skyColor(-wy) : 0;
+  }
+  for (let j = 0, p = 0; j < LH; j++) {
+    const wy = Y0 + j, sc = skyRow[j], wc = rowAlb[j];
+    for (let i = 0; i < LW; i++, p++) {
+      if (wy < surfI[i]) { colB[p] = sc; kindB[p] = K_SKY; }
+      else { colB[p] = wc; kindB[p] = K_WATER; }
+    }
+  }
+  drawSky();
+  drawBackdrop();
+  drawFloor();
+  drawDecor();
+  drawVents();
+  drawActors();
+  drawSub();
+  drawParts();
+  drawSurface();
+  light();
+  ctx.putImageData(img, 0, 0);
+}
+
+// ---------- Words on screen ----------
+const ZONES = [[1, 'At the surface'], [200, 'Sunlit zone'], [1000, 'Twilight zone'], [4000, 'Midnight zone'], [6000, 'Abyssal zone'], [Infinity, 'Hadal zone']];
+const zoneOf = (m) => ZONES.find(([max]) => m < max)[1];
+let lastZone = '', zoneSince = 0, seenTimer = 0, lastSky = '';
+function say(text) { const el = $('said'); el.textContent = ''; setTimeout(() => { el.textContent = text; }, 30); }
+function seen(text) {
+  const el = $('seen');
+  el.textContent = text; el.classList.add('on');
+  clearTimeout(seenTimer); seenTimer = setTimeout(() => el.classList.remove('on'), 4500);
+  say(text);
+}
+function describe() {
+  const m = subDepth(), z = zoneOf(m);
+  const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
+  const n = Math.abs(sub.step), going = n === 0 ? 'stopped' : `heading ${sub.step > 0 ? 'east' : 'west'}, ${SPEED_NAMES[n].toLowerCase()}`;
+  canvas.setAttribute('aria-label', `A little yellow submarine ${where}, ${going}, lights ${lamp.on ? 'on' : 'off'}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
+}
+let hudIn = 0, labelIn = 5;
+function hud(dt) {
+  hudIn -= dt;
+  if (hudIn > 0) return;
+  hudIn = 0.2;
+  const m = subDepth(), z = zoneOf(m), fm = mOf(floorY(sub.x));
+  $('depth').textContent = `${fmt(m)} m`;
+  $('zone').textContent = z;
+  $('floor').textContent = `Sea floor ${fmt(fm)} m`;
+  const sky = `${timeName()}, ${weatherName()}`;
+  $('weather').textContent = sky;
+  // wait for a new zone to settle before announcing it, so bobbing on a boundary stays quiet
+  if (z !== lastZone) {
+    zoneSince += 0.2;
+    if (zoneSince > 1.5 || !lastZone) { if (lastZone) say(`${z}, ${fmt(m)} m.`); lastZone = z; zoneSince = 0; describe(); }
+  } else zoneSince = 0;
+  if (sky !== lastSky) { lastSky = sky; describe(); }
+  if ((labelIn -= 0.2) <= 0) { labelIn = 5; describe(); }
+}
+
+// ---------- Sound ----------
+// every sound is built on the spot from oscillators and filtered noise, so there are no audio files
+const prefs = { sound: false };
+try { prefs.sound = localStorage.getItem('cozy-submarine.sound') === 'on'; } catch (e) {}
+function savePrefs() { try { localStorage.setItem('cozy-submarine.sound', prefs.sound ? 'on' : 'off'); } catch (e) {} }
+let audio = null, master = null, noiseBuf = null;
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    // playback, so the sea is heard even with the iPhone's silent switch on. the Sound button mutes it
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    // a limiter that only steps in when sounds pile up
+    const comp = audio.createDynamicsCompressor();
+    comp.threshold.value = -4;
+    comp.knee.value = 0;
+    comp.ratio.value = 20;
+    comp.attack.value = 0.001;
+    comp.release.value = 0.1;
+    master = audio.createGain();
+    master.gain.value = 0.8;
+    master.connect(comp).connect(audio.destination);
+    noiseBuf = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
+    const ch = noiseBuf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  }
+  // iOS can leave the context suspended or "interrupted" after calls and app switches
+  if (audio.state !== 'running') audio.resume();
+  return audio;
+}
+// a touch pointerdown doesn't count as a gesture, so start and resume audio from the ones that do
+['pointerup', 'touchend', 'keydown'].forEach((t) =>
+  document.addEventListener(t, () => { if (prefs.sound) ac(); }, { capture: true, passive: true }));
+const live = () => (prefs.sound && audio && audio.state === 'running' ? audio : null);
+
+function setSound(on) {
+  prefs.sound = on;
+  savePrefs();
+  $('sound').setAttribute('aria-pressed', on);
+  if (on && ac()) audio.resume().then(() => play('ping'));
+}
+
+// a gain that jumps up over attack seconds, then dies away by dur
+function env(a, t, peak, attack, dur) {
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(master);
+  return g;
+}
+
+// ---------- Sound data ----------
+// each sound is layers of tones and noise. a tone is an oscillator gliding from freq to to; noise
+// runs through a filter whose cutoff glides from freq to to. every layer rises to gain over attack
+// seconds and dies away by dur. at starts a layer late, vary nudges its pitch each time it plays,
+// and repeat scatters that many copies across spread seconds. the Sound Bench (../sound-bench/)
+// has an identical copy to play and edit, so a change here goes there too, and the other way round.
+const SOUNDS = {
+  "bubble": { "name": "Bubble", "use": "Bubbles rising past the hull in the shallows", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 520, "to": 1350, "gain": 0.045, "attack": 0.004, "dur": 0.07, "vary": 0.35 },
+    { "kind": "tone", "wave": "sine", "freq": 780, "to": 1900, "gain": 0.025, "attack": 0.003, "dur": 0.05, "at": 0.09, "vary": 0.35 }
+  ] },
+  "bubble-low": { "name": "Deep bubble", "use": "Slower, lower bubbles the deeper you go", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 170, "to": 420, "gain": 0.07, "attack": 0.008, "dur": 0.16, "vary": 0.3 }
+  ] },
+  "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
+  ] },
+  "hum": { "name": "Deep hum", "use": "The low hum of the deep sea, below the twilight zone", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 110, "to": 80, "q": 2, "gain": 0.35, "attack": 1.4, "dur": 3.6 },
+    { "kind": "tone", "wave": "sine", "freq": 46, "to": 44, "gain": 0.05, "attack": 1.4, "dur": 3.6, "vary": 0.03 }
+  ] },
+  "wave-calm": { "name": "Calm wave", "use": "A small wave lapping at the hull on a calm sea", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 700, "to": 260, "q": 0.8, "gain": 0.12, "attack": 0.9, "dur": 2.4 },
+    { "kind": "noise", "filter": "highpass", "freq": 2600, "q": 0.7, "gain": 0.015, "attack": 0.8, "dur": 1.6, "at": 0.4 }
+  ] },
+  "wave-rough": { "name": "Rough wave", "use": "A wave breaking on a rough sea", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1100, "to": 220, "q": 0.8, "gain": 0.3, "attack": 0.6, "dur": 2.6 },
+    { "kind": "noise", "filter": "bandpass", "freq": 2400, "to": 900, "q": 0.6, "gain": 0.08, "attack": 0.5, "dur": 1.8, "at": 0.3 }
+  ] },
+  "wave-storm": { "name": "Storm wave", "use": "A big wave crashing in a storm", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 1600, "to": 160, "q": 0.9, "gain": 0.5, "attack": 0.4, "dur": 3 },
+    { "kind": "noise", "filter": "bandpass", "freq": 3000, "to": 700, "q": 0.5, "gain": 0.14, "attack": 0.35, "dur": 2.2, "at": 0.2 },
+    { "kind": "tone", "wave": "sine", "freq": 60, "to": 38, "gain": 0.08, "attack": 0.3, "dur": 1.6 }
+  ] },
+  "rain": { "name": "Rain", "use": "Rain on the sea in a storm", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 3200, "q": 0.6, "gain": 0.05, "attack": 1.2, "dur": 3.6 },
+    { "kind": "noise", "filter": "bandpass", "freq": 5200, "q": 3, "gain": 0.02, "attack": 0.001, "dur": 0.012, "vary": 0.3, "repeat": 18, "spread": 3.2 }
+  ] },
+  "thunder": { "name": "Thunder", "use": "Thunder rolling after a lightning flash", "layers": [
+    { "kind": "noise", "filter": "lowpass", "freq": 900, "to": 70, "q": 0.8, "gain": 0.8, "attack": 0.04, "dur": 3.5 },
+    { "kind": "noise", "filter": "lowpass", "freq": 300, "to": 60, "q": 1, "gain": 0.4, "attack": 0.3, "dur": 2.2, "at": 0.4, "repeat": 3, "spread": 1 },
+    { "kind": "tone", "wave": "sine", "freq": 52, "to": 30, "gain": 0.3, "attack": 0.05, "dur": 2.4 }
+  ] },
+  "creak": { "name": "Hull creak", "use": "The hull creaking now and then in the deep", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 92, "to": 71, "gain": 0.018, "attack": 0.25, "dur": 0.9, "vary": 0.15 },
+    { "kind": "noise", "filter": "bandpass", "freq": 380, "to": 300, "q": 9, "gain": 0.12, "attack": 0.3, "dur": 0.8 }
+  ] },
+  "lights": { "name": "Lamp switch", "use": "Switching the lights on or off", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
+    { "kind": "noise", "filter": "highpass", "freq": 3000, "q": 0.7, "gain": 0.12, "attack": 0.001, "dur": 0.02 },
+    { "kind": "tone", "wave": "sine", "freq": 120, "to": 110, "gain": 0.06, "attack": 0.05, "dur": 0.35, "at": 0.02 }
+  ] },
+  "ping": { "name": "Sonar ping", "use": "Turning sound on", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.12, "attack": 0.004, "dur": 1.6 },
+    { "kind": "tone", "wave": "sine", "freq": 1180, "to": 1150, "gain": 0.03, "attack": 0.004, "dur": 1.2, "at": 0.45 }
+  ] }
+};
+
+const soundLength = (s) => Math.max(...s.layers.map((L) => (L.at || 0) + (L.spread || 0) + L.dur));
+// play a sound at seconds from now; len stretches it to last that long, and vol turns it down
+// (the waves fade as you dive)
+function play(id, at = 0, len, vol = 1) {
+  const a = live(), s = SOUNDS[id];
+  if (!a || !s || vol < 0.02) return;
+  const k = len ? len / soundLength(s) : 1;
+  for (const L of s.layers) {
+    for (let n = 0; n < (L.repeat || 1); n++) {
+      const v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+      const late = (L.at || 0) + (L.repeat ? Math.random() * (L.spread || 0) : 0);
+      voice(a, L, a.currentTime + at + late * k, L.dur * k, (L.attack || 0.003) * k, v, vol);
+    }
+  }
+}
+function voice(a, L, t, dur, attack, v, vol) {
+  const tone = L.kind === 'tone';
+  const src = tone ? a.createOscillator() : a.createBufferSource();
+  let out = src, glide;
+  if (tone) {
+    src.type = L.wave || 'sine';
+    glide = src.frequency;
+  } else {
+    src.buffer = noiseBuf;
+    src.loop = true;
+    out = a.createBiquadFilter();
+    out.type = L.filter || 'bandpass';
+    out.Q.value = L.q ?? 1;
+    src.connect(out);
+    glide = out.frequency;
+  }
+  glide.setValueAtTime(L.freq * v, t);
+  if (L.to) glide.exponentialRampToValueAtTime(L.to * v, t + dur);
+  out.connect(env(a, t, L.gain * vol, Math.min(attack, dur * 0.95), dur));
+  if (tone) src.start(t); else src.start(t, Math.random() * 0.8);
+  src.stop(t + dur + 0.05);
+}
+
+// ---------- The sea's sounds ----------
+// waves near the surface, a wash of water that turns to a low hum as you go down, and bubbles
+// that get slower and lower with depth
+const ambient = { wave: 0, bed: 0, bub: 0, rain: 0, creak: 30 };
+function listenTick(dt) {
+  if (!live()) return;
+  const m = subDepth(), near = Math.exp(-m / 12), moving = Math.min(1, (Math.abs(sub.vx) + Math.abs(sub.vy)) / 40);
+  for (const k in ambient) ambient[k] -= dt;
+  if (ambient.wave <= 0) {
+    ambient.wave = 2.6 - SKY.wI * 0.9 + Math.random() * 0.8;
+    play(SKY.wI < 0.38 ? 'wave-calm' : SKY.wI < 0.66 ? 'wave-rough' : 'wave-storm', 0, 0, near * (m > 1 ? 0.6 : 1));
+  }
+  if (ambient.bed <= 0) {
+    ambient.bed = 2.4;
+    const deep = smooth(150, 2500, m);
+    play('wash', 0, 0, (1 - deep) * (1 - near * 0.6) * (0.6 + moving * 0.4));
+    play('hum', 0, 0, deep);
+  }
+  if (ambient.bub <= 0) {
+    const deep = smooth(60, 1800, m);
+    ambient.bub = (0.35 + deep * 1.3) / (0.5 + moving) * rand(0.5, 1.5);
+    if (m > 1) play(Math.random() < deep ? 'bubble-low' : 'bubble');
+  }
+  if (ambient.rain <= 0) { ambient.rain = 3; play('rain', 0, 0, SKY.storm * near); }
+  if (ambient.creak <= 0) { ambient.creak = rand(25, 60); if (m > 800) play('creak', 0, 0, 0.8); }
+}
+
+// ---------- Controls ----------
+function setLights(on) {
+  lamp.on = on;
+  $('lights').setAttribute('aria-pressed', on);
+  play('lights');
+  describe();
+}
+function setHidden(h) {
+  $('tray').hidden = h; $('head').hidden = h; $('show').hidden = !h;
+  ($(h ? 'show' : 'hide')).focus({ preventScroll: true });
+}
+$('left').addEventListener('click', () => setStep(sub.step - 1));
+$('right').addEventListener('click', () => setStep(sub.step + 1));
+$('lights').addEventListener('click', () => setLights(!lamp.on));
+$('sound').addEventListener('click', () => setSound(!prefs.sound));
+$('hide').addEventListener('click', () => setHidden(true));
+$('show').addEventListener('click', () => setHidden(false));
+$('newsea').addEventListener('click', () => { const s = freshSeed(); writeSeed(s); startWorld(s); say('A new ocean.'); });
+// rise and dive move while held, and a press from the keyboard gives a short nudge
+function holdButton(btn, v) {
+  btn.addEventListener('pointerdown', (e) => { hold.v = v; btn.setPointerCapture(e.pointerId); });
+  const stop = () => { if (hold.v === v) hold.v = 0; };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => btn.addEventListener(t, stop));
+  btn.addEventListener('click', (e) => { if (e.detail === 0) { nudge.v = v; nudge.left = 0.8; } });
+}
+holdButton($('rise'), -1);
+holdButton($('dive'), 1);
+
+// drag anywhere: down dives, up rises, and sideways turns the speed up or down
+canvas.addEventListener('pointerdown', (e) => {
+  drag.on = true; drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY; drag.step = sub.step; drag.v = 0;
+  canvas.setPointerCapture(e.pointerId); canvas.classList.add('dragging');
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag.on || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.v = Math.abs(dy) < 12 ? 0 : clamp((dy - Math.sign(dy) * 12) / 70, -1, 1);
+  const st = clamp(drag.step + Math.trunc(dx / 45), -4, 4);
+  if (st !== sub.step) setStep(st);
+});
+const endDrag = () => { drag.on = false; drag.v = 0; canvas.classList.remove('dragging'); };
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => canvas.addEventListener(t, endDrag));
+
+document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches('input:not([type=range]), textarea, select')) return;
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (k === 'ArrowUp' || k === 'w') { keys.up = true; e.preventDefault(); }
+  else if (k === 'ArrowDown' || k === 's') { keys.down = true; e.preventDefault(); }
+  else if (k === 'ArrowLeft' || k === 'a') { if (!e.repeat) setStep(sub.step - 1); e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd') { if (!e.repeat) setStep(sub.step + 1); e.preventDefault(); }
+  else if (k === 'l' && !e.repeat) setLights(!lamp.on);
+  else if (k === 'm' && !e.repeat) setSound(!prefs.sound);
+  else if (k === 'h' && !e.repeat) setHidden(!$('tray').hidden);
+});
+document.addEventListener('keyup', (e) => {
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (k === 'ArrowUp' || k === 'w') keys.up = false;
+  if (k === 'ArrowDown' || k === 's') keys.down = false;
+});
+window.addEventListener('blur', () => { keys.up = keys.down = false; hold.v = 0; endDrag(); });
+window.addEventListener('hashchange', () => { const s = readSeed(); if (s && s !== SEED) startWorld(s); });
+let rz = 0;
+window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
+
+// ---------- Go ----------
+$('sound').setAttribute('aria-pressed', prefs.sound);
+layout();
+SEED = readSeed() || freshSeed();
+writeSeed(SEED);
+readSky(Date.now());
+startWorld(SEED);
+let last = performance.now(), acc = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt;
+  if (acc < 1 / 30 - 0.003) return;
+  const step = Math.min(acc, 0.1); acc = 0;
+  readSky(Date.now());
+  tick(step);
+  moveActors(step);
+  moveParts(step);
+  listenTick(step);
+  draw();
+  hud(step);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
