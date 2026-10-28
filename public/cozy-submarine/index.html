@@ -610,7 +610,7 @@ const SPECIES = [
 for (const sp of SPECIES) sp.spr = ART[sp.art];
 
 // ---------- State ----------
-const sub = { x: 0, y: 2, vx: 0, vy: 0, speed: 1, face: 1, sx: 0, hold: 0, brake: false, follow: false };
+const sub = { x: 0, y: 2, vx: 0, vy: 0, speed: 1, face: 1, sx: 0, hold: 0, brake: false, coast: 0, follow: false };
 const cam = { x: 0, y: 0 };
 const lamp = { on: false, sx: 0, sy: 0, dx: 1, dy: 0.12, r: 84 };
 const keys = { up: false, down: false };
@@ -670,11 +670,12 @@ function setSpeed(n, quiet) {
   $('speed').textContent = SPEED_NAMES[sub.speed];
   if (!quiet) describe();
 }
-// a press the way you're facing is one step faster. a press the other way turns the sub round on
-// the spot and stops it there, ready to set off the new way
+// a press the way you're facing is one step faster. a press the other way turns the sub round and
+// lets it coast to a stop in about a second and a half, ready to set off the new way
+const TURN_COAST = 1.5;
 function go(d, quiet) {
   if (d === sub.face) setSpeed(sub.speed + 1, true);
-  else { sub.face = d; setSpeed(0, true); sub.vx = 0; }
+  else { sub.face = d; setSpeed(0, true); sub.coast = Math.abs(sub.vx) / TURN_COAST; }
   showHeading();
   if (!quiet) describe();
 }
@@ -685,8 +686,9 @@ function showHeading() {
 function tick(dt) {
   T += dt;
   const want = sub.face * SPEEDS[sub.speed];
-  // Stop brakes hard; changing speed eases
-  const accel = sub.brake ? 150 : 30;
+  // Stop brakes hard; changing speed eases; drifting backwards after a turn sheds its speed in TURN_COAST
+  if (sub.vx * sub.face >= 0) sub.coast = 0;
+  const accel = sub.brake ? 150 : sub.coast || 30;
   sub.vx += clamp(want - sub.vx, -accel * dt, accel * dt);
   sub.x += sub.vx * dt;
 
@@ -726,8 +728,13 @@ function tick(dt) {
   }
   if (sub.y > hard) { sub.y = hard; if (sub.vy > 0) sub.vy = 0; }
 
-  // camera: the sub sits back from the way it's heading, and the sky shows at most half the screen
-  sub.sx += (LW * (0.5 - 0.17 * sub.face) - sub.sx) * Math.min(1, dt * 1.2);
+  // camera: the sub sits back from the way it's moving, and the sky shows at most half the screen.
+  // it only slides over as fast as the sub goes, so turning round leaves it in place until it sets off
+  const lead = Math.sign(sub.vx);
+  if (lead) {
+    const gap = LW * (0.5 - 0.17 * lead) - sub.sx, most = Math.abs(sub.vx) * 0.6 * dt;
+    sub.sx += clamp(gap * Math.min(1, dt * 1.2), -most, most);
+  }
   cam.x = sub.x - sub.sx;
   const ty = Math.max(sub.y - LH * 0.5, -LH * 0.47);
   cam.y += (ty - cam.y) * Math.min(1, dt * 4);
