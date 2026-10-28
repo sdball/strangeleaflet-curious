@@ -104,10 +104,12 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
       <button type="button" class="chip" id="left" aria-label="Steer left" aria-keyshortcuts="ArrowLeft">◀</button>
       <span id="speed" role="status">Slow →</span>
       <button type="button" class="chip" id="right" aria-label="Steer right" aria-keyshortcuts="ArrowRight">▶</button>
+      <button type="button" class="chip" id="stop" aria-keyshortcuts="Space">■ Stop</button>
     </div>
     <div class="group" role="group" aria-label="Depth">
       <button type="button" class="chip" id="rise" aria-keyshortcuts="ArrowUp">▲ Rise</button>
       <button type="button" class="chip" id="dive" aria-keyshortcuts="ArrowDown">▼ Dive</button>
+      <button type="button" class="chip" id="follow" aria-pressed="false" aria-keyshortcuts="F">Follow floor</button>
     </div>
     <div class="group">
       <button type="button" class="chip" id="lights" aria-pressed="false" aria-keyshortcuts="L">Lights</button>
@@ -118,7 +120,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <div class="foot">
     <span>The link shares this ocean.</span>
     <button type="button" class="chip" id="newsea">New ocean</button>
-    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> speed · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
+    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> speed · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
   </div>
 </section>
 <button type="button" class="chip panel" id="show" hidden aria-keyshortcuts="H">Show controls</button>
@@ -608,7 +610,7 @@ const SPECIES = [
 for (const sp of SPECIES) sp.spr = ART[sp.art];
 
 // ---------- State ----------
-const sub = { x: 0, y: 2, vx: 0, vy: 0, step: 1, face: 1, sx: 0, hold: 0 };
+const sub = { x: 0, y: 2, vx: 0, vy: 0, step: 1, face: 1, sx: 0, hold: 0, brake: false, follow: false };
 const cam = { x: 0, y: 0 };
 const lamp = { on: false, sx: 0, sy: 0, dx: 1, dy: 0.12, r: 84 };
 const keys = { up: false, down: false };
@@ -635,6 +637,7 @@ function startWorld(seed) {
   floorCache.clear(); isleCache.clear(); ventCache.clear();
   actors = []; parts = [];
   sub.x = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0; sub.step = 1; sub.face = 1;
+  setFollow(false, true);
   sub.sx = LW * 0.33; cam.x = sub.x - sub.sx; cam.y = -LH * 0.47;
   spawnIn = 1; rareAt = 0;
   seedSnow();
@@ -663,6 +666,7 @@ function layout() {
 // ---------- Movement ----------
 function setStep(st, quiet) {
   sub.step = clamp(st, -4, 4);
+  sub.brake = false;
   const n = Math.abs(sub.step), name = SPEED_NAMES[n];
   $('speed').textContent = n === 0 ? name : sub.step > 0 ? `${name} →` : `← ${name}`;
   if (!quiet) describe();
@@ -670,21 +674,34 @@ function setStep(st, quiet) {
 function tick(dt) {
   T += dt;
   const want = Math.sign(sub.step) * SPEEDS[Math.abs(sub.step)];
-  sub.vx += clamp(want - sub.vx, -30 * dt, 30 * dt);
+  // Stop brakes hard; changing speed eases
+  const accel = sub.brake ? 150 : 30;
+  sub.vx += clamp(want - sub.vx, -accel * dt, accel * dt);
   if (sub.step) sub.face = Math.sign(sub.step);
   sub.x += sub.vx * dt;
 
   if (nudge.left > 0) nudge.left -= dt; else nudge.v = 0;
   const input = clamp((keys.down ? 1 : 0) - (keys.up ? 1 : 0) + drag.v + hold.v + nudge.v, -1, 1);
   sub.hold = Math.abs(input) > 0.2 ? sub.hold + dt : 0;
-  // a long hold speeds up, so a trench dive takes a minute or two instead of ten
-  const vmax = 28 + 100 * smooth(0, 2.5, sub.hold);
-  sub.vy += clamp(input * vmax - sub.vy, -170 * dt, 170 * dt);
+  // rising takes you off the floor; diving while following changes nothing, you're already down there
+  if (sub.follow && input < -0.2) setFollow(false);
+  let wantVy;
+  if (sub.follow) {
+    // aim a little above the lowest point of the floor under and ahead of the sub
+    const d = Math.sign(sub.vx) || sub.face, reach = 14 + Math.abs(sub.vx) * 1.2;
+    let low = Infinity;
+    for (let s = -10; s <= 10 + reach; s += 2) low = Math.min(low, floorY(sub.x + d * s));
+    wantVy = clamp((low - 10 - sub.y) * 2.5, -160, 140);
+  } else {
+    // a long hold speeds up, so a trench dive takes a minute or two instead of ten
+    wantVy = input * (28 + 100 * smooth(0, 2.5, sub.hold));
+  }
+  sub.vy += clamp(wantVy - sub.vy, -170 * dt, 170 * dt);
   sub.y += sub.vy * dt;
 
   // at the surface the sub floats and rides the waves
   const float = waveY(sub.x, T) + 2;
-  if (sub.y < float || (sub.y < float + 2 && input <= 0)) { sub.y = float; if (sub.vy < 0) sub.vy = 0; }
+  if (sub.y < float || (sub.y < float + 2 && wantVy <= 0)) { sub.y = float; if (sub.vy < 0) sub.vy = 0; }
 
   // rise ahead of a climbing sea floor, and never sink into it
   let hard = Infinity;
@@ -836,7 +853,7 @@ function moveParts(dt) {
     let x = Math.random() * LW;
     for (let y = -120; y < 0; y += 2) { x += rand(-1.6, 1.6); pts.push([Math.round(x), y]); }
     bolt = { pts, life: 0.18 };
-    play('thunder', rand(0.4, 1.8), 0, Math.exp(-m / 14));
+    play('thunder', rand(0.4, 1.8), 0, atSurface());
   }
 }
 
@@ -1297,7 +1314,8 @@ function seen(text) {
 function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
-  const n = Math.abs(sub.step), going = n === 0 ? 'stopped' : `heading ${sub.step > 0 ? 'east' : 'west'}, ${SPEED_NAMES[n].toLowerCase()}`;
+  const n = Math.abs(sub.step);
+  const going = (n === 0 ? 'stopped' : `heading ${sub.step > 0 ? 'east' : 'west'}, ${SPEED_NAMES[n].toLowerCase()}`) + (sub.follow ? ', following the floor' : '');
   canvas.setAttribute('aria-label', `A little yellow submarine ${where}, ${going}, lights ${lamp.on ? 'on' : 'off'}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
 }
 let hudIn = 0, labelIn = 5;
@@ -1380,6 +1398,12 @@ function env(a, t, peak, attack, dur) {
 // and repeat scatters that many copies across spread seconds. the Sound Bench (../sound-bench/)
 // has an identical copy to play and edit, so a change here goes there too, and the other way round.
 const SOUNDS = {
+  "engine": { "name": "Engine hum", "use": "The engine's steady hum while the sub is moving, held as long as it runs and higher the faster you go", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 55, "gain": 0.16, "attack": 0.4, "dur": 1.5 },
+    { "kind": "tone", "wave": "triangle", "freq": 110.6, "gain": 0.04, "attack": 0.4, "dur": 1.5 },
+    { "kind": "tone", "wave": "sine", "freq": 165, "gain": 0.015, "attack": 0.4, "dur": 1.5 },
+    { "kind": "noise", "filter": "lowpass", "freq": 240, "q": 1.5, "gain": 0.12, "attack": 0.4, "dur": 1.5 }
+  ] },
   "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
   ] },
@@ -1458,25 +1482,78 @@ function voice(a, L, t, dur, attack, v, vol) {
   src.stop(t + dur + 0.05);
 }
 
+// ---------- Held sounds ----------
+// a held sound keeps its layers running for as long as it's needed, and its level and pitch can
+// move while it plays. attack is how long it takes to swell in. on the Sound Bench it plays once,
+// for its dur
+function sustain(id) {
+  const a = live(), s = SOUNDS[id];
+  if (!a || !s) return null;
+  const out = a.createGain();
+  out.gain.value = 0;
+  out.connect(master);
+  const srcs = [], glides = [];
+  for (const L of s.layers) {
+    const tone = L.kind === 'tone';
+    const src = tone ? a.createOscillator() : a.createBufferSource();
+    let node = src;
+    if (tone) { src.type = L.wave || 'sine'; glides.push([src.frequency, L.freq]); }
+    else {
+      src.buffer = noiseBuf; src.loop = true;
+      node = a.createBiquadFilter();
+      node.type = L.filter || 'bandpass';
+      node.Q.value = L.q ?? 1;
+      src.connect(node);
+      glides.push([node.frequency, L.freq]);
+    }
+    const g = a.createGain();
+    g.gain.value = L.gain;
+    node.connect(g).connect(out);
+    src.start();
+    srcs.push(src);
+  }
+  const swell = Math.max(0.05, ...s.layers.map((L) => L.attack || 0)) / 3;
+  return {
+    set(level, pitch) {
+      const t = a.currentTime;
+      out.gain.setTargetAtTime(level, t, swell);
+      for (const [param, f] of glides) param.setTargetAtTime(f * pitch, t, 0.25);
+    },
+    stop() {
+      out.gain.setTargetAtTime(0, a.currentTime, 0.05);
+      for (const src of srcs) src.stop(a.currentTime + 0.3);
+    },
+  };
+}
+
 // ---------- The sea's sounds ----------
-// waves near the surface, and a wash of water that turns to a low hum as you go down
+// waves, rain, and thunder at the surface, fading out over the first ten meters, so a storm still
+// rumbles overhead just under the waves. below, a wash of water turns to a low hum as you go down,
+// and the engine hums while you move
+const atSurface = () => 1 - smooth(0.5, 10, subDepth());
 const ambient = { wave: 0, bed: 0, rain: 0, creak: 30 };
+let engine = null;
 function listenTick(dt) {
-  if (!live()) return;
-  const m = subDepth(), near = Math.exp(-m / 12), moving = Math.min(1, (Math.abs(sub.vx) + Math.abs(sub.vy)) / 40);
+  const a = live();
+  if (!a) { if (engine) { engine.stop(); engine = null; } return; }
+  const m = subDepth(), up = atSurface(), moving = Math.min(1, (Math.abs(sub.vx) + Math.abs(sub.vy)) / 40);
   for (const k in ambient) ambient[k] -= dt;
   if (ambient.wave <= 0) {
     ambient.wave = 2.6 - SKY.wI * 0.9 + Math.random() * 0.8;
-    play(SKY.wI < 0.38 ? 'wave-calm' : SKY.wI < 0.66 ? 'wave-rough' : 'wave-storm', 0, 0, near * (m > 1 ? 0.6 : 1));
+    play(SKY.wI < 0.38 ? 'wave-calm' : SKY.wI < 0.66 ? 'wave-rough' : 'wave-storm', 0, 0, up);
   }
   if (ambient.bed <= 0) {
     ambient.bed = 2.4;
     const deep = smooth(150, 2500, m);
-    play('wash', 0, 0, (1 - deep) * (1 - near * 0.6) * (0.6 + moving * 0.4));
+    play('wash', 0, 0, (1 - deep) * (1 - up * 0.6) * (0.6 + moving * 0.4));
     play('hum', 0, 0, deep);
   }
-  if (ambient.rain <= 0) { ambient.rain = 3; play('rain', 0, 0, SKY.storm * near); }
+  if (ambient.rain <= 0) { ambient.rain = 3; play('rain', 0, 0, SKY.storm * up); }
   if (ambient.creak <= 0) { ambient.creak = rand(25, 60); if (m > 800) play('creak', 0, 0, 0.8); }
+  // the engine is silent at rest and swells in as the sub gets going
+  const pace = Math.min(1, Math.abs(sub.vx) / SPEEDS[4] + Math.abs(sub.vy) / 400);
+  if (!engine) engine = sustain('engine');
+  if (engine) engine.set(smooth(0, 0.04, pace) * (0.6 + 0.4 * pace) * (1 - up * 0.4), lerp(0.75, 1.6, pace));
 }
 
 // ---------- Controls ----------
@@ -1486,12 +1563,30 @@ function setLights(on) {
   play('lights');
   describe();
 }
+function setFollow(on, quiet) {
+  sub.follow = on;
+  $('follow').setAttribute('aria-pressed', on);
+  if (quiet) return;
+  say(on ? 'Following the sea floor.' : 'No longer following the floor.');
+  describe();
+}
+// Stop halts everything: the screw, any rise or dive, and following the floor
+function allStop() {
+  setStep(0, true);
+  sub.brake = true; sub.vy = 0;
+  hold.v = 0; nudge.v = 0; nudge.left = 0; drag.v = 0; drag.step = 0;
+  if (sub.follow) setFollow(false, true);
+  say('All stop.');
+  describe();
+}
 function setHidden(h) {
   $('tray').hidden = h; $('head').hidden = h; $('show').hidden = !h;
   ($(h ? 'show' : 'hide')).focus({ preventScroll: true });
 }
 $('left').addEventListener('click', () => setStep(sub.step - 1));
 $('right').addEventListener('click', () => setStep(sub.step + 1));
+$('stop').addEventListener('click', allStop);
+$('follow').addEventListener('click', () => setFollow(!sub.follow));
 $('lights').addEventListener('click', () => setLights(!lamp.on));
 $('sound').addEventListener('click', () => setSound(!prefs.sound));
 $('hide').addEventListener('click', () => setHidden(true));
@@ -1530,6 +1625,9 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'ArrowDown' || k === 's') { keys.down = true; e.preventDefault(); }
   else if (k === 'ArrowLeft' || k === 'a') { if (!e.repeat) setStep(sub.step - 1); e.preventDefault(); }
   else if (k === 'ArrowRight' || k === 'd') { if (!e.repeat) setStep(sub.step + 1); e.preventDefault(); }
+  // Space on a focused button presses that button, so it only means Stop elsewhere
+  else if (k === ' ' && !e.target.matches('button, a')) { if (!e.repeat) allStop(); e.preventDefault(); }
+  else if (k === 'f' && !e.repeat) setFollow(!sub.follow);
   else if (k === 'l' && !e.repeat) setLights(!lamp.on);
   else if (k === 'm' && !e.repeat) setSound(!prefs.sound);
   else if (k === 'h' && !e.repeat) setHidden(!$('tray').hidden);

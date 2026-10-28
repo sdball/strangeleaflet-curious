@@ -555,6 +555,12 @@ const HARDPOINT_SOUNDS = {
 
 // Cozy Submarine's sounds, exactly as public/cozy-submarine/index.html has them
 const COZY_SUBMARINE_SOUNDS = {
+  "engine": { "name": "Engine hum", "use": "The engine's steady hum while the sub is moving, held as long as it runs and higher the faster you go", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 55, "gain": 0.16, "attack": 0.4, "dur": 1.5 },
+    { "kind": "tone", "wave": "triangle", "freq": 110.6, "gain": 0.04, "attack": 0.4, "dur": 1.5 },
+    { "kind": "tone", "wave": "sine", "freq": 165, "gain": 0.015, "attack": 0.4, "dur": 1.5 },
+    { "kind": "noise", "filter": "lowpass", "freq": 240, "q": 1.5, "gain": 0.12, "attack": 0.4, "dur": 1.5 }
+  ] },
   "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
   ] },
