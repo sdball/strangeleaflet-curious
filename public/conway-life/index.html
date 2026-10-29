@@ -275,7 +275,7 @@ pre.code mark { background: var(--mark); color: inherit; border-radius: 3px; box
 .t-com { color: var(--muted); font-style: italic; }
 .codenote { font-size: .9rem; color: var(--muted); margin: .45rem 0 0; }
 
-/* ---------- Station 3: seven languages ---------- */
+/* ---------- Station 3: eight languages ---------- */
 .panel-head + .ctl { margin-top: 1rem; }
 .langs { display: grid; gap: 1.1rem; margin-top: 1rem; }
 /* one language per row, so even the longest lines fit beside their note */
@@ -420,7 +420,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
     <div class="panel-head">
       <p class="station">Station 2</p>
       <h2 id="s2-h">Count the neighbors, not the board</h2>
-      <p>You could store the whole board and check every point on it, empty or not. This page keeps only a list of the living cells, as row and column pairs, and works out the next step from that list in three moves. <b>Each living cell names its eight neighbors. Count how often each point was named. Keep the points named 3 times, and the living ones named 2 times.</b> A point's count is exactly its number of living neighbors, because only living cells do the naming. Press Next to watch it happen one move at a time. Station 3 lines the same function up in seven languages, and Station 4 runs it on a much bigger board.</p>
+      <p>You could store the whole board and check every point on it, empty or not. This page keeps only a list of the living cells, as row and column pairs, and works out the next step from that list in three moves. <b>Each living cell names its eight neighbors. Count how often each point was named. Keep the points named 3 times, and the living ones named 2 times.</b> A point's count is exactly its number of living neighbors, because only living cells do the naming. Press Next to watch it happen one move at a time. Station 3 lines the same step up in eight languages, and Station 4 runs it on a much bigger board.</p>
     </div>
     <div class="split">
       <svg class="goban" id="b2" tabindex="0" role="application" aria-roledescription="board" aria-label="Station 2 board, rows and columns −2 to 4" aria-describedby="s2-cap" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Space"></svg>
@@ -454,18 +454,19 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
         <button type="button" data-lang="py">Python</button>
         <button type="button" data-lang="rb">Ruby</button>
         <button type="button" data-lang="rs">Rust</button>
+        <button type="button" data-lang="sql">SQL</button>
       </div>
       <pre class="code" id="s2-code" tabindex="0" aria-label="The step function, with the part for the current move highlighted"></pre>
       <p class="codenote" id="s2-codenote"></p>
     </div>
   </section>
 
-  <!-- 3. Seven languages -->
+  <!-- 3. Eight languages -->
   <section class="panel" id="s3-panel" aria-labelledby="s3-h">
     <div class="panel-head">
       <p class="station">Station 3</p>
-      <h2 id="s3-h">One idea, seven languages</h2>
-      <p>Here is Station 2's step written seven ways. Each one takes a set of living cells and makes the same three moves: name the neighbors, count them, keep the 3s and the living 2s. None of them loops over the board, checks for edges, or keeps a second board to write into. Pick a part of the step to light it up in all seven at once, or use the same buttons beside any language without scrolling back up. Each language gets a note on how it does that part.</p>
+      <h2 id="s3-h">One idea, eight languages</h2>
+      <p>Here is Station 2's step written eight ways. Each one takes a set of living cells and makes the same three moves: name the neighbors, count them, keep the 3s and the living 2s. None of them loops over the board, checks for edges, or keeps a second board to write into. Pick a part of the step to light it up in all eight at once, or use the same buttons beside any language without scrolling back up. Each language gets a note on how it does that part.</p>
     </div>
     <div class="ctl" role="group" aria-label="Highlight a part of the step">
       <span>Highlight</span>
@@ -482,7 +483,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
     <ul class="why">
       <li><b>Data in, data out.</b> <code>step</code> takes a set and returns a new one. It reads nothing else and changes nothing, so every board on this page shares it, and the Back buttons work by keeping the old sets.</li>
       <li><b>The rules fit in one line.</b> Four rules become <code>n == 3 or (n == 2 and alive)</code>, in every language here.</li>
-      <li><b>One test says a lot.</b> Step a blinker twice and you're back where you started: <code>step(step(blinker)) == blinker</code>. Each of the seven versions passes it.</li>
+      <li><b>One test says a lot.</b> Step a blinker twice and you're back where you started: <code>step(step(blinker)) == blinker</code>. Each of the eight versions passes it.</li>
       <li><b>The data structure does the work.</b> As the <a href="https://strangeleaflet.com/conways-game-of-life-a-functional-approach/">blog post</a> puts it, <q>The wrong data structure has to be supported by code. The right data structure supports the code.</q> Open the whole-board version below to see the code it saves.</li>
     </ul>
     <details class="contrast">
@@ -1227,6 +1228,48 @@ fn step(cells: &HashSet<Cell>) -> HashSet<Cell> {
       collect: [".map(|(cell, _)| cell)", ".collect()"],
     },
   },
+  sql: {
+    label: "SQL",
+    cell: (cell) => `(${unkey(cell).join(", ")})`,
+    names: { cells: "cells", named: "named", counts: "counts", next: "step" },
+    fn: { flat: "CROSS JOIN", freq: "COUNT(*)" },
+    note: "No loops and no functions: the living cells are a table, and each move is a named query. A join names the neighbors, GROUP BY counts them, and WHERE keeps the 3s and living 2s.",
+    idiom: "A table with a primary key on <code>(r, c)</code> can't hold the same cell twice, so it works as a set. A view is a saved query: select from <code>step</code> and you get the next generation of whatever is in <code>cells</code>. You never say how to loop, and the database works out the join and the grouping.",
+    explain: {
+      neighbors: "<code>offsets</code> is a tiny table of −1, 0, and 1, made with <code>VALUES</code>. Joining it twice gives nine pairs, the <code>WHERE</code> drops the pair where both are 0, and the <code>SELECT</code> adds the rest to the cell.",
+      name: "<code>CROSS JOIN</code> pairs every row of <code>cells</code> with every offset, so each living cell comes out once per neighbor. <code>named</code> holds all of those rows.",
+      count: "<code>GROUP BY r, c</code> gathers the rows for each point into one group, and <code>COUNT(*)</code> says how many rows went into it.",
+      keep: "The <code>WHERE</code> holds all four rules. <code>(r, c) IN (SELECT r, c FROM cells)</code> asks whether the point is alive now by looking it up in the table.",
+      collect: "The last <code>SELECT</code> returns the kept points as rows. <code>GROUP BY</code> already left each point just once, so the rows form a set. Selecting from the view changes nothing in <code>cells</code>.",
+    },
+    code: `CREATE TABLE cells (r INTEGER, c INTEGER, PRIMARY KEY (r, c));
+
+CREATE VIEW step AS
+WITH offsets(d) AS (VALUES (-1), (0), (1)),
+named AS (
+  SELECT r + dr.d AS r, c + dc.d AS c
+  FROM cells
+  CROSS JOIN offsets AS dr
+  CROSS JOIN offsets AS dc
+  WHERE dr.d <> 0 OR dc.d <> 0
+),
+counts AS (
+  SELECT r, c, COUNT(*) AS n
+  FROM named
+  GROUP BY r, c
+)
+SELECT r, c
+FROM counts
+WHERE n = 3 OR (n = 2 AND (r, c) IN (SELECT r, c FROM cells));`,
+    parts: {
+      sig: ["CREATE VIEW step AS"],
+      neighbors: ["offsets(d) AS (VALUES (-1), (0), (1))", "r + dr.d AS r, c + dc.d AS c", "WHERE dr.d <> 0 OR dc.d <> 0"],
+      name: ["FROM cells", "CROSS JOIN offsets AS dr", "CROSS JOIN offsets AS dc"],
+      count: ["COUNT(*) AS n", "GROUP BY r, c"],
+      keep: ["n = 3 OR (n = 2 AND (r, c) IN (SELECT r, c FROM cells))"],
+      collect: ["SELECT r, c\nFROM counts"],
+    },
+  },
 };
 LANGS.js.code = `const neighbors = ${neighbors};\n\nconst frequencies = ${frequencies};\n\n${step}`;
 
@@ -1255,6 +1298,9 @@ const SYNTAX = {
     rules: [["com", /#.*/y], ["def", /(?<=\bdef )\w+/y], ["type", /[A-Z]\w*/y], ["atom", /:\w+/y]] },
   rs: { words: "use type fn let mut for in move impl", word: /[A-Za-z_]\w*/y,
     rules: [["com", /\/\/.*/y], ["def", /(?<=\b(?:fn|type) )\w+/y], ["type", /[A-Z]\w*|\bi32\b/y]] },
+  // the names a view, a table, or a WITH clause gives itself count as definitions
+  sql: { words: "CREATE TABLE VIEW AS WITH VALUES SELECT FROM CROSS JOIN WHERE GROUP BY AND OR IN PRIMARY KEY COUNT", word: /[A-Za-z_]\w*/y,
+    rules: [["com", /--.*/y], ["def", /(?<=\b(?:TABLE|VIEW|WITH) )\w+|^\w+(?= AS \()/my], ["type", /\bINTEGER\b/y]] },
 };
 
 // the token kind of every character in code ("" for plain)
@@ -1434,16 +1480,16 @@ $("s2-langs").querySelectorAll("button").forEach((b) => b.addEventListener("clic
   paint2();
 }));
 
-// ---------- Station 3: seven languages ----------
+// ---------- Station 3: eight languages ----------
 
 const PART_NOTES = {
   neighbors: ["The eight neighbors.", "Add −1, 0, or 1 to the row and to the column, and skip the cell itself. Clojure skips it by giving the middle column only −1 and 1."],
-  name: ["Name.", "Every living cell's neighbors, joined into one long list: <code>mapcat</code>, <code>Enum.flat_map</code>, <code>flatMap</code>, a two-level generator, and <code>flat_map</code> in Ruby and Rust. Go walks the same list with two nested loops and never stores it."],
-  count: ["Count.", "How many times each point was named. Clojure and Elixir have <code>frequencies</code>, Ruby has <code>tally</code>, Python has <code>Counter</code>, and JavaScript gets by with a one-line <code>reduce</code>. Go and Rust add one to a map entry each time a point is named."],
+  name: ["Name.", "Every living cell's neighbors, joined into one long list: <code>mapcat</code>, <code>Enum.flat_map</code>, <code>flatMap</code>, a two-level generator, <code>flat_map</code> in Ruby and Rust, and a <code>CROSS JOIN</code> in SQL. Go walks the same list with two nested loops and never stores it."],
+  count: ["Count.", "How many times each point was named. Clojure and Elixir have <code>frequencies</code>, Ruby has <code>tally</code>, Python has <code>Counter</code>, and JavaScript gets by with a one-line <code>reduce</code>. Go and Rust add one to a map entry each time a point is named, and SQL groups the rows for each point and counts each group."],
   keep: ["Keep.", "All four rules in one test: 3 living neighbors, or 2 and already alive."],
-  collect: ["Collect.", "Gather what's kept into a new set: <code>set</code> in Clojure, <code>MapSet.new</code> in Elixir, a fresh map in Go, <code>new Set</code> in JavaScript, a set comprehension in Python, <code>to_set</code> in Ruby, and <code>collect</code> in Rust."],
+  collect: ["Collect.", "Gather what's kept into a new set: <code>set</code> in Clojure, <code>MapSet.new</code> in Elixir, a fresh map in Go, <code>new Set</code> in JavaScript, a set comprehension in Python, <code>to_set</code> in Ruby, <code>collect</code> in Rust, and the last <code>SELECT</code> in SQL."],
 };
-const LANG_ORDER = ["clj", "ex", "go", "js", "py", "rb", "rs"];
+const LANG_ORDER = ["clj", "ex", "go", "js", "py", "rb", "rs", "sql"];
 // N and B walk these in order, with no highlight before the first and after the last
 const PART_ORDER = [null, "neighbors", "name", "count", "keep", "collect"];
 let part = null;
