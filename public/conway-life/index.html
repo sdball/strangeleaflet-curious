@@ -283,13 +283,28 @@ pre.code mark { background: var(--mark); color: inherit; border-radius: 3px; box
   min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 15rem;
-  grid-template-areas: "head head" "code idiom";
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas: "head head" "code note" "code idiom";
   gap: .35rem 1.1rem;
+  align-items: start;
 }
-@media (max-width: 820px) { .lang { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "code" "idiom"; } }
-.lang h3 { grid-area: head; display: flex; gap: .7rem; align-items: baseline; font: 800 1.15rem/1.3 var(--head); margin: 0; }
+/* on a phone the note goes above the code, right under the buttons that change it */
+@media (max-width: 820px) { .lang { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "note" "code" "idiom"; } }
+.lang-head { grid-area: head; display: flex; flex-wrap: wrap; gap: .35rem 1rem; align-items: center; }
+.lang h3 { display: flex; gap: .7rem; align-items: baseline; font: 800 1.15rem/1.3 var(--head); margin: 0; }
 .lang h3 span { font: 400 .8rem var(--mono); color: var(--muted); }
+.lang-head .seg button { font-size: .85rem; padding: .3rem .6rem; }
 .lang pre.code { grid-area: code; font-size: .8rem; }
+.lang .partnote {
+  grid-area: note;
+  font-size: .92rem;
+  margin: 0;
+  padding: .45rem .7rem;
+  background: var(--code);
+  border-left: 4px solid var(--mark);
+  border-radius: 0 6px 6px 0;
+}
+.lang .partnote b { color: var(--seal); }
 .lang .idiom { grid-area: idiom; font-size: .92rem; color: var(--muted); margin: 0; }
 .why { max-width: 68ch; margin: 1.4rem 0 0; padding-left: 1.2rem; }
 .why li { margin-bottom: .55rem; }
@@ -446,11 +461,11 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
   </section>
 
   <!-- 3. Seven languages -->
-  <section class="panel" aria-labelledby="s3-h">
+  <section class="panel" id="s3-panel" aria-labelledby="s3-h">
     <div class="panel-head">
       <p class="station">Station 3</p>
       <h2 id="s3-h">One idea, seven languages</h2>
-      <p>Here is Station 2's step written seven ways. Each one takes a set of living cells and makes the same three moves: name the neighbors, count them, keep the 3s and the living 2s. None of them loops over the board, checks for edges, or keeps a second board to write into. Pick a part of the step to light it up in all seven at once.</p>
+      <p>Here is Station 2's step written seven ways. Each one takes a set of living cells and makes the same three moves: name the neighbors, count them, keep the 3s and the living 2s. None of them loops over the board, checks for edges, or keeps a second board to write into. Pick a part of the step to light it up in all seven at once, or use the same buttons beside any language without scrolling back up. Each language gets a note on how it does that part.</p>
     </div>
     <div class="ctl" role="group" aria-label="Highlight a part of the step">
       <span>Highlight</span>
@@ -968,6 +983,13 @@ const LANGS = {
   (set (for [[loc n] (frequencies (mapcat neighbours cells))
              :when (or (= n 3) (and (= n 2) (cells loc)))]
          loc)))`,
+    explain: {
+      neighbors: "<code>for</code> runs <code>dx</code> through −1, 0, and 1. When <code>dx</code> is 0, <code>dy</code> gets only −1 and 1, so the cell never names itself. Each pass adds the offsets to <code>x</code> and <code>y</code>.",
+      name: "<code>mapcat</code> calls <code>neighbours</code> on every living cell and joins the lists of eight into one long list.",
+      count: "<code>frequencies</code> turns that list into a map from each point to how many times it appears. The <code>for</code> pulls each entry apart into <code>loc</code> and <code>n</code>.",
+      keep: "The <code>:when</code> clause lets a point through if it was named 3 times, or 2 times and is already alive. A set works as a function, so <code>(cells loc)</code> gives back <code>loc</code> if it's alive and <code>nil</code> if not.",
+      collect: "<code>for</code> builds a lazy sequence of the kept points, and <code>set</code> pours it into a new set, ready for the next step.",
+    },
     parts: {
       sig: ["(defn step [cells]"],
       neighbors: ["(for [dx [-1 0 1] dy (if (zero? dx) [-1 1] [-1 0 1])]", "[(+ dx x) (+ dy y)]"],
@@ -997,6 +1019,13 @@ def step(cells) do
   end)
   |> MapSet.new(fn {cell, _n} -> cell end)
 end`,
+    explain: {
+      neighbors: "A comprehension runs <code>dx</code> and <code>dy</code> through <code>-1..1</code>, nine pairs in all. The filter <code>{dx, dy} != {0, 0}</code> drops the cell itself, and each of the other eight becomes a tuple.",
+      name: "<code>Enum.flat_map</code> calls <code>neighbors</code> on each living cell and joins the results into one list. <code>&amp;neighbors/1</code> is how Elixir hands over a named function.",
+      count: "<code>Enum.frequencies</code> returns a map from each point to the number of times it was named.",
+      keep: "<code>Enum.filter</code> gets each <code>{cell, n}</code> pair from the map and keeps it if the count is 3, or 2 and <code>MapSet.member?</code> says the cell is alive now.",
+      collect: "<code>MapSet.new/2</code> takes the kept pairs and a function that drops the count, and builds the new set in one call.",
+    },
     parts: {
       sig: ["def step(cells) do"],
       neighbors: ["for dx <- -1..1, dy <- -1..1, {dx, dy} != {0, 0}", "{x + dx, y + dy}"],
@@ -1042,6 +1071,13 @@ func step(cells map[Cell]bool) map[Cell]bool {
 	}
 	return next
 }`,
+    explain: {
+      neighbors: "Two counting loops run <code>dr</code> and <code>dc</code> from −1 to 1, and the <code>if</code> skips the pair where both are 0. Each of the other eight becomes a <code>Cell</code>, appended to a slice made with room for 8.",
+      name: "<code>range cells</code> visits each living cell (ranging over a map gives its keys), and the inner loop takes each of its eight neighbors. The list is never stored: each neighbor is counted the moment it's named.",
+      count: "<code>counts</code> starts as an empty map from <code>Cell</code> to <code>int</code>. A missing key reads as 0, so <code>counts[n]++</code> works the first time a point is named, too.",
+      keep: "A plain <code>if</code> holds all four rules. <code>cells[c]</code> is <code>false</code> for any point missing from the map, so it reads as “is this cell alive?”",
+      collect: "<code>next</code> is a fresh map, and each kept point goes in as <code>true</code>. The old map is never touched, so <code>cells</code> still holds the last generation.",
+    },
     parts: {
       sig: ["func step(cells map[Cell]bool) map[Cell]bool {"],
       neighbors: ["for dr := -1; dr <= 1; dr++ {", "for dc := -1; dc <= 1; dc++ {", "if dr != 0 || dc != 0 {", "Cell{c.R + dr, c.C + dc}"],
@@ -1058,6 +1094,13 @@ func step(cells map[Cell]bool) map[Cell]bool {
     fn: { flat: "flatMap", freq: "frequencies" },
     note: "This is the code running on this page, read straight from the script, so it can't drift from what you see on the boards.",
     idiom: "The version running on this page. JavaScript has no <code>frequencies</code>, so a one-line <code>reduce</code> stands in. A Set only matches the very same array object, so cells are <code>\"row,col\"</code> strings.",
+    explain: {
+      neighbors: "<code>flatMap</code> over the row offsets and <code>map</code> over the column offsets make nine pairs, and <code>filter((dc) =&gt; dr || dc)</code> skips the one where both are 0. Each neighbor goes back out as a <code>\"row,col\"</code> string.",
+      name: "<code>[...cells]</code> spreads the set into an array, which has <code>flatMap</code>. It calls <code>neighbors</code> on each living cell and joins the results into one list.",
+      count: "<code>frequencies</code> is written right here: one <code>reduce</code> that walks the list and adds one to each point's entry in a <code>Map</code>, starting from 0.",
+      keep: "<code>filter</code> gets each <code>[cell, n]</code> entry of the map and keeps the ones that follow the rules. <code>cells.has(cell)</code> asks whether the point is alive now.",
+      collect: "<code>map</code> drops the counts, and <code>new Set</code> gathers the kept cells into the next generation.",
+    },
     parts: {
       sig: ["function step(cells) {"],
       neighbors: ["[-1, 0, 1].flatMap((dr) => [-1, 0, 1]", ".filter((dc) => dr || dc)", ".map((dc) => `${r + dr},${c + dc}`)"],
@@ -1087,6 +1130,13 @@ def step(cells):
     counts = Counter(n for cell in cells for n in neighbors(cell))
     return {cell for cell, n in counts.items()
             if n == 3 or (n == 2 and cell in cells)}`,
+    explain: {
+      neighbors: "A list comprehension with two <code>for</code> clauses tries all nine offsets, and the <code>if</code> drops <code>(0, 0)</code>, the cell itself.",
+      name: "A generator expression with two <code>for</code> clauses walks every neighbor of every living cell, one at a time, without building a list first.",
+      count: "<code>Counter</code> takes in that stream and keeps how many times each point came up.",
+      keep: "The <code>if</code> at the end of the set comprehension holds all four rules. <code>cell in cells</code> asks whether the point is alive now.",
+      collect: "The braces make it a set comprehension, so the kept cells land straight in a new set. <code>counts.items()</code> hands over each point with its count.",
+    },
     parts: {
       sig: ["def step(cells):"],
       neighbors: ["(r + dr, c + dc)", "for dr in (-1, 0, 1)", "for dc in (-1, 0, 1)", "if (dr, dc) != (0, 0)"],
@@ -1116,6 +1166,13 @@ def step(cells)
     .keys
     .to_set
 end`,
+    explain: {
+      neighbors: "<code>product</code> pairs every row offset with every column offset, nine pairs in all. <code>reject</code> drops <code>[0, 0]</code>, and <code>map</code> adds the other eight to the cell.",
+      name: "<code>flat_map</code> calls <code>neighbors</code> on each living cell and joins the results into one array.",
+      count: "<code>tally</code> turns the array into a hash from each point to how many times it appears.",
+      keep: "<code>select</code> on a hash hands the block each key and value, here the cell and its count, and keeps the pairs that pass. <code>cells.include?(cell)</code> asks whether the point is alive now.",
+      collect: "<code>keys</code> drops the counts, and <code>to_set</code> makes the new set.",
+    },
     parts: {
       sig: ["def step(cells)"],
       neighbors: ["[-1, 0, 1].product([-1, 0, 1])", ".reject { |dr, dc| dr == 0 && dc == 0 }", ".map { |dr, dc| [r + dr, c + dc] }"],
@@ -1154,6 +1211,13 @@ fn step(cells: &HashSet<Cell>) -> HashSet<Cell> {
         .map(|(cell, _)| cell)
         .collect()
 }`,
+    explain: {
+      neighbors: "Two ranges, <code>-1..=1</code>, make the nine offsets. <code>filter</code> drops <code>(0, 0)</code>, and <code>map</code> adds the rest to the cell. <code>move</code> lets each closure keep its own copy of <code>dr</code>, or of <code>r</code> and <code>c</code>.",
+      name: "<code>iter()</code> walks the set, <code>copied()</code> turns each borrowed <code>&amp;Cell</code> into a <code>Cell</code>, and <code>flat_map</code> feeds each one to <code>neighbors</code>. Nothing is built until the <code>for</code> loop asks for the next one.",
+      count: "<code>counts</code> starts empty. <code>entry(n).or_insert(0)</code> finds the count for <code>n</code>, starting it at 0 the first time, and <code>+= 1</code> adds one.",
+      keep: "<code>filter</code> gets each <code>(cell, n)</code> pair and passes the ones that follow the rules. <code>cells.contains(&amp;cell)</code> asks whether the point is alive now.",
+      collect: "<code>map</code> drops the count, and <code>collect</code> builds whatever the function says it returns, here a fresh <code>HashSet</code>.",
+    },
     parts: {
       sig: ["fn step(cells: &HashSet<Cell>) -> HashSet<Cell> {"],
       neighbors: ["(-1..=1)", ".flat_map(|dr| (-1..=1).map(move |dc| (dr, dc)))", ".filter(|&d| d != (0, 0))", ".map(move |(dr, dc)| (r + dr, c + dc))"],
@@ -1380,6 +1444,8 @@ const PART_NOTES = {
   collect: ["Collect.", "Gather what's kept into a new set: <code>set</code> in Clojure, <code>MapSet.new</code> in Elixir, a fresh map in Go, <code>new Set</code> in JavaScript, a set comprehension in Python, <code>to_set</code> in Ruby, and <code>collect</code> in Rust."],
 };
 const LANG_ORDER = ["clj", "ex", "go", "js", "py", "rb", "rs"];
+// N and B walk these in order, with no highlight before the first and after the last
+const PART_ORDER = [null, "neighbors", "name", "count", "keep", "collect"];
 let part = null;
 
 // a whole board of 0s and 1s, for comparison. it isn't run anywhere on the page
@@ -1405,11 +1471,18 @@ const GRID_CODE = `function stepGrid(grid) {
 
 const lineCount = (code) => code.split("\n").filter((l) => l.trim()).length;
 
+// every language card gets its own copy of the part buttons, so you never scroll back up for them
+const PART_BUTTONS = $("s3-parts").innerHTML;
+
 $("s3-langs").replaceChildren(...LANG_ORDER.map((id) => {
   const L = LANGS[id], card = document.createElement("article");
   card.className = "lang";
   card.setAttribute("aria-labelledby", `s3-${id}-h`);
-  card.innerHTML = `<h3 id="s3-${id}-h">${L.label}<span>${lineCount(L.code)} lines</span></h3>
+  card.innerHTML = `<div class="lang-head">
+      <h3 id="s3-${id}-h">${L.label}<span>${lineCount(L.code)} lines</span></h3>
+      <div class="seg" role="group" aria-label="Highlight a part of the step in ${L.label}">${PART_BUTTONS}</div>
+    </div>
+    <p class="partnote" hidden></p>
     <pre class="code" tabindex="0" aria-label="The step function in ${L.label}"></pre>
     <p class="idiom">${L.idiom}</p>`;
   return card;
@@ -1417,21 +1490,35 @@ $("s3-langs").replaceChildren(...LANG_ORDER.map((id) => {
 $("s3-grid").innerHTML = highlight(GRID_CODE, "js");
 
 function paint3() {
-  $("s3-langs").querySelectorAll(".lang pre").forEach((pre, i) => {
-    const L = LANGS[LANG_ORDER[i]];
-    pre.innerHTML = highlight(L.code, LANG_ORDER[i], part ? L.parts[part] : []);
+  $("s3-langs").querySelectorAll(".lang").forEach((card, i) => {
+    const L = LANGS[LANG_ORDER[i]], note = card.querySelector(".partnote");
+    card.querySelector("pre").innerHTML = highlight(L.code, LANG_ORDER[i], part ? L.parts[part] : []);
+    note.hidden = !part;
+    note.innerHTML = part ? `<b>${PART_NOTES[part][0]}</b> ${L.explain[part]}` : "";
   });
-  $("s3-parts").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.part === part));
+  $("s3-panel").querySelectorAll("button[data-part]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.part === part));
   const note = PART_NOTES[part];
   $("s3-cap").innerHTML = note
-    ? `<b>${note[0]}</b> ${note[1]}<span class="sub">Press it again to clear the highlight.</span>`
-    : `The whole-board version below takes ${lineCount(GRID_CODE)} lines and four nested loops.<span class="sub">Pick a part of the step to see where each language does it.</span>`;
+    ? `<b>${note[0]}</b> ${note[1]}<span class="sub">Press it again to clear the highlight. <kbd>N</kbd> and <kbd>B</kbd> step to the next and previous parts.</span>`
+    : `The whole-board version below takes ${lineCount(GRID_CODE)} lines and four nested loops.<span class="sub">Pick a part of the step, here or beside any language, to see where each language does it. <kbd>N</kbd> and <kbd>B</kbd> step through the parts.</span>`;
 }
 
-$("s3-parts").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
-  part = part === b.dataset.part ? null : b.dataset.part;
+// every card's note changes height when the part does, so keep
+// the given element (the button just pressed) where it was on screen
+function setPart(p, anchor) {
+  const top = anchor?.getBoundingClientRect().top;
+  part = p;
   paint3();
-}));
+  if (anchor) scrollBy(0, anchor.getBoundingClientRect().top - top);
+}
+
+const step3 = (dir, anchor) =>
+  setPart(PART_ORDER[(PART_ORDER.indexOf(part) + dir + PART_ORDER.length) % PART_ORDER.length], anchor);
+
+$("s3-panel").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-part]");
+  if (b) setPart(part === b.dataset.part ? null : b.dataset.part, b);
+});
 
 // ---------- Station 4: the big board ----------
 
@@ -1767,8 +1854,12 @@ $("s4-zooms").querySelectorAll("button").forEach((b) => b.addEventListener("clic
 const STATION_KEYS = [
   ["b1", { n: step1, b: back1 }],
   ["b2", { n: next2, b: back2 }],
+  ["s3-langs", { n: () => step3(1, s3Anchor()), b: () => step3(-1, s3Anchor()) }],
   ["big", { n: step4, b: rewind4, p: () => play4(!s4.running) }],
 ].map(([board, keys]) => [$(board).closest(".panel"), keys]);
+
+// with focus in a language card, hold that card still as the notes change
+const s3Anchor = () => document.activeElement?.closest("#s3-langs .lang");
 
 function stationInView() {
   let best = null, most = 0;
