@@ -471,7 +471,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
       <li><b>The data structure does the work.</b> As the <a href="https://strangeleaflet.com/conways-game-of-life-a-functional-approach/">blog post</a> puts it, <q>The wrong data structure has to be supported by code. The right data structure supports the code.</q> Open the whole-board version below to see the code it saves.</li>
     </ul>
     <details class="contrast">
-      <summary>Compare: the whole-board version</summary>
+      <summary>Compare: a whole-board version</summary>
       <p>Store every point as a 0 or a 1 and the step has to visit every one of them, empty or not, and check each neighbor against the edges so the counting doesn't run off the board. It still returns a new board, so it's just as pure. It also needs a board size chosen up front, and a glider that reaches the edge stops being a glider.</p>
       <pre class="code" id="s3-grid" tabindex="0" aria-label="A whole-board step function in JavaScript, for comparison"></pre>
     </details>
