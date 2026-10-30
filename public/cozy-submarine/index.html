@@ -29,7 +29,7 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 #head { position: fixed; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; }
 #head h1 { margin: 0; font-size: 17px; font-weight: 700; color: var(--lamp); line-height: 1.1; letter-spacing: 0.3px; }
 #head a { display: inline-block; margin-top: 5px; font-size: 11px; color: var(--paper); text-underline-offset: 2px; }
-#head[hidden], #tray[hidden], #show[hidden] { display: none; }
+#head[hidden], #tray[hidden], #show[hidden], #yellow[hidden] { display: none; }
 #gauge { position: fixed; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; text-align: right; pointer-events: none; }
 #depth { display: block; font-size: 26px; font-weight: 700; color: var(--lamp); line-height: 1; font-variant-numeric: tabular-nums; }
 #zone, #floor, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
@@ -54,6 +54,8 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 #speed { min-width: 7em; text-align: center; font-size: 12px; }
 .foot { margin-top: 7px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 10px; color: var(--muted); align-items: center; }
 .foot .chip { min-height: 32px; font-size: 11px; padding: 4px 8px; }
+.foot a { color: var(--paper); text-underline-offset: 2px; display: inline-flex; align-items: center; min-height: 32px; }
+.foot a:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
 kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px; margin: 0 1px; color: var(--paper); }
 #show { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
@@ -120,6 +122,8 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <div class="foot">
     <span>The link shares this ocean.</span>
     <button type="button" class="chip" id="newsea">New ocean</button>
+    <a href="../pixel-bench/">Draw your own sub</a>
+    <button type="button" class="chip" id="yellow" hidden>Back to the yellow sub</button>
     <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> faster (hold for more), or turn · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
   </div>
 </section>
@@ -343,8 +347,55 @@ const SUB_ROWS = [
   '   DDDDDDDDDDDDDD   ',
 ];
 const SUB_PAL = { D: '#3B2A1C', d: '#7A6A58', Y: '#F2C14E', h: '#FFE6A3', y: '#C98E32', P: '*#FFC56A' };
-const SUB_OFF = spr({ ...SUB_PAL, L: '#8A8676' }, SUB_ROWS);
-const SUB_ON = spr({ ...SUB_PAL, L: '*#FFF7DA' }, SUB_ROWS);
+// L is the headlamp's lens, which the game colors itself
+const LENS_OFF = '#8A8676', LENS_ON = '*#FFF7DA';
+let SUB_OFF, SUB_ON, SUBG, ownSub = false;
+
+// ---------- Your own sub ----------
+// Pixel Bench (../pixel-bench/) saves a sub here, as { palette, rows } laid out like SUB_PAL and SUB_ROWS
+const SUB_KEY = 'cozy-submarine.sub', SUB_MAX_W = 32, SUB_MAX_H = 16;
+function cleanSub(data) {
+  if (!data || typeof data !== 'object' || !data.palette || typeof data.palette !== 'object' || !Array.isArray(data.rows)) return null;
+  const rows = data.rows;
+  if (!rows.length || rows.length > SUB_MAX_H || !rows.every((r) => typeof r === 'string' && r.length <= SUB_MAX_W)) return null;
+  const pal = {};
+  for (const [k, v] of Object.entries(data.palette)) {
+    if (k.length === 1 && k !== ' ' && k !== 'L' && typeof v === 'string' && /^[*~]?#[0-9a-fA-F]{6}$/.test(v)) pal[k] = v;
+  }
+  if (!rows.some((r) => [...r].some((ch) => ch === 'L' || Object.hasOwn(pal, ch)))) return null;
+  return { pal, rows };
+}
+// everything else is placed from the art itself: the propeller sits two pixels behind the stern (the
+// leftmost pixels), halfway up them, the lamp shines from the frontmost L, and the keel always rides
+// where the yellow sub's does, so a bigger sub grows upward and never into the floor
+function subGeometry(s, rows) {
+  const fr = s.frames[0], w = s.w;
+  let left = w, right = -1, bottom = -1;
+  for (let j = 0; j < s.h; j++) for (let i = 0; i < w; i++) {
+    if (fr.c[j * w + i] < 0) continue;
+    left = Math.min(left, i); right = Math.max(right, i); bottom = j;
+  }
+  const stern = [];
+  for (let j = 0; j < s.h; j++) if (fr.c[j * w + left] >= 0) stern.push(j);
+  const hub = stern[Math.floor(stern.length / 2)];
+  let lampI = right, lampJ = hub, front = -1;
+  rows.forEach((r, j) => { const i = r.lastIndexOf('L'); if (i > front) { front = i; lampI = i; lampJ = j; } });
+  return { w, left, cx: Math.round((left + right) / 2), oy: 4 - bottom, hub, lampI, lampJ, half: Math.ceil((right - left) / 2) + 1 };
+}
+function fitSub(pal, rows) {
+  SUB_OFF = spr({ ...pal, L: LENS_OFF }, rows);
+  SUB_ON = spr({ ...pal, L: LENS_ON }, rows);
+  SUBG = subGeometry(SUB_OFF, rows);
+}
+function loadSub() {
+  let own = null;
+  try { own = cleanSub(JSON.parse(localStorage.getItem(SUB_KEY))); } catch (e) {}
+  ownSub = !!own;
+  if (own) fitSub(own.pal, own.rows);
+  else fitSub(SUB_PAL, SUB_ROWS);
+  $('yellow').hidden = !ownSub;
+}
+loadSub();
 
 const ART = {
   sardine: spr({ b: '#9DB8C8', s: '#E4ECEF', t: '#7896A8', e: '#1A2028' }, [
@@ -716,7 +767,7 @@ function tick(dt) {
     // aim a little above the lowest point of the floor under and ahead of the sub
     const d = Math.sign(sub.vx) || sub.face, reach = 14 + Math.abs(sub.vx) * 1.2;
     let low = Infinity;
-    for (let s = -10; s <= 10 + reach; s += 2) low = Math.min(low, floorY(sub.x + d * s));
+    for (let s = -SUBG.half; s <= SUBG.half + reach; s += 2) low = Math.min(low, floorY(sub.x + d * s));
     wantVy = clamp((low - 10 - sub.y) * 2.5, -160, 140);
   } else {
     // a long hold speeds up, so a trench dive takes a minute or two instead of ten
@@ -731,12 +782,12 @@ function tick(dt) {
 
   // rise ahead of a climbing sea floor, and never sink into it
   let hard = Infinity;
-  for (let dx = -10; dx <= 10; dx += 2) hard = Math.min(hard, floorY(sub.x + dx));
+  for (let dx = -SUBG.half; dx <= SUBG.half; dx += 2) hard = Math.min(hard, floorY(sub.x + dx));
   hard -= 6;
   if (Math.abs(sub.vx) > 0.5) {
     const d = Math.sign(sub.vx), reach = 12 + Math.abs(sub.vx) * 0.9;
     let ahead = Infinity;
-    for (let s = 10; s <= 10 + reach; s += 2) ahead = Math.min(ahead, floorY(sub.x + d * s));
+    for (let s = SUBG.half; s <= SUBG.half + reach; s += 2) ahead = Math.min(ahead, floorY(sub.x + d * s));
     ahead -= 7;
     if (sub.y > ahead) sub.y -= Math.min(sub.y - ahead, (30 + Math.abs(sub.vx) * 2.5) * dt);
   }
@@ -837,10 +888,10 @@ function seedRain() {
 function moveParts(dt) {
   const m = subDepth(), under = sub.y > waveY(sub.x, T) + 3;
   // bubbles off the propeller, and deep down a glow of stirred-up plankton
-  const stern = sub.x - sub.face * 11;
+  const stern = sub.x - sub.face * (SUBG.cx - SUBG.left + 2), hub = sub.y + SUBG.oy + SUBG.hub;
   const churn = Math.abs(sub.vx) / 14 + Math.abs(sub.vy) / 30;
-  if (under && Math.random() < churn * dt * 3) parts.push({ type: 'bub', x: stern + rand(-1, 1), y: sub.y + rand(0, 3), vx: -sub.face * rand(2, 6), vy: -rand(10, 18), life: 5 });
-  if (m > 250 && Math.random() < churn * dt * 6) parts.push({ type: 'spark', x: stern - sub.face * rand(0, 6), y: sub.y + rand(-3, 4), vx: -sub.face * rand(1, 4), vy: rand(-2, 2), life: rand(0.4, 0.9) });
+  if (under && Math.random() < churn * dt * 3) parts.push({ type: 'bub', x: stern + rand(-1, 1), y: hub + rand(-1, 2), vx: -sub.face * rand(2, 6), vy: -rand(10, 18), life: 5 });
+  if (m > 250 && Math.random() < churn * dt * 6) parts.push({ type: 'spark', x: stern - sub.face * rand(0, 6), y: hub + rand(-4, 3), vx: -sub.face * rand(1, 4), vy: rand(-2, 2), life: rand(0.4, 0.9) });
   if (m > 300 && Math.random() < dt * 0.6) parts.push({ type: 'spark', x: cam.x + Math.random() * LW, y: cam.y + Math.random() * LH, vx: 0, vy: 0, life: rand(0.3, 0.7) });
   // smoke from black smokers and from a few volcanoes
   for (let c = Math.floor((cam.x - 60) / VENT); c <= Math.floor((cam.x + LW + 60) / VENT); c++) {
@@ -1192,13 +1243,14 @@ function drawSub() {
   const m = subDepth();
   // the surge of a storm reaches a little way down
   const sway = reduced ? 0 : Math.sin(T * 1.3) * SKY.amp * 0.5 * Math.exp(-m / 25) * (m > 1 ? 1 : 0);
-  const sx = Math.round(sub.sx) - 10, sy = Math.round(sub.y + sway - Y0) - 6, flip = sub.face < 0;
+  const g = SUBG, sx = Math.round(sub.sx) - g.cx, sy = Math.round(sub.y + sway - Y0) + g.oy, flip = sub.face < 0;
+  const col = (i) => sx + (flip ? g.w - 1 - i : i);
   blit(lamp.on ? SUB_ON : SUB_OFF, 0, sx, sy, flip);
-  const px = flip ? sx + 20 : sx - 1, spin = Math.abs(sub.vx) > 0.5 ? Math.floor(T * 14) % 2 : 0, pc = hex('#6E6A62');
-  if (spin) { put(px, sy + 5, pc); put(px, sy + 7, pc); put(px, sy + 9, pc); }
-  else { put(px, sy + 6, pc); put(px, sy + 8, pc); }
-  put(px + (flip ? -1 : 1), sy + 7, hex('#4A463E'));
-  lamp.sx = flip ? sx : sx + 19; lamp.sy = sy + 7; lamp.dx = flip ? -0.97 : 0.97; lamp.dy = 0.24;
+  const px = col(g.left - 2), hy = sy + g.hub, spin = Math.abs(sub.vx) > 0.5 ? Math.floor(T * 14) % 2 : 0, pc = hex('#6E6A62');
+  if (spin) { put(px, hy - 2, pc); put(px, hy, pc); put(px, hy + 2, pc); }
+  else { put(px, hy - 1, pc); put(px, hy + 1, pc); }
+  put(col(g.left - 1), hy, hex('#4A463E'));
+  lamp.sx = col(g.lampI); lamp.sy = sy + g.lampJ; lamp.dx = flip ? -0.97 : 0.97; lamp.dy = 0.24;
 }
 function drawParts() {
   for (const s of snow) {
@@ -1346,7 +1398,7 @@ function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
   const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
-  canvas.setAttribute('aria-label', `A little yellow submarine ${where}, ${going}, lights ${lamp.on ? 'on' : 'off'}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
+  canvas.setAttribute('aria-label', `${ownSub ? 'Your own little submarine' : 'A little yellow submarine'} ${where}, ${going}, lights ${lamp.on ? 'on' : 'off'}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
 }
 let hudIn = 0, labelIn = 5;
 function hud(dt) {
@@ -1674,6 +1726,14 @@ document.addEventListener('keyup', (e) => {
   if (k === 'ArrowRight' || k === 'd') releaseThrottle(1);
 });
 window.addEventListener('blur', () => { keys.up = keys.down = false; hold.v = 0; releaseThrottle(); endDrag(); });
+// Pixel Bench may save a new sub while this page is open in another tab
+window.addEventListener('storage', (e) => { if (e.key === SUB_KEY || e.key === null) { loadSub(); describe(); } });
+$('yellow').addEventListener('click', () => {
+  try { localStorage.removeItem(SUB_KEY); } catch (e) {}
+  loadSub(); describe();
+  say('Back in the yellow submarine.');
+  $('newsea').focus();
+});
 window.addEventListener('hashchange', () => { const s = readSeed(); if (s && s !== SEED) startWorld(s); });
 let rz = 0;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
