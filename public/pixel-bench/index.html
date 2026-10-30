@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pixel Bench — The Cabinet of Curios</title>
+<meta name="description" content="Draw your own submarine for Cozy Submarine one pixel at a time, watch it sail in the shallows and the deep, then send it out to sea.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Barlow:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* a drafting table: cream paper, navy ink, a red pencil */
+  --bg: #EFE8D8;
+  --panel: #F7F2E6;
+  --edge: #CFC3A8;
+  --ink: #1E2A3E;
+  --muted: #59616F;
+  --accent: #B8452C;
+  --accent-ink: #FFFFFF;
+  --btn: #FBF8F0;
+  --btn-edge: #B3A88F;
+  --cell: #FBF8F0;
+  --stern: #E6DCC6;
+  --line: rgba(30, 42, 62, .13);
+  --line-strong: rgba(30, 42, 62, .42);
+  --focus: #B8452C;
+
+  --stencil: "Saira Stencil One", "Arial Black", system-ui, sans-serif;
+  --sans: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+/* dark is a blueprint */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E2140; --panel: #13294D; --edge: #2B4C7E; --ink: #E4ECF7; --muted: #A2B4CF;
+    --accent: #F2C14E; --accent-ink: #1A1404; --btn: #18325C; --btn-edge: #3A5F96;
+    --cell: #102648; --stern: #0B1C38; --line: rgba(200, 220, 255, .12); --line-strong: rgba(200, 220, 255, .42);
+    --focus: #F2C14E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E2140; --panel: #13294D; --edge: #2B4C7E; --ink: #E4ECF7; --muted: #A2B4CF;
+  --accent: #F2C14E; --accent-ink: #1A1404; --btn: #18325C; --btn-edge: #3A5F96;
+  --cell: #102648; --stern: #0B1C38; --line: rgba(200, 220, 255, .12); --line-strong: rgba(200, 220, 255, .42);
+  --focus: #F2C14E;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1, h2 { font-family: var(--stencil); font-weight: 400; letter-spacing: .04em; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1; margin: 0 0 .6rem; }
+h2 { font-size: 1.35rem; line-height: 1.25; margin: 0; }
+h3 { font: 600 1.05rem var(--sans); margin: 1.4rem 0 .2rem; }
+.lede { font-size: 1.15rem; max-width: 62ch; margin: 0 0 .75rem; }
+.howto { color: var(--muted); max-width: 66ch; margin: 0 0 1.5rem; }
+kbd { font: 500 .8em var(--mono); padding: .05em .35em; border: 1px solid var(--btn-edge); border-radius: 4px; background: var(--btn); }
+code { font-family: var(--mono); font-size: .88em; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.panel p { max-width: 68ch; }
+.readout { font: 500 .95rem var(--mono); color: var(--muted); margin: 0; }
+
+button {
+  font: 600 .95rem var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 5px;
+  min-height: 44px;
+  padding: .45rem .85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:hover:not(:disabled) { border-color: var(--ink); }
+button:disabled { opacity: .4; cursor: default; }
+button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
+.row .label { color: var(--muted); font-size: .95rem; margin-right: .1rem; }
+.row .spacer { flex: 1 1 0; min-width: .5rem; }
+.cap { color: var(--muted); font-size: .95rem; min-height: 1.5em; margin: .4rem 0; }
+
+/* the swatches */
+.swatches { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 .75rem; }
+.sw {
+  position: relative;
+  width: 44px; height: 44px; min-height: 44px; padding: 0;
+  border: 1px solid var(--btn-edge);
+  background: var(--btn);
+  display: grid; place-items: center;
+}
+.sw .chip { width: 30px; height: 30px; border-radius: 3px; border: 1px solid var(--line-strong); }
+.sw .chip.empty {
+  background:
+    linear-gradient(45deg, transparent 46%, var(--accent) 46%, var(--accent) 54%, transparent 54%),
+    var(--cell);
+}
+.sw .chip.lamp { background: linear-gradient(135deg, #8A8676 50%, #FFF7DA 50%); }
+.sw .chip.glow { box-shadow: 0 0 0 2px var(--panel), 0 0 7px 3px currentColor; }
+.sw .chip.thin { opacity: .55; }
+.sw .num {
+  position: absolute; left: 2px; top: 1px;
+  font: 500 .62rem var(--mono); color: var(--muted);
+}
+.sw[aria-pressed="true"] { background: var(--btn); border: 2px solid var(--accent); color: inherit; }
+.sw[aria-pressed="true"] .num { color: var(--accent); }
+
+.board { width: 100%; overflow: hidden; }
+#grid { display: block; touch-action: none; cursor: crosshair; }
+#grid:focus-visible { outline-offset: 3px; }
+
+.mixer { border-top: 1px dashed var(--edge); margin-top: .75rem; padding-top: .5rem; }
+.mixer .name { font-weight: 600; margin: .5rem 0 0; }
+.hexpick {
+  display: inline-flex; align-items: center; gap: .45rem;
+  min-height: 44px; padding: 0 .6rem 0 .5rem;
+  border: 1px solid var(--btn-edge); border-radius: 5px; background: var(--btn);
+  font: 600 .95rem var(--sans); cursor: pointer;
+}
+.hexpick input { width: 34px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer; }
+.hexpick code { font-weight: 400; }
+.hexpick:has(input:disabled) { opacity: .4; cursor: default; }
+.hexpick:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.hexpick input:focus-visible { outline: none; }
+
+/* the sea trial */
+.trial { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: .5rem 0 0; }
+.trial figure { margin: 0; }
+.trial canvas {
+  display: block; width: 100%; aspect-ratio: 52 / 26;
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  border: 1px solid var(--edge); border-radius: 3px;
+}
+.trial figcaption { color: var(--muted); font-size: .92rem; margin-top: .3rem; }
+
+textarea {
+  display: block; width: 100%; min-height: 9rem; resize: vertical;
+  font: 400 16px/1.4 var(--mono);
+  color: var(--ink); background: var(--cell);
+  border: 1px solid var(--btn-edge); border-radius: 5px; padding: .6rem;
+}
+.small-file input { font: inherit; font-size: .95rem; max-width: 100%; }
+.small-file input::file-selector-button {
+  font: 600 .95rem var(--sans); color: var(--ink); background: var(--btn);
+  border: 1px solid var(--btn-edge); border-radius: 5px; min-height: 44px; padding: .45rem .85rem; margin-right: .6rem; cursor: pointer;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+.notes { max-width: 68ch; margin-top: 2rem; }
+.notes li { margin-bottom: .6rem; }
+.foot { color: var(--muted); font-size: .92rem; margin-top: 2rem; }
+
+@media (max-width: 600px) {
+  .wrap { padding: 1rem 1rem 3rem; }
+  .panel { padding: .9rem .8rem 1rem; }
+  .trial { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Pixel Bench</h1>
+  <p class="lede">Draw your own submarine for <a href="../cozy-submarine/">Cozy Submarine</a>, one pixel at a time. Start from the yellow sub or a clear grid, watch your design sail in the shallows and the deep, then send it out to sea.</p>
+  <p class="howto">Click or drag on the grid to paint, and right-click to rub out. On the grid, the arrow keys move a cursor and <kbd>Space</kbd> paints. <kbd>P</kbd> pencil, <kbd>F</kbd> fill, <kbd>I</kbd> picker, <kbd>0</kbd>–<kbd>9</kbd> pick a color, <kbd>L</kbd> lights, <kbd>Ctrl</kbd> <kbd>Z</kbd> undo.</p>
+
+  <section class="panel" aria-labelledby="draw-h">
+    <div class="panel-head">
+      <h2 id="draw-h">The drawing board</h2>
+      <p class="readout" id="size-read"></p>
+    </div>
+    <div class="row" role="group" aria-label="Tools">
+      <button type="button" id="t-pencil" aria-pressed="true" aria-keyshortcuts="P">Pencil</button>
+      <button type="button" id="t-fill" aria-pressed="false" aria-keyshortcuts="F">Fill</button>
+      <button type="button" id="t-pick" aria-pressed="false" aria-keyshortcuts="I">Picker</button>
+      <span class="spacer"></span>
+      <button type="button" id="undo" aria-keyshortcuts="Control+Z Meta+Z">Undo</button>
+      <button type="button" id="redo" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y">Redo</button>
+    </div>
+    <div class="swatches" id="swatches" role="group" aria-label="Colors"></div>
+    <div class="board" id="board">
+      <canvas id="grid" tabindex="0" role="application" aria-roledescription="pixel grid" aria-describedby="grid-help"></canvas>
+    </div>
+    <p class="sr-only" id="grid-help">Arrow keys move the cursor, Shift moves four at a time. Space or Enter uses the tool, Delete rubs out.</p>
+    <p class="cap" id="grid-cap" aria-live="polite"></p>
+
+    <div class="mixer" aria-labelledby="mix-name">
+      <p class="name" id="mix-name"></p>
+      <div class="row">
+        <label class="hexpick"><input type="color" id="c-hex"><span>Color <code id="c-code"></code></span></label>
+        <button type="button" id="c-glow" aria-pressed="false">Glows in the dark</button>
+        <button type="button" id="c-thin" aria-pressed="false">See-through</button>
+        <button type="button" id="c-remove">Remove this color</button>
+        <button type="button" id="c-add">Add a color</button>
+      </div>
+      <p class="cap" id="mix-note"></p>
+    </div>
+
+    <div class="row" role="group" aria-label="Grid size">
+      <span class="label">Width</span>
+      <button type="button" id="w-less" aria-label="Narrower">−</button>
+      <button type="button" id="w-more" aria-label="Wider">+</button>
+      <span class="label">Height</span>
+      <button type="button" id="h-less" aria-label="Shorter">−</button>
+      <button type="button" id="h-more" aria-label="Taller">+</button>
+    </div>
+    <div class="row" role="group" aria-label="Move the drawing">
+      <span class="label">Move the drawing</span>
+      <button type="button" id="m-left" aria-label="Move left">◀</button>
+      <button type="button" id="m-up" aria-label="Move up">▲</button>
+      <button type="button" id="m-down" aria-label="Move down">▼</button>
+      <button type="button" id="m-right" aria-label="Move right">▶</button>
+    </div>
+    <div class="row" role="group" aria-label="Start over">
+      <span class="label">Start over with</span>
+      <button type="button" id="o-yellow">The yellow sub</button>
+      <button type="button" id="o-clear">A clear grid</button>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="trial-h">
+    <div class="panel-head">
+      <h2 id="trial-h">Sea trial</h2>
+    </div>
+    <div class="row" role="group" aria-label="Sea trial">
+      <button type="button" id="p-lights" aria-pressed="false" aria-keyshortcuts="L">Lights</button>
+      <button type="button" id="p-move" aria-pressed="true">Propeller</button>
+      <button type="button" id="p-face" aria-pressed="false">Face left</button>
+    </div>
+    <div class="trial">
+      <figure>
+        <canvas id="shallows" width="52" height="26" role="img"></canvas>
+        <figcaption>The shallows, in full daylight.</figcaption>
+      </figure>
+      <figure>
+        <canvas id="deep" width="52" height="26" role="img"></canvas>
+        <figcaption>The deep, where only glowing colors and the headlamp's beam show.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="send-h">
+    <div class="panel-head">
+      <h2 id="send-h">Send it to sea</h2>
+    </div>
+    <p>Cozy Submarine picks up your sub from this browser. If the game is already open in another tab, your sub swaps in right away.</p>
+    <p class="cap" id="s-status"></p>
+    <div class="row">
+      <button type="button" class="primary" id="s-send">Sail it in Cozy Submarine</button>
+      <button type="button" id="s-yellow">Put the yellow sub back</button>
+      <a href="../cozy-submarine/">Open Cozy Submarine</a>
+    </div>
+    <p class="cap" id="s-cap" aria-live="polite"></p>
+
+    <h3 id="take-h">Take it with you</h3>
+    <p>Your drawing stays in this browser as you go. To keep it for good, or carry it to another device, copy it or save it as a file. The rows of letters are laid out the same way the game's own source keeps its sub.</p>
+    <div class="row">
+      <button type="button" id="x-copy">Copy the sub</button>
+      <button type="button" id="x-download">Download the sub</button>
+    </div>
+    <h3 id="import-h">Bring one back</h3>
+    <p>Paste a sub you copied, or pick its file, to load it onto the bench.</p>
+    <textarea id="x-import" aria-labelledby="import-h" spellcheck="false" autocomplete="off"></textarea>
+    <div class="row">
+      <button type="button" id="x-load">Load what's pasted</button>
+      <label class="small-file"><span class="sr-only">Load from a file</span><input type="file" id="x-file" accept=".json,application/json"></label>
+    </div>
+    <p class="cap" id="x-cap" aria-live="polite"></p>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">Things to notice</h2>
+    <ul>
+      <li><b>Every pixel is a letter.</b> The game keeps its sub as eleven lines of text, one letter per pixel, and a short list saying which color each letter means. A space is empty sea. Copy your sub to see yours written out that way.</li>
+      <li><b>Art faces right.</b> The game flips it when you turn around, so draw the nose on the right and the stern on the left.</li>
+      <li><b>The propeller finds its own place.</b> It goes two pixels behind the stern (your leftmost pixels), halfway up them. The grid shows it faintly in the strip on the left. It isn't part of the drawing, so it spins the same for every sub.</li>
+      <li><b>The beam starts at the headlamp.</b> Paint the headlamp color where you want the light to come out. With more than one, the frontmost shines. With none, the beam leaves from the nose.</li>
+      <li><b>The keel sets the waterline.</b> The bottom of your drawing rides where the yellow sub's does, so a taller sub grows upward and still clears the sea floor, and a long one keeps its distance from the slopes.</li>
+      <li><b>Glowing colors light themselves.</b> Deep down there's no sunlight, and anything that doesn't glow fades to a shadow. The yellow sub's portholes glow so you can find it in the dark.</li>
+    </ul>
+  </section>
+
+  <p class="foot">Your drawing is saved in this browser as you go.</p>
+</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+let reduced = false;
+const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+reduced = motionQuery.matches;
+
+// ---------- The yellow sub ----------
+// Cozy Submarine's sub, exactly as public/cozy-submarine/index.html has it. change both together
+const SUB_ROWS = [
+  '           Dd       ',
+  '           DD       ',
+  '       DDDDDDDD     ',
+  '       DhYYYYYD     ',
+  '   DDDDYYYYYYYYDDD  ',
+  '  DhhYYYYYYYYYYYYYD ',
+  ' DYYPPYYYYPPYYYYYYYD',
+  ' DYYPPYYYYPPYYYYYYYL',
+  ' DyYYYYYYYYYYYYYYYD ',
+  '  DyyyyyyyyyyyyyyD  ',
+  '   DDDDDDDDDDDDDD   ',
+];
+const SUB_PAL = { D: '#3B2A1C', d: '#7A6A58', Y: '#F2C14E', h: '#FFE6A3', y: '#C98E32', P: '*#FFC56A' };
+// L is the headlamp's lens, which the game colors itself
+const LENS_OFF = '#8A8676', LENS_ON = '#FFF7DA';
+const PROP = '#6E6A62', SHAFT = '#4A463E';
+
+// ---------- Limits and storage ----------
+const FORMAT = "pixel-bench/1";
+const MAX_W = 32, MAX_H = 16, MIN_W = 4, MIN_H = 3, MAX_COLORS = 16;
+// the strip left of the drawing, where the propeller goes
+const MARGIN = 2;
+// letters for new colors. L is taken by the headlamp, and digits would reorder a palette object
+const KEYS = "ABCDEFGHIJKMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const DRAFT_KEY = "pixel-bench.sub", SUB_KEY = "cozy-submarine.sub";
+const NEW_COLORS = ["#E05A47", "#4FA3D9", "#6BBF59", "#9B6FD1", "#F2F2EA", "#2B2B30", "#E89A3C", "#3FB8AF"];
+
+// ---------- State ----------
+// art.cells[j][i] is a palette letter, "L" for the headlamp, or " " for empty sea
+let art = null;
+let cur = "Y", tool = "pencil";
+const cursor = { i: 0, j: 0, show: false };
+const hover = { i: -1, j: -1 };
+const trial = { lights: false, move: !reduced, left: false, spin: 0 };
+
+// ---------- Reading and writing subs ----------
+// check and clamp a sub from storage or an import; null when it isn't a sub at all
+function cleanArt(data) {
+  if (!data || typeof data !== "object" || !data.palette || typeof data.palette !== "object" || !Array.isArray(data.rows)) return null;
+  const rows = data.rows;
+  if (!rows.length || rows.length > MAX_H || !rows.every((r) => typeof r === "string" && r.length <= MAX_W)) return null;
+  const pal = [];
+  for (const [k, v] of Object.entries(data.palette)) {
+    if (pal.length >= MAX_COLORS) break;
+    if (k.length !== 1 || k === " " || k === "L" || typeof v !== "string") continue;
+    const m = /^([*~]?)(#[0-9a-fA-F]{6})$/.exec(v);
+    if (m) pal.push({ k, c: m[2].toUpperCase(), glow: m[1] === "*", thin: m[1] === "~" });
+  }
+  const known = new Set(["L", ...pal.map((p) => p.k)]);
+  const w = clamp(Math.max(...rows.map((r) => r.length)), MIN_W, MAX_W), h = clamp(rows.length, MIN_H, MAX_H);
+  const cells = Array.from({ length: h }, (_, j) => Array.from({ length: w }, (_, i) => {
+    const ch = (rows[j] || "")[i];
+    return ch && known.has(ch) ? ch : " ";
+  }));
+  return { w, h, cells, pal };
+}
+function toData(a) {
+  return {
+    format: FORMAT, group: "cozy-submarine", sprite: "sub",
+    palette: Object.fromEntries(a.pal.map((p) => [p.k, (p.glow ? "*" : p.thin ? "~" : "") + p.c])),
+    rows: a.cells.map((r) => r.join("")),
+  };
+}
+const serialize = () => JSON.stringify(toData(art));
+const exportText = () => JSON.stringify(toData(art), null, 2);
+const yellowSub = () => cleanArt({ palette: SUB_PAL, rows: SUB_ROWS });
+const painted = () => art.cells.some((r) => r.some((k) => k !== " "));
+function save() { try { localStorage.setItem(DRAFT_KEY, serialize()); } catch (e) {} }
+function stored(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+
+// ---------- Undo ----------
+// every change snapshots the whole sub before it starts, and keeps the snapshot only if something changed
+const undos = [], redos = [];
+let before = null;
+function begin() { if (before === null) before = serialize(); }
+function commit() {
+  if (before === null) return;
+  if (serialize() !== before) {
+    undos.push(before);
+    if (undos.length > 200) undos.shift();
+    redos.length = 0;
+    save();
+  }
+  before = null;
+  paint();
+}
+function step(from, to, word) {
+  if (!from.length) return;
+  to.push(serialize());
+  art = cleanArt(JSON.parse(from.pop()));
+  settle();
+  say(word);
+}
+const undo = () => step(undos, redos, "Undone.");
+const redo = () => step(redos, undos, "Redone.");
+// after the whole sub is swapped out, keep the color and cursor somewhere that still exists
+function settle() {
+  if (cur !== " " && cur !== "L" && !art.pal.some((p) => p.k === cur)) cur = art.pal.length ? art.pal[0].k : " ";
+  cursor.i = clamp(cursor.i, 0, art.w - 1);
+  cursor.j = clamp(cursor.j, 0, art.h - 1);
+  save();
+  paint();
+}
+
+// ---------- Names ----------
+function colorOf(k) { return art.pal.find((p) => p.k === k); }
+function nameOf(k) {
+  if (k === " ") return "empty";
+  if (k === "L") return "headlamp";
+  const n = art.pal.findIndex((p) => p.k === k);
+  return `color ${n + 1}`;
+}
+function swatchLabel(k) {
+  if (k === " ") return "Empty, rubs out";
+  if (k === "L") return "Headlamp";
+  const p = colorOf(k);
+  return `Color ${art.pal.indexOf(p) + 1}, ${p.c}` + (p.glow ? ", glows" : "") + (p.thin ? ", see-through" : "");
+}
+const swatchKeys = () => [" ", ...art.pal.map((p) => p.k), "L"];
+const say = (text) => { $("grid-cap").textContent = text; };
+
+// ---------- Where the game puts things ----------
+// the same rules Cozy Submarine's subGeometry follows
+function geometry() {
+  let left = art.w, right = -1, top = -1, bottom = -1;
+  for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) {
+    if (art.cells[j][i] === " ") continue;
+    left = Math.min(left, i); right = Math.max(right, i);
+    if (top < 0) top = j;
+    bottom = j;
+  }
+  if (right < 0) return null;
+  const stern = [];
+  for (let j = 0; j < art.h; j++) if (art.cells[j][left] !== " ") stern.push(j);
+  const hub = stern[Math.floor(stern.length / 2)];
+  let lampI = right, lampJ = hub, front = -1;
+  art.cells.forEach((r, j) => { const i = r.lastIndexOf("L"); if (i > front) { front = i; lampI = i; lampJ = j; } });
+  return { left, right, top, bottom, hub, lampI, lampJ };
+}
+
+// ---------- Colors ----------
+const hexInt = (s) => parseInt(s.slice(1), 16);
+const R8 = (c) => (c >> 16) & 255, G8 = (c) => (c >> 8) & 255, B8 = (c) => c & 255;
+const rgb = (r, g, b) => (clamp(r | 0, 0, 255) << 16) | (clamp(g | 0, 0, 255) << 8) | clamp(b | 0, 0, 255);
+const mix = (a, b, t) => rgb(R8(a) + (R8(b) - R8(a)) * t, G8(a) + (G8(b) - G8(a)) * t, B8(a) + (B8(b) - B8(a)) * t);
+const cssColor = (c) => "#" + c.toString(16).padStart(6, "0");
+const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+// ---------- Drawing the grid ----------
+const grid = $("grid"), gx = grid.getContext("2d");
+let cell = 20;
+function drawGrid() {
+  const { w, h } = art, cols = w + MARGIN;
+  cell = clamp(Math.floor(($("board").clientWidth - 2) / cols), 6, 30);
+  const cw = cols * cell + 1, ch = h * cell + 1, dpr = window.devicePixelRatio || 1;
+  if (grid.width !== Math.round(cw * dpr) || grid.height !== Math.round(ch * dpr)) {
+    grid.width = Math.round(cw * dpr); grid.height = Math.round(ch * dpr);
+    grid.style.width = cw + "px"; grid.style.height = ch + "px";
+  }
+  gx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gx.clearRect(0, 0, cw, ch);
+  const x0 = MARGIN * cell + 0.5;
+  gx.fillStyle = token("--stern");
+  gx.fillRect(0.5, 0.5, MARGIN * cell, h * cell);
+  gx.fillStyle = token("--cell");
+  gx.fillRect(x0, 0.5, w * cell, h * cell);
+
+  // the propeller, faintly, both ways round
+  const g = geometry();
+  if (g) {
+    gx.globalAlpha = 0.45;
+    gx.fillStyle = PROP;
+    for (const d of [-2, -1, 0, 1, 2]) {
+      const j = g.hub + d;
+      if (j >= 0 && j < h) gx.fillRect(x0 + (g.left - 2) * cell, 0.5 + j * cell, cell, cell);
+    }
+    gx.fillStyle = SHAFT;
+    gx.fillRect(x0 + (g.left - 1) * cell, 0.5 + g.hub * cell, cell, cell);
+    gx.globalAlpha = 1;
+  }
+
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const k = art.cells[j][i];
+    if (k === " ") continue;
+    const p = colorOf(k), x = x0 + i * cell, y = 0.5 + j * cell;
+    gx.globalAlpha = p && p.thin ? 0.55 : 1;
+    gx.fillStyle = k === "L" ? (trial.lights ? LENS_ON : LENS_OFF) : p.c;
+    gx.fillRect(x, y, cell, cell);
+    gx.globalAlpha = 1;
+    // a dot marks the colors that glow, and the headlamp
+    if ((k === "L" || p.glow) && cell >= 10) {
+      gx.fillStyle = "rgba(255, 255, 255, .85)";
+      const s = Math.max(2, Math.round(cell / 5));
+      gx.fillRect(x + cell - s - 2, y + 2, s, s);
+    }
+  }
+
+  gx.strokeStyle = token("--line");
+  gx.lineWidth = 1;
+  gx.beginPath();
+  for (let i = 0; i <= cols; i++) { gx.moveTo(i * cell + 0.5, 0); gx.lineTo(i * cell + 0.5, h * cell + 1); }
+  for (let j = 0; j <= h; j++) { gx.moveTo(0, j * cell + 0.5); gx.lineTo(cols * cell + 1, j * cell + 0.5); }
+  gx.stroke();
+  gx.strokeStyle = token("--line-strong");
+  gx.strokeRect(x0, 0.5, w * cell, h * cell);
+
+  if (hover.i >= 0 && !cursor.show) {
+    gx.strokeStyle = token("--ink");
+    gx.strokeRect(x0 + hover.i * cell + 1, 1.5 + hover.j * cell, cell - 2, cell - 2);
+  }
+  if (cursor.show) {
+    gx.strokeStyle = token("--focus");
+    gx.lineWidth = 2;
+    gx.strokeRect(x0 + cursor.i * cell + 1, 1.5 + cursor.j * cell, cell - 2, cell - 2);
+    gx.lineWidth = 1;
+  }
+  grid.setAttribute("aria-label", `Pixel grid, ${w} wide and ${h} tall, cursor at column ${cursor.i + 1}, row ${cursor.j + 1}`);
+}
+
+// ---------- The sea trial ----------
+// a little patch of each sea at the game's own scale, drawn a pixel at a time
+const PW = 52, PH = 26;
+const panes = [
+  { id: "shallows", top: hexInt("#5AB7D6"), low: hexInt("#2A7FB0"), dark: false },
+  { id: "deep", top: hexInt("#0C1B33"), low: hexInt("#050C18"), dark: true },
+].map((p) => {
+  const c = $(p.id), ctx = c.getContext("2d"), img = ctx.createImageData(PW, PH);
+  return { ...p, ctx, img, el: c };
+});
+function drawTrial() {
+  const g = geometry();
+  // place it facing right, centered with its propeller, then mirror the whole scene to face left
+  let ox = 0, oy = 0;
+  if (g) {
+    ox = Math.floor((PW - (g.right - g.left + 3)) / 2) - (g.left - 2);
+    oy = Math.floor((PH - 3 - (g.bottom - g.top + 1)) / 2) - g.top;
+  }
+  for (const pane of panes) {
+    const col = new Int32Array(PW * PH), sub = new Uint8Array(PW * PH);
+    for (let y = 0; y < PH; y++) {
+      const c = mix(pane.top, pane.low, y / (PH - 1));
+      for (let x = 0; x < PW; x++) col[y * PW + x] = c;
+    }
+    if (!pane.dark) {
+      // a sandy floor for scale
+      for (let x = 0; x < PW; x++) {
+        const fy = PH - 2 - Math.round(1 + Math.sin(x * 0.35) * 0.6 + Math.sin(x * 0.9 + 1) * 0.4);
+        for (let y = fy; y < PH; y++) col[y * PW + x] = y === fy ? hexInt("#E9D7A3") : hexInt("#D6BF86");
+      }
+    }
+    const dim = (c) => (pane.dark ? mix(pane.top, c, 0.14) : c);
+    const put = (i, j, c) => {
+      const x = ox + i, y = oy + j;
+      if (x < 0 || y < 0 || x >= PW || y >= PH) return;
+      col[y * PW + x] = c; sub[y * PW + x] = 1;
+    };
+    if (g) {
+      for (let j = 0; j < art.h; j++) for (let i = 0; i < art.w; i++) {
+        const k = art.cells[j][i];
+        if (k === " ") continue;
+        if (k === "L") { put(i, j, trial.lights ? hexInt(LENS_ON) : dim(hexInt(LENS_OFF))); continue; }
+        const p = colorOf(k), c = p.glow ? hexInt(p.c) : dim(hexInt(p.c));
+        const x = ox + i, y = oy + j, under = x >= 0 && y >= 0 && x < PW && y < PH ? col[y * PW + x] : 0;
+        put(i, j, p.thin ? mix(under, c, 0.5) : c);
+      }
+      const spin = trial.move && !reduced ? trial.spin : 0, pc = dim(hexInt(PROP));
+      if (spin) for (const d of [-2, 0, 2]) put(g.left - 2, g.hub + d, pc);
+      else for (const d of [-1, 1]) put(g.left - 2, g.hub + d, pc);
+      put(g.left - 1, g.hub, dim(hexInt(SHAFT)));
+      // the lamp's beam: a cone of lit water ahead and a little down, as in the game
+      if (trial.lights) {
+        const lx = ox + g.lampI, ly = oy + g.lampJ, R = 44, beam = hexInt("#CFE6EE");
+        for (let y = 0; y < PH; y++) for (let x = lx + 1; x < PW; x++) {
+          if (sub[y * PW + x]) continue;
+          const dx = x - lx, dy = y - ly, d = Math.hypot(dx, dy);
+          if (d > R) continue;
+          const along = (dx * 0.97 + dy * 0.24) / d;
+          const k = (1 - d / R) ** 1.2 * smooth(0.86, 0.97, along) * (pane.dark ? 0.55 : 0.18);
+          if (k > 0) col[y * PW + x] = mix(col[y * PW + x], beam, k);
+        }
+      }
+    }
+    const data = pane.img.data;
+    for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) {
+      const c = col[y * PW + (trial.left ? PW - 1 - x : x)], o = (y * PW + x) * 4;
+      data[o] = R8(c); data[o + 1] = G8(c); data[o + 2] = B8(c); data[o + 3] = 255;
+    }
+    pane.ctx.putImageData(pane.img, 0, 0);
+    const where = pane.dark ? "in the deep" : "in the shallows";
+    pane.el.setAttribute("aria-label", g
+      ? `Your sub ${where}, facing ${trial.left ? "left" : "right"}, lights ${trial.lights ? "on" : "off"}`
+      : `Empty water ${where}. There's nothing on the grid yet.`);
+  }
+}
+// the propeller turns over 7 times a second while it's moving, like the game's
+let spinFrame = 0;
+function spinLoop(now) {
+  spinFrame = 0;
+  if (!trial.move || reduced) { if (trial.spin) { trial.spin = 0; drawTrial(); } return; }
+  const s = Math.floor(now / 1000 * 14) % 2;
+  if (s !== trial.spin) { trial.spin = s; drawTrial(); }
+  spinFrame = requestAnimationFrame(spinLoop);
+}
+const startSpin = () => { if (!spinFrame) spinFrame = requestAnimationFrame(spinLoop); };
+
+// ---------- Swatches and the mixer ----------
+function drawSwatches() {
+  const box = $("swatches"), keys = swatchKeys();
+  box.textContent = "";
+  keys.forEach((k, n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "sw";
+    b.setAttribute("aria-pressed", k === cur);
+    b.setAttribute("aria-label", swatchLabel(k));
+    if (n < 10) b.setAttribute("aria-keyshortcuts", String(n));
+    const chip = document.createElement("span"), p = colorOf(k);
+    chip.className = "chip" + (k === " " ? " empty" : k === "L" ? " lamp" : "") + (p && p.glow ? " glow" : "") + (p && p.thin ? " thin" : "");
+    if (p) { chip.style.background = p.c; chip.style.color = p.c; }
+    b.append(chip);
+    if (n < 10) {
+      const num = document.createElement("span");
+      num.className = "num"; num.textContent = n;
+      num.setAttribute("aria-hidden", "true");
+      b.append(num);
+    }
+    b.addEventListener("click", () => choose(k));
+    box.append(b);
+  });
+}
+function choose(k) {
+  cur = k;
+  if (tool === "pick") setTool("pencil");
+  paint();
+  say(`Painting with ${nameOf(k)}.`);
+}
+function drawMixer() {
+  const p = colorOf(cur);
+  $("mix-name").textContent = cur === " " ? "Empty" : cur === "L" ? "Headlamp" : `Color ${art.pal.indexOf(p) + 1}`;
+  $("c-hex").disabled = $("c-glow").disabled = $("c-thin").disabled = $("c-remove").disabled = !p;
+  $("c-add").disabled = art.pal.length >= MAX_COLORS;
+  if (p) {
+    $("c-hex").value = p.c.toLowerCase();
+    $("c-code").textContent = p.c;
+    $("c-glow").setAttribute("aria-pressed", p.glow);
+    $("c-thin").setAttribute("aria-pressed", p.thin);
+    $("mix-note").textContent = p.glow ? "Glows: it stays bright even in the deep, with the lights off."
+      : p.thin ? "See-through: half this color, half whatever is behind it."
+      : "Lit like everything else: bright in the sun, a shadow in the deep.";
+  } else {
+    $("c-code").textContent = "";
+    $("c-glow").setAttribute("aria-pressed", false);
+    $("c-thin").setAttribute("aria-pressed", false);
+    $("mix-note").textContent = cur === " "
+      ? "Empty pixels let the sea show through. Paint with it to rub out."
+      : "The headlamp's lens. The game colors it: dull grey with the lights off, bright white with them on. The beam starts at the frontmost one.";
+  }
+}
+$("c-hex").addEventListener("input", () => {
+  const p = colorOf(cur);
+  if (!p) return;
+  begin();
+  p.c = $("c-hex").value.toUpperCase();
+  $("c-code").textContent = p.c;
+  drawGrid(); drawTrial(); drawSwatches();
+});
+$("c-hex").addEventListener("change", commit);
+function finish(which) {
+  const p = colorOf(cur);
+  if (!p) return;
+  begin();
+  const on = !p[which];
+  p.glow = p.thin = false;
+  p[which] = on;
+  commit();
+}
+$("c-glow").addEventListener("click", () => finish("glow"));
+$("c-thin").addEventListener("click", () => finish("thin"));
+$("c-add").addEventListener("click", () => {
+  if (art.pal.length >= MAX_COLORS) return;
+  const used = new Set(art.pal.map((p) => p.k)), k = [...KEYS].find((ch) => !used.has(ch));
+  const taken = new Set(art.pal.map((p) => p.c));
+  const c = NEW_COLORS.find((x) => !taken.has(x)) || "#888888";
+  begin();
+  art.pal.push({ k, c, glow: false, thin: false });
+  cur = k;
+  commit();
+  say(`Added color ${art.pal.length}. Pick its color above.`);
+});
+$("c-remove").addEventListener("click", () => {
+  const p = colorOf(cur);
+  if (!p) return;
+  const n = art.pal.indexOf(p);
+  begin();
+  for (const r of art.cells) for (let i = 0; i < r.length; i++) if (r[i] === p.k) r[i] = " ";
+  art.pal.splice(n, 1);
+  cur = art.pal.length ? art.pal[Math.max(0, n - 1)].k : " ";
+  commit();
+  say(`Removed color ${n + 1}. Its pixels are empty now.`);
+});
+
+// ---------- Tools ----------
+function setTool(t) {
+  tool = t;
+  for (const id of ["pencil", "fill", "pick"]) $("t-" + id).setAttribute("aria-pressed", id === t);
+}
+$("t-pencil").addEventListener("click", () => setTool("pencil"));
+$("t-fill").addEventListener("click", () => setTool("fill"));
+$("t-pick").addEventListener("click", () => setTool("pick"));
+function fill(i, j, k) {
+  const from = art.cells[j][i];
+  if (from === k) return;
+  const todo = [[i, j]];
+  while (todo.length) {
+    const [x, y] = todo.pop();
+    if (x < 0 || y < 0 || x >= art.w || y >= art.h || art.cells[y][x] !== from) continue;
+    art.cells[y][x] = k;
+    todo.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+}
+function pick(i, j) {
+  cur = art.cells[j][i];
+  setTool("pencil");
+  paint();
+  say(`Picked ${nameOf(cur)}.`);
+}
+// one use of the tool at a cell, from the keyboard
+function useAt(i, j, k) {
+  if (tool === "pick") return pick(i, j);
+  begin();
+  if (tool === "fill") fill(i, j, k); else art.cells[j][i] = k;
+  commit();
+  say(`${tool === "fill" ? "Filled" : "Painted"} column ${i + 1}, row ${j + 1} with ${nameOf(k)}.`);
+}
+
+// ---------- Painting with a pointer ----------
+const stroke = { on: false, k: " ", i: 0, j: 0, id: null };
+function cellAt(e) {
+  const r = grid.getBoundingClientRect();
+  const i = Math.floor((e.clientX - r.left) / cell) - MARGIN, j = Math.floor((e.clientY - r.top) / cell);
+  return i >= 0 && j >= 0 && i < art.w && j < art.h ? { i, j } : null;
+}
+// paint every cell on the way from the last one, so a quick drag leaves no gaps
+function strokeTo(i, j) {
+  const n = Math.max(Math.abs(i - stroke.i), Math.abs(j - stroke.j));
+  for (let s = 1; s <= n; s++) {
+    art.cells[Math.round(stroke.j + (j - stroke.j) * s / n)][Math.round(stroke.i + (i - stroke.i) * s / n)] = stroke.k;
+  }
+  stroke.i = i; stroke.j = j;
+}
+grid.addEventListener("pointerdown", (e) => {
+  const at = cellAt(e);
+  if (!at || (e.button !== 0 && e.button !== 2)) return;
+  e.preventDefault();
+  cursor.show = false;
+  const k = e.button === 2 ? " " : cur;
+  if (tool === "pick" && e.button === 0) return pick(at.i, at.j);
+  if (tool === "fill") { begin(); fill(at.i, at.j, k); commit(); return; }
+  begin();
+  Object.assign(stroke, { on: true, k, i: at.i, j: at.j, id: e.pointerId });
+  art.cells[at.j][at.i] = k;
+  grid.setPointerCapture(e.pointerId);
+  drawGrid();
+});
+grid.addEventListener("pointermove", (e) => {
+  const at = cellAt(e);
+  hover.i = at ? at.i : -1; hover.j = at ? at.j : -1;
+  if (stroke.on && e.pointerId === stroke.id && at) strokeTo(at.i, at.j);
+  drawGrid();
+});
+const endStroke = () => { if (!stroke.on) return; stroke.on = false; commit(); };
+["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => grid.addEventListener(t, endStroke));
+grid.addEventListener("pointerleave", () => { hover.i = -1; drawGrid(); });
+grid.addEventListener("contextmenu", (e) => e.preventDefault());
+
+// ---------- Painting from the keyboard ----------
+function announceCursor() {
+  say(`Column ${cursor.i + 1}, row ${cursor.j + 1}: ${nameOf(art.cells[cursor.j][cursor.i])}.`);
+}
+grid.addEventListener("focus", () => { cursor.show = true; drawGrid(); });
+grid.addEventListener("blur", () => { cursor.show = false; drawGrid(); });
+grid.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = e.shiftKey ? 4 : 1, moves = { ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n] };
+  if (moves[e.key]) {
+    e.preventDefault();
+    cursor.show = true;
+    cursor.i = clamp(cursor.i + moves[e.key][0], 0, art.w - 1);
+    cursor.j = clamp(cursor.j + moves[e.key][1], 0, art.h - 1);
+    drawGrid();
+    announceCursor();
+  } else if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    if (!e.repeat || tool === "pencil") useAt(cursor.i, cursor.j, cur);
+  } else if (e.key === "Delete" || e.key === "Backspace") {
+    e.preventDefault();
+    begin(); art.cells[cursor.j][cursor.i] = " "; commit();
+    say(`Rubbed out column ${cursor.i + 1}, row ${cursor.j + 1}.`);
+  }
+});
+
+// ---------- Size and position ----------
+// the grid grows and shrinks at the nose and the top, since the keel sets where the sub rides
+function resize(dw, dh) {
+  const w = clamp(art.w + dw, MIN_W, MAX_W), h = clamp(art.h + dh, MIN_H, MAX_H);
+  if (w === art.w && h === art.h) return;
+  begin();
+  let cells = art.cells.map((r) => (w > art.w ? [...r, ...Array(w - art.w).fill(" ")] : r.slice(0, w)));
+  if (h > art.h) cells = [...Array.from({ length: h - art.h }, () => Array(w).fill(" ")), ...cells];
+  else cells = cells.slice(art.h - h);
+  Object.assign(art, { w, h, cells });
+  cursor.i = clamp(cursor.i, 0, w - 1); cursor.j = clamp(cursor.j, 0, h - 1);
+  commit();
+  say(`The grid is ${w} wide and ${h} tall.`);
+}
+$("w-less").addEventListener("click", () => resize(-1, 0));
+$("w-more").addEventListener("click", () => resize(1, 0));
+$("h-less").addEventListener("click", () => resize(0, -1));
+$("h-more").addEventListener("click", () => resize(0, 1));
+// a move only goes ahead when nothing would fall off the edge
+function edgeClear(dx, dy) {
+  const { w, h, cells } = art;
+  if (dx < 0) return cells.every((r) => r[0] === " ");
+  if (dx > 0) return cells.every((r) => r[w - 1] === " ");
+  if (dy < 0) return cells[0].every((k) => k === " ");
+  return cells[h - 1].every((k) => k === " ");
+}
+function shift(dx, dy) {
+  if (!painted() || !edgeClear(dx, dy)) return;
+  begin();
+  const { w, h } = art, old = art.cells;
+  art.cells = Array.from({ length: h }, (_, j) => Array.from({ length: w }, (_, i) => {
+    const si = i - dx, sj = j - dy;
+    return si >= 0 && sj >= 0 && si < w && sj < h ? old[sj][si] : " ";
+  }));
+  commit();
+}
+$("m-left").addEventListener("click", () => shift(-1, 0));
+$("m-right").addEventListener("click", () => shift(1, 0));
+$("m-up").addEventListener("click", () => shift(0, -1));
+$("m-down").addEventListener("click", () => shift(0, 1));
+$("o-yellow").addEventListener("click", () => {
+  begin(); art = yellowSub(); settle(); commit();
+  say("Back to the yellow sub. Undo brings your drawing back.");
+});
+$("o-clear").addEventListener("click", () => {
+  begin(); for (const r of art.cells) r.fill(" "); commit();
+  say("The grid is clear. Your colors are still there.");
+});
+
+// ---------- The sea trial controls ----------
+function setLights(on) { trial.lights = on; $("p-lights").setAttribute("aria-pressed", on); drawGrid(); drawTrial(); }
+$("p-lights").addEventListener("click", () => setLights(!trial.lights));
+$("p-move").addEventListener("click", () => {
+  trial.move = !trial.move;
+  $("p-move").setAttribute("aria-pressed", trial.move);
+  if (trial.move) startSpin(); else { trial.spin = 0; drawTrial(); }
+});
+$("p-face").addEventListener("click", () => {
+  trial.left = !trial.left;
+  $("p-face").setAttribute("aria-pressed", trial.left);
+  drawTrial();
+});
+
+// ---------- Sending it to sea ----------
+function drawStatus() {
+  const there = stored(SUB_KEY);
+  let mine = false;
+  try { mine = there !== null && JSON.stringify(JSON.parse(there).rows) === JSON.stringify(toData(art).rows) && JSON.stringify(JSON.parse(there).palette) === JSON.stringify(toData(art).palette); } catch (e) {}
+  $("s-status").textContent = there === null ? "Cozy Submarine is sailing the yellow sub."
+    : mine ? "Cozy Submarine is sailing this drawing."
+    : "Cozy Submarine is sailing a sub of yours, but not quite this drawing.";
+  $("s-yellow").disabled = there === null;
+}
+$("s-send").addEventListener("click", () => {
+  if (!painted()) { $("s-cap").textContent = "There's nothing on the grid to sail yet."; return; }
+  try {
+    localStorage.setItem(SUB_KEY, serialize());
+    $("s-cap").textContent = "Done. Cozy Submarine sails your sub from now on, in this browser.";
+  } catch (e) {
+    $("s-cap").textContent = "This browser wouldn't let the page save it. Copy the sub instead and keep it somewhere safe.";
+  }
+  drawStatus();
+});
+$("s-yellow").addEventListener("click", () => {
+  try { localStorage.removeItem(SUB_KEY); } catch (e) {}
+  $("s-cap").textContent = "Cozy Submarine is back to the yellow sub. Your drawing here is untouched.";
+  drawStatus();
+});
+window.addEventListener("storage", (e) => { if (e.key === SUB_KEY || e.key === null) drawStatus(); });
+
+// ---------- Export and import ----------
+$("x-copy").addEventListener("click", async () => {
+  const text = exportText();
+  try {
+    await navigator.clipboard.writeText(text);
+    $("x-cap").textContent = "Copied your sub.";
+  } catch (e) {
+    // no clipboard access: put it in the box to copy by hand
+    $("x-import").value = text;
+    $("x-import").select();
+    $("x-cap").textContent = "Your browser wouldn't let the page copy, so the sub is in the box below, selected and ready to copy.";
+  }
+});
+$("x-download").addEventListener("click", () => {
+  const blob = new Blob([exportText()], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "my-sub.json";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  $("x-cap").textContent = "Saved my-sub.json.";
+});
+function load(text) {
+  let data;
+  try { data = JSON.parse(text); } catch (e) { $("x-cap").textContent = "That isn't a sub: it doesn't read as JSON."; return; }
+  if (data && data.format !== undefined && data.format !== FORMAT) { $("x-cap").textContent = "That isn't a Pixel Bench sub."; return; }
+  const a = cleanArt(data);
+  if (!a) { $("x-cap").textContent = "That has no sub in it the bench can read."; return; }
+  begin();
+  art = a;
+  settle();
+  commit();
+  $("x-cap").textContent = `Loaded a sub ${a.w} wide and ${a.h} tall, with ${a.pal.length} ${a.pal.length === 1 ? "color" : "colors"}. Undo brings back what you had.`;
+}
+$("x-load").addEventListener("click", () => load($("x-import").value));
+$("x-file").addEventListener("change", async () => {
+  const f = $("x-file").files[0];
+  if (f) load(await f.text());
+  $("x-file").value = "";
+});
+
+// ---------- Keyboard ----------
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input:not([type=range]):not([type=color]), textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && (k === "z" || k === "y")) {
+    e.preventDefault();
+    if (k === "y" || e.shiftKey) redo(); else undo();
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if (k === "p") setTool("pencil");
+  else if (k === "f") setTool("fill");
+  else if (k === "i") setTool("pick");
+  else if (k === "l") setLights(!trial.lights);
+  else if (/^[0-9]$/.test(k)) { const key = swatchKeys()[Number(k)]; if (key !== undefined) choose(key); }
+});
+
+// ---------- Paint ----------
+function paint() {
+  drawSwatches();
+  drawMixer();
+  drawGrid();
+  drawTrial();
+  drawStatus();
+  const n = art.cells.reduce((s, r) => s + r.filter((k) => k !== " ").length, 0);
+  $("size-read").textContent = `${art.w} × ${art.h} · ${n} ${n === 1 ? "pixel" : "pixels"}`;
+  $("undo").disabled = !undos.length;
+  $("redo").disabled = !redos.length;
+  $("w-less").disabled = art.w <= MIN_W; $("w-more").disabled = art.w >= MAX_W;
+  $("h-less").disabled = art.h <= MIN_H; $("h-more").disabled = art.h >= MAX_H;
+  const any = painted();
+  $("m-left").disabled = !any || !edgeClear(-1, 0); $("m-right").disabled = !any || !edgeClear(1, 0);
+  $("m-up").disabled = !any || !edgeClear(0, -1); $("m-down").disabled = !any || !edgeClear(0, 1);
+}
+$("undo").addEventListener("click", undo);
+$("redo").addEventListener("click", redo);
+
+// ---------- Start ----------
+(function boot() {
+  let draft = null;
+  try { draft = cleanArt(JSON.parse(stored(DRAFT_KEY))); } catch (e) {}
+  art = draft || yellowSub();
+  settle();
+  new ResizeObserver(() => drawGrid()).observe($("board"));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawGrid());
+  motionQuery.addEventListener("change", (e) => { reduced = e.matches; if (!reduced) startSpin(); drawTrial(); });
+  if (trial.move) startSpin();
+  $("p-move").setAttribute("aria-pressed", trial.move);
+})();
+</script>
+</body>
+</html>
