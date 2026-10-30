@@ -26,10 +26,11 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
   box-shadow: inset 0 0 0 1px rgba(185, 149, 86, 0.5), 0 3px 0 rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
 }
-#head { position: fixed; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; }
+#corner { position: fixed; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); display: flex; gap: 8px; align-items: flex-start; }
+#head { padding: 7px 11px 8px; }
 #head h1 { margin: 0; font-size: 17px; font-weight: 700; color: var(--lamp); line-height: 1.1; letter-spacing: 0.3px; }
 #head a { display: inline-block; margin-top: 5px; font-size: 11px; color: var(--paper); text-underline-offset: 2px; }
-#head[hidden], #tray[hidden], #show[hidden], #yellow[hidden] { display: none; }
+#head[hidden], #gauge[hidden], #tray[hidden], .group[hidden], #yellow[hidden] { display: none; }
 #gauge { position: fixed; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; text-align: right; pointer-events: none; }
 #depth { display: block; font-size: 26px; font-weight: 700; color: var(--lamp); line-height: 1; font-variant-numeric: tabular-nums; }
 #zone, #floor, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
@@ -50,29 +51,43 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 .chip:hover { border-color: var(--hover); }
 .chip:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--edge); }
 .chip[aria-pressed="true"] { background: var(--lamp); border-color: var(--lamp); color: var(--ink); }
-.chip:focus-visible, #show:focus-visible, #head a:focus-visible, #sea:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+.chip:focus-visible, #head a:focus-visible, #sea:focus-visible, #menu a:focus-visible, #menu textarea:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+#opts { font-size: 12px; }
+.glabel { font-size: 11px; color: var(--muted); margin-right: 2px; }
 #speed { min-width: 7em; text-align: center; font-size: 12px; }
-.foot { margin-top: 7px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 10px; color: var(--muted); align-items: center; }
-.foot .chip { min-height: 32px; font-size: 11px; padding: 4px 8px; }
-.foot a { color: var(--paper); text-underline-offset: 2px; display: inline-flex; align-items: center; min-height: 32px; }
-.foot a:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+#menu {
+  color: var(--paper); font-family: var(--font); background: rgba(8, 21, 30, 0.94);
+  width: min(480px, calc(100% - 20px)); max-height: calc(100% - 20px); overflow: auto; padding: 12px 14px 14px;
+  touch-action: pan-y; overscroll-behavior: contain;
+}
+#menu::backdrop { background: rgba(3, 9, 13, 0.45); }
+.menu-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+#menu h2 { margin: 0; font-size: 16px; color: var(--lamp); }
+#menu h3 { margin: 14px 0 6px; font-size: 11px; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+#menu p { margin: 6px 0; font-size: 11px; line-height: 1.6; }
+#menu p:empty { display: none; }
+#menu a { color: var(--paper); text-underline-offset: 2px; }
+#menu .group { flex-wrap: wrap; margin: 6px 0; }
+#menu textarea {
+  display: block; width: 100%; min-height: 64px; resize: vertical; margin: 6px 0;
+  font: 16px/1.3 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  color: var(--paper); background: #0A1820; border: 2px solid #2D5562; border-radius: 0;
+}
 kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px; margin: 0 1px; color: var(--paper); }
-#show { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 600px) {
   #head h1 { font-size: 14px; }
   #head a { font-size: 10px; }
+  #corner { flex-direction: column; gap: 6px; }
+  #opts { font-size: 11px; padding: 6px 7px; }
   #depth { font-size: 20px; }
   #zone, #floor, #weather, #seen { font-size: 10px; }
   .row { gap: 6px 8px; }
   .chip { font-size: 12px; padding: 6px 8px; }
   #speed { min-width: 5.8em; font-size: 11px; }
-  .tip { display: none; }
 }
 @media (max-height: 480px) {
-  .tip { display: none; }
   #tray { padding: 6px 8px 5px; }
-  .foot { margin-top: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -88,10 +103,13 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
 </head>
 <body>
 <canvas id="sea" role="img" aria-label="A little yellow submarine at sea"></canvas>
-<header id="head" class="panel">
-  <h1>Cozy Submarine</h1>
-  <a href="/">The Cabinet of Curios</a>
-</header>
+<div id="corner">
+  <button type="button" class="chip panel" id="opts" aria-haspopup="dialog" aria-keyshortcuts="O">Options</button>
+  <header id="head" class="panel">
+    <h1>Cozy Submarine</h1>
+    <a href="/">The Cabinet of Curios</a>
+  </header>
+</div>
 <div id="gauge" class="panel" aria-hidden="true">
   <b id="depth">0 m</b>
   <span id="zone">At the surface</span>
@@ -102,32 +120,66 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
 <p id="said" class="sr" aria-live="polite"></p>
 <section id="tray" class="panel" aria-label="Submarine controls">
   <div class="row">
-    <div class="group" role="group" aria-label="Heading and speed">
+    <div class="group" id="helm" role="group" aria-label="Heading and speed">
       <button type="button" class="chip" id="left" aria-label="Go left" aria-pressed="false" aria-keyshortcuts="ArrowLeft">◀</button>
       <span id="speed" role="status">Dead slow</span>
       <button type="button" class="chip" id="right" aria-label="Go right" aria-pressed="true" aria-keyshortcuts="ArrowRight">▶</button>
       <button type="button" class="chip" id="stop" aria-keyshortcuts="Space">■ Stop</button>
     </div>
-    <div class="group" role="group" aria-label="Depth">
+    <div class="group" id="divectl" role="group" aria-label="Depth">
       <button type="button" class="chip" id="rise" aria-keyshortcuts="ArrowUp">▲ Rise</button>
       <button type="button" class="chip" id="dive" aria-keyshortcuts="ArrowDown">▼ Dive</button>
       <button type="button" class="chip" id="follow" aria-pressed="false" aria-keyshortcuts="F">Follow floor</button>
     </div>
-    <div class="group">
-      <button type="button" class="chip" id="lights" aria-pressed="false" aria-keyshortcuts="L">Lights</button>
-      <button type="button" class="chip" id="sound" aria-pressed="false" aria-keyshortcuts="M">Sound</button>
-      <button type="button" class="chip" id="hide" aria-keyshortcuts="H">Hide</button>
+    <div class="group" id="lampctl" role="group" aria-labelledby="lamp-label">
+      <span class="glabel" id="lamp-label">Lights</span>
+      <button type="button" class="chip" id="l-front" aria-label="Front light" aria-pressed="false" aria-keyshortcuts="L">Front</button>
+      <button type="button" class="chip" id="l-bottom" aria-label="Bottom light" aria-pressed="false" aria-keyshortcuts="B">Bottom</button>
+      <button type="button" class="chip" id="l-rear" aria-label="Rear light" aria-pressed="false" aria-keyshortcuts="R">Rear</button>
     </div>
   </div>
-  <div class="foot">
-    <span>The link shares this ocean.</span>
-    <button type="button" class="chip" id="newsea">New ocean</button>
-    <a href="../pixel-bench/">Draw your own sub</a>
-    <button type="button" class="chip" id="yellow" hidden>Back to the yellow sub</button>
-    <span class="tip">Drag to steer · <kbd>←</kbd><kbd>→</kbd> faster (hold for more), or turn · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> lights · <kbd>M</kbd> sound · <kbd>H</kbd> hide</span>
-  </div>
 </section>
-<button type="button" class="chip panel" id="show" hidden aria-keyshortcuts="H">Show controls</button>
+<dialog id="menu" class="panel" aria-labelledby="menu-h">
+  <div class="menu-head">
+    <h2 id="menu-h">Options</h2>
+    <button type="button" class="chip" id="menu-close" aria-keyshortcuts="Escape">Close</button>
+  </div>
+  <h3>The ocean</h3>
+  <p>The link in your address bar shares this ocean.</p>
+  <div class="group">
+    <button type="button" class="chip" id="newsea">New ocean</button>
+    <button type="button" class="chip" id="sound" aria-pressed="false" aria-keyshortcuts="M">Sound</button>
+  </div>
+  <h3>Your sub</h3>
+  <p id="subname" aria-live="polite"></p>
+  <p><a href="../pixel-bench/" id="drawsub">Draw your own sub in Pixel Bench</a>, then sail it from there, or copy it and paste it here.</p>
+  <textarea id="paste" aria-label="Paste a sub from Pixel Bench" spellcheck="false" autocomplete="off"></textarea>
+  <div class="group">
+    <button type="button" class="chip" id="usesub">Sail the pasted sub</button>
+    <button type="button" class="chip" id="yellow" hidden>Back to the yellow sub</button>
+  </div>
+  <p id="subcap" aria-live="polite"></p>
+  <h3 id="screen-h">On screen</h3>
+  <div class="group" role="group" aria-labelledby="screen-h">
+    <button type="button" class="chip" id="show-head" aria-pressed="true">Title</button>
+    <button type="button" class="chip" id="show-gauge" aria-pressed="true">Gauges</button>
+  </div>
+  <h3 id="controls-h">Controls</h3>
+  <div class="group" role="group" aria-labelledby="controls-h">
+    <button type="button" class="chip" id="show-helm" aria-pressed="true">Helm</button>
+    <button type="button" class="chip" id="show-divectl" aria-pressed="true">Depth</button>
+    <button type="button" class="chip" id="show-lampctl" aria-pressed="true">Lights</button>
+  </div>
+  <p>A hidden control still answers to its keys.</p>
+  <h3>Clear view</h3>
+  <div class="group">
+    <button type="button" class="chip" id="clear" aria-pressed="false" aria-keyshortcuts="H">Hide it all</button>
+  </div>
+  <p>Hides the title, gauges, and controls at once, until you press it or <kbd>H</kbd> again. The Options button always stays.</p>
+  <h3>Keys</h3>
+  <p class="keys">Drag the sea to steer · <kbd>←</kbd><kbd>→</kbd> faster (hold for more), or turn · <kbd>↑</kbd><kbd>↓</kbd> depth · <kbd>Space</kbd> stop · <kbd>F</kbd> follow floor · <kbd>L</kbd> front light · <kbd>B</kbd> bottom light · <kbd>R</kbd> rear light · <kbd>M</kbd> sound · <kbd>H</kbd> clear view · <kbd>O</kbd> options</p>
+  <p><a href="/">Back to The Cabinet of Curios</a></p>
+</dialog>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -339,17 +391,18 @@ const SUB_ROWS = [
   '       DDDDDDDD     ',
   '       DhYYYYYD     ',
   '   DDDDYYYYYYYYDDD  ',
-  '  DhhYYYYYYYYYYYYYD ',
+  '  ThhYYYYYYYYYYYYYD ',
   ' DYYPPYYYYPPYYYYYYYD',
   ' DYYPPYYYYPPYYYYYYYL',
   ' DyYYYYYYYYYYYYYYYD ',
   '  DyyyyyyyyyyyyyyD  ',
-  '   DDDDDDDDDDDDDD   ',
+  '   DDDDDDDUDDDDDD   ',
 ];
 const SUB_PAL = { D: '#3B2A1C', d: '#7A6A58', Y: '#F2C14E', h: '#FFE6A3', y: '#C98E32', P: '*#FFC56A' };
-// L is the headlamp's lens, which the game colors itself
-const LENS_OFF = '#8A8676', LENS_ON = '*#FFF7DA';
-let SUB_OFF, SUB_ON, SUBG, ownSub = false;
+// the lights' lenses, which the game colors itself: L the front light, U the one underneath, T the rear
+const LENSES = { front: 'L', bottom: 'U', rear: 'T' };
+const LENS_OFF = '#8A8676', LENS_ON = '#FFF7DA';
+let SUB, SUBG, ownSub = false;
 
 // ---------- Your own sub ----------
 // Pixel Bench (../pixel-bench/) saves a sub here, as { palette, rows } laid out like SUB_PAL and SUB_ROWS
@@ -360,14 +413,15 @@ function cleanSub(data) {
   if (!rows.length || rows.length > SUB_MAX_H || !rows.every((r) => typeof r === 'string' && r.length <= SUB_MAX_W)) return null;
   const pal = {};
   for (const [k, v] of Object.entries(data.palette)) {
-    if (k.length === 1 && k !== ' ' && k !== 'L' && typeof v === 'string' && /^[*~]?#[0-9a-fA-F]{6}$/.test(v)) pal[k] = v;
+    if (k.length === 1 && !' LUT'.includes(k) && typeof v === 'string' && /^[*~]?#[0-9a-fA-F]{6}$/.test(v)) pal[k] = v;
   }
-  if (!rows.some((r) => [...r].some((ch) => ch === 'L' || Object.hasOwn(pal, ch)))) return null;
+  if (!rows.some((r) => [...r].some((ch) => 'LUT'.includes(ch) || Object.hasOwn(pal, ch)))) return null;
   return { pal, rows };
 }
 // everything else is placed from the art itself: the propeller sits two pixels behind the stern (the
-// leftmost pixels), halfway up them, the lamp shines from the frontmost L, and the keel always rides
-// where the yellow sub's does, so a bigger sub grows upward and never into the floor
+// leftmost pixels), halfway up them, each light shines from its outermost lens (the frontmost L, the
+// lowest U, the rearmost T), and the keel always rides where the yellow sub's does, so a bigger sub
+// grows upward and never into the floor
 function subGeometry(s, rows) {
   const fr = s.frames[0], w = s.w;
   let left = w, right = -1, bottom = -1;
@@ -378,14 +432,21 @@ function subGeometry(s, rows) {
   const stern = [];
   for (let j = 0; j < s.h; j++) if (fr.c[j * w + left] >= 0) stern.push(j);
   const hub = stern[Math.floor(stern.length / 2)];
-  let lampI = right, lampJ = hub, front = -1;
-  rows.forEach((r, j) => { const i = r.lastIndexOf('L'); if (i > front) { front = i; lampI = i; lampJ = j; } });
-  return { w, left, cx: Math.round((left + right) / 2), oy: 4 - bottom, hub, lampI, lampJ, half: Math.ceil((right - left) / 2) + 1 };
+  const cx = Math.round((left + right) / 2), lens = {}, at = {};
+  for (const [id, ch] of Object.entries(LENSES)) {
+    lens[id] = [];
+    rows.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] === ch) lens[id].push([i, j]); });
+  }
+  // with no lens of its own, a light shines from the nose, the middle of the keel, or the stern
+  const outer = (id, score, none) => lens[id].reduce((a, b) => (score(b) > score(a) ? b : a), lens[id][0]) || none;
+  at.front = outer('front', ([i]) => i, [right, hub]);
+  at.bottom = outer('bottom', ([i, j]) => j * 100 - Math.abs(i - cx), [cx, bottom]);
+  at.rear = outer('rear', ([i]) => -i, [left, hub]);
+  return { w, left, cx, oy: 4 - bottom, hub, lens, at, half: Math.ceil((right - left) / 2) + 1 };
 }
 function fitSub(pal, rows) {
-  SUB_OFF = spr({ ...pal, L: LENS_OFF }, rows);
-  SUB_ON = spr({ ...pal, L: LENS_ON }, rows);
-  SUBG = subGeometry(SUB_OFF, rows);
+  SUB = spr({ ...pal, L: LENS_OFF, U: LENS_OFF, T: LENS_OFF }, rows);
+  SUBG = subGeometry(SUB, rows);
 }
 function loadSub() {
   let own = null;
@@ -663,7 +724,15 @@ for (const sp of SPECIES) sp.spr = ART[sp.art];
 // ---------- State ----------
 const sub = { x: 0, y: 2, vx: 0, vy: 0, speed: 1, face: 1, sx: 0, hold: 0, brake: false, coast: 0, follow: false };
 const cam = { x: 0, y: 0 };
-const lamp = { on: false, sx: 0, sy: 0, dx: 1, dy: 0.12, r: 84 };
+// each light throws a cone: fx, fy aim it (facing right), r is its reach, and the cone fades in
+// between the cosines c0 and c1. the front one reaches farthest, the one underneath spreads widest
+const LIGHTS = [
+  { id: 'front', name: 'front', btn: 'l-front', on: false, fx: 0.97, fy: 0.24, r: 84, c0: 0.74, c1: 0.9 },
+  { id: 'bottom', name: 'bottom', btn: 'l-bottom', on: false, fx: 0.1, fy: 0.995, r: 60, c0: 0.55, c1: 0.78 },
+  { id: 'rear', name: 'rear', btn: 'l-rear', on: false, fx: -0.97, fy: 0.12, r: 52, c0: 0.8, c1: 0.93 },
+];
+for (const L of LIGHTS) Object.assign(L, { sx: 0, sy: 0, dx: L.fx, dy: L.fy });
+const lightById = (id) => LIGHTS.find((L) => L.id === id);
 const keys = { up: false, down: false };
 const drag = { on: false, x: 0, y: 0, step: 0, v: 0, id: null };
 const hold = { v: 0 }, nudge = { v: 0, left: 0 };
@@ -1245,12 +1314,16 @@ function drawSub() {
   const sway = reduced ? 0 : Math.sin(T * 1.3) * SKY.amp * 0.5 * Math.exp(-m / 25) * (m > 1 ? 1 : 0);
   const g = SUBG, sx = Math.round(sub.sx) - g.cx, sy = Math.round(sub.y + sway - Y0) + g.oy, flip = sub.face < 0;
   const col = (i) => sx + (flip ? g.w - 1 - i : i);
-  blit(lamp.on ? SUB_ON : SUB_OFF, 0, sx, sy, flip);
+  blit(SUB, 0, sx, sy, flip);
+  for (const L of LIGHTS) {
+    const [i, j] = g.at[L.id];
+    L.sx = col(i); L.sy = sy + j; L.dx = flip ? -L.fx : L.fx; L.dy = L.fy;
+    if (L.on) for (const [a, b] of g.lens[L.id]) put(col(a), sy + b, hex(LENS_ON), K_GLOW);
+  }
   const px = col(g.left - 2), hy = sy + g.hub, spin = Math.abs(sub.vx) > 0.5 ? Math.floor(T * 14) % 2 : 0, pc = hex('#6E6A62');
   if (spin) { put(px, hy - 2, pc); put(px, hy, pc); put(px, hy + 2, pc); }
   else { put(px, hy - 1, pc); put(px, hy + 1, pc); }
   put(col(g.left - 1), hy, hex('#4A463E'));
-  lamp.sx = col(g.lampI); lamp.sy = sy + g.lampJ; lamp.dx = flip ? -0.97 : 0.97; lamp.dy = 0.24;
 }
 function drawParts() {
   for (const s of snow) {
@@ -1295,7 +1368,7 @@ function drawSurface() {
 }
 
 // ---------- Light ----------
-// everything is drawn flat, then lit: sunlight fades with depth, the lamp throws a cone, and glowing
+// everything is drawn flat, then lit: sunlight fades with depth, each light throws a cone, and glowing
 // things shine on their own
 function waterColor(m, top) {
   if (m < 60) return mix(top, C.mid, m / 60);
@@ -1305,9 +1378,7 @@ function waterColor(m, top) {
 // most light is gone by 200 m, a dim blue lasts through the twilight zone, and below 1,000 m it's black
 const ambAt = (m, dl) => Math.pow(dl * (0.82 * Math.exp(-m / 50) + 0.18 * Math.exp(-m / 300)), 0.7);
 function light() {
-  const on = lamp.on, lx = lamp.sx, ly = lamp.sy, lr = lamp.r, ldx = lamp.dx, ldy = lamp.dy;
-  const bx0 = on ? Math.max(0, Math.floor(lx - lr)) : 1, bx1 = on ? Math.min(LW - 1, Math.ceil(lx + lr)) : 0;
-  const by0 = on ? Math.floor(ly - lr) : 1, by1 = on ? Math.ceil(ly + lr) : 0;
+  const beams = LIGHTS.filter((L) => L.on), nb = beams.length;
   const F = flash, sunny = SKY.day * (1 - SKY.storm), ab = SKY.above, t = reduced ? 0 : T;
   for (let j = 0; j < LH; j++) {
     const wy = Y0 + j, m = rowM[j], amb = rowAmb[j];
@@ -1315,7 +1386,6 @@ function light() {
     const shK = m < 120 && sunny > 0.05 ? 0.14 * sunny * Math.exp(-m / 40) : 0;
     const fl = F ? F * 70 * Math.exp(-m / 15) : 0;
     const fog = rowAlb[j], fR = R8(fog) * amb * 0.12, fG = G8(fog) * amb * 0.12, fB = B8(fog) * amb * 0.12;
-    const inY = j >= by0 && j <= by1, ddy = j - ly;
     let p = j * LW;
     for (let i = 0; i < LW; i++, p++) {
       const k = kindB[p], c = colB[p];
@@ -1333,13 +1403,12 @@ function light() {
           L *= 1 + caK * (1 - smooth(0, 0.3, cs)) + shK * Math.sin(wx * 0.045 + wy * 0.02 + t * 0.15);
         }
         let lv = 0;
-        if (inY && k !== K_ROCK && i >= bx0 && i <= bx1) {
-          const ddx = i - lx, d2 = ddx * ddx + ddy * ddy;
-          if (d2 < lr * lr) {
-            const d = Math.sqrt(d2) || 1, cone = smooth(0.74, 0.9, (ddx * ldx + ddy * ldy) / d);
-            lv = cone * (1 - d / lr) ** 1.4;
-            if (d < 18) lv += (1 - d / 18) ** 2 * 0.5;
-          }
+        if (k !== K_ROCK) for (let n = 0; n < nb; n++) {
+          const B = beams[n], ddx = i - B.sx, ddy = j - B.sy, d2 = ddx * ddx + ddy * ddy;
+          if (d2 >= B.r * B.r) continue;
+          const d = Math.sqrt(d2) || 1, cone = smooth(B.c0, B.c1, (ddx * B.dx + ddy * B.dy) / d);
+          lv += cone * (1 - d / B.r) ** 1.4;
+          if (d < 18) lv += (1 - d / 18) ** 2 * 0.5;
         }
         if (k === K_WATER) { r = r * L + 200 * lv * 0.2 + fl; g = g * L + 228 * lv * 0.22 + fl; b = b * L + 220 * lv * 0.21 + fl; }
         // solid things keep a faint silhouette even in the deep, so you can see where the floor is
@@ -1394,11 +1463,17 @@ function seen(text) {
   clearTimeout(seenTimer); seenTimer = setTimeout(() => el.classList.remove('on'), 4500);
   say(text);
 }
+function lightsSaid() {
+  const on = LIGHTS.filter((L) => L.on).map((L) => L.name);
+  if (!on.length) return 'lights off';
+  if (on.length === LIGHTS.length) return 'all lights on';
+  return `${on.join(' and ')} ${on.length > 1 ? 'lights' : 'light'} on`;
+}
 function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
   const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
-  canvas.setAttribute('aria-label', `${ownSub ? 'Your own little submarine' : 'A little yellow submarine'} ${where}, ${going}, lights ${lamp.on ? 'on' : 'off'}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
+  canvas.setAttribute('aria-label', `${ownSub ? 'Your own little submarine' : 'A little yellow submarine'} ${where}, ${going}, ${lightsSaid()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
 }
 let hudIn = 0, labelIn = 5;
 function hud(dt) {
@@ -1634,9 +1709,10 @@ function listenTick(dt) {
 }
 
 // ---------- Controls ----------
-function setLights(on) {
-  lamp.on = on;
-  $('lights').setAttribute('aria-pressed', on);
+function setLight(id, on) {
+  const L = lightById(id);
+  L.on = on;
+  $(L.btn).setAttribute('aria-pressed', on);
   play('lights');
   describe();
 }
@@ -1656,10 +1732,55 @@ function allStop() {
   say('All stop.');
   describe();
 }
-function setHidden(h) {
-  $('tray').hidden = h; $('head').hidden = h; $('show').hidden = !h;
-  ($(h ? 'show' : 'hide')).focus({ preventScroll: true });
+
+// ---------- What's on screen ----------
+// each part can be switched off in Options, and H clears them all away for a clean view until pressed
+// again. the Options button always stays
+const SHOW_KEY = 'cozy-submarine.show';
+const PARTS = [['head', 'title'], ['gauge', 'gauges'], ['helm', 'helm'], ['divectl', 'depth controls'], ['lampctl', 'light switches']];
+const show = Object.fromEntries(PARTS.map(([id]) => [id, true]));
+let clearView = false;
+try { Object.assign(show, Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem(SHOW_KEY)) || {}).filter(([k, v]) => k in show && typeof v === 'boolean'))); } catch (e) {}
+function applyShow() {
+  for (const [id] of PARTS) {
+    $(id).hidden = clearView || !show[id];
+    $('show-' + id).setAttribute('aria-pressed', show[id]);
+  }
+  $('tray').hidden = ['helm', 'divectl', 'lampctl'].every((id) => $(id).hidden);
+  $('clear').setAttribute('aria-pressed', clearView);
 }
+function setShown(id, on) {
+  show[id] = on;
+  try { localStorage.setItem(SHOW_KEY, JSON.stringify(show)); } catch (e) {}
+  applyShow();
+}
+function setClear(on) {
+  clearView = on;
+  applyShow();
+  say(on ? 'Clear view. Press H to bring everything back.' : 'Everything is back on screen.');
+}
+
+// ---------- Options ----------
+const menu = $('menu');
+function openMenu() { if (!menu.open) { menu.showModal(); showSubName(); } }
+function showSubName() {
+  $('subname').textContent = ownSub ? "You're sailing your own sub." : "You're sailing the yellow sub.";
+}
+$('opts').addEventListener('click', openMenu);
+$('menu-close').addEventListener('click', () => menu.close());
+// a click on the dimmed sea around the menu closes it too
+menu.addEventListener('click', (e) => { if (e.target === menu) menu.close(); });
+for (const [id] of PARTS) $('show-' + id).addEventListener('click', () => setShown(id, !show[id]));
+$('clear').addEventListener('click', () => setClear(!clearView));
+$('usesub').addEventListener('click', () => {
+  let data = null;
+  try { data = cleanSub(JSON.parse($('paste').value)); } catch (e) {}
+  if (!data) { $('subcap').textContent = "That isn't a sub. Copy one from Pixel Bench and paste it here."; return; }
+  try { localStorage.setItem(SUB_KEY, JSON.stringify({ palette: data.pal, rows: data.rows })); } catch (e) {}
+  loadSub(); describe(); showSubName();
+  $('paste').value = '';
+  $('subcap').textContent = 'Your sub is in the water.';
+});
 // the arrows step up while held. a click from the keyboard is one press, and a held Enter doesn't
 // repeat, so it can't race to Full
 function throttleButton(btn, d) {
@@ -1672,10 +1793,8 @@ throttleButton($('left'), -1);
 throttleButton($('right'), 1);
 $('stop').addEventListener('click', allStop);
 $('follow').addEventListener('click', () => setFollow(!sub.follow));
-$('lights').addEventListener('click', () => setLights(!lamp.on));
+for (const L of LIGHTS) $(L.btn).addEventListener('click', () => setLight(L.id, !L.on));
 $('sound').addEventListener('click', () => setSound(!prefs.sound));
-$('hide').addEventListener('click', () => setHidden(true));
-$('show').addEventListener('click', () => setHidden(false));
 $('newsea').addEventListener('click', () => { const s = freshSeed(); writeSeed(s); startWorld(s); say('A new ocean.'); });
 // rise and dive move while held, and a press from the keyboard gives a short nudge
 function holdButton(btn, v) {
@@ -1706,6 +1825,8 @@ const endDrag = () => { drag.on = false; drag.v = 0; canvas.classList.remove('dr
 document.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.matches('input:not([type=range]), textarea, select')) return;
+  // the menu keeps the keys to itself, apart from O to close it again
+  if (menu.open) { if (e.key.toLowerCase() === 'o' && !e.repeat) menu.close(); return; }
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (k === 'ArrowUp' || k === 'w') { keys.up = true; e.preventDefault(); }
   else if (k === 'ArrowDown' || k === 's') { keys.down = true; e.preventDefault(); }
@@ -1714,9 +1835,12 @@ document.addEventListener('keydown', (e) => {
   // Space on a focused button presses that button, so it only means Stop elsewhere
   else if (k === ' ' && !e.target.matches('button, a')) { if (!e.repeat) allStop(); e.preventDefault(); }
   else if (k === 'f' && !e.repeat) setFollow(!sub.follow);
-  else if (k === 'l' && !e.repeat) setLights(!lamp.on);
+  else if (k === 'l' && !e.repeat) setLight('front', !lightById('front').on);
+  else if (k === 'b' && !e.repeat) setLight('bottom', !lightById('bottom').on);
+  else if (k === 'r' && !e.repeat) setLight('rear', !lightById('rear').on);
+  else if (k === 'o' && !e.repeat) { e.preventDefault(); openMenu(); }
   else if (k === 'm' && !e.repeat) setSound(!prefs.sound);
-  else if (k === 'h' && !e.repeat) setHidden(!$('tray').hidden);
+  else if (k === 'h' && !e.repeat) setClear(!clearView);
 });
 document.addEventListener('keyup', (e) => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -1730,9 +1854,9 @@ window.addEventListener('blur', () => { keys.up = keys.down = false; hold.v = 0;
 window.addEventListener('storage', (e) => { if (e.key === SUB_KEY || e.key === null) { loadSub(); describe(); } });
 $('yellow').addEventListener('click', () => {
   try { localStorage.removeItem(SUB_KEY); } catch (e) {}
-  loadSub(); describe();
-  say('Back in the yellow submarine.');
-  $('newsea').focus();
+  loadSub(); describe(); showSubName();
+  $('subcap').textContent = 'Back in the yellow sub.';
+  $('drawsub').focus();
 });
 window.addEventListener('hashchange', () => { const s = readSeed(); if (s && s !== SEED) startWorld(s); });
 let rz = 0;
@@ -1740,6 +1864,7 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layo
 
 // ---------- Go ----------
 $('sound').setAttribute('aria-pressed', prefs.sound);
+applyShow();
 layout();
 SEED = readSeed() || freshSeed();
 writeSeed(SEED);
