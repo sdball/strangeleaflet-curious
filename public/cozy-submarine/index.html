@@ -501,6 +501,8 @@ function loadSub() {
 }
 loadSub();
 
+// shared by the horseshoe crab that crawls and the one that swims
+const HORSESHOE_PAL = { h: '#A08A5C', S: '#7C6842', a: '#6A5838', r: '#4A3C26', t: '#5E4E32', k: '#1E180E', l: '#3E3220' };
 const ART = {
   sardine: spr({ b: '#9DB8C8', s: '#E4ECEF', t: '#7896A8', e: '#1A2028' }, [
     't bb ',
@@ -748,6 +750,31 @@ const ART = {
     'yywwwyy',
     ' wwwww ',
     'w w w w']),
+  // a horseshoe crab from the side: the domed head shield, the lower plate behind it, and the long
+  // tail spike dragging on the floor. it belongs in an ancient ocean as much as this one
+  horseshoe: spr(HORSESHOE_PAL, [
+    '            hhhhh   ',
+    '          hhSSSkSS  ',
+    '      aaahSSSSSSSSS ',
+    '   ttaaaarrrrrrrrrr ',
+    'ttt      l l l l    '], [
+    '            hhhhh   ',
+    '          hhSSSkSS  ',
+    '      aaahSSSSSSSSS ',
+    '   ttaaaarrrrrrrrrr ',
+    'ttt       l l l l   ']),
+  // swimming, it turns over: shell down, legs paddling on top
+  horseshoeSwim: spr(HORSESHOE_PAL, [
+    'ttt      l l l l    ',
+    '   ttaaaarrrrrrrrrr ',
+    '      aaaSSSSSSSSSS ',
+    '          SSSSSkSS  ',
+    '            SSSSS   '], [
+    'ttt       l l l l   ',
+    '   ttaaaarrrrrrrrrr ',
+    '      aaaSSSSSSSSSS ',
+    '          SSSSSkSS  ',
+    '            SSSSS   ']),
 };
 
 // ---------- Animals ----------
@@ -782,6 +809,11 @@ const SPECIES = [
     name: 'Common octopus', note: 'Most of its nerve cells are in its arms, which taste what they touch.' },
   { id: 'crab', art: 'crab', floor: true, min: 0, max: 400, weight: 1.6, speed: [2, 5], fps: 6,
     name: 'Rock crab', note: 'It walks sideways, the way its legs bend best.' },
+  // horseshoe crabs crawl the floor of warm shallows, and now and then one swims past upside down
+  { id: 'horseshoe', art: 'horseshoe', floor: true, min: 0, max: 40, weight: 0.8, climate: 'warm mild', speed: [1, 2.5], fps: 3,
+    name: 'Horseshoe crab', note: 'Older than the dinosaurs, and closer kin to spiders than to crabs.' },
+  { id: 'horseshoeswim', art: 'horseshoeSwim', min: 0, max: 30, weight: 0.4, climate: 'warm mild', speed: [3, 5], bob: 2, fps: 4,
+    name: 'Horseshoe crab', note: 'It swims upside down, and its blood is blue.' },
   { id: 'lantern', art: 'lantern', min: 200, max: 1200, weight: 3, speed: [6, 10], school: [6, 14], bob: 2,
     name: 'Lanternfish', note: 'Every night it rises hundreds of meters to feed, and sinks again by dawn.' },
   { id: 'hatchet', art: 'hatchet', min: 200, max: 1200, weight: 1.6, speed: [3, 6], school: [2, 6], bob: 2,
