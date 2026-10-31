@@ -1019,7 +1019,7 @@ function leapAbout(a, dt) {
       const lp = mb.leap;
       lp.t += dt;
       const [x, y] = memberAt(a, mb), cx = x + sp.spr.w / 2, out = y + sp.spr.h / 2 < waveY(cx, T);
-      if (out !== lp.out) { lp.out = out; splash(cx, out ? 0.4 : 1); }
+      if (out !== lp.out) { lp.out = out; splash(cx, out ? 0.4 : 1, sp.id); }
       if (lp.t >= lp.dur) mb.leap = null;
     } else if (mb.wait > 0) {
       if ((mb.wait -= dt) <= 0) startLeap(a, mb);
@@ -1039,12 +1039,13 @@ function startLeap(a, mb) {
   return true;
 }
 // spray where a leaping animal breaks the surface, bubbles where it dives back in, and the sound of
-// it, which carries a little way and fades as you dive
-function splash(x, k) {
+// each, a rising leap on the way out and a splash on the way in, named for the animal (dolphin-leap,
+// dolphin-splash). they carry a little way and fade as you dive
+function splash(x, k, id) {
   const y = waveY(x, T), n = Math.round((reduced ? 4 : 10) * k);
   for (let i = 0; i < n; i++) parts.push({ type: 'spray', x: x + rand(-2, 2), y: y - 1, vx: rand(-12, 12), vy: -rand(15, 40) * (0.5 + 0.5 * k), life: 2 });
   if (k === 1) for (let i = 0; i < 5; i++) parts.push({ type: 'bub', x: x + rand(-3, 3), y: y + rand(3, 9), vx: rand(-3, 3), vy: -rand(6, 12), life: 3 });
-  play('splash', 0, 0, k * (1 - smooth(40, 220, Math.abs(x - sub.x))) * (1 - smooth(2, 40, subDepth())));
+  play(`${id}-${k === 1 ? 'splash' : 'leap'}`, 0, 0, (1 - smooth(40, 220, Math.abs(x - sub.x))) * (1 - smooth(2, 40, subDepth())));
 }
 
 // ---------- Particles ----------
@@ -1703,10 +1704,11 @@ const SOUNDS = {
     { "kind": "tone", "wave": "sawtooth", "freq": 92, "to": 71, "gain": 0.018, "attack": 0.25, "dur": 0.9, "vary": 0.15 },
     { "kind": "noise", "filter": "bandpass", "freq": 380, "to": 300, "q": 9, "gain": 0.12, "attack": 0.3, "dur": 0.8 }
   ] },
-  "splash": { "name": "Splash", "use": "A leaping dolphin diving back into the sea, heard near the surface, and softer as one leaves it", "layers": [
-    { "kind": "noise", "filter": "bandpass", "freq": 1600, "to": 450, "q": 0.9, "gain": 0.35, "attack": 0.008, "dur": 0.35, "vary": 0.15 },
-    { "kind": "noise", "filter": "highpass", "freq": 3500, "q": 0.7, "gain": 0.06, "attack": 0.01, "dur": 0.12, "at": 0.08, "repeat": 5, "spread": 0.35 },
-    { "kind": "tone", "wave": "sine", "freq": 320, "to": 760, "gain": 0.05, "attack": 0.004, "dur": 0.09, "at": 0.03, "vary": 0.2 }
+  "dolphin-leap": { "name": "Dolphin leap", "use": "A dolphin leaping clear of the water, heard near the surface", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 326, "to": 2030, "gain": 0.123, "attack": 0.004, "dur": 0.172, "vary": 0.256 }
+  ] },
+  "dolphin-splash": { "name": "Dolphin splash", "use": "A leaping dolphin diving back into the sea, heard near the surface", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 3230, "to": 1960, "q": 1.63, "gain": 0.18, "attack": 0.003, "dur": 0.718, "vary": 0.0335 }
   ] },
   "lights": { "name": "Lamp switch", "use": "Switching the lights on or off", "layers": [
     { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
