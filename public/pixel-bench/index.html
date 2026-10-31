@@ -367,7 +367,7 @@ textarea {
       <figure><canvas class="px check" id="s4-real" role="img"></canvas><figcaption>As drawn</figcaption></figure>
     </div>
     <p class="cap" id="s4-cap" aria-live="polite"></p>
-    <p>Look at the horseshoe crab: a pale row on top, a middle brown below it, a darker rim, and a darker plate behind. All browns, and the shell reads as a dome lit from above.</p>
+    <p>Look at the horseshoe crab: a few pale squares where light catches the top of the shell and the tip of the tail, a middle brown for the shell, a darker band down the tail, and the darkest brown for the rim and legs underneath. All browns, and the shell reads as a dome lit from above.</p>
     <h3>A ramp of shades</h3>
     <p>The shades for one material make a <b>ramp</b>. The plain way to build one is to darken a single color. Many artists also turn the hue as they go: shadows lean cooler, toward purple and blue, and highlights lean warmer, toward yellow. Flip between the two ramps on the same ball.</p>
     <div class="row"><button type="button" id="sr-shift" aria-pressed="true">Turn the hue</button></div>
@@ -583,6 +583,8 @@ const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const plural = (n, word) => `${n} ${n === 1 ? word : word + "s"}`;
+// a name can end in "!" (the horseshoe crab's does), which reads oddly mid-sentence
+const plainName = (name) => name.replace(/!+$/, "");
 const fmt = (n) => Math.round(n).toLocaleString("en-US");
 
 let reduced = false;
@@ -952,36 +954,36 @@ const COZY_SUBMARINE_SPRITES = {
       "w w w w"
     ]
   ] },
-  "horseshoe": { "name": "Horseshoe crab", "use": "Crawls the sea floor from 0 to 40 m in warm and mild seas", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
+  "horseshoe": { "name": "Horseshoe crab!", "use": "Crawls the sea floor from 0 to 40 m in warm and mild seas", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
     [
-      "            hhhhh   ",
-      "          hhSSSkSS  ",
-      "      aaahSSSSSSSSS ",
-      "   ttaaaarrrrrrrrrr ",
-      "ttt      l l l l    "
+      "                    ",
+      "            hhSkh   ",
+      "     hSSaaaaSSSSSS  ",
+      "           rrrrrrr  ",
+      "            r r r   "
     ],
     [
-      "            hhhhh   ",
-      "          hhSSSkSS  ",
-      "      aaahSSSSSSSSS ",
-      "   ttaaaarrrrrrrrrr ",
-      "ttt       l l l l   "
+      "            hhSkh   ",
+      "     hSSaaaaSSSSSS  ",
+      "           rrrrrrr  ",
+      "           r r r r  ",
+      "                    "
     ]
   ] },
   "horseshoeSwim": { "name": "Swimming horseshoe crab", "use": "Swims from 0 to 30 m in warm and mild seas, upside down", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
     [
-      "ttt      l l l l    ",
-      "   ttaaaarrrrrrrrrr ",
-      "      aaaSSSSSSSSSS ",
-      "          SSSSSkSS  ",
-      "            SSSSS   "
+      "            r r r   ",
+      "           rrrrrrr  ",
+      "     SSSaaaaSSSSSS  ",
+      "            SSSkS   ",
+      "                    "
     ],
     [
-      "ttt       l l l l   ",
-      "   ttaaaarrrrrrrrrr ",
-      "      aaaSSSSSSSSSS ",
-      "          SSSSSkSS  ",
-      "            SSSSS   "
+      "                    ",
+      "           r r r r  ",
+      "           rrrrrrr  ",
+      "     SSSaaaaSSSSSS  ",
+      "            SSSkS   "
     ]
   ] }
 };
@@ -1436,8 +1438,8 @@ function s2Paint() {
   drawSprite($("s2-a"), s, 0, { scale: 2, one });
   drawSprite($("s2-b"), s, 0, { scale: 4, one });
   drawSprite($("s2-c"), s, 0, { scale: w > 30 ? 8 : 12, one });
-  for (const id of ["s2-a", "s2-b", "s2-c"]) $(id).setAttribute("aria-label", `The ${s.name.toLowerCase()}${s2.sil ? " as a one-color outline" : ""}`);
-  $("s2-cap").textContent = `The ${s.name.toLowerCase()} is ${w} × ${h} squares, and ${countPixels(s)} of them are painted.`;
+  for (const id of ["s2-a", "s2-b", "s2-c"]) $(id).setAttribute("aria-label", `The ${plainName(s.name).toLowerCase()}${s2.sil ? " as a one-color outline" : ""}`);
+  $("s2-cap").textContent = `The ${plainName(s.name).toLowerCase()} is ${w} × ${h} squares, and ${countPixels(s)} of them are painted.`;
 }
 picker($("s2-pick"), ["sardine", "shark", "dolphin", "orca", "turtle", "seal", "humpback"], s2.id, (id) => { s2.id = id; s2Paint(); });
 $("s2-sil").addEventListener("click", () => {
@@ -1634,7 +1636,7 @@ for (const id of ["gull", "crow", "pigeon", "flock-bird"]) {
   const fig = document.createElement("figure"), c = document.createElement("canvas"), cap = document.createElement("figcaption"), s = preset(id, "pocket-places");
   c.className = "px check";
   c.setAttribute("role", "img");
-  c.setAttribute("aria-label", `The shared bird drawing in the ${s.name.toLowerCase()}'s palette`);
+  c.setAttribute("aria-label", `The shared bird drawing in the ${plainName(s.name).toLowerCase()}'s palette`);
   drawSprite(c, s, 0, { scale: 12 });
   cap.textContent = s.name;
   fig.append(c, cap);
@@ -1671,9 +1673,9 @@ function s4Paint() {
   const s = preset(s4.id), { w } = sizeOf(s), { flat, body } = flatMap(s), scale = w > 30 ? 8 : 12;
   drawSprite($("s4-flat"), s, 0, { scale, flat });
   drawSprite($("s4-real"), s, 0, { scale });
-  $("s4-flat").setAttribute("aria-label", `The ${s.name.toLowerCase()} with one body color`);
-  $("s4-real").setAttribute("aria-label", `The ${s.name.toLowerCase()} as the game draws it`);
-  $("s4-cap").textContent = `The ${s.name.toLowerCase()}'s body uses ${plural(body.length, "color")}. Flattened, it uses one.`;
+  $("s4-flat").setAttribute("aria-label", `The ${plainName(s.name).toLowerCase()} with one body color`);
+  $("s4-real").setAttribute("aria-label", `The ${plainName(s.name).toLowerCase()} as the game draws it`);
+  $("s4-cap").textContent = `The ${plainName(s.name).toLowerCase()}'s body uses ${plural(body.length, "color")}. Flattened, it uses one.`;
 }
 picker($("s4-pick"), ["horseshoe", "humpback", "giantsquid", "turtle", "shark"], s4.id, (id) => { s4.id = id; s4Paint(); });
 
@@ -1691,8 +1693,8 @@ function s5Paint() {
   drawSprite($("s5-big"), s, s5.f, { scale: 16, marks });
   drawSprite($("s5-small"), s, s5.f, { scale: 3 });
   const n = changed(s).length, total = Math.max(countPixels(s, 0), countPixels(s, 1));
-  $("s5-big").setAttribute("aria-label", `The ${s.name.toLowerCase()}, frame ${s5.f + 1} of ${s.frames.length}`);
-  $("s5-small").setAttribute("aria-label", `The ${s.name.toLowerCase()} at its real size`);
+  $("s5-big").setAttribute("aria-label", `The ${plainName(s.name).toLowerCase()}, frame ${s5.f + 1} of ${s.frames.length}`);
+  $("s5-small").setAttribute("aria-label", `The ${plainName(s.name).toLowerCase()} at its real size`);
   $("s5-cap").textContent = `${n} of its ${total} pixels change between frames, ${S5_FPS[s5.id]} times a second in the game.`;
 }
 function s5Run() {
@@ -1723,7 +1725,7 @@ function s6Paint() {
   const thin = Object.values(s.palette).filter((v) => readColor(v).thin).length;
   $("s6-out").textContent = `${fmt(s6.m)} m`;
   $("s6-depth").setAttribute("aria-valuetext", `${fmt(s6.m)} meters`);
-  $("s6-sea").setAttribute("aria-label", `The ${s.name.toLowerCase()} at ${fmt(s6.m)} meters`);
+  $("s6-sea").setAttribute("aria-label", `The ${plainName(s.name).toLowerCase()} at ${fmt(s6.m)} meters`);
   const marks = [glow ? `${plural(glow, "glowing color")}` : "", thin ? `${plural(thin, "see-through color")}` : ""].filter(Boolean).join(" and ");
   $("s6-cap").textContent = `${shown} of its ${total} pixels stand out from the water. Its palette has ${marks || "no glowing or see-through colors"}.`;
 }
@@ -1911,14 +1913,14 @@ function select(gid, id) {
 $("b-pick").addEventListener("change", () => {
   const [gid, id] = $("b-pick").value.split("/");
   select(gid, id);
-  say(`${art.name}, ${art.w} × ${art.h}, ${plural(art.frames.length, "frame")}.`);
+  say(`${plainName(art.name)}, ${art.w} × ${art.h}, ${plural(art.frames.length, "frame")}.`);
 });
 
 // ---------- The bench: drawing ----------
 function drawBenchGrid() {
   const under = bench.f > 0 ? art.frames[bench.f - 1] : null;
   bench.cell = drawCells($("b-grid"), $("b-board"), cells(), colorOf, { hover, cursor: cursor.show ? cursor : null, under });
-  $("b-grid").setAttribute("aria-label", `Pixel grid for ${art.name}, frame ${bench.f + 1}, ${art.w} wide and ${art.h} tall, cursor at column ${cursor.i + 1}, row ${cursor.j + 1}`);
+  $("b-grid").setAttribute("aria-label", `Pixel grid for ${plainName(art.name)}, frame ${bench.f + 1}, ${art.w} wide and ${art.h} tall, cursor at column ${cursor.i + 1}, row ${cursor.j + 1}`);
 }
 const trial = { play: !reduced, left: false, f: 0, timer: 0, pose: null };
 // the frames the preview plays: the chosen pose's, or every frame
@@ -1936,7 +1938,7 @@ function drawPreview() {
   $("p-deep-cap").textContent = words.b;
   for (const [id, where] of [["p-day", words.la], ["p-deep", words.lb]]) {
     $(id).style.width = "100%";
-    $(id).setAttribute("aria-label", `${art.name} ${where}, facing ${trial.left ? "left" : "right"}`);
+    $(id).setAttribute("aria-label", `${plainName(art.name)} ${where}, facing ${trial.left ? "left" : "right"}`);
   }
 }
 function previewRun() {
@@ -2290,7 +2292,7 @@ $("b-reset").addEventListener("click", () => {
   bench.f = 0;
   settle();
   commit();
-  say(`${art.name} is back as the game draws it. Undo brings your changes back.`);
+  say(`${plainName(art.name)} is back as the game draws it. Undo brings your changes back.`);
 });
 $("x-reset-all").addEventListener("click", () => {
   const g = groupById(bench.group), n = Object.keys(edits[g.id] || {}).length;
