@@ -501,281 +501,404 @@ function loadSub() {
 }
 loadSub();
 
-// shared by the horseshoe crab that crawls and the one that swims
-const HORSESHOE_PAL = { h: '#A08A5C', S: '#7C6842', a: '#6A5838', r: '#4A3C26', t: '#5E4E32', k: '#1E180E', l: '#3E3220' };
-const ART = {
-  sardine: spr({ b: '#9DB8C8', s: '#E4ECEF', t: '#7896A8', e: '#1A2028' }, [
-    't bb ',
-    'tbbbe',
-    't ss ']),
-  clown: spr({ o: '#F07A2A', W: '#F6F1E8', k: '#2A1A14' }, [
-    '  ooo  ',
-    'ooWoWoo',
-    'ooWoWok',
-    '  ooo  ']),
-  tang: spr({ y: '#F2D33A', k: '#2A2414' }, [
-    '   yy  ',
-    'y yyyy ',
-    'yyyyyyk',
-    'y yyyy ',
-    '   yy  ']),
-  shark: spr({ g: '#7F8C96', W: '#D9DEE0', k: '#1C2328' }, [
-    '         g        ',
-    '        gg        ',
-    'g     gggggggg    ',
-    'gg  gggggggggggg  ',
-    ' ggggggggggggggkgg',
-    'gg  WWWWWWWWWWWWW ',
-    'g      g    g     ']),
-  humpback: spr({ d: '#3E4A58', l: '#AEB8BF', L: '#87939C', f: '#E3E8EB', k: '#12161C' }, [
-    '                        dd                  ',
-    '            ddddddddddddddddddddd           ',
-    'dd      dddddddddddddddddddddddddddddd      ',
-    'ddd  dddddddddddddddddddddddddddddddddddd   ',
-    ' dddddddddddddddddddddddddddddddddddddddddd ',
-    'ddd  ddddddddddddddddddddddddddddddddddkddd ',
-    'dd     llllllllllllllllllllllllllllllllllldd',
-    '          lLlLlLlLlLlLlLlLlLlLlLlLlLlLll    ',
-    '                  fffffffffff               ',
-    '                     fffffff                ']),
-  sperm: spr({ d: '#4E4D52', l: '#8C8A8E', k: '#1A1A1E' }, [
-    '                 d                      ',
-    '      dddddddddddddddddddddddddddddddd  ',
-    'dd  dddddddddddddddddddddddddddddddddddd',
-    'ddddddddddddddddddddddddddddddddddddddd ',
-    'ddd  ddddddddddddddddddddddddkddddddddd ',
-    'd     ddddddddddddddddddddddddddddddddd ',
-    '          dddddddddddddddddddddd lllll  ',
-    '                   dd          ll       ']),
-  orca: spr({ k: '#1A1C22', W: '#F2F2EE', g: '#9A9EA6' }, [
-    '           k            ',
-    '          kk            ',
-    '         kkk            ',
-    'k      kkkkkkkkkkkkk    ',
-    'kk  kkkkkgkkkkkkkWWkkk  ',
-    ' kkkkkkkkkkkkkkkkkkkkkk ',
-    'kk   WWWWWkkkkkkWWWWWWk ',
-    'k        kk             ']),
-  dolphin: spr({ d: '#8494A3', l: '#D3DAE0', k: '#1C2228' }, [
-    '       dd       ',
-    'd   ddddddddd   ',
-    'dd ddddddddddkdd',
-    ' ddlllllllllll  ',
-    'd       ll      ']),
-  // a leaping dolphin, nose up on the way out of the water and nose down on the way back in
-  dolphinLeap: spr({ d: '#8494A3', l: '#D3DAE0', k: '#1C2228' }, [
-    '             ddd',
-    '       d   ddkl ',
-    '       ddddddl  ',
-    '       ddddll   ',
-    '     ddddll     ',
-    '   ddddlll      ',
-    'dddddll l       ',
-    ' ddll           ',
-    'd               ',
-    '                '], [
-    'd               ',
-    ' dd             ',
-    'ddddd   d       ',
-    '   dddd d       ',
-    '   llddddd      ',
-    '     lldddd     ',
-    '       lldddd   ',
-    '        lllddd  ',
-    '       l   llkd ',
-    '             lld']),
-  turtle: spr({ B: '#4E5E32', b: '#7E8C4A', s: '#A8A070', k: '#1E2014' }, [
-    '    bbbbb     ',
-    '  bbBbBbBbb   ',
-    ' bbBbBbBbBbbss',
-    'sbbbbbbbbbbsks',
-    's  ss    ss   ']),
-  seal: spr({ s: '#7A6E62', l: '#A99B8A', f: '#5E544A', k: '#1A1612' }, [
-    '       ssss ',
-    'ff sssssssks',
-    ' fsssllllss ',
-    '    ss  ss  ']),
-  jelly: spr({ b: '~#CFE3F0', m: '~#E6B0CC', t: '~#A9C9DA' }, [
-    ' bbbbb ',
-    'bbmmmbb',
-    'bbbbbbb',
-    ' t t t ',
-    ' t  t  ',
-    '  t  t ',
-    ' t  t  '], [
-    '  bbb  ',
-    ' bmmmb ',
-    ' bbbbb ',
-    ' t t t ',
-    '  t t  ',
-    ' t  t  ',
-    '  t  t ']),
-  atolla: spr({ r: '#6A1E28', R: '#8A2A34', a: '*#6FB7FF', t: '#5A2030' }, [
-    ' rrrrr ',
-    'rrRRRrr',
-    'arararr',
-    ' t t t ',
-    '  t t  '], [
-    ' rrrrr ',
-    'rrRRRrr',
-    'rararar',
-    ' t t t ',
-    ' t   t ']),
-  comb: spr({ b: '~#D8E8F0', a: '*#FF6FA8', c: '*#6FE8FF', d: '*#B8FF6F' }, [
-    ' bbb ',
-    'babcb',
-    'bcbdb',
-    'bdbab',
-    'babcb',
-    ' bbb '], [
-    ' bbb ',
-    'bcbdb',
-    'bdbab',
-    'babcb',
-    'bcbdb',
-    ' bbb ']),
-  squid: spr({ r: '#C8584A', R: '#E07A62', t: '#B04A3E', k: '#1E1414' }, [
-    '    rrrrrr ',
-    'ttkRRRRRRRr',
-    'tt rrrrrrr ',
-    't          ']),
-  giantsquid: spr({ r: '#B8483E', R: '#D86A56', t: '#A03E36', k: '#140E0E' }, [
-    '                    rrrrrrrrr   ',
-    't    tttttttttttrRRRRRRRRRRRRRr ',
-    'tttttttttttttttkRRRRRRRRRRRRRRRr',
-    't    tttttttttttrRRRRRRRRRRRRRr ',
-    '                    rrrrrrrrr   ']),
-  lantern: spr({ d: '#3A4048', t: '#2C3238', e: '#C9D6DE', g: '*#7FE0FF' }, [
-    'tddde',
-    'tgdg ']),
-  hatchet: spr({ s: '#B8C4CC', t: '#8C98A0', e: '#1C2228', g: '*#8FD8FF' }, [
-    ' ss  ',
-    'tssse',
-    ' ss  ',
-    ' gg  ']),
-  angler: spr({ d: '#3A2E2A', l: '#5A4A40', k: '#0E0A08', W: '#E8E0D0', g: '*#C8FFB0' }, [
-    '     lll   ',
-    '    l   l  ',
-    '  ddd    g ',
-    ' ddddddd   ',
-    'tddkddddd  ',
-    'tdddddWdW  ',
-    ' ddddddd   ',
-    '   dd      ']),
-  vampire: spr({ r: '#5A1E2C', e: '#7FB0FF', g: '*#7FC8FF' }, [
-    '   rrr   ',
-    ' rrrrrrr ',
-    'rrrrerrrr',
-    'grr r rrg',
-    ' r  r  r ',
-    'g   g   g']),
-  siphon: spr({ g: '*#8FE8FF', b: '~#9FD0E0', p: '*#FF9FD0' }, [
-    '  b   b   b   b   b   b     ',
-    'gbgbgbgbgbgbgbgbgbgbgbgbgbpp',
-    '   b   b   b   b   b   b    ']),
-  gulper: spr({ d: '#1E1C22', k: '#5A5060', p: '*#FF6FB0' }, [
-    '           ddddd  ',
-    'pdddddddddddddddd ',
-    '            ddddkd',
-    '             dddd ']),
-  dumbo: spr({ p: '#E7A08C', P: '#C97C6A', k: '#2A1612' }, [
-    'P  pppp  P',
-    'PPppppppPP',
-    '  pkppkp  ',
-    '  pppppp  ',
-    '  p pp p  ',
-    ' p  p  p  '], [
-    '   pppp   ',
-    '  pppppp  ',
-    'PPpkppkpPP',
-    'P pppppp P',
-    '  p pp p  ',
-    ' p  p  p  ']),
-  rattail: spr({ g: '#8A8F94', t: '#6E7378', k: '#1C1E22' }, [
-    '      ggggg ',
-    'tttggggggggk',
-    '     gggggg ']),
-  octopus: spr({ o: '#D0603A', O: '#E88A5A', k: '#1E0E08' }, [
-    '   OOO   ',
-    '  OoooO  ',
-    '  okook  ',
-    '  ooooo  ',
-    ' o o o o ',
-    'o o   o o'], [
-    '   OOO   ',
-    '  OoooO  ',
-    '  okook  ',
-    '  ooooo  ',
-    ' o o o o ',
-    ' o o o o ']),
-  crab: spr({ C: '#D8502E', c: '#B23E22', k: '#1E0E08' }, [
-    'C k k C',
-    'CC c CC',
-    ' CCCCC ',
-    'c c c c'], [
-    'C k k C',
-    'CC c CC',
-    ' CCCCC ',
-    ' c c c ']),
-  spidercrab: spr({ o: '#E07A3A', O: '#C8622A' }, [
-    '  o       o  ',
-    '   o OOO o   ',
-    ' o  OOOOO  o ',
-    'o  o o o o  o',
-    '  o       o  '], [
-    '  o       o  ',
-    '   o OOO o   ',
-    ' o  OOOOO  o ',
-    ' o o o o o o ',
-    'o  o     o  o']),
-  tripod: spr({ g: '#9A9590', t: '#7E7A76', l: '#6E6A66', k: '#1E1C1A' }, [
-    '    gggg  ',
-    'tggggggggk',
-    '   gggg   ',
-    '   l   l  ',
-    '   l   l  ',
-    '  l   l   ']),
-  seapig: spr({ p: '~#E8B4B8', P: '#D89AA0', k: '#4A2A2E' }, [
-    '  P P   ',
-    ' pppppp ',
-    'pppppppk',
-    ' P P P  ']),
-  snailfish: spr({ s: '~#F0D6D2', k: '#4A3A3A' }, [
-    '  ssss   ',
-    'sssssssk ',
-    '  sssss  ']),
-  amphipod: spr({ a: '#E8E4D8' }, ['aa']),
-  yeti: spr({ w: '#EDE8E0', y: '#D8D0C0' }, [
-    'y     y',
-    'yywwwyy',
-    ' wwwww ',
-    'w w w w']),
-  // a horseshoe crab from the side: the domed head shield, the lower plate behind it, and the long
-  // tail spike dragging on the floor. it belongs in an ancient ocean as much as this one
-  horseshoe: spr(HORSESHOE_PAL, [
-    '            hhhhh   ',
-    '          hhSSSkSS  ',
-    '      aaahSSSSSSSSS ',
-    '   ttaaaarrrrrrrrrr ',
-    'ttt      l l l l    '], [
-    '            hhhhh   ',
-    '          hhSSSkSS  ',
-    '      aaahSSSSSSSSS ',
-    '   ttaaaarrrrrrrrrr ',
-    'ttt       l l l l   ']),
-  // swimming, it turns over: shell down, legs paddling on top
-  horseshoeSwim: spr(HORSESHOE_PAL, [
-    'ttt      l l l l    ',
-    '   ttaaaarrrrrrrrrr ',
-    '      aaaSSSSSSSSSS ',
-    '          SSSSSkSS  ',
-    '            SSSSS   '], [
-    'ttt       l l l l   ',
-    '   ttaaaarrrrrrrrrr ',
-    '      aaaSSSSSSSSSS ',
-    '          SSSSSkSS  ',
-    '            SSSSS   ']),
+// ---------- Sprite data ----------
+// every creature as data: a palette of letters, then one or more frames of rows, a letter per pixel
+// and a space for nothing. art faces right. a color starting with * glows in the dark, and one
+// starting with ~ is see-through. Pixel Bench (../pixel-bench/) has an identical copy to look at and
+// edit, and its export pastes straight in here, so a change here goes there too, and the other way round
+const SPRITES = {
+  "sardine": { "name": "Sardine", "use": "Swims in groups of 8 to 16 from 0 to 200 m", "palette": { "b": "#9DB8C8", "s": "#E4ECEF", "t": "#7896A8", "e": "#1A2028" }, "frames": [
+    [
+      "t bb ",
+      "tbbbe",
+      "t ss "
+    ]
+  ] },
+  "clown": { "name": "Clownfish", "use": "Swims in groups of 1 to 3 from 0 to 40 m in warm seas", "palette": { "o": "#F07A2A", "W": "#F6F1E8", "k": "#2A1A14" }, "frames": [
+    [
+      "  ooo  ",
+      "ooWoWoo",
+      "ooWoWok",
+      "  ooo  "
+    ]
+  ] },
+  "tang": { "name": "Yellow tang", "use": "Swims in groups of 1 to 4 from 0 to 50 m in warm and mild seas", "palette": { "y": "#F2D33A", "k": "#2A2414" }, "frames": [
+    [
+      "   yy  ",
+      "y yyyy ",
+      "yyyyyyk",
+      "y yyyy ",
+      "   yy  "
+    ]
+  ] },
+  "shark": { "name": "Blue shark", "use": "Swims from 0 to 700 m", "palette": { "g": "#7F8C96", "W": "#D9DEE0", "k": "#1C2328" }, "frames": [
+    [
+      "         g        ",
+      "        gg        ",
+      "g     gggggggg    ",
+      "gg  gggggggggggg  ",
+      " ggggggggggggggkgg",
+      "gg  WWWWWWWWWWWWW ",
+      "g      g    g     "
+    ]
+  ] },
+  "humpback": { "name": "Humpback whale", "use": "Swims from 5 to 250 m, a rare sight", "palette": { "d": "#3E4A58", "l": "#AEB8BF", "L": "#87939C", "f": "#E3E8EB", "k": "#12161C" }, "frames": [
+    [
+      "                        dd                  ",
+      "            ddddddddddddddddddddd           ",
+      "dd      dddddddddddddddddddddddddddddd      ",
+      "ddd  dddddddddddddddddddddddddddddddddddd   ",
+      " dddddddddddddddddddddddddddddddddddddddddd ",
+      "ddd  ddddddddddddddddddddddddddddddddddkddd ",
+      "dd     llllllllllllllllllllllllllllllllllldd",
+      "          lLlLlLlLlLlLlLlLlLlLlLlLlLlLll    ",
+      "                  fffffffffff               ",
+      "                     fffffff                "
+    ]
+  ] },
+  "sperm": { "name": "Sperm whale", "use": "Swims from 20 to 2,200 m, a rare sight", "palette": { "d": "#4E4D52", "l": "#8C8A8E", "k": "#1A1A1E" }, "frames": [
+    [
+      "                 d                      ",
+      "      dddddddddddddddddddddddddddddddd  ",
+      "dd  dddddddddddddddddddddddddddddddddddd",
+      "ddddddddddddddddddddddddddddddddddddddd ",
+      "ddd  ddddddddddddddddddddddddkddddddddd ",
+      "d     ddddddddddddddddddddddddddddddddd ",
+      "          dddddddddddddddddddddd lllll  ",
+      "                   dd          ll       "
+    ]
+  ] },
+  "orca": { "name": "Orca", "use": "Swims in groups of 2 to 3 from 0 to 300 m in cold and mild seas, a rare sight", "palette": { "k": "#1A1C22", "W": "#F2F2EE", "g": "#9A9EA6" }, "frames": [
+    [
+      "           k            ",
+      "          kk            ",
+      "         kkk            ",
+      "k      kkkkkkkkkkkkk    ",
+      "kk  kkkkkgkkkkkkkWWkkk  ",
+      " kkkkkkkkkkkkkkkkkkkkkk ",
+      "kk   WWWWWkkkkkkWWWWWWk ",
+      "k        kk             "
+    ]
+  ] },
+  "dolphin": { "name": "Bottlenose dolphin", "use": "Swims in groups of 2 to 4 from 0 to 60 m in warm and mild seas", "palette": { "d": "#8494A3", "l": "#D3DAE0", "k": "#1C2228" }, "frames": [
+    [
+      "       dd       ",
+      "d   ddddddddd   ",
+      "dd ddddddddddkdd",
+      " ddlllllllllll  ",
+      "d       ll      "
+    ]
+  ] },
+  "dolphinLeap": { "name": "Leaping dolphin", "use": "A dolphin leaping clear of the water: nose up on the way out, nose down on the way back in", "palette": { "d": "#8494A3", "l": "#D3DAE0", "k": "#1C2228" }, "frames": [
+    [
+      "             ddd",
+      "       d   ddkl ",
+      "       ddddddl  ",
+      "       ddddll   ",
+      "     ddddll     ",
+      "   ddddlll      ",
+      "dddddll l       ",
+      " ddll           ",
+      "d               ",
+      "                "
+    ],
+    [
+      "d               ",
+      " dd             ",
+      "ddddd   d       ",
+      "   dddd d       ",
+      "   llddddd      ",
+      "     lldddd     ",
+      "       lldddd   ",
+      "        lllddd  ",
+      "       l   llkd ",
+      "             lld"
+    ]
+  ] },
+  "turtle": { "name": "Green sea turtle", "use": "Swims from 0 to 120 m in warm and mild seas", "palette": { "B": "#4E5E32", "b": "#7E8C4A", "s": "#A8A070", "k": "#1E2014" }, "frames": [
+    [
+      "    bbbbb     ",
+      "  bbBbBbBbb   ",
+      " bbBbBbBbBbbss",
+      "sbbbbbbbbbbsks",
+      "s  ss    ss   "
+    ]
+  ] },
+  "seal": { "name": "Harbor seal", "use": "Swims from 0 to 120 m in cold seas", "palette": { "s": "#7A6E62", "l": "#A99B8A", "f": "#5E544A", "k": "#1A1612" }, "frames": [
+    [
+      "       ssss ",
+      "ff sssssssks",
+      " fsssllllss ",
+      "    ss  ss  "
+    ]
+  ] },
+  "jelly": { "name": "Moon jelly", "use": "Swims from 0 to 700 m", "palette": { "b": "~#CFE3F0", "m": "~#E6B0CC", "t": "~#A9C9DA" }, "frames": [
+    [
+      " bbbbb ",
+      "bbmmmbb",
+      "bbbbbbb",
+      " t t t ",
+      " t  t  ",
+      "  t  t ",
+      " t  t  "
+    ],
+    [
+      "  bbb  ",
+      " bmmmb ",
+      " bbbbb ",
+      " t t t ",
+      "  t t  ",
+      " t  t  ",
+      "  t  t "
+    ]
+  ] },
+  "atolla": { "name": "Atolla jellyfish", "use": "Swims from 400 to 4,000 m", "palette": { "r": "#6A1E28", "R": "#8A2A34", "a": "*#6FB7FF", "t": "#5A2030" }, "frames": [
+    [
+      " rrrrr ",
+      "rrRRRrr",
+      "arararr",
+      " t t t ",
+      "  t t  "
+    ],
+    [
+      " rrrrr ",
+      "rrRRRrr",
+      "rararar",
+      " t t t ",
+      " t   t "
+    ]
+  ] },
+  "comb": { "name": "Comb jelly", "use": "Swims from 100 to 3,000 m", "palette": { "b": "~#D8E8F0", "a": "*#FF6FA8", "c": "*#6FE8FF", "d": "*#B8FF6F" }, "frames": [
+    [
+      " bbb ",
+      "babcb",
+      "bcbdb",
+      "bdbab",
+      "babcb",
+      " bbb "
+    ],
+    [
+      " bbb ",
+      "bcbdb",
+      "bdbab",
+      "babcb",
+      "bcbdb",
+      " bbb "
+    ]
+  ] },
+  "squid": { "name": "Humboldt squid", "use": "Swims in groups of 1 to 4 from 60 to 900 m", "palette": { "r": "#C8584A", "R": "#E07A62", "t": "#B04A3E", "k": "#1E1414" }, "frames": [
+    [
+      "    rrrrrr ",
+      "ttkRRRRRRRr",
+      "tt rrrrrrr ",
+      "t          "
+    ]
+  ] },
+  "giantsquid": { "name": "Giant squid", "use": "Swims from 300 to 1,200 m, a rare sight", "palette": { "r": "#B8483E", "R": "#D86A56", "t": "#A03E36", "k": "#140E0E" }, "frames": [
+    [
+      "                    rrrrrrrrr   ",
+      "t    tttttttttttrRRRRRRRRRRRRRr ",
+      "tttttttttttttttkRRRRRRRRRRRRRRRr",
+      "t    tttttttttttrRRRRRRRRRRRRRr ",
+      "                    rrrrrrrrr   "
+    ]
+  ] },
+  "lantern": { "name": "Lanternfish", "use": "Swims in groups of 6 to 14 from 200 to 1,200 m", "palette": { "d": "#3A4048", "t": "#2C3238", "e": "#C9D6DE", "g": "*#7FE0FF" }, "frames": [
+    [
+      "tddde",
+      "tgdg "
+    ]
+  ] },
+  "hatchet": { "name": "Hatchetfish", "use": "Swims in groups of 2 to 6 from 200 to 1,200 m", "palette": { "s": "#B8C4CC", "t": "#8C98A0", "e": "#1C2228", "g": "*#8FD8FF" }, "frames": [
+    [
+      " ss  ",
+      "tssse",
+      " ss  ",
+      " gg  "
+    ]
+  ] },
+  "angler": { "name": "Anglerfish", "use": "Swims from 900 to 4,000 m", "palette": { "d": "#3A2E2A", "t": "#2A201D", "l": "#5A4A40", "k": "#0E0A08", "W": "#E8E0D0", "g": "*#C8FFB0" }, "frames": [
+    [
+      "     lll   ",
+      "    l   l  ",
+      "  ddd    g ",
+      " ddddddd   ",
+      "tddkddddd  ",
+      "tdddddWdW  ",
+      " ddddddd   ",
+      "   dd      "
+    ]
+  ] },
+  "vampire": { "name": "Vampire squid", "use": "Swims from 600 to 1,500 m", "palette": { "r": "#5A1E2C", "e": "#7FB0FF", "g": "*#7FC8FF" }, "frames": [
+    [
+      "   rrr   ",
+      " rrrrrrr ",
+      "rrrrerrrr",
+      "grr r rrg",
+      " r  r  r ",
+      "g   g   g"
+    ]
+  ] },
+  "siphon": { "name": "Siphonophore", "use": "Swims from 500 to 3,500 m", "palette": { "g": "*#8FE8FF", "b": "~#9FD0E0", "p": "*#FF9FD0" }, "frames": [
+    [
+      "  b   b   b   b   b   b     ",
+      "gbgbgbgbgbgbgbgbgbgbgbgbgbpp",
+      "   b   b   b   b   b   b    "
+    ]
+  ] },
+  "gulper": { "name": "Gulper eel", "use": "Swims from 600 to 3,000 m", "palette": { "d": "#1E1C22", "k": "#5A5060", "p": "*#FF6FB0" }, "frames": [
+    [
+      "           ddddd  ",
+      "pdddddddddddddddd ",
+      "            ddddkd",
+      "             dddd "
+    ]
+  ] },
+  "dumbo": { "name": "Dumbo octopus", "use": "Swims from 1,000 to 7,000 m", "palette": { "p": "#E7A08C", "P": "#C97C6A", "k": "#2A1612" }, "frames": [
+    [
+      "P  pppp  P",
+      "PPppppppPP",
+      "  pkppkp  ",
+      "  pppppp  ",
+      "  p pp p  ",
+      " p  p  p  "
+    ],
+    [
+      "   pppp   ",
+      "  pppppp  ",
+      "PPpkppkpPP",
+      "P pppppp P",
+      "  p pp p  ",
+      " p  p  p  "
+    ]
+  ] },
+  "rattail": { "name": "Rattail", "use": "Swims from 1,000 to 6,000 m", "palette": { "g": "#8A8F94", "t": "#6E7378", "k": "#1C1E22" }, "frames": [
+    [
+      "      ggggg ",
+      "tttggggggggk",
+      "     gggggg "
+    ]
+  ] },
+  "octopus": { "name": "Common octopus", "use": "Crawls the sea floor from 0 to 200 m", "palette": { "o": "#D0603A", "O": "#E88A5A", "k": "#1E0E08" }, "frames": [
+    [
+      "   OOO   ",
+      "  OoooO  ",
+      "  okook  ",
+      "  ooooo  ",
+      " o o o o ",
+      "o o   o o"
+    ],
+    [
+      "   OOO   ",
+      "  OoooO  ",
+      "  okook  ",
+      "  ooooo  ",
+      " o o o o ",
+      " o o o o "
+    ]
+  ] },
+  "crab": { "name": "Rock crab", "use": "Crawls the sea floor from 0 to 400 m", "palette": { "C": "#D8502E", "c": "#B23E22", "k": "#1E0E08" }, "frames": [
+    [
+      "C k k C",
+      "CC c CC",
+      " CCCCC ",
+      "c c c c"
+    ],
+    [
+      "C k k C",
+      "CC c CC",
+      " CCCCC ",
+      " c c c "
+    ]
+  ] },
+  "spidercrab": { "name": "Japanese spider crab", "use": "Crawls the sea floor from 150 to 1,500 m", "palette": { "o": "#E07A3A", "O": "#C8622A" }, "frames": [
+    [
+      "  o       o  ",
+      "   o OOO o   ",
+      " o  OOOOO  o ",
+      "o  o o o o  o",
+      "  o       o  "
+    ],
+    [
+      "  o       o  ",
+      "   o OOO o   ",
+      " o  OOOOO  o ",
+      " o o o o o o ",
+      "o  o     o  o"
+    ]
+  ] },
+  "tripod": { "name": "Tripod fish", "use": "Stands on the sea floor from 900 to 6,000 m, waiting for food to drift by", "palette": { "g": "#9A9590", "t": "#7E7A76", "l": "#6E6A66", "k": "#1E1C1A" }, "frames": [
+    [
+      "    gggg  ",
+      "tggggggggk",
+      "   gggg   ",
+      "   l   l  ",
+      "   l   l  ",
+      "  l   l   "
+    ]
+  ] },
+  "seapig": { "name": "Sea pig", "use": "Crawls the sea floor from 1,000 to 9,500 m", "palette": { "p": "~#E8B4B8", "P": "#D89AA0", "k": "#4A2A2E" }, "frames": [
+    [
+      "  P P   ",
+      " pppppp ",
+      "pppppppk",
+      " P P P  "
+    ]
+  ] },
+  "snailfish": { "name": "Hadal snailfish", "use": "Swims in groups of 1 to 4 from 6,000 to 8,300 m", "palette": { "s": "~#F0D6D2", "k": "#4A3A3A" }, "frames": [
+    [
+      "  ssss   ",
+      "sssssssk ",
+      "  sssss  "
+    ]
+  ] },
+  "amphipod": { "name": "Amphipod", "use": "Swims in groups of 8 to 18 from 5,000 to 11,500 m", "palette": { "a": "#E8E4D8" }, "frames": [
+    [
+      "aa"
+    ]
+  ] },
+  "yeti": { "name": "Yeti crab", "use": "The pale crab that lives among the black smokers, drawn at every vent field", "palette": { "w": "#EDE8E0", "y": "#D8D0C0" }, "frames": [
+    [
+      "y     y",
+      "yywwwyy",
+      " wwwww ",
+      "w w w w"
+    ]
+  ] },
+  "horseshoe": { "name": "Horseshoe crab", "use": "Crawls the sea floor from 0 to 40 m in warm and mild seas", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
+    [
+      "            hhhhh   ",
+      "          hhSSSkSS  ",
+      "      aaahSSSSSSSSS ",
+      "   ttaaaarrrrrrrrrr ",
+      "ttt      l l l l    "
+    ],
+    [
+      "            hhhhh   ",
+      "          hhSSSkSS  ",
+      "      aaahSSSSSSSSS ",
+      "   ttaaaarrrrrrrrrr ",
+      "ttt       l l l l   "
+    ]
+  ] },
+  "horseshoeSwim": { "name": "Swimming horseshoe crab", "use": "Swims from 0 to 30 m in warm and mild seas, upside down", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
+    [
+      "ttt      l l l l    ",
+      "   ttaaaarrrrrrrrrr ",
+      "      aaaSSSSSSSSSS ",
+      "          SSSSSkSS  ",
+      "            SSSSS   "
+    ],
+    [
+      "ttt       l l l l   ",
+      "   ttaaaarrrrrrrrrr ",
+      "      aaaSSSSSSSSSS ",
+      "          SSSSSkSS  ",
+      "            SSSSS   "
+    ]
+  ] }
 };
+const ART = Object.fromEntries(Object.entries(SPRITES).map(([id, s]) => [id, spr(s.palette, ...s.frames)]));
 
 // ---------- Animals ----------
 // min and max are depths in meters. weight is how often each turns up among those that fit.
