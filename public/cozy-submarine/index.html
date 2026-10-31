@@ -159,8 +159,8 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   </div>
   <h3>Your sub</h3>
   <p id="subname" aria-live="polite"></p>
-  <p><a href="../pixel-bench/" id="drawsub">Draw your own sub in Pixel Bench</a>, then sail it from there, or copy it and paste it here.</p>
-  <textarea id="paste" aria-label="Paste a sub from Pixel Bench" spellcheck="false" autocomplete="off"></textarea>
+  <p><a href="../custom-submarine/" id="drawsub">Draw your own sub in Custom Submarine</a>, then sail it from there, or copy it and paste it here.</p>
+  <textarea id="paste" aria-label="Paste a sub from Custom Submarine" spellcheck="false" autocomplete="off"></textarea>
   <div class="group">
     <button type="button" class="chip" id="usesub">Sail the pasted sub</button>
     <button type="button" class="chip" id="yellow" hidden>Back to the yellow sub</button>
@@ -448,7 +448,7 @@ const LENS_OFF = '#8A8676', LENS_ON = '#FFF7DA';
 let SUB, SUBG, ownSub = false;
 
 // ---------- Your own sub ----------
-// Pixel Bench (../pixel-bench/) saves a sub here, as { palette, rows } laid out like SUB_PAL and SUB_ROWS
+// Custom Submarine (../custom-submarine/) saves a sub here, as { palette, rows } laid out like SUB_PAL and SUB_ROWS
 const SUB_KEY = 'cozy-submarine.sub', SUB_MAX_W = 32, SUB_MAX_H = 16;
 function cleanSub(data) {
   if (!data || typeof data !== 'object' || !data.palette || typeof data.palette !== 'object' || !Array.isArray(data.rows)) return null;
@@ -2037,7 +2037,7 @@ $('clear').addEventListener('click', () => setClear(!clearView));
 $('usesub').addEventListener('click', () => {
   let data = null;
   try { data = cleanSub(JSON.parse($('paste').value)); } catch (e) {}
-  if (!data) { $('subcap').textContent = "That isn't a sub. Copy one from Pixel Bench and paste it here."; return; }
+  if (!data) { $('subcap').textContent = "That isn't a sub. Copy one from Custom Submarine and paste it here."; return; }
   try { localStorage.setItem(SUB_KEY, JSON.stringify({ palette: data.pal, rows: data.rows })); } catch (e) {}
   loadSub(); describe(); showSubName();
   $('paste').value = '';
@@ -2112,7 +2112,7 @@ document.addEventListener('keyup', (e) => {
   if (k === 'ArrowRight' || k === 'd') releaseThrottle(1);
 });
 window.addEventListener('blur', () => { keys.up = keys.down = false; hold.v = 0; releaseThrottle(); endDrag(); });
-// Pixel Bench may save a new sub while this page is open in another tab
+// Custom Submarine may save a new sub while this page is open in another tab
 window.addEventListener('storage', (e) => { if (e.key === SUB_KEY || e.key === null) { loadSub(); describe(); } });
 $('yellow').addEventListener('click', () => {
   try { localStorage.removeItem(SUB_KEY); } catch (e) {}

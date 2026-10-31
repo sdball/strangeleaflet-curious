@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pixel Bench — The Cabinet of Curios</title>
+<title>Custom Submarine — The Cabinet of Curios</title>
 <meta name="description" content="Draw your own submarine for Cozy Submarine one pixel at a time, watch it sail in the shallows and the deep, then send it out to sea.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚓</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Barlow:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -198,7 +198,7 @@ textarea {
 <body>
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
-  <h1>Pixel Bench</h1>
+  <h1>Custom Submarine</h1>
   <p class="lede">Draw your own submarine for <a href="../cozy-submarine/">Cozy Submarine</a>, one pixel at a time. Start from the yellow sub or a clear grid, watch your design sail in the shallows and the deep, then send it out to sea.</p>
   <p class="howto">Click or drag on the grid to paint, and right-click to rub out. On the grid, the arrow keys move a cursor and <kbd>Space</kbd> paints. <kbd>P</kbd> pencil, <kbd>F</kbd> fill, <kbd>I</kbd> picker, <kbd>0</kbd>–<kbd>9</kbd> pick a color, <kbd>L</kbd> lights, <kbd>Ctrl</kbd> <kbd>Z</kbd> undo.</p>
 
@@ -358,13 +358,14 @@ const lightOf = (k) => LIGHTS.find((L) => L.k === k);
 const PROP = '#6E6A62', SHAFT = '#4A463E';
 
 // ---------- Limits and storage ----------
+// this page began as Pixel Bench, so its subs keep that format name and old copies still load
 const FORMAT = "pixel-bench/1";
 const MAX_W = 32, MAX_H = 16, MIN_W = 4, MIN_H = 3, MAX_COLORS = 16;
 // the strip left of the drawing, where the propeller goes
 const MARGIN = 2;
 // letters for new colors. L, U, and T are the lights' lenses, and digits would reorder a palette object
 const KEYS = "ABCDEFGHIJKMNOPQRSVWXYZabcdefghijklmnopqrstuvwxyz";
-const DRAFT_KEY = "pixel-bench.sub", SUB_KEY = "cozy-submarine.sub";
+const DRAFT_KEY = "custom-submarine.draft", OLD_DRAFT_KEY = "pixel-bench.sub", SUB_KEY = "cozy-submarine.sub";
 const NEW_COLORS = ["#E05A47", "#4FA3D9", "#6BBF59", "#9B6FD1", "#F2F2EA", "#2B2B30", "#E89A3C", "#3FB8AF"];
 
 // ---------- State ----------
@@ -973,7 +974,7 @@ $("x-download").addEventListener("click", () => {
 function load(text) {
   let data;
   try { data = JSON.parse(text); } catch (e) { $("x-cap").textContent = "That isn't a sub: it doesn't read as JSON."; return; }
-  if (data && data.format !== undefined && data.format !== FORMAT) { $("x-cap").textContent = "That isn't a Pixel Bench sub."; return; }
+  if (data && data.format !== undefined && data.format !== FORMAT) { $("x-cap").textContent = "That isn't a sub from this page."; return; }
   const a = cleanArt(data);
   if (!a) { $("x-cap").textContent = "That has no sub in it the bench can read."; return; }
   begin();
@@ -1032,7 +1033,7 @@ $("redo").addEventListener("click", redo);
 // ---------- Start ----------
 (function boot() {
   let draft = null;
-  try { draft = cleanArt(JSON.parse(stored(DRAFT_KEY))); } catch (e) {}
+  try { draft = cleanArt(JSON.parse(stored(DRAFT_KEY) || stored(OLD_DRAFT_KEY))); } catch (e) {}
   art = draft || yellowSub();
   settle();
   new ResizeObserver(() => drawGrid()).observe($("board"));
