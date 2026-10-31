@@ -1,0 +1,1884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pixel Bench — The Cabinet of Curios</title>
+<meta name="description" content="See how a few dozen pixels become a dolphin, a jellyfish, or a glowing anglerfish. Work through stations on letters, outlines, palettes, shading, frames, and light, then edit every sprite in Cozy Submarine.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* a hobby cutting mat: grey-green with a printed grid, a cream work card, a green pencil */
+  --bg: #D5E0D8;
+  --grid: rgba(31, 61, 48, .09);
+  --panel: #F7F8F2;
+  --edge: #B9C8BD;
+  --ink: #1D2A25;
+  --muted: #55665E;
+  --accent: #23795A;
+  --accent-ink: #FFFFFF;
+  --mark: #D6336C;
+  --btn: #FFFFFF;
+  --btn-edge: #9DB2A5;
+  --cell: #FFFFFF;
+  --check: #E9EEE9;
+  --line: rgba(29, 42, 37, .14);
+  --line-strong: rgba(29, 42, 37, .45);
+  --focus: #D6336C;
+
+  --pixel: "Pixelify Sans", "Courier New", system-ui, sans-serif;
+  --sans: "Atkinson Hyperlegible", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+/* dark is a light table after hours */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111916; --grid: rgba(140, 220, 180, .06); --panel: #19231F; --edge: #2E4239; --ink: #E3EEE8; --muted: #9DB3A8;
+    --accent: #67D49F; --accent-ink: #0B1A13; --mark: #FF6FA3; --btn: #1F2C27; --btn-edge: #3D574B;
+    --cell: #1B2622; --check: #222F2A; --line: rgba(220, 240, 230, .12); --line-strong: rgba(220, 240, 230, .45);
+    --focus: #FF6FA3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111916; --grid: rgba(140, 220, 180, .06); --panel: #19231F; --edge: #2E4239; --ink: #E3EEE8; --muted: #9DB3A8;
+  --accent: #67D49F; --accent-ink: #0B1A13; --mark: #FF6FA3; --btn: #1F2C27; --btn-edge: #3D574B;
+  --cell: #1B2622; --check: #222F2A; --line: rgba(220, 240, 230, .12); --line-strong: rgba(220, 240, 230, .45);
+  --focus: #FF6FA3;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1, h2 { font-family: var(--pixel); font-weight: 700; letter-spacing: .02em; }
+h1 { font-size: clamp(2.2rem, 7vw, 3.4rem); line-height: 1.05; margin: 0 0 .6rem; }
+h2 { font-size: 1.45rem; line-height: 1.2; margin: 0; }
+h3 { font: 700 1.05rem var(--sans); margin: 1.4rem 0 .2rem; }
+.lede { font-size: 1.15rem; max-width: 62ch; margin: 0 0 .75rem; }
+.howto { color: var(--muted); max-width: 66ch; margin: 0 0 1.5rem; }
+kbd { font: 600 .78em var(--mono); padding: .05em .35em; border: 1px solid var(--btn-edge); border-radius: 4px; background: var(--btn); }
+code { font-family: var(--mono); font-size: .88em; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  margin: 0 0 1.25rem;
+  box-shadow: 0 2px 0 var(--edge);
+}
+.panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.station { font: 500 .85rem var(--pixel); color: var(--accent); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 .1rem; }
+.panel p { max-width: 68ch; }
+.readout { font: 400 .92rem var(--mono); color: var(--muted); margin: 0; }
+
+button {
+  font: 700 .95rem var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 6px;
+  min-height: 44px;
+  padding: .45rem .85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:hover:not(:disabled) { border-color: var(--ink); }
+button:disabled { opacity: .4; cursor: default; }
+button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
+.row .label { color: var(--muted); font-size: .95rem; margin-right: .1rem; }
+.row .spacer { flex: 1 1 0; min-width: .5rem; }
+.cap { color: var(--muted); font-size: .95rem; min-height: 1.5em; margin: .4rem 0; }
+.seg { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+
+/* pixel pictures: drawn one canvas pixel per sprite pixel, then scaled up without blurring */
+canvas.px { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.check {
+  background-color: var(--cell);
+  background-image:
+    linear-gradient(45deg, var(--check) 25%, transparent 25%, transparent 75%, var(--check) 75%),
+    linear-gradient(45deg, var(--check) 25%, transparent 25%, transparent 75%, var(--check) 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+}
+.shelf { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: flex-end; margin: .75rem 0; }
+.shelf figure { margin: 0; }
+.shelf figcaption { color: var(--muted); font-size: .88rem; margin-top: .3rem; }
+.scroll { overflow-x: auto; max-width: 100%; }
+
+/* station 1: the picture and its letters side by side */
+.letters { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem 1.5rem; align-items: start; margin: .75rem 0; }
+.letters textarea { min-height: 0; height: auto; font-size: 20px; line-height: 1.35; letter-spacing: .1em; white-space: pre; overflow-x: auto; }
+.pal { list-style: none; padding: 0; margin: .5rem 0 0; display: flex; flex-wrap: wrap; gap: .3rem 1rem; font: 400 .95rem var(--mono); }
+.pal li { display: flex; align-items: center; gap: .4rem; }
+.pal .chip { width: 18px; height: 18px; border-radius: 3px; border: 1px solid var(--line-strong); display: inline-block; }
+.pal .glow { box-shadow: 0 0 6px 2px currentColor; }
+.pal .thin { opacity: .55; }
+@media (max-width: 640px) { .letters { grid-template-columns: 1fr; } }
+
+/* the editing grids */
+/* the widest creatures still fit a phone at 6 px a square, and the board scrolls past that */
+.board { width: 100%; overflow-x: auto; }
+canvas.grid { display: block; touch-action: none; cursor: crosshair; }
+
+input[type="range"] { width: min(100%, 26rem); accent-color: var(--accent); height: 44px; }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; margin: .6rem 0; }
+.ctl label { font-weight: 700; }
+.ctl output { font: 400 .95rem var(--mono); color: var(--muted); min-width: 6ch; }
+
+/* station 3 */
+.pickers { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+.hexpick {
+  display: inline-flex; align-items: center; gap: .45rem;
+  min-height: 44px; padding: 0 .6rem 0 .5rem;
+  border: 1px solid var(--btn-edge); border-radius: 6px; background: var(--btn);
+  font: 700 .95rem var(--sans); cursor: pointer;
+}
+.hexpick input { width: 34px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer; }
+.hexpick code { font-weight: 400; }
+.hexpick:has(input:disabled) { opacity: .4; cursor: default; }
+.hexpick:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.hexpick input:focus-visible { outline: none; }
+
+/* the bench */
+.bench-top { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; margin: .5rem 0; }
+.bench-top label { font-weight: 700; }
+select {
+  font: 400 16px var(--sans); color: var(--ink); background: var(--btn);
+  border: 1px solid var(--btn-edge); border-radius: 6px; min-height: 44px; padding: .3rem .5rem; max-width: 100%;
+}
+.use { color: var(--muted); margin: .2rem 0 .6rem; }
+.swatches { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 .75rem; }
+.sw {
+  position: relative;
+  width: 44px; height: 44px; min-height: 44px; padding: 0;
+  display: grid; place-items: center;
+}
+.sw .chip { width: 30px; height: 30px; border-radius: 3px; border: 1px solid var(--line-strong); }
+.sw .chip.empty { background: linear-gradient(45deg, transparent 46%, var(--mark) 46%, var(--mark) 54%, transparent 54%), var(--cell); }
+.sw .chip.glow { box-shadow: 0 0 0 2px var(--panel), 0 0 7px 3px currentColor; }
+.sw .chip.thin { opacity: .55; }
+.sw .num { position: absolute; left: 3px; top: 1px; font: 600 .62rem var(--mono); color: var(--muted); }
+.sw[aria-pressed="true"] { background: var(--btn); border: 2px solid var(--mark); color: inherit; }
+.sw[aria-pressed="true"] .num { color: var(--mark); }
+.mixer { border-top: 1px dashed var(--edge); margin-top: .75rem; padding-top: .5rem; }
+.mixer .name { font-weight: 700; margin: .5rem 0 0; }
+.preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem; margin: .5rem 0; }
+.preview figure { margin: 0; }
+.preview canvas { width: 100%; height: auto; border: 1px solid var(--edge); border-radius: 4px; }
+.preview figcaption { color: var(--muted); font-size: .9rem; margin-top: .3rem; }
+.meta { display: grid; grid-template-columns: 1fr 2fr; gap: .5rem 1rem; margin: .75rem 0; }
+.meta label { display: flex; flex-direction: column; gap: .2rem; font-weight: 700; }
+input[type="text"] {
+  font: 400 16px var(--sans); color: var(--ink); background: var(--cell);
+  border: 1px solid var(--btn-edge); border-radius: 6px; min-height: 44px; padding: .3rem .6rem; width: 100%;
+}
+@media (max-width: 640px) { .meta { grid-template-columns: 1fr; } }
+.take { border-top: 1px dashed var(--edge); margin-top: 1.25rem; }
+
+textarea {
+  display: block; width: 100%; min-height: 9rem; resize: vertical;
+  font: 400 16px/1.4 var(--mono);
+  color: var(--ink); background: var(--cell);
+  border: 1px solid var(--btn-edge); border-radius: 6px; padding: .6rem;
+}
+.small-file input { font: inherit; font-size: .95rem; max-width: 100%; }
+.small-file input::file-selector-button {
+  font: 700 .95rem var(--sans); color: var(--ink); background: var(--btn);
+  border: 1px solid var(--btn-edge); border-radius: 6px; min-height: 44px; padding: .45rem .85rem; margin-right: .6rem; cursor: pointer;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+.notes, .history, .sources { max-width: 68ch; margin-top: 2rem; }
+.notes li, .history li, .sources li { margin-bottom: .6rem; }
+.foot { color: var(--muted); font-size: .92rem; margin-top: 2rem; }
+
+@media (max-width: 600px) {
+  .wrap { padding: 1rem 1rem 3rem; }
+  .panel { padding: .9rem .8rem 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Pixel Bench</h1>
+  <p class="lede">A pixel-art creature can be a few dozen colored squares and still read at a glance as a dolphin, a jellyfish, or a glowing anglerfish. Work through the stations to see how each trick works, then open the bench and redraw any creature in <a href="../cozy-submarine/">Cozy Submarine</a>.</p>
+  <p class="howto">Every picture here is drawn from the same data the game uses. Click or tap the buttons to switch creatures, and change anything you like: nothing here touches the game itself. To draw your own sub, go to <a href="../custom-submarine/">Custom Submarine</a>.</p>
+
+  <!-- ---------- Station 1 ---------- -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 1</p>
+        <h2 id="s1-h">A grid of letters</h2>
+      </div>
+      <button type="button" id="s1-reset">Put the crab back</button>
+    </div>
+    <p>This is Cozy Submarine's crab, and beside it is the crab as the game stores it: four lines of text, one letter per pixel. A short list, the <b>palette</b>, says which color each letter means. A space is empty water. Change a letter in the text and the picture follows. Click a square, or press <kbd>Space</kbd> on one, to step it through the colors, and the text follows.</p>
+    <div class="letters">
+      <div>
+        <canvas class="grid" id="s1-grid" tabindex="0" role="application" aria-roledescription="pixel grid" aria-describedby="s1-help"></canvas>
+        <p class="sr-only" id="s1-help">Arrow keys move between squares. Space steps the square to the next color.</p>
+      </div>
+      <div>
+        <label for="s1-rows" class="sr-only">The crab's rows of letters</label>
+        <textarea id="s1-rows" rows="4" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+        <ul class="pal" id="s1-pal" aria-label="The crab's palette"></ul>
+      </div>
+    </div>
+    <p class="cap" id="s1-cap" aria-live="polite"></p>
+    <p>The game draws it this size, one screen square per letter (a few real screen pixels each):</p>
+    <canvas class="px check" id="s1-small" role="img" aria-label="The crab at the size the game draws it"></canvas>
+    <p>Art always faces right. When the crab walks left, the game reads each row backward. Station 2 is about how so few squares can still say "crab".</p>
+  </section>
+
+  <!-- ---------- Station 2 ---------- -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 2</p>
+        <h2 id="s2-h">Small on purpose</h2>
+      </div>
+      <button type="button" id="s2-sil" aria-pressed="false">Outline only</button>
+    </div>
+    <p>At the size the game draws them, there's no room for detail, so the <b>outline</b> does almost all the work. A tall fin says shark, a beak says dolphin, a flat shell with flippers says turtle. Press <b>Outline only</b> to paint each creature in one color and see if you still know it.</p>
+    <div class="seg" role="group" aria-label="Creature" id="s2-pick"></div>
+    <div class="shelf scroll">
+      <figure><canvas class="px check" id="s2-a" role="img"></canvas><figcaption>As small as the game draws it</figcaption></figure>
+      <figure><canvas class="px check" id="s2-b" role="img"></canvas><figcaption>Twice that</figcaption></figure>
+      <figure><canvas class="px check" id="s2-c" role="img"></canvas><figcaption>Up close</figcaption></figure>
+    </div>
+    <p class="cap" id="s2-cap" aria-live="polite"></p>
+    <p>Up close, the pixels look crude. Small, your eye fills in the curves. Pixel artists check their work at its real size for exactly that reason.</p>
+  </section>
+
+  <!-- ---------- Station 3 ---------- -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 3</p>
+        <h2 id="s3-h">Swap the palette</h2>
+      </div>
+    </div>
+    <p>The letters say <i>where</i> each color goes, and the palette says <i>what</i> it is. Change the palette and every pixel with that letter changes at once, without redrawing anything. Real clownfish come in all three of these colorings, so one drawing covers them all. Then mix your own.</p>
+    <div class="seg" role="group" aria-label="Coloring" id="s3-presets"></div>
+    <div class="pickers" id="s3-pickers"></div>
+    <div class="shelf">
+      <figure><canvas class="px check" id="s3-big" role="img"></canvas><figcaption>Up close</figcaption></figure>
+      <figure><canvas class="px check" id="s3-small" role="img"></canvas><figcaption>At its real size</figcaption></figure>
+    </div>
+    <p class="cap" id="s3-cap" aria-live="polite"></p>
+    <p>Cozy Submarine does this while you play. The sub's light lenses are their own letters, and the game paints them grey when a light is off and white when it's on.</p>
+  </section>
+
+  <!-- ---------- Station 4 ---------- -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 4</p>
+        <h2 id="s4-h">Light and shade</h2>
+      </div>
+    </div>
+    <p>A shape in one flat color looks like a cutout. Add a lighter shade where light would hit and a darker one where it wouldn't, and it turns round. Here each creature is drawn twice: once with every body color made the same, and once as the game draws it.</p>
+    <div class="seg" role="group" aria-label="Creature" id="s4-pick"></div>
+    <div class="shelf scroll">
+      <figure><canvas class="px check" id="s4-flat" role="img"></canvas><figcaption>One body color</figcaption></figure>
+      <figure><canvas class="px check" id="s4-real" role="img"></canvas><figcaption>As drawn</figcaption></figure>
+    </div>
+    <p class="cap" id="s4-cap" aria-live="polite"></p>
+    <p>Look at the horseshoe crab: a pale row on top, a middle brown below it, a darker rim, and a darker plate behind. All browns, and the shell reads as a dome lit from above.</p>
+  </section>
+
+  <!-- ---------- Station 5 ---------- -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 5</p>
+        <h2 id="s5-h">Two frames</h2>
+      </div>
+      <div class="row" style="margin:0">
+        <button type="button" id="s5-play" aria-pressed="true">Play</button>
+        <button type="button" id="s5-step">Next frame</button>
+      </div>
+    </div>
+    <p>Motion is a second drawing, swapped in and out. The creatures in Cozy Submarine that move do it with just two frames, and most of their pixels stay put. Press <b>Mark the changes</b> to tint the ones that differ between the frames pink.</p>
+    <div class="seg" role="group" aria-label="Creature" id="s5-pick"></div>
+    <div class="row"><button type="button" id="s5-mark" aria-pressed="false">Mark the changes</button></div>
+    <div class="shelf scroll">
+      <figure><canvas class="px check" id="s5-big" role="img"></canvas><figcaption>Up close</figcaption></figure>
+      <figure><canvas class="px check" id="s5-small" role="img"></canvas><figcaption>At its real size</figcaption></figure>
+    </div>
+    <p class="cap" id="s5-cap" aria-live="polite"></p>
+    <p>Speed matters as much as the drawing. The crab flips its legs six times a second and scuttles. The moon jelly swaps one and a half times a second and pulses.</p>
+  </section>
+
+  <!-- ---------- Station 6 ---------- -->
+  <section class="panel" aria-labelledby="s6-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 6</p>
+        <h2 id="s6-h">In the dark</h2>
+      </div>
+    </div>
+    <p>The same pixels look different depending on where they are. Cozy Submarine dims everything as you go down, the way the sea swallows sunlight. Two marks on a palette color change that. A color marked to <b>glow</b> keeps its brightness in the dark. A <b>see-through</b> color is half its own color and half the water behind it. Drag the depth and watch which pixels survive.</p>
+    <div class="seg" role="group" aria-label="Creature" id="s6-pick"></div>
+    <div class="ctl">
+      <label for="s6-depth">Depth</label>
+      <input type="range" id="s6-depth" min="0" max="2000" step="10" value="0">
+      <output id="s6-out" for="s6-depth">0 m</output>
+    </div>
+    <canvas class="px" id="s6-sea" role="img" style="width:min(100%, 520px); border-radius:4px"></canvas>
+    <p class="cap" id="s6-cap" aria-live="polite"></p>
+    <p>Deep-sea animals really do this. Many of them make their own light, and many have see-through bodies with almost no color to hide.</p>
+  </section>
+
+  <!-- ---------- Station 7: the bench ---------- -->
+  <section class="panel" aria-labelledby="bench-h" id="bench">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 7</p>
+        <h2 id="bench-h">The bench</h2>
+      </div>
+      <p class="readout" id="b-size"></p>
+    </div>
+    <p>Pick any creature and change anything about it: its pixels, its colors and their marks, its size, and its frames. Click or drag to paint, and right-click to rub out. On the grid, the arrow keys move a cursor, <kbd>Space</kbd> paints, and <kbd>Delete</kbd> rubs out. <kbd>P</kbd> pencil, <kbd>F</kbd> fill, <kbd>I</kbd> picker, <kbd>0</kbd>–<kbd>9</kbd> pick a color, <kbd>[</kbd> <kbd>]</kbd> change frame, <kbd>Ctrl</kbd> <kbd>Z</kbd> undo.</p>
+    <div class="bench-top">
+      <label for="b-pick">Creature</label>
+      <select id="b-pick"></select>
+    </div>
+    <p class="use" id="b-use"></p>
+
+    <div class="row" role="group" aria-label="Tools">
+      <button type="button" id="t-pencil" aria-pressed="true" aria-keyshortcuts="P">Pencil</button>
+      <button type="button" id="t-fill" aria-pressed="false" aria-keyshortcuts="F">Fill</button>
+      <button type="button" id="t-pick" aria-pressed="false" aria-keyshortcuts="I">Picker</button>
+      <span class="spacer"></span>
+      <button type="button" id="b-undo" aria-keyshortcuts="Control+Z Meta+Z">Undo</button>
+      <button type="button" id="b-redo" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y">Redo</button>
+    </div>
+    <div class="row" role="group" aria-label="Frames" id="b-frames"></div>
+    <div class="swatches" id="b-swatches" role="group" aria-label="Colors"></div>
+    <div class="board" id="b-board">
+      <canvas class="grid" id="b-grid" tabindex="0" role="application" aria-roledescription="pixel grid" aria-describedby="b-help"></canvas>
+    </div>
+    <p class="sr-only" id="b-help">Arrow keys move the cursor, Shift moves four at a time. Space or Enter uses the tool, Delete rubs out.</p>
+    <p class="cap" id="b-cap" aria-live="polite"></p>
+
+    <div class="mixer">
+      <p class="name" id="b-mix-name"></p>
+      <div class="row">
+        <label class="hexpick"><input type="color" id="c-hex"><span>Color <code id="c-code"></code></span></label>
+        <button type="button" id="c-glow" aria-pressed="false">Glows in the dark</button>
+        <button type="button" id="c-thin" aria-pressed="false">See-through</button>
+        <button type="button" id="c-remove">Remove this color</button>
+        <button type="button" id="c-add">Add a color</button>
+      </div>
+    </div>
+
+    <div class="row" role="group" aria-label="Size">
+      <span class="label">Width</span>
+      <button type="button" id="w-less" aria-label="Narrower">−</button>
+      <button type="button" id="w-more" aria-label="Wider">+</button>
+      <span class="label">Height</span>
+      <button type="button" id="h-less" aria-label="Shorter">−</button>
+      <button type="button" id="h-more" aria-label="Taller">+</button>
+      <span class="label">Move</span>
+      <button type="button" id="m-left" aria-label="Move left">◀</button>
+      <button type="button" id="m-up" aria-label="Move up">▲</button>
+      <button type="button" id="m-down" aria-label="Move down">▼</button>
+      <button type="button" id="m-right" aria-label="Move right">▶</button>
+    </div>
+    <p class="cap">Width grows and shrinks on the right, at the nose. Height grows and shrinks at the top, so anything that walks on the floor keeps its feet. Moving shifts every frame together.</p>
+
+    <h3 id="trial-h">How it looks at sea</h3>
+    <div class="row" role="group" aria-labelledby="trial-h">
+      <button type="button" id="p-play" aria-pressed="true">Play the frames</button>
+      <button type="button" id="p-left" aria-pressed="false">Face left</button>
+    </div>
+    <div class="preview">
+      <figure><canvas class="px" id="p-day"></canvas><figcaption>Sunlit water, at the game's size</figcaption></figure>
+      <figure><canvas class="px" id="p-deep"></canvas><figcaption>1,500 m down, where only glowing colors show</figcaption></figure>
+    </div>
+
+    <div class="meta">
+      <label>Name <input type="text" id="b-name" autocomplete="off"></label>
+      <label>Where it's used <input type="text" id="b-usefield" autocomplete="off"></label>
+    </div>
+    <div class="row">
+      <button type="button" id="b-reset">Undo my changes to this creature</button>
+    </div>
+
+    <div class="take">
+      <h3 id="take-h">Take it with you</h3>
+      <p>Your changes stay in this browser. To keep them for good, export the whole set as a file. Its <code>sprites</code> part is laid out exactly like the game's own source, so it can be pasted straight back in.</p>
+      <div class="row">
+        <button type="button" id="x-copy">Copy the set</button>
+        <button type="button" id="x-download">Download the set</button>
+        <button type="button" id="x-reset-all">Undo every change in this set</button>
+      </div>
+      <h3 id="import-h">Bring a set back</h3>
+      <p>Paste an export, or pick its file, to load it onto the bench.</p>
+      <textarea id="x-import" aria-labelledby="import-h" spellcheck="false" autocomplete="off"></textarea>
+      <div class="row">
+        <button type="button" id="x-load">Load what's pasted</button>
+        <label class="small-file"><span class="sr-only">Load from a file</span><input type="file" id="x-file" accept=".json,application/json"></label>
+      </div>
+      <p class="cap" id="x-cap" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">Things to notice</h2>
+    <ul>
+      <li><b>A whole sea is a few pages of text.</b> Every creature in Cozy Submarine, frames and all, fits in less space than one small photo. That's what makes it easy to copy, change, and paste back.</li>
+      <li><b>The outline carries the name.</b> At the game's size you mostly see a silhouette. Fins, tails, and beaks are where the pixels are spent.</li>
+      <li><b>Colors live in the palette, not the pixels.</b> One drawing can be many creatures, and a game can recolor things while you play for free.</li>
+      <li><b>Two or three shades make a curve.</b> A light row on top and a dark row underneath, and a flat shape gains a body and a light source.</li>
+      <li><b>Motion is mostly stillness.</b> A few pixels flipping between two frames is enough, as long as the speed suits the animal.</li>
+      <li><b>Where it is changes what it looks like.</b> Glowing and see-through colors let the same art read in sunlit shallows and pitch-black depths.</li>
+    </ul>
+  </section>
+
+  <section class="history" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <ul>
+      <li><b>Game consoles worked in tiny tiles.</b> The NES draws its moving objects as sprites of 8 × 8 pixels (or 8 × 16), up to 64 at once. Each sprite uses one of four sprite palettes, and each palette holds three colors plus see-through, chosen from 64. Larger characters are several sprites side by side, and because the colors live in the palette, the same tiles can be drawn in another one.</li>
+      <li><b>The first Macintosh icons were drawn on graph paper.</b> Susan Kare designed them for the Mac that launched in January 1984, coloring in squares on the smallest graph paper she could find, mostly at 32 × 32 and in black and white. The Museum of Modern Art acquired her sketchbooks in 2015.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>NESdev Wiki, <a href="https://www.nesdev.org/wiki/PPU_OAM">"PPU OAM"</a>, on sprite sizes, the 64-sprite list, and each sprite's palette.</li>
+      <li>NESdev Wiki, <a href="https://www.nesdev.org/wiki/PPU_palettes">"PPU palettes"</a>, on four palettes of four colors, the see-through first entry, and the 64 colors to choose from.</li>
+      <li>Wikipedia, <a href="https://en.wikipedia.org/wiki/Susan_Kare">"Susan Kare"</a>, on the graph paper, the 32 × 32 icons, the January 1984 launch, and MoMA's 2015 acquisition.</li>
+      <li>The Museum of Modern Art, <a href="https://www.moma.org/collection/works/188382">Susan Kare, "Apple Macintosh OS icon sketchbook"</a> (1982).</li>
+    </ul>
+  </section>
+
+  <p class="foot">The bench puts the creature you picked into the address bar, so a link to this page opens on it. Your edits are saved in this browser as you go.</p>
+</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const plural = (n, word) => `${n} ${n === 1 ? word : word + "s"}`;
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+
+let reduced = false;
+const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+reduced = motionQuery.matches;
+
+// ---------- Sprite data ----------
+// Cozy Submarine's creatures, exactly as public/cozy-submarine/index.html has them. a palette of letters,
+// then frames of rows. a color starting with * glows in the dark, and one starting with ~ is see-through.
+// change both together
+const COZY_SUBMARINE_SPRITES = {
+  "sardine": { "name": "Sardine", "use": "Swims in groups of 8 to 16 from 0 to 200 m", "palette": { "b": "#9DB8C8", "s": "#E4ECEF", "t": "#7896A8", "e": "#1A2028" }, "frames": [
+    [
+      "t bb ",
+      "tbbbe",
+      "t ss "
+    ]
+  ] },
+  "clown": { "name": "Clownfish", "use": "Swims in groups of 1 to 3 from 0 to 40 m in warm seas", "palette": { "o": "#F07A2A", "W": "#F6F1E8", "k": "#2A1A14" }, "frames": [
+    [
+      "  ooo  ",
+      "ooWoWoo",
+      "ooWoWok",
+      "  ooo  "
+    ]
+  ] },
+  "tang": { "name": "Yellow tang", "use": "Swims in groups of 1 to 4 from 0 to 50 m in warm and mild seas", "palette": { "y": "#F2D33A", "k": "#2A2414" }, "frames": [
+    [
+      "   yy  ",
+      "y yyyy ",
+      "yyyyyyk",
+      "y yyyy ",
+      "   yy  "
+    ]
+  ] },
+  "shark": { "name": "Blue shark", "use": "Swims from 0 to 700 m", "palette": { "g": "#7F8C96", "W": "#D9DEE0", "k": "#1C2328" }, "frames": [
+    [
+      "         g        ",
+      "        gg        ",
+      "g     gggggggg    ",
+      "gg  gggggggggggg  ",
+      " ggggggggggggggkgg",
+      "gg  WWWWWWWWWWWWW ",
+      "g      g    g     "
+    ]
+  ] },
+  "humpback": { "name": "Humpback whale", "use": "Swims from 5 to 250 m, a rare sight", "palette": { "d": "#3E4A58", "l": "#AEB8BF", "L": "#87939C", "f": "#E3E8EB", "k": "#12161C" }, "frames": [
+    [
+      "                        dd                  ",
+      "            ddddddddddddddddddddd           ",
+      "dd      dddddddddddddddddddddddddddddd      ",
+      "ddd  dddddddddddddddddddddddddddddddddddd   ",
+      " dddddddddddddddddddddddddddddddddddddddddd ",
+      "ddd  ddddddddddddddddddddddddddddddddddkddd ",
+      "dd     llllllllllllllllllllllllllllllllllldd",
+      "          lLlLlLlLlLlLlLlLlLlLlLlLlLlLll    ",
+      "                  fffffffffff               ",
+      "                     fffffff                "
+    ]
+  ] },
+  "sperm": { "name": "Sperm whale", "use": "Swims from 20 to 2,200 m, a rare sight", "palette": { "d": "#4E4D52", "l": "#8C8A8E", "k": "#1A1A1E" }, "frames": [
+    [
+      "                 d                      ",
+      "      dddddddddddddddddddddddddddddddd  ",
+      "dd  dddddddddddddddddddddddddddddddddddd",
+      "ddddddddddddddddddddddddddddddddddddddd ",
+      "ddd  ddddddddddddddddddddddddkddddddddd ",
+      "d     ddddddddddddddddddddddddddddddddd ",
+      "          dddddddddddddddddddddd lllll  ",
+      "                   dd          ll       "
+    ]
+  ] },
+  "orca": { "name": "Orca", "use": "Swims in groups of 2 to 3 from 0 to 300 m in cold and mild seas, a rare sight", "palette": { "k": "#1A1C22", "W": "#F2F2EE", "g": "#9A9EA6" }, "frames": [
+    [
+      "           k            ",
+      "          kk            ",
+      "         kkk            ",
+      "k      kkkkkkkkkkkkk    ",
+      "kk  kkkkkgkkkkkkkWWkkk  ",
+      " kkkkkkkkkkkkkkkkkkkkkk ",
+      "kk   WWWWWkkkkkkWWWWWWk ",
+      "k        kk             "
+    ]
+  ] },
+  "dolphin": { "name": "Bottlenose dolphin", "use": "Swims in groups of 2 to 4 from 0 to 60 m in warm and mild seas", "palette": { "d": "#8494A3", "l": "#D3DAE0", "k": "#1C2228" }, "frames": [
+    [
+      "       dd       ",
+      "d   ddddddddd   ",
+      "dd ddddddddddkdd",
+      " ddlllllllllll  ",
+      "d       ll      "
+    ]
+  ] },
+  "dolphinLeap": { "name": "Leaping dolphin", "use": "A dolphin leaping clear of the water: nose up on the way out, nose down on the way back in", "palette": { "d": "#8494A3", "l": "#D3DAE0", "k": "#1C2228" }, "frames": [
+    [
+      "             ddd",
+      "       d   ddkl ",
+      "       ddddddl  ",
+      "       ddddll   ",
+      "     ddddll     ",
+      "   ddddlll      ",
+      "dddddll l       ",
+      " ddll           ",
+      "d               ",
+      "                "
+    ],
+    [
+      "d               ",
+      " dd             ",
+      "ddddd   d       ",
+      "   dddd d       ",
+      "   llddddd      ",
+      "     lldddd     ",
+      "       lldddd   ",
+      "        lllddd  ",
+      "       l   llkd ",
+      "             lld"
+    ]
+  ] },
+  "turtle": { "name": "Green sea turtle", "use": "Swims from 0 to 120 m in warm and mild seas", "palette": { "B": "#4E5E32", "b": "#7E8C4A", "s": "#A8A070", "k": "#1E2014" }, "frames": [
+    [
+      "    bbbbb     ",
+      "  bbBbBbBbb   ",
+      " bbBbBbBbBbbss",
+      "sbbbbbbbbbbsks",
+      "s  ss    ss   "
+    ]
+  ] },
+  "seal": { "name": "Harbor seal", "use": "Swims from 0 to 120 m in cold seas", "palette": { "s": "#7A6E62", "l": "#A99B8A", "f": "#5E544A", "k": "#1A1612" }, "frames": [
+    [
+      "       ssss ",
+      "ff sssssssks",
+      " fsssllllss ",
+      "    ss  ss  "
+    ]
+  ] },
+  "jelly": { "name": "Moon jelly", "use": "Swims from 0 to 700 m", "palette": { "b": "~#CFE3F0", "m": "~#E6B0CC", "t": "~#A9C9DA" }, "frames": [
+    [
+      " bbbbb ",
+      "bbmmmbb",
+      "bbbbbbb",
+      " t t t ",
+      " t  t  ",
+      "  t  t ",
+      " t  t  "
+    ],
+    [
+      "  bbb  ",
+      " bmmmb ",
+      " bbbbb ",
+      " t t t ",
+      "  t t  ",
+      " t  t  ",
+      "  t  t "
+    ]
+  ] },
+  "atolla": { "name": "Atolla jellyfish", "use": "Swims from 400 to 4,000 m", "palette": { "r": "#6A1E28", "R": "#8A2A34", "a": "*#6FB7FF", "t": "#5A2030" }, "frames": [
+    [
+      " rrrrr ",
+      "rrRRRrr",
+      "arararr",
+      " t t t ",
+      "  t t  "
+    ],
+    [
+      " rrrrr ",
+      "rrRRRrr",
+      "rararar",
+      " t t t ",
+      " t   t "
+    ]
+  ] },
+  "comb": { "name": "Comb jelly", "use": "Swims from 100 to 3,000 m", "palette": { "b": "~#D8E8F0", "a": "*#FF6FA8", "c": "*#6FE8FF", "d": "*#B8FF6F" }, "frames": [
+    [
+      " bbb ",
+      "babcb",
+      "bcbdb",
+      "bdbab",
+      "babcb",
+      " bbb "
+    ],
+    [
+      " bbb ",
+      "bcbdb",
+      "bdbab",
+      "babcb",
+      "bcbdb",
+      " bbb "
+    ]
+  ] },
+  "squid": { "name": "Humboldt squid", "use": "Swims in groups of 1 to 4 from 60 to 900 m", "palette": { "r": "#C8584A", "R": "#E07A62", "t": "#B04A3E", "k": "#1E1414" }, "frames": [
+    [
+      "    rrrrrr ",
+      "ttkRRRRRRRr",
+      "tt rrrrrrr ",
+      "t          "
+    ]
+  ] },
+  "giantsquid": { "name": "Giant squid", "use": "Swims from 300 to 1,200 m, a rare sight", "palette": { "r": "#B8483E", "R": "#D86A56", "t": "#A03E36", "k": "#140E0E" }, "frames": [
+    [
+      "                    rrrrrrrrr   ",
+      "t    tttttttttttrRRRRRRRRRRRRRr ",
+      "tttttttttttttttkRRRRRRRRRRRRRRRr",
+      "t    tttttttttttrRRRRRRRRRRRRRr ",
+      "                    rrrrrrrrr   "
+    ]
+  ] },
+  "lantern": { "name": "Lanternfish", "use": "Swims in groups of 6 to 14 from 200 to 1,200 m", "palette": { "d": "#3A4048", "t": "#2C3238", "e": "#C9D6DE", "g": "*#7FE0FF" }, "frames": [
+    [
+      "tddde",
+      "tgdg "
+    ]
+  ] },
+  "hatchet": { "name": "Hatchetfish", "use": "Swims in groups of 2 to 6 from 200 to 1,200 m", "palette": { "s": "#B8C4CC", "t": "#8C98A0", "e": "#1C2228", "g": "*#8FD8FF" }, "frames": [
+    [
+      " ss  ",
+      "tssse",
+      " ss  ",
+      " gg  "
+    ]
+  ] },
+  "angler": { "name": "Anglerfish", "use": "Swims from 900 to 4,000 m", "palette": { "d": "#3A2E2A", "t": "#2A201D", "l": "#5A4A40", "k": "#0E0A08", "W": "#E8E0D0", "g": "*#C8FFB0" }, "frames": [
+    [
+      "     lll   ",
+      "    l   l  ",
+      "  ddd    g ",
+      " ddddddd   ",
+      "tddkddddd  ",
+      "tdddddWdW  ",
+      " ddddddd   ",
+      "   dd      "
+    ]
+  ] },
+  "vampire": { "name": "Vampire squid", "use": "Swims from 600 to 1,500 m", "palette": { "r": "#5A1E2C", "e": "#7FB0FF", "g": "*#7FC8FF" }, "frames": [
+    [
+      "   rrr   ",
+      " rrrrrrr ",
+      "rrrrerrrr",
+      "grr r rrg",
+      " r  r  r ",
+      "g   g   g"
+    ]
+  ] },
+  "siphon": { "name": "Siphonophore", "use": "Swims from 500 to 3,500 m", "palette": { "g": "*#8FE8FF", "b": "~#9FD0E0", "p": "*#FF9FD0" }, "frames": [
+    [
+      "  b   b   b   b   b   b     ",
+      "gbgbgbgbgbgbgbgbgbgbgbgbgbpp",
+      "   b   b   b   b   b   b    "
+    ]
+  ] },
+  "gulper": { "name": "Gulper eel", "use": "Swims from 600 to 3,000 m", "palette": { "d": "#1E1C22", "k": "#5A5060", "p": "*#FF6FB0" }, "frames": [
+    [
+      "           ddddd  ",
+      "pdddddddddddddddd ",
+      "            ddddkd",
+      "             dddd "
+    ]
+  ] },
+  "dumbo": { "name": "Dumbo octopus", "use": "Swims from 1,000 to 7,000 m", "palette": { "p": "#E7A08C", "P": "#C97C6A", "k": "#2A1612" }, "frames": [
+    [
+      "P  pppp  P",
+      "PPppppppPP",
+      "  pkppkp  ",
+      "  pppppp  ",
+      "  p pp p  ",
+      " p  p  p  "
+    ],
+    [
+      "   pppp   ",
+      "  pppppp  ",
+      "PPpkppkpPP",
+      "P pppppp P",
+      "  p pp p  ",
+      " p  p  p  "
+    ]
+  ] },
+  "rattail": { "name": "Rattail", "use": "Swims from 1,000 to 6,000 m", "palette": { "g": "#8A8F94", "t": "#6E7378", "k": "#1C1E22" }, "frames": [
+    [
+      "      ggggg ",
+      "tttggggggggk",
+      "     gggggg "
+    ]
+  ] },
+  "octopus": { "name": "Common octopus", "use": "Crawls the sea floor from 0 to 200 m", "palette": { "o": "#D0603A", "O": "#E88A5A", "k": "#1E0E08" }, "frames": [
+    [
+      "   OOO   ",
+      "  OoooO  ",
+      "  okook  ",
+      "  ooooo  ",
+      " o o o o ",
+      "o o   o o"
+    ],
+    [
+      "   OOO   ",
+      "  OoooO  ",
+      "  okook  ",
+      "  ooooo  ",
+      " o o o o ",
+      " o o o o "
+    ]
+  ] },
+  "crab": { "name": "Rock crab", "use": "Crawls the sea floor from 0 to 400 m", "palette": { "C": "#D8502E", "c": "#B23E22", "k": "#1E0E08" }, "frames": [
+    [
+      "C k k C",
+      "CC c CC",
+      " CCCCC ",
+      "c c c c"
+    ],
+    [
+      "C k k C",
+      "CC c CC",
+      " CCCCC ",
+      " c c c "
+    ]
+  ] },
+  "spidercrab": { "name": "Japanese spider crab", "use": "Crawls the sea floor from 150 to 1,500 m", "palette": { "o": "#E07A3A", "O": "#C8622A" }, "frames": [
+    [
+      "  o       o  ",
+      "   o OOO o   ",
+      " o  OOOOO  o ",
+      "o  o o o o  o",
+      "  o       o  "
+    ],
+    [
+      "  o       o  ",
+      "   o OOO o   ",
+      " o  OOOOO  o ",
+      " o o o o o o ",
+      "o  o     o  o"
+    ]
+  ] },
+  "tripod": { "name": "Tripod fish", "use": "Stands on the sea floor from 900 to 6,000 m, waiting for food to drift by", "palette": { "g": "#9A9590", "t": "#7E7A76", "l": "#6E6A66", "k": "#1E1C1A" }, "frames": [
+    [
+      "    gggg  ",
+      "tggggggggk",
+      "   gggg   ",
+      "   l   l  ",
+      "   l   l  ",
+      "  l   l   "
+    ]
+  ] },
+  "seapig": { "name": "Sea pig", "use": "Crawls the sea floor from 1,000 to 9,500 m", "palette": { "p": "~#E8B4B8", "P": "#D89AA0", "k": "#4A2A2E" }, "frames": [
+    [
+      "  P P   ",
+      " pppppp ",
+      "pppppppk",
+      " P P P  "
+    ]
+  ] },
+  "snailfish": { "name": "Hadal snailfish", "use": "Swims in groups of 1 to 4 from 6,000 to 8,300 m", "palette": { "s": "~#F0D6D2", "k": "#4A3A3A" }, "frames": [
+    [
+      "  ssss   ",
+      "sssssssk ",
+      "  sssss  "
+    ]
+  ] },
+  "amphipod": { "name": "Amphipod", "use": "Swims in groups of 8 to 18 from 5,000 to 11,500 m", "palette": { "a": "#E8E4D8" }, "frames": [
+    [
+      "aa"
+    ]
+  ] },
+  "yeti": { "name": "Yeti crab", "use": "The pale crab that lives among the black smokers, drawn at every vent field", "palette": { "w": "#EDE8E0", "y": "#D8D0C0" }, "frames": [
+    [
+      "y     y",
+      "yywwwyy",
+      " wwwww ",
+      "w w w w"
+    ]
+  ] },
+  "horseshoe": { "name": "Horseshoe crab", "use": "Crawls the sea floor from 0 to 40 m in warm and mild seas", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
+    [
+      "            hhhhh   ",
+      "          hhSSSkSS  ",
+      "      aaahSSSSSSSSS ",
+      "   ttaaaarrrrrrrrrr ",
+      "ttt      l l l l    "
+    ],
+    [
+      "            hhhhh   ",
+      "          hhSSSkSS  ",
+      "      aaahSSSSSSSSS ",
+      "   ttaaaarrrrrrrrrr ",
+      "ttt       l l l l   "
+    ]
+  ] },
+  "horseshoeSwim": { "name": "Swimming horseshoe crab", "use": "Swims from 0 to 30 m in warm and mild seas, upside down", "palette": { "h": "#A08A5C", "S": "#7C6842", "a": "#6A5838", "r": "#4A3C26", "t": "#5E4E32", "k": "#1E180E", "l": "#3E3220" }, "frames": [
+    [
+      "ttt      l l l l    ",
+      "   ttaaaarrrrrrrrrr ",
+      "      aaaSSSSSSSSSS ",
+      "          SSSSSkSS  ",
+      "            SSSSS   "
+    ],
+    [
+      "ttt       l l l l   ",
+      "   ttaaaarrrrrrrrrr ",
+      "      aaaSSSSSSSSSS ",
+      "          SSSSSkSS  ",
+      "            SSSSS   "
+    ]
+  ] }
+};
+
+const GROUPS = [
+  { id: "cozy-submarine", name: "Cozy Submarine", href: "../cozy-submarine/", sprites: COZY_SUBMARINE_SPRITES },
+];
+const FORMAT = "pixel-bench/1";
+const groupById = (id) => GROUPS.find((g) => g.id === id);
+const preset = (id) => COZY_SUBMARINE_SPRITES[id];
+
+// ---------- Colors ----------
+const hexInt = (s) => parseInt(s.slice(1), 16);
+const R8 = (c) => (c >> 16) & 255, G8 = (c) => (c >> 8) & 255, B8 = (c) => c & 255;
+const rgb = (r, g, b) => (clamp(r | 0, 0, 255) << 16) | (clamp(g | 0, 0, 255) << 8) | clamp(b | 0, 0, 255);
+const mix = (a, b, t) => rgb(R8(a) + (R8(b) - R8(a)) * t, G8(a) + (G8(b) - G8(a)) * t, B8(a) + (B8(b) - B8(a)) * t);
+const cssColor = (c) => "#" + c.toString(16).padStart(6, "0").toUpperCase();
+const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+// a palette value: "#RRGGBB", "*#RRGGBB" for glowing, "~#RRGGBB" for see-through
+function readColor(v) {
+  const m = /^([*~]?)(#[0-9a-fA-F]{6})$/.exec(v || "");
+  return m ? { hex: m[2].toUpperCase(), c: hexInt(m[2]), glow: m[1] === "*", thin: m[1] === "~" } : null;
+}
+const writeColor = (p) => (p.glow ? "*" : p.thin ? "~" : "") + p.hex;
+
+// ---------- Drawing pixels ----------
+const sizeOf = (s) => ({ w: Math.max(...s.frames.flat().map((r) => r.length)), h: Math.max(...s.frames.map((f) => f.length)) });
+// draws one frame into a canvas a pixel per pixel, with room around it. o.pal swaps colors by letter,
+// o.one paints every pixel one color, o.flat maps letters to others, o.marks lists pixels to outline
+function drawSprite(canvas, s, f, o = {}) {
+  const { w, h } = sizeOf(s), pad = o.pad ?? 1, W = w + pad * 2, H = h + pad * 2;
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = W * (o.scale || 1) + "px";
+  canvas.style.height = H * (o.scale || 1) + "px";
+  const ctx = canvas.getContext("2d"), img = ctx.createImageData(W, H), d = img.data;
+  const rows = s.frames[f % s.frames.length], pal = { ...s.palette, ...(o.pal || {}) };
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    let k = (rows[j] || "")[i];
+    if (!k || k === " ") continue;
+    if (o.flat && o.flat[k]) k = o.flat[k];
+    const p = readColor(pal[k]);
+    if (!p) continue;
+    const c = o.one !== undefined ? o.one : p.c, x = (o.flip ? w - 1 - i : i) + pad, n = ((j + pad) * W + x) * 4;
+    d[n] = R8(c); d[n + 1] = G8(c); d[n + 2] = B8(c); d[n + 3] = p.thin && o.one === undefined ? 150 : 255;
+  }
+  // a mark tints a painted pixel halfway to pink, and shows an empty one as faint pink
+  if (o.marks) {
+    const mc = hexInt(token("--mark"));
+    for (const [i, j] of o.marks) {
+      const n = ((j + pad) * W + (o.flip ? w - 1 - i : i) + pad) * 4, on = d[n + 3] > 0;
+      const c = on ? mix(rgb(d[n], d[n + 1], d[n + 2]), mc, 0.55) : mc;
+      d[n] = R8(c); d[n + 1] = G8(c); d[n + 2] = B8(c); d[n + 3] = on ? 255 : 90;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function countPixels(s, f = 0) {
+  return s.frames[f].reduce((n, r) => n + [...r].filter((k) => k !== " " && s.palette[k]).length, 0);
+}
+// buttons for picking a creature, one pressed at a time
+function picker(box, ids, cur, onPick) {
+  box.textContent = "";
+  for (const id of ids) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = preset(id).name;
+    b.setAttribute("aria-pressed", id === cur);
+    b.addEventListener("click", () => {
+      for (const x of box.children) x.setAttribute("aria-pressed", x === b);
+      onPick(id);
+    });
+    box.append(b);
+  }
+}
+
+// ---------- The sea ----------
+// Cozy Submarine's own light: sunlight fades with depth, glowing colors ignore it, and see-through
+// colors are half water. lit(c) is how a solid color looks at depth m
+const SEA = { top: hexInt("#2C8FB8"), mid: hexInt("#1C5A9E"), deep: hexInt("#133D83"), abyss: hexInt("#0E2D66") };
+function waterColor(m) {
+  if (m < 60) return mix(SEA.top, SEA.mid, m / 60);
+  if (m < 400) return mix(SEA.mid, SEA.deep, (m - 60) / 340);
+  return mix(SEA.deep, SEA.abyss, clamp((m - 400) / 3000, 0, 1));
+}
+const ambAt = (m) => Math.pow(0.82 * Math.exp(-m / 50) + 0.18 * Math.exp(-m / 300), 0.7);
+// draws a patch of sea W by H at depth m with a sprite in the middle; returns how many of its pixels show
+function drawSea(canvas, W, H, m, s, f, flip) {
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d"), img = ctx.createImageData(W, H), d = img.data;
+  const L = ambAt(m), water = waterColor(m);
+  const sea = rgb(R8(water) * L + 1, G8(water) * L + 3, B8(water) * L + 7);
+  const col = new Int32Array(W * H).fill(sea);
+  const { w, h } = sizeOf(s), x0 = Math.floor((W - w) / 2), y0 = Math.floor((H - h) / 2), rows = s.frames[f % s.frames.length];
+  let shown = 0;
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const p = readColor(s.palette[(rows[j] || "")[i]]);
+    if (!p) continue;
+    const x = x0 + (flip ? w - 1 - i : i), y = y0 + j;
+    if (x < 0 || y < 0 || x >= W || y >= H) continue;
+    let c;
+    if (p.glow) c = p.c;
+    else if (p.thin) { const t = mix(water, p.c, 0.5); c = rgb(R8(t) * L + 1, G8(t) * L + 3, B8(t) * L + 7); }
+    else { const e = Math.max(L, 0.06) * 0.88; c = rgb(R8(p.c) * e, G8(p.c) * e, B8(p.c) * e); }
+    col[y * W + x] = c;
+    // a pixel shows when it stands out from the water around it
+    if (Math.abs(R8(c) - R8(sea)) + Math.abs(G8(c) - G8(sea)) + Math.abs(B8(c) - B8(sea)) > 60) shown++;
+  }
+  for (let p = 0; p < W * H; p++) { d[p * 4] = R8(col[p]); d[p * 4 + 1] = G8(col[p]); d[p * 4 + 2] = B8(col[p]); d[p * 4 + 3] = 255; }
+  ctx.putImageData(img, 0, 0);
+  return shown;
+}
+
+// ---------- Editing grids ----------
+// a big grid of squares for a sprite's frame, with lines, a checkered empty, and a cursor. shared by
+// station 1 and the bench. cells[j][i] is a letter or " "
+function drawCells(canvas, box, cells, colorOf, o = {}) {
+  const h = cells.length, w = Math.max(...cells.map((r) => r.length));
+  const cell = o.cell || clamp(Math.floor(((box ? box.clientWidth : 400) - 2) / w), 6, 40);
+  const cw = w * cell + 1, ch = h * cell + 1, dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
+    canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+    canvas.style.width = cw + "px"; canvas.style.height = ch + "px";
+  }
+  const g = canvas.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, cw, ch);
+  const cellBg = token("--cell"), check = token("--check");
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const x = i * cell + 0.5, y = j * cell + 0.5, k = cells[j][i] || " ";
+    g.fillStyle = (i + j) % 2 ? check : cellBg;
+    g.fillRect(x, y, cell, cell);
+    // onion skin: the frame before, faintly
+    if (o.under && o.under[j] && o.under[j][i] && o.under[j][i] !== " ") {
+      const q = colorOf(o.under[j][i]);
+      if (q) { g.globalAlpha = 0.25; g.fillStyle = q.hex; g.fillRect(x, y, cell, cell); g.globalAlpha = 1; }
+    }
+    if (k === " ") continue;
+    const p = colorOf(k);
+    if (!p) {
+      // a letter the palette doesn't know draws nothing; hatch it so you can find it
+      g.strokeStyle = token("--mark");
+      g.beginPath(); g.moveTo(x + 3, y + cell - 3); g.lineTo(x + cell - 3, y + 3); g.stroke();
+      continue;
+    }
+    g.globalAlpha = p.thin ? 0.55 : 1;
+    g.fillStyle = p.hex;
+    g.fillRect(x, y, cell, cell);
+    g.globalAlpha = 1;
+    if (p.glow && cell >= 10) {
+      g.fillStyle = "rgba(255, 255, 255, .85)";
+      const s = Math.max(2, Math.round(cell / 5));
+      g.fillRect(x + cell - s - 2, y + 2, s, s);
+    }
+  }
+  g.strokeStyle = token("--line");
+  g.lineWidth = 1;
+  g.beginPath();
+  for (let i = 0; i <= w; i++) { g.moveTo(i * cell + 0.5, 0); g.lineTo(i * cell + 0.5, h * cell + 1); }
+  for (let j = 0; j <= h; j++) { g.moveTo(0, j * cell + 0.5); g.lineTo(w * cell + 1, j * cell + 0.5); }
+  g.stroke();
+  g.strokeStyle = token("--line-strong");
+  g.strokeRect(0.5, 0.5, w * cell, h * cell);
+  if (o.hover && o.hover.i >= 0) {
+    g.strokeStyle = token("--ink");
+    g.strokeRect(o.hover.i * cell + 1.5, o.hover.j * cell + 1.5, cell - 2, cell - 2);
+  }
+  if (o.cursor) {
+    g.strokeStyle = token("--focus");
+    g.lineWidth = 2;
+    g.strokeRect(o.cursor.i * cell + 1.5, o.cursor.j * cell + 1.5, cell - 2, cell - 2);
+    g.lineWidth = 1;
+  }
+  return cell;
+}
+function cellAt(canvas, cell, w, h, e) {
+  const r = canvas.getBoundingClientRect();
+  const i = Math.floor((e.clientX - r.left) / cell), j = Math.floor((e.clientY - r.top) / cell);
+  return i >= 0 && j >= 0 && i < w && j < h ? { i, j } : null;
+}
+
+// ---------- Station 1: a grid of letters ----------
+const s1 = { rows: clone(preset("crab").frames[0]), pal: preset("crab").palette, cursor: { i: 0, j: 0 }, focus: false, cell: 36 };
+const s1Color = (k) => readColor(s1.pal[k]);
+function s1Paint(fromText) {
+  const w = Math.max(1, ...s1.rows.map((r) => r.length)), h = s1.rows.length;
+  const cells = s1.rows.map((r) => [...r.padEnd(w, " ")]);
+  s1.cell = drawCells($("s1-grid"), null, cells, s1Color, { cell: w > 12 ? 20 : 36, cursor: s1.focus ? s1.cursor : null });
+  if (!fromText) $("s1-rows").value = s1.rows.join("\n");
+  $("s1-rows").rows = Math.max(2, h);
+  drawSprite($("s1-small"), { palette: s1.pal, frames: [s1.rows] }, 0, { scale: 3 });
+  const unknown = [...new Set(s1.rows.join("").replace(/ /g, ""))].filter((k) => !s1.pal[k]);
+  $("s1-cap").textContent = unknown.length
+    ? `${unknown.map((k) => `"${k}"`).join(" and ")} ${unknown.length === 1 ? "isn't" : "aren't"} in the palette, so ${unknown.length === 1 ? "it draws" : "they draw"} nothing. The hatched squares show where.`
+    : `${w} × ${h}, ${plural(countPixels({ palette: s1.pal, frames: [s1.rows] }), "painted pixel")}.`;
+  $("s1-grid").setAttribute("aria-label", `The crab as a grid, ${w} wide and ${h} tall`);
+}
+function s1Cycle(i, j) {
+  const keys = [" ", ...Object.keys(s1.pal)], w = Math.max(...s1.rows.map((r) => r.length));
+  const row = [...s1.rows[j].padEnd(w, " ")], at = keys.indexOf(row[i]);
+  row[i] = keys[(at + 1) % keys.length];
+  s1.rows[j] = row.join("").replace(/ +$/, "") || " ";
+  s1Paint();
+  $("s1-cap").textContent = `Column ${i + 1}, row ${j + 1} is now ${row[i] === " " ? "a space, empty water" : `"${row[i]}"`}.`;
+}
+function s1Palette() {
+  const ul = $("s1-pal");
+  ul.textContent = "";
+  for (const [k, v] of Object.entries(s1.pal)) {
+    const p = readColor(v), li = document.createElement("li"), chip = document.createElement("span");
+    chip.className = "chip";
+    chip.style.background = p.hex;
+    chip.setAttribute("aria-hidden", "true");
+    li.append(chip, `${k} ${v}`);
+    ul.append(li);
+  }
+}
+$("s1-rows").addEventListener("input", () => {
+  s1.rows = $("s1-rows").value.split("\n").slice(0, 16).map((r) => r.slice(0, 32));
+  if (!s1.rows.length) s1.rows = [""];
+  s1.cursor.i = Math.min(s1.cursor.i, Math.max(0, ...s1.rows.map((r) => r.length)) - 1);
+  s1.cursor.j = Math.min(s1.cursor.j, s1.rows.length - 1);
+  s1Paint(true);
+});
+$("s1-grid").addEventListener("pointerdown", (e) => {
+  const w = Math.max(...s1.rows.map((r) => r.length)), at = cellAt($("s1-grid"), s1.cell, w, s1.rows.length, e);
+  if (!at) return;
+  e.preventDefault();
+  s1.cursor = at;
+  s1Cycle(at.i, at.j);
+});
+$("s1-grid").addEventListener("focus", () => { s1.focus = true; s1Paint(); });
+$("s1-grid").addEventListener("blur", () => { s1.focus = false; s1Paint(); });
+$("s1-grid").addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const w = Math.max(...s1.rows.map((r) => r.length)), moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (moves[e.key]) {
+    e.preventDefault();
+    s1.cursor.i = clamp(s1.cursor.i + moves[e.key][0], 0, w - 1);
+    s1.cursor.j = clamp(s1.cursor.j + moves[e.key][1], 0, s1.rows.length - 1);
+    s1Paint();
+    const k = s1.rows[s1.cursor.j][s1.cursor.i] || " ";
+    $("s1-cap").textContent = `Column ${s1.cursor.i + 1}, row ${s1.cursor.j + 1}: ${k === " " ? "a space" : `"${k}"`}.`;
+  } else if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    s1Cycle(s1.cursor.i, s1.cursor.j);
+  }
+});
+$("s1-reset").addEventListener("click", () => {
+  s1.rows = clone(preset("crab").frames[0]);
+  s1Paint();
+  $("s1-cap").textContent = "The crab is back as the game draws it.";
+});
+
+// ---------- Station 2: small on purpose ----------
+const s2 = { id: "dolphin", sil: false };
+function s2Paint() {
+  const s = preset(s2.id), { w, h } = sizeOf(s), one = s2.sil ? hexInt(token("--ink")) : undefined;
+  drawSprite($("s2-a"), s, 0, { scale: 2, one });
+  drawSprite($("s2-b"), s, 0, { scale: 4, one });
+  drawSprite($("s2-c"), s, 0, { scale: w > 30 ? 8 : 12, one });
+  for (const id of ["s2-a", "s2-b", "s2-c"]) $(id).setAttribute("aria-label", `The ${s.name.toLowerCase()}${s2.sil ? " as a one-color outline" : ""}`);
+  $("s2-cap").textContent = `The ${s.name.toLowerCase()} is ${w} × ${h} squares, and ${countPixels(s)} of them are painted.`;
+}
+picker($("s2-pick"), ["sardine", "shark", "dolphin", "orca", "turtle", "seal", "humpback"], s2.id, (id) => { s2.id = id; s2Paint(); });
+$("s2-sil").addEventListener("click", () => {
+  s2.sil = !s2.sil;
+  $("s2-sil").setAttribute("aria-pressed", s2.sil);
+  s2Paint();
+});
+
+// ---------- Station 3: swap the palette ----------
+// the clownfish's letters: o its body, W its bands, k its eye
+const S3_PRESETS = [
+  { name: "Orange", pal: { o: "#F07A2A", W: "#F6F1E8", k: "#2A1A14" } },
+  { name: "Black", pal: { o: "#26262C", W: "#F2F0EA", k: "#E8A23A" } },
+  { name: "Maroon", pal: { o: "#7E1F2A", W: "#EFE2C8", k: "#1A0E10" } },
+];
+const s3 = { pal: { ...S3_PRESETS[0].pal } };
+function s3Paint() {
+  const s = { ...preset("clown"), palette: s3.pal };
+  drawSprite($("s3-big"), s, 0, { scale: 18 });
+  drawSprite($("s3-small"), s, 0, { scale: 3 });
+  $("s3-big").setAttribute("aria-label", `A clownfish with body ${s3.pal.o}, bands ${s3.pal.W}, and eye ${s3.pal.k}`);
+  $("s3-small").setAttribute("aria-label", "The same clownfish at its real size");
+  for (const k of Object.keys(s3.pal)) { $("s3-c-" + k).value = s3.pal[k].toLowerCase(); $("s3-code-" + k).textContent = s3.pal[k]; }
+  const match = S3_PRESETS.find((p) => Object.keys(p.pal).every((k) => p.pal[k] === s3.pal[k]));
+  for (const b of $("s3-presets").children) b.setAttribute("aria-pressed", !!match && b.textContent === match.name);
+}
+for (const p of S3_PRESETS) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = p.name;
+  b.addEventListener("click", () => {
+    s3.pal = { ...p.pal };
+    s3Paint();
+    $("s3-cap").textContent = `${p.name}: the same ${countPixels(preset("clown"))} pixels, three new colors.`;
+  });
+  $("s3-presets").append(b);
+}
+for (const [k, label] of [["o", "Body"], ["W", "Bands"], ["k", "Eye"]]) {
+  const l = document.createElement("label"), input = document.createElement("input"), span = document.createElement("span"), code = document.createElement("code");
+  l.className = "hexpick";
+  input.type = "color"; input.id = "s3-c-" + k;
+  code.id = "s3-code-" + k;
+  span.append(`${label} (${k}) `, code);
+  l.append(input, span);
+  input.addEventListener("input", () => {
+    s3.pal[k] = input.value.toUpperCase();
+    s3Paint();
+    $("s3-cap").textContent = `Every "${k}" pixel is now ${s3.pal[k]}.`;
+  });
+  $("s3-pickers").append(l);
+}
+
+// ---------- Station 4: light and shade ----------
+// flattening paints every body color as the most-used one, keeping eyes and glowing colors
+const s4 = { id: "horseshoe" };
+function flatMap(s) {
+  const count = {};
+  for (const r of s.frames[0]) for (const k of r) if (k !== " " && s.palette[k]) count[k] = (count[k] || 0) + 1;
+  const keep = (k) => k === "k" || k === "e" || readColor(s.palette[k]).glow;
+  const body = Object.keys(count).filter((k) => !keep(k)).sort((a, b) => count[b] - count[a]);
+  const flat = {};
+  for (const k of body) flat[k] = body[0];
+  return { flat, body };
+}
+function s4Paint() {
+  const s = preset(s4.id), { w } = sizeOf(s), { flat, body } = flatMap(s), scale = w > 30 ? 8 : 12;
+  drawSprite($("s4-flat"), s, 0, { scale, flat });
+  drawSprite($("s4-real"), s, 0, { scale });
+  $("s4-flat").setAttribute("aria-label", `The ${s.name.toLowerCase()} with one body color`);
+  $("s4-real").setAttribute("aria-label", `The ${s.name.toLowerCase()} as the game draws it`);
+  $("s4-cap").textContent = `The ${s.name.toLowerCase()}'s body uses ${plural(body.length, "color")}. Flattened, it uses one.`;
+}
+picker($("s4-pick"), ["horseshoe", "humpback", "giantsquid", "turtle", "shark"], s4.id, (id) => { s4.id = id; s4Paint(); });
+
+// ---------- Station 5: two frames ----------
+// how fast Cozy Submarine flips each one's frames, per second
+const S5_FPS = { crab: 6, jelly: 1.5, dumbo: 2.5, spidercrab: 3, comb: 4, atolla: 2, octopus: 2 };
+const s5 = { id: "crab", f: 0, play: !reduced, mark: false, timer: 0 };
+function changed(s) {
+  const out = [], a = s.frames[0], b = s.frames[1] || a, { w, h } = sizeOf(s);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (((a[j] || "")[i] || " ") !== ((b[j] || "")[i] || " ")) out.push([i, j]);
+  return out;
+}
+function s5Paint() {
+  const s = preset(s5.id), marks = s5.mark ? changed(s) : null;
+  drawSprite($("s5-big"), s, s5.f, { scale: 16, marks });
+  drawSprite($("s5-small"), s, s5.f, { scale: 3 });
+  const n = changed(s).length, total = Math.max(countPixels(s, 0), countPixels(s, 1));
+  $("s5-big").setAttribute("aria-label", `The ${s.name.toLowerCase()}, frame ${s5.f + 1} of ${s.frames.length}`);
+  $("s5-small").setAttribute("aria-label", `The ${s.name.toLowerCase()} at its real size`);
+  $("s5-cap").textContent = `${n} of its ${total} pixels change between frames, ${S5_FPS[s5.id]} times a second in the game.`;
+}
+function s5Run() {
+  clearTimeout(s5.timer);
+  if (!s5.play) return;
+  s5.timer = setTimeout(() => { s5.f = (s5.f + 1) % 2; s5Paint(); s5Run(); }, 1000 / S5_FPS[s5.id]);
+}
+function s5Play(on) {
+  s5.play = on;
+  $("s5-play").setAttribute("aria-pressed", on);
+  s5Run();
+}
+picker($("s5-pick"), ["crab", "jelly", "dumbo", "spidercrab", "comb", "atolla"], s5.id, (id) => { s5.id = id; s5.f = 0; s5Paint(); s5Run(); });
+$("s5-play").addEventListener("click", () => s5Play(!s5.play));
+$("s5-step").addEventListener("click", () => { s5Play(false); s5.f = (s5.f + 1) % 2; s5Paint(); });
+$("s5-mark").addEventListener("click", () => {
+  s5.mark = !s5.mark;
+  $("s5-mark").setAttribute("aria-pressed", s5.mark);
+  s5Paint();
+});
+
+// ---------- Station 6: in the dark ----------
+const s6 = { id: "angler", m: 0 };
+function s6Paint() {
+  const s = preset(s6.id), { w } = sizeOf(s), W = Math.max(40, w + 16), H = 22;
+  const shown = drawSea($("s6-sea"), W, H, s6.m, s, 0, false), total = countPixels(s);
+  const glow = Object.values(s.palette).filter((v) => readColor(v).glow).length;
+  const thin = Object.values(s.palette).filter((v) => readColor(v).thin).length;
+  $("s6-out").textContent = `${fmt(s6.m)} m`;
+  $("s6-depth").setAttribute("aria-valuetext", `${fmt(s6.m)} meters`);
+  $("s6-sea").setAttribute("aria-label", `The ${s.name.toLowerCase()} at ${fmt(s6.m)} meters`);
+  const marks = [glow ? `${plural(glow, "glowing color")}` : "", thin ? `${plural(thin, "see-through color")}` : ""].filter(Boolean).join(" and ");
+  $("s6-cap").textContent = `${shown} of its ${total} pixels stand out from the water. Its palette has ${marks || "no glowing or see-through colors"}.`;
+}
+picker($("s6-pick"), ["angler", "atolla", "comb", "jelly", "hatchet", "lantern", "shark"], s6.id, (id) => { s6.id = id; s6Paint(); });
+$("s6-depth").addEventListener("input", () => { s6.m = Number($("s6-depth").value); s6Paint(); });
+
+// ---------- The bench: state and saving ----------
+// edits holds the creatures you've changed, by set and id. everything else is the preset
+const EDITS_KEY = "pixel-bench:edits";
+const MAX_W = 48, MAX_H = 16, MAX_FRAMES = 6, MAX_COLORS = 16;
+// letters for new colors; a space is empty, and digits would reorder a palette object
+const KEYS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const NEW_COLORS = ["#E05A47", "#4FA3D9", "#6BBF59", "#9B6FD1", "#F2F2EA", "#2B2B30", "#E89A3C", "#3FB8AF"];
+let edits = {};
+try {
+  const saved = JSON.parse(localStorage.getItem(EDITS_KEY) || "null");
+  if (saved && saved.v === 1 && saved.groups && typeof saved.groups === "object") {
+    for (const g of GROUPS) {
+      const set = cleanSet(saved.groups[g.id]);
+      if (set) edits[g.id] = set;
+    }
+  }
+} catch (e) { /* storage blocked or garbled: start fresh */ }
+function saveEdits() {
+  try { localStorage.setItem(EDITS_KEY, JSON.stringify({ v: 1, groups: edits })); } catch (e) { /* storage blocked */ }
+}
+// check a sprite from storage or an import, clamped to the bench's limits; null when it isn't one.
+// a letter missing from the palette is kept as it is: the game draws nothing there, and so does the bench
+function cleanSprite(s) {
+  if (!s || typeof s !== "object" || !s.palette || typeof s.palette !== "object" || !Array.isArray(s.frames) || !s.frames.length) return null;
+  const palette = {};
+  for (const [k, v] of Object.entries(s.palette)) {
+    if (Object.keys(palette).length >= MAX_COLORS) break;
+    if (k.length === 1 && k !== " " && readColor(v)) palette[k] = writeColor(readColor(v));
+  }
+  const frames = s.frames.slice(0, MAX_FRAMES).filter((f) => Array.isArray(f) && f.length && f.every((r) => typeof r === "string"))
+    .map((f) => f.slice(0, MAX_H).map((r) => r.slice(0, MAX_W)));
+  if (!frames.length) return null;
+  return { name: typeof s.name === "string" ? s.name.slice(0, 60) : "", use: typeof s.use === "string" ? s.use.slice(0, 200) : "", palette, frames };
+}
+function cleanSet(set) {
+  if (!set || typeof set !== "object") return null;
+  const out = {};
+  for (const [id, s] of Object.entries(set)) { const c = cleanSprite(s); if (c) out[id] = c; }
+  return Object.keys(out).length ? out : null;
+}
+const spritesOf = (gid) => ({ ...groupById(gid).sprites, ...(edits[gid] || {}) });
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// keep only real changes, so a creature changed back stops counting as changed
+function tidy(gid) {
+  const set = edits[gid];
+  if (!set) return;
+  for (const id of Object.keys(set)) if (same(set[id], groupById(gid).sprites[id])) delete set[id];
+  if (!Object.keys(set).length) delete edits[gid];
+  saveEdits();
+}
+
+// ---------- The bench: the working copy ----------
+// art is the creature on the bench: w, h, pal [{ k, hex, glow, thin }], frames [cells[j][i]]
+const bench = { group: "cozy-submarine", id: "dolphin", f: 0, cur: " ", tool: "pencil" };
+let art = null;
+const cursor = { i: 0, j: 0, show: false }, hover = { i: -1, j: -1 };
+function toArt(s) {
+  const { w, h } = sizeOf(s);
+  const pal = Object.entries(s.palette).map(([k, v]) => ({ k, ...readColor(v) }));
+  // short frames grow at the top, so their bottoms line up
+  const frames = s.frames.map((rows) => {
+    const top = Array.from({ length: h - rows.length }, () => Array(w).fill(" "));
+    return [...top, ...rows.map((r) => [...r.padEnd(w, " ")])];
+  });
+  return { name: s.name, use: s.use, w, h, pal, frames };
+}
+function fromArt(a) {
+  return {
+    name: a.name, use: a.use,
+    palette: Object.fromEntries(a.pal.map((p) => [p.k, writeColor(p)])),
+    frames: a.frames.map((cells) => cells.map((r) => r.join(""))),
+  };
+}
+const colorOf = (k) => art.pal.find((p) => p.k === k);
+const cells = () => art.frames[bench.f];
+const painted = () => art.frames.some((f) => f.some((r) => r.some((k) => k !== " ")));
+// writes the working copy back into the set's edits
+function store() {
+  const set = edits[bench.group] || (edits[bench.group] = {});
+  set[bench.id] = fromArt(art);
+  tidy(bench.group);
+}
+
+// ---------- The bench: undo ----------
+// every change snapshots the creature before it starts, and keeps the snapshot only if something changed.
+// the history belongs to one creature and starts over when you pick another
+let undos = [], redos = [], before = null;
+const snap = () => JSON.stringify({ art, f: bench.f });
+function begin() { if (before === null) before = snap(); }
+function commit() {
+  if (before === null) return;
+  if (snap() !== before) {
+    undos.push(before);
+    if (undos.length > 200) undos.shift();
+    redos = [];
+    store();
+  }
+  before = null;
+  paint();
+}
+function step(from, to, word) {
+  if (!from.length) return;
+  to.push(snap());
+  const s = JSON.parse(from.pop());
+  art = s.art; bench.f = Math.min(s.f, art.frames.length - 1);
+  settle();
+  store();
+  paint();
+  say(word);
+}
+const undo = () => step(undos, redos, "Undone.");
+const redo = () => step(redos, undos, "Redone.");
+// after the creature is swapped out, keep the color and cursor somewhere that still exists
+function settle() {
+  if (bench.cur !== " " && !colorOf(bench.cur)) bench.cur = art.pal.length ? art.pal[0].k : " ";
+  cursor.i = clamp(cursor.i, 0, art.w - 1);
+  cursor.j = clamp(cursor.j, 0, art.h - 1);
+}
+const say = (text) => { $("b-cap").textContent = text; };
+
+// ---------- The bench: picking a creature ----------
+function fillPick() {
+  const sel = $("b-pick"), changedIds = new Set(Object.keys(edits[bench.group] || {}));
+  sel.textContent = "";
+  for (const g of GROUPS) {
+    const og = document.createElement("optgroup");
+    og.label = g.name;
+    for (const [id, s] of Object.entries(spritesOf(g.id))) {
+      const o = document.createElement("option");
+      o.value = `${g.id}/${id}`;
+      o.textContent = (s.name || id) + (g.id === bench.group && changedIds.has(id) ? " (changed)" : "");
+      og.append(o);
+    }
+    sel.append(og);
+  }
+  sel.value = `${bench.group}/${bench.id}`;
+}
+function select(gid, id) {
+  const set = spritesOf(gid);
+  if (!set[id]) id = Object.keys(set)[0];
+  bench.group = gid; bench.id = id; bench.f = 0;
+  art = toArt(set[id]);
+  undos = []; redos = []; before = null;
+  settle();
+  if (bench.cur === " " && art.pal.length) bench.cur = art.pal[0].k;
+  history.replaceState(null, "", "#" + new URLSearchParams({ sprite: `${gid}/${id}` }));
+  trial.f = 0;
+  paint();
+  previewRun();
+}
+$("b-pick").addEventListener("change", () => {
+  const [gid, id] = $("b-pick").value.split("/");
+  select(gid, id);
+  say(`${art.name}, ${art.w} × ${art.h}, ${plural(art.frames.length, "frame")}.`);
+});
+
+// ---------- The bench: drawing ----------
+function drawBenchGrid() {
+  const under = bench.f > 0 ? art.frames[bench.f - 1] : null;
+  bench.cell = drawCells($("b-grid"), $("b-board"), cells(), colorOf, { hover, cursor: cursor.show ? cursor : null, under });
+  $("b-grid").setAttribute("aria-label", `Pixel grid for ${art.name}, frame ${bench.f + 1}, ${art.w} wide and ${art.h} tall, cursor at column ${cursor.i + 1}, row ${cursor.j + 1}`);
+}
+const trial = { play: !reduced, left: false, f: 0, timer: 0 };
+function drawPreview() {
+  const s = fromArt(art), f = trial.play ? trial.f : bench.f, W = Math.max(48, art.w + 16), H = Math.max(20, art.h + 10);
+  drawSea($("p-day"), W, H, 10, s, f, trial.left);
+  drawSea($("p-deep"), W, H, 1500, s, f, trial.left);
+  for (const id of ["p-day", "p-deep"]) {
+    $(id).style.width = "100%";
+    $(id).setAttribute("aria-label", `${art.name} ${id === "p-day" ? "in sunlit water" : "1,500 meters down"}, facing ${trial.left ? "left" : "right"}`);
+  }
+}
+function previewRun() {
+  clearTimeout(trial.timer);
+  if (!trial.play || art.frames.length < 2) return;
+  trial.timer = setTimeout(() => { trial.f = (trial.f + 1) % art.frames.length; drawPreview(); previewRun(); }, 1000 / 3);
+}
+function drawFrames() {
+  const box = $("b-frames");
+  box.textContent = "";
+  art.frames.forEach((_, n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = `Frame ${n + 1}`;
+    b.setAttribute("aria-pressed", n === bench.f);
+    b.addEventListener("click", () => setFrame(n));
+    box.append(b);
+  });
+  const add = document.createElement("button");
+  add.type = "button"; add.textContent = "Copy this frame"; add.disabled = art.frames.length >= MAX_FRAMES;
+  add.addEventListener("click", () => {
+    begin();
+    art.frames.splice(bench.f + 1, 0, clone(cells()));
+    bench.f++;
+    commit();
+    say(`Frame ${bench.f + 1} is a copy of frame ${bench.f}. Change it to make something move.`);
+  });
+  const del = document.createElement("button");
+  del.type = "button"; del.textContent = "Delete this frame"; del.disabled = art.frames.length <= 1;
+  del.addEventListener("click", () => {
+    if (art.frames.length <= 1) return;
+    begin();
+    art.frames.splice(bench.f, 1);
+    bench.f = Math.min(bench.f, art.frames.length - 1);
+    commit();
+    say(`Deleted. ${plural(art.frames.length, "frame")} left.`);
+  });
+  box.append(add, del);
+}
+function setFrame(n) {
+  bench.f = clamp(n, 0, art.frames.length - 1);
+  paint();
+  say(`Frame ${bench.f + 1} of ${art.frames.length}.` + (bench.f > 0 ? " The frame before shows faintly underneath." : ""));
+}
+function swatchKeys() { return [" ", ...art.pal.map((p) => p.k)]; }
+function swatchLabel(k) {
+  if (k === " ") return "Empty, rubs out";
+  const p = colorOf(k);
+  return `Color ${art.pal.indexOf(p) + 1}, letter ${k}, ${p.hex}` + (p.glow ? ", glows" : "") + (p.thin ? ", see-through" : "");
+}
+function nameOf(k) { return k === " " ? "empty" : `color ${art.pal.findIndex((p) => p.k === k) + 1}`; }
+function drawSwatches() {
+  const box = $("b-swatches");
+  box.textContent = "";
+  swatchKeys().forEach((k, n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "sw";
+    b.setAttribute("aria-pressed", k === bench.cur);
+    b.setAttribute("aria-label", swatchLabel(k));
+    if (n < 10) b.setAttribute("aria-keyshortcuts", String(n));
+    const chip = document.createElement("span"), p = colorOf(k);
+    chip.className = "chip" + (k === " " ? " empty" : "") + (p && p.glow ? " glow" : "") + (p && p.thin ? " thin" : "");
+    if (p) { chip.style.background = p.hex; chip.style.color = p.hex; }
+    b.append(chip);
+    if (n < 10) {
+      const num = document.createElement("span");
+      num.className = "num"; num.textContent = n;
+      num.setAttribute("aria-hidden", "true");
+      b.append(num);
+    }
+    b.addEventListener("click", () => choose(k));
+    box.append(b);
+  });
+}
+function choose(k) {
+  bench.cur = k;
+  if (bench.tool === "pick") setTool("pencil");
+  paint();
+  say(`Painting with ${nameOf(k)}.`);
+}
+function drawMixer() {
+  const p = colorOf(bench.cur);
+  $("b-mix-name").textContent = bench.cur === " " ? "Empty: paint with it to rub out" : `Color ${art.pal.indexOf(p) + 1}, letter ${p.k}`;
+  $("c-hex").disabled = $("c-glow").disabled = $("c-thin").disabled = $("c-remove").disabled = !p;
+  $("c-add").disabled = art.pal.length >= MAX_COLORS;
+  $("c-hex").value = p ? p.hex.toLowerCase() : "#000000";
+  $("c-code").textContent = p ? p.hex : "";
+  $("c-glow").setAttribute("aria-pressed", !!(p && p.glow));
+  $("c-thin").setAttribute("aria-pressed", !!(p && p.thin));
+}
+function paint() {
+  fillPick();
+  const s = spritesOf(bench.group)[bench.id];
+  $("b-use").textContent = s.use || "";
+  if (document.activeElement !== $("b-name")) $("b-name").value = art.name;
+  if (document.activeElement !== $("b-usefield")) $("b-usefield").value = art.use;
+  drawFrames();
+  drawSwatches();
+  drawMixer();
+  drawBenchGrid();
+  drawPreview();
+  const n = cells().reduce((t, r) => t + r.filter((k) => k !== " ").length, 0);
+  $("b-size").textContent = `${art.w} × ${art.h} · ${plural(n, "pixel")} · ${plural(art.pal.length, "color")}`;
+  $("b-undo").disabled = !undos.length;
+  $("b-redo").disabled = !redos.length;
+  $("w-less").disabled = art.w <= 1; $("w-more").disabled = art.w >= MAX_W;
+  $("h-less").disabled = art.h <= 1; $("h-more").disabled = art.h >= MAX_H;
+  const any = painted();
+  for (const [id, dx, dy] of [["m-left", -1, 0], ["m-right", 1, 0], ["m-up", 0, -1], ["m-down", 0, 1]]) $(id).disabled = !any || !edgeClear(dx, dy);
+  $("b-reset").disabled = !(edits[bench.group] && edits[bench.group][bench.id]);
+  $("x-reset-all").disabled = !edits[bench.group];
+}
+
+// ---------- The bench: colors ----------
+$("c-hex").addEventListener("input", () => {
+  const p = colorOf(bench.cur);
+  if (!p) return;
+  begin();
+  p.hex = $("c-hex").value.toUpperCase(); p.c = hexInt(p.hex);
+  $("c-code").textContent = p.hex;
+  drawBenchGrid(); drawPreview(); drawSwatches();
+});
+$("c-hex").addEventListener("change", commit);
+function mark(which) {
+  const p = colorOf(bench.cur);
+  if (!p) return;
+  begin();
+  const on = !p[which];
+  p.glow = p.thin = false;
+  p[which] = on;
+  commit();
+  say(on ? (which === "glow" ? "This color glows now: watch the deep preview." : "This color is see-through now: half its own color, half the water.") : "This color is lit like everything else.");
+}
+$("c-glow").addEventListener("click", () => mark("glow"));
+$("c-thin").addEventListener("click", () => mark("thin"));
+$("c-add").addEventListener("click", () => {
+  if (art.pal.length >= MAX_COLORS) return;
+  const used = new Set(art.pal.map((p) => p.k)), k = [...KEYS].find((ch) => !used.has(ch));
+  const taken = new Set(art.pal.map((p) => p.hex)), hex = NEW_COLORS.find((x) => !taken.has(x)) || "#888888";
+  begin();
+  art.pal.push({ k, hex, c: hexInt(hex), glow: false, thin: false });
+  bench.cur = k;
+  commit();
+  say(`Added color ${art.pal.length}, letter ${k}. Pick its color above.`);
+});
+$("c-remove").addEventListener("click", () => {
+  const p = colorOf(bench.cur);
+  if (!p) return;
+  const n = art.pal.indexOf(p);
+  begin();
+  for (const f of art.frames) for (const r of f) for (let i = 0; i < r.length; i++) if (r[i] === p.k) r[i] = " ";
+  art.pal.splice(n, 1);
+  bench.cur = art.pal.length ? art.pal[Math.max(0, n - 1)].k : " ";
+  commit();
+  say(`Removed color ${n + 1}. Its pixels are empty now, in every frame.`);
+});
+
+// ---------- The bench: tools ----------
+function setTool(t) {
+  bench.tool = t;
+  for (const id of ["pencil", "fill", "pick"]) $("t-" + id).setAttribute("aria-pressed", id === t);
+}
+$("t-pencil").addEventListener("click", () => setTool("pencil"));
+$("t-fill").addEventListener("click", () => setTool("fill"));
+$("t-pick").addEventListener("click", () => setTool("pick"));
+function fill(i, j, k) {
+  const c = cells(), from = c[j][i];
+  if (from === k) return;
+  const todo = [[i, j]];
+  while (todo.length) {
+    const [x, y] = todo.pop();
+    if (x < 0 || y < 0 || x >= art.w || y >= art.h || c[y][x] !== from) continue;
+    c[y][x] = k;
+    todo.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+}
+function pickAt(i, j) {
+  bench.cur = cells()[j][i];
+  setTool("pencil");
+  paint();
+  say(`Picked ${nameOf(bench.cur)}.`);
+}
+function useAt(i, j, k) {
+  if (bench.tool === "pick") return pickAt(i, j);
+  begin();
+  if (bench.tool === "fill") fill(i, j, k); else cells()[j][i] = k;
+  commit();
+  say(`${bench.tool === "fill" ? "Filled" : "Painted"} column ${i + 1}, row ${j + 1} with ${nameOf(k)}.`);
+}
+
+// ---------- The bench: painting with a pointer ----------
+const stroke = { on: false, k: " ", i: 0, j: 0, id: null };
+const grid = $("b-grid");
+// paint every cell on the way from the last one, so a quick drag leaves no gaps
+function strokeTo(i, j) {
+  const n = Math.max(Math.abs(i - stroke.i), Math.abs(j - stroke.j));
+  for (let s = 1; s <= n; s++) cells()[Math.round(stroke.j + (j - stroke.j) * s / n)][Math.round(stroke.i + (i - stroke.i) * s / n)] = stroke.k;
+  stroke.i = i; stroke.j = j;
+}
+grid.addEventListener("pointerdown", (e) => {
+  const at = cellAt(grid, bench.cell, art.w, art.h, e);
+  if (!at || (e.button !== 0 && e.button !== 2)) return;
+  e.preventDefault();
+  cursor.show = false;
+  const k = e.button === 2 ? " " : bench.cur;
+  if (bench.tool === "pick" && e.button === 0) return pickAt(at.i, at.j);
+  if (bench.tool === "fill") { begin(); fill(at.i, at.j, k); commit(); return; }
+  begin();
+  Object.assign(stroke, { on: true, k, i: at.i, j: at.j, id: e.pointerId });
+  cells()[at.j][at.i] = k;
+  grid.setPointerCapture(e.pointerId);
+  drawBenchGrid();
+});
+grid.addEventListener("pointermove", (e) => {
+  const at = cellAt(grid, bench.cell, art.w, art.h, e);
+  hover.i = at ? at.i : -1; hover.j = at ? at.j : -1;
+  if (stroke.on && e.pointerId === stroke.id && at) strokeTo(at.i, at.j);
+  drawBenchGrid();
+});
+const endStroke = () => { if (!stroke.on) return; stroke.on = false; commit(); };
+["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => grid.addEventListener(t, endStroke));
+grid.addEventListener("pointerleave", () => { hover.i = -1; drawBenchGrid(); });
+grid.addEventListener("contextmenu", (e) => e.preventDefault());
+
+// ---------- The bench: painting from the keyboard ----------
+grid.addEventListener("focus", () => { cursor.show = true; drawBenchGrid(); });
+grid.addEventListener("blur", () => { cursor.show = false; drawBenchGrid(); });
+grid.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = e.shiftKey ? 4 : 1, moves = { ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n] };
+  if (moves[e.key]) {
+    e.preventDefault();
+    cursor.show = true;
+    cursor.i = clamp(cursor.i + moves[e.key][0], 0, art.w - 1);
+    cursor.j = clamp(cursor.j + moves[e.key][1], 0, art.h - 1);
+    drawBenchGrid();
+    say(`Column ${cursor.i + 1}, row ${cursor.j + 1}: ${nameOf(cells()[cursor.j][cursor.i])}.`);
+  } else if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    if (!e.repeat || bench.tool === "pencil") useAt(cursor.i, cursor.j, bench.cur);
+  } else if (e.key === "Delete" || e.key === "Backspace") {
+    e.preventDefault();
+    begin(); cells()[cursor.j][cursor.i] = " "; commit();
+    say(`Rubbed out column ${cursor.i + 1}, row ${cursor.j + 1}.`);
+  }
+});
+
+// ---------- The bench: size and position ----------
+// width changes at the nose (the right), height at the top, every frame together
+function resize(dw, dh) {
+  const w = clamp(art.w + dw, 1, MAX_W), h = clamp(art.h + dh, 1, MAX_H);
+  if (w === art.w && h === art.h) return;
+  begin();
+  art.frames = art.frames.map((f) => {
+    let c = f.map((r) => (w > art.w ? [...r, ...Array(w - art.w).fill(" ")] : r.slice(0, w)));
+    if (h > art.h) c = [...Array.from({ length: h - art.h }, () => Array(w).fill(" ")), ...c];
+    else c = c.slice(art.h - h);
+    return c;
+  });
+  Object.assign(art, { w, h });
+  settle();
+  commit();
+  say(`${art.w} wide and ${art.h} tall.`);
+}
+$("w-less").addEventListener("click", () => resize(-1, 0));
+$("w-more").addEventListener("click", () => resize(1, 0));
+$("h-less").addEventListener("click", () => resize(0, -1));
+$("h-more").addEventListener("click", () => resize(0, 1));
+// a move only goes ahead when nothing in any frame would fall off the edge
+function edgeClear(dx, dy) {
+  return art.frames.every((c) => {
+    if (dx < 0) return c.every((r) => r[0] === " ");
+    if (dx > 0) return c.every((r) => r[art.w - 1] === " ");
+    if (dy < 0) return c[0].every((k) => k === " ");
+    return c[art.h - 1].every((k) => k === " ");
+  });
+}
+function shift(dx, dy) {
+  if (!painted() || !edgeClear(dx, dy)) return;
+  begin();
+  const { w, h } = art;
+  art.frames = art.frames.map((old) => Array.from({ length: h }, (_, j) => Array.from({ length: w }, (_, i) => {
+    const si = i - dx, sj = j - dy;
+    return si >= 0 && sj >= 0 && si < w && sj < h ? old[sj][si] : " ";
+  })));
+  commit();
+}
+$("m-left").addEventListener("click", () => shift(-1, 0));
+$("m-right").addEventListener("click", () => shift(1, 0));
+$("m-up").addEventListener("click", () => shift(0, -1));
+$("m-down").addEventListener("click", () => shift(0, 1));
+
+// ---------- The bench: preview, names, and undoing ----------
+$("p-play").addEventListener("click", () => {
+  trial.play = !trial.play;
+  $("p-play").setAttribute("aria-pressed", trial.play);
+  drawPreview(); previewRun();
+});
+$("p-left").addEventListener("click", () => {
+  trial.left = !trial.left;
+  $("p-left").setAttribute("aria-pressed", trial.left);
+  drawPreview();
+});
+for (const [id, key] of [["b-name", "name"], ["b-usefield", "use"]]) {
+  $(id).addEventListener("input", () => { begin(); art[key] = $(id).value; });
+  $(id).addEventListener("change", commit);
+}
+$("b-reset").addEventListener("click", () => {
+  begin();
+  art = toArt(groupById(bench.group).sprites[bench.id]);
+  bench.f = 0;
+  settle();
+  commit();
+  say(`${art.name} is back as the game draws it. Undo brings your changes back.`);
+});
+$("x-reset-all").addEventListener("click", () => {
+  const g = groupById(bench.group), n = Object.keys(edits[g.id] || {}).length;
+  delete edits[g.id];
+  saveEdits();
+  select(g.id, bench.id);
+  $("x-cap").textContent = `Put back ${plural(n, "creature")} in the ${g.name} set.`;
+});
+
+// ---------- Export and import ----------
+// written out the way Cozy Submarine's source keeps its SPRITES: a creature per stanza, a row per line
+function writeSprites(set) {
+  const out = Object.entries(set).map(([id, s]) => {
+    const pal = "{ " + Object.entries(s.palette).map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(", ") + " }";
+    const frames = s.frames.map((rows) => "    [\n" + rows.map((r) => "      " + JSON.stringify(r)).join(",\n") + "\n    ]").join(",\n");
+    return `  ${JSON.stringify(id)}: { "name": ${JSON.stringify(s.name)}, "use": ${JSON.stringify(s.use)}, "palette": ${pal}, "frames": [\n${frames}\n  ] }`;
+  });
+  return "{\n" + out.join(",\n") + "\n}";
+}
+const exportText = (gid) => `{ "format": ${JSON.stringify(FORMAT)}, "group": ${JSON.stringify(gid)}, "sprites": ${writeSprites(spritesOf(gid))} }\n`;
+const fileName = () => `${bench.group}-sprites.json`;
+$("x-copy").addEventListener("click", async () => {
+  const text = exportText(bench.group), n = Object.keys(spritesOf(bench.group)).length;
+  try {
+    await navigator.clipboard.writeText(text);
+    $("x-cap").textContent = `Copied all ${plural(n, "creature")} in the ${groupById(bench.group).name} set.`;
+  } catch (e) {
+    // no clipboard access: put it in the box to copy by hand
+    $("x-import").value = text;
+    $("x-import").select();
+    $("x-cap").textContent = "Your browser wouldn't let the page copy, so the set is in the box below, selected and ready to copy.";
+  }
+});
+$("x-download").addEventListener("click", () => {
+  const blob = new Blob([exportText(bench.group)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName();
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  $("x-cap").textContent = `Saved ${fileName()}.`;
+});
+function load(text) {
+  let data;
+  try { data = JSON.parse(text); } catch (e) { $("x-cap").textContent = "That isn't an export: it doesn't read as JSON."; return; }
+  if (!data || data.format !== FORMAT) { $("x-cap").textContent = "That isn't a Pixel Bench export."; return; }
+  if (data.sprite === "sub") { $("x-cap").textContent = "That's a sub. Load it in Custom Submarine instead."; return; }
+  const g = groupById(data.group);
+  if (!g) { $("x-cap").textContent = `That export is for "${data.group}", which the bench doesn't have.`; return; }
+  const set = cleanSet(data.sprites);
+  if (!set) { $("x-cap").textContent = "That export has no creatures the bench can draw."; return; }
+  const total = Object.keys(set).length;
+  edits[g.id] = set;
+  tidy(g.id);
+  const differ = Object.keys(edits[g.id] || {});
+  select(g.id, bench.group === g.id ? bench.id : differ[0] || bench.id);
+  $("x-cap").textContent = `Loaded ${plural(total, "creature")} into the ${g.name} set. ${!differ.length ? "They all match the game's." : differ.length === 1 ? "1 of them differs from the game's." : `${differ.length} of them differ from the game's.`}`;
+}
+$("x-load").addEventListener("click", () => load($("x-import").value));
+$("x-file").addEventListener("change", async () => {
+  const f = $("x-file").files[0];
+  if (f) load(await f.text());
+  $("x-file").value = "";
+});
+
+// ---------- Keyboard ----------
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input:not([type=range]):not([type=color]), textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && (k === "z" || k === "y")) {
+    e.preventDefault();
+    if (k === "y" || e.shiftKey) redo(); else undo();
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if (k === "p") setTool("pencil");
+  else if (k === "f") setTool("fill");
+  else if (k === "i") setTool("pick");
+  else if (k === "[") setFrame(bench.f - 1);
+  else if (k === "]") setFrame(bench.f + 1);
+  else if (/^[0-9]$/.test(k)) { const key = swatchKeys()[Number(k)]; if (key !== undefined) choose(key); }
+});
+
+// ---------- Start ----------
+(function boot() {
+  s1Palette(); s1Paint();
+  s2Paint();
+  s3Paint();
+  s4Paint();
+  s5Paint(); s5Play(s5.play);
+  s6Paint();
+  const [gid, id] = (new URLSearchParams(location.hash.slice(1)).get("sprite") || "").split("/");
+  select(groupById(gid) ? gid : "cozy-submarine", id || "dolphin");
+  $("p-play").setAttribute("aria-pressed", trial.play);
+  previewRun();
+  new ResizeObserver(() => drawBenchGrid()).observe($("b-board"));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { s1Paint(); s2Paint(); s5Paint(); drawBenchGrid(); });
+  motionQuery.addEventListener("change", (e) => {
+    reduced = e.matches;
+    if (reduced) { s5Play(false); trial.play = false; $("p-play").setAttribute("aria-pressed", false); clearTimeout(trial.timer); }
+  });
+})();
+</script>
+</body>
+</html>

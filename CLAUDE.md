@@ -172,6 +172,14 @@ Game sounds are synthesized with Web Audio, never recorded files. A curio with s
 
 `sound-bench` holds an identical copy of every curio's sounds as its presets, one set per curio (`HARDPOINT_SOUNDS`, registered in its `GROUPS`). The data is duplicated on purpose, so each page stays self-contained. When one copy changes, change the other to match in the same commit. A Sound Bench export (`{ "format": "sound-bench/1", "group": "hardpoint", "sounds": {...} }`) uses the same layout, so its `sounds` object pastes straight into both pages. A new curio with sounds adds its set to `sound-bench` too.
 
+## Sprites
+
+Pixel-art sprites are data too: an object of sprites, each `{ "name", "use", "palette", "frames" }`. The palette maps single letters to colors (`"#RRGGBB"`, `"*#RRGGBB"` glows in the dark, `"~#RRGGBB"` is see-through), and each frame is an array of row strings, one letter per pixel and a space for nothing. Art faces right. Keep one row per line and one sprite per stanza (see `SPRITES` in `cozy-submarine`).
+
+`pixel-bench` holds an identical copy of every curio's sprites, one set per curio (`COZY_SUBMARINE_SPRITES`, registered in its `GROUPS`), the same way `sound-bench` holds sounds. When one copy changes, change the other to match in the same commit. A Pixel Bench export (`{ "format": "pixel-bench/1", "group": "cozy-submarine", "sprites": {...} }`) writes `sprites` in the same layout, so it pastes straight into both pages.
+
+Cozy Submarine's own sub is not in that set. Players draw their own in `custom-submarine`, which saves it to `localStorage` for the game to sail.
+
 ## Writing style
 
 - Plain, concrete, second person. Short sentences that say what to do and what you'll see ("Drag z and watch…", "Press +1 to count").
