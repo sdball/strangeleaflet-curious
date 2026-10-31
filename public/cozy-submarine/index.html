@@ -33,8 +33,8 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 #head[hidden], #gauge[hidden], #tray[hidden], .group[hidden], #yellow[hidden] { display: none; }
 #gauge { position: fixed; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; text-align: right; pointer-events: none; }
 #depth { display: block; font-size: 26px; font-weight: 700; color: var(--lamp); line-height: 1; font-variant-numeric: tabular-nums; }
-#zone, #floor, #water, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
-#floor, #water, #weather { color: var(--muted); }
+#zone, #floor, #where, #water, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
+#floor, #where, #water, #weather { color: var(--muted); }
 #seen { display: block; font-size: 11px; margin-top: 5px; color: var(--lamp); opacity: 0; transition: opacity 0.6s; white-space: nowrap; }
 #seen.on { opacity: 1; }
 #tray {
@@ -81,7 +81,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   #corner { flex-direction: column; gap: 6px; }
   #opts { font-size: 11px; padding: 6px 7px; }
   #depth { font-size: 20px; }
-  #zone, #floor, #water, #weather, #seen { font-size: 10px; }
+  #zone, #floor, #where, #water, #weather, #seen { font-size: 10px; }
   .row { gap: 6px 8px; }
   .chip { font-size: 12px; padding: 6px 8px; }
   #speed { min-width: 5.8em; font-size: 11px; }
@@ -114,7 +114,8 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <b id="depth">0 m</b>
   <span id="zone">At the surface</span>
   <span id="floor">Sea floor 40 m</span>
-  <span id="water">Mild water</span>
+  <span id="where">Coordinates: 0</span>
+  <span id="water">Water 14 °C</span>
   <span id="weather">Day, calm</span>
   <span id="seen"></span>
 </div>
@@ -273,13 +274,41 @@ function floorY(x) {
 }
 const climV = (x) => fbm(x / 24000, SEED + 10);
 const climate = (x) => { const v = climV(x); return v < 0.4 ? 'cold' : v > 0.6 ? 'warm' : 'mild'; };
-// the sun only warms the top of the sea. it cools fast below the sunlit zone, and under 1,000 m it's
-// near freezing everywhere, polar seas from top to bottom
-function warmth(x, m) {
-  const c = climate(x);
-  if (c === 'cold' || m > 1000) return 'cold';
-  return m > 200 ? 'cool' : c;
+// ---------- Water temperature ----------
+// the sun warms only the top of the sea, from about -1 °C in polar water to 29 °C in the tropics.
+// below a well-mixed top layer it cools fast, and under 1,000 m it's 2 to 4 °C everywhere
+function seaTemp(x, m) {
+  const top = clamp(-1 + (climV(x) - 0.2) * 50, -1.5, 29), deep = 2 + 2.5 * Math.exp(-m / 1200);
+  return deep + (top - deep) * Math.exp(-Math.max(0, m - 50) / 200);
 }
+// a black smoker vents water at 330 to 400 °C, but it mixes into the cold sea within a meter or two.
+// the plume rises and widens, a few degrees warm five meters up and a fraction of a degree past
+// twenty. tube worms live in a gentler warmth seeping up from the floor around the chimneys.
+// distances are in meters, two pixels to one, from the closest point of the hull
+function ventTemp(x0, x1, y0, y1) {
+  let t = 0;
+  for (let c = Math.floor((x0 - 120) / VENT); c <= Math.floor((x1 + 120) / VENT); c++) {
+    const f = ventAt(c);
+    if (!f) continue;
+    const span = (f.chimneys.length * 26 + 14) / 2 + 6, fx = clamp(f.cx, x0, x1);
+    t += 12 * Math.exp(-(((fx - f.cx) / span) ** 2)) * Math.exp(-Math.max(0, floorY(fx) - y1) / 4);
+    for (const ch of f.chimneys) {
+      const mx = f.cx + ch.dx, my = floorY(mx) - ch.h - 1, py = clamp(my, y0, y1);
+      const z = Math.max(0, my - py) / 2, dz = Math.max(0, py - my) / 2;
+      const dx = Math.abs(clamp(mx, x0, x1) - mx) / 2, b = 0.5 + 0.12 * z;
+      t += ch.heat * (0.3 / (z + dz + 0.3)) ** (5 / 3) * Math.exp(-((dx / b) ** 2));
+    }
+  }
+  return t;
+}
+function waterTemp() {
+  const x0 = sub.x - SUBG.half, x1 = sub.x + SUBG.half, y0 = sub.y + SUBG.oy, y1 = sub.y + 4;
+  return Math.min(400, seaTemp(sub.x, subDepth()) + ventTemp(x0, x1, y0, y1));
+}
+const fmtTemp = (t) => {
+  const n = Math.abs(t) < 10 ? Math.abs(t).toFixed(1) : fmt(Math.abs(t));
+  return `${t < -0.05 ? '\u2212' : ''}${n} °C`;
+};
 
 // ---------- Islands and icebergs ----------
 const ISLE = 1700;
@@ -325,7 +354,7 @@ function ventAt(c) {
   if (r(0) < 0.55 && mOf(baseFloor(cx)) > 5600) {
     f = { cx, chimneys: [], worms: [], seen: false };
     const n = 1 + Math.floor(r(2) * 3);
-    for (let i = 0; i < n; i++) f.chimneys.push({ dx: Math.round((i - (n - 1) / 2) * (14 + r(3 + i) * 10)), h: 16 + Math.floor(r(10 + i) * 26), w: 4 + Math.floor(r(20 + i) * 4) });
+    for (let i = 0; i < n; i++) f.chimneys.push({ dx: Math.round((i - (n - 1) / 2) * (14 + r(3 + i) * 10)), h: 16 + Math.floor(r(10 + i) * 26), w: 4 + Math.floor(r(20 + i) * 4), heat: 330 + r(95 + i) * 70 });
     for (let i = 0; i < 26; i++) f.worms.push({ dx: Math.round((r(30 + i) - 0.5) * (n * 26 + 14)), h: 2 + Math.floor(r(60 + i) * 5) });
     f.crab = Math.round((r(90) - 0.5) * 30);
   }
@@ -768,7 +797,7 @@ const drag = { on: false, x: 0, y: 0, step: 0, v: 0, id: null };
 const hold = { v: 0 }, nudge = { v: 0, left: 0 };
 const throttle = { d: 0, next: 0 };
 let actors = [], parts = [], snow = [], drops = [], bolt = null;
-let T = 0, flash = 0, spawnIn = 1, rareAt = 0;
+let T = 0, flash = 0, spawnIn = 1, rareAt = 0, home = 0;
 const SPEEDS = [0, 10, 24, 48, 90];
 const SPEED_NAMES = ['Stopped', 'Dead slow', 'Slow', 'Half', 'Full'];
 
@@ -787,7 +816,7 @@ function startWorld(seed) {
   SEED = seed;
   floorCache.clear(); isleCache.clear(); ventCache.clear();
   actors = []; parts = [];
-  sub.x = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0;
+  sub.x = home = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0;
   setFollow(false, true);
   sub.sx = LW * 0.33; cam.x = sub.x - sub.sx; cam.y = -LH * 0.47;
   spawnIn = 1; rareAt = 0;
@@ -1534,7 +1563,7 @@ function draw() {
 // ---------- Words on screen ----------
 const ZONES = [[1, 'At the surface'], [200, 'Sunlit zone'], [1000, 'Twilight zone'], [4000, 'Midnight zone'], [6000, 'Abyssal zone'], [Infinity, 'Hadal zone']];
 const zoneOf = (m) => ZONES.find(([max]) => m < max)[1];
-let lastZone = '', zoneSince = 0, seenTimer = 0, lastSky = '', lastWater = '';
+let lastZone = '', zoneSince = 0, seenTimer = 0, lastSky = '';
 function say(text) { const el = $('said'); el.textContent = ''; setTimeout(() => { el.textContent = text; }, 30); }
 function seen(text) {
   const el = $('seen');
@@ -1551,9 +1580,15 @@ function lightsSaid() {
 function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
-  const water = `${warmth(sub.x, m)} water`;
   const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
-  canvas.setAttribute('aria-label', `${ownSub ? 'Your own little submarine' : 'A little yellow submarine'} ${where} in ${water}, ${going}, ${lightsSaid()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
+  canvas.setAttribute('aria-label', `${ownSub ? 'Your own little submarine' : 'A little yellow submarine'} ${where} in water at ${fmtTemp(waterTemp())}, ${going}, ${lightsSaid()}, at coordinates ${coord()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
+}
+// coordinates count meters east of where you set out, and below zero going west. a pixel is half a
+// meter across, the same as near the surface going down. the start is the same spot every time for
+// an ocean, so coordinates find a place again
+function coord() {
+  const c = Math.round((sub.x - home) / 2);
+  return c < 0 ? `−${-c}` : `${c}`;
 }
 let hudIn = 0, labelIn = 5;
 function hud(dt) {
@@ -1564,10 +1599,8 @@ function hud(dt) {
   $('depth').textContent = `${fmt(m)} m`;
   $('zone').textContent = z;
   $('floor').textContent = `Sea floor ${fmt(fm)} m`;
-  // near the surface, the same warm, mild, or cold that decides which animals turn up
-  const water = warmth(sub.x, m);
-  $('water').textContent = `${water[0].toUpperCase()}${water.slice(1)} water`;
-  if (water !== lastWater) { lastWater = water; describe(); }
+  $('where').textContent = `Coordinates: ${coord()}`;
+  $('water').textContent = `Water ${fmtTemp(waterTemp())}`;
   const sky = `${timeName()}, ${weatherName()}`;
   $('weather').textContent = sky;
   // wait for a new zone to settle before announcing it, so bobbing on a boundary stays quiet
