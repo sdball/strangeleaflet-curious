@@ -152,11 +152,25 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
     <button type="button" class="chip" id="menu-close" aria-keyshortcuts="Escape">Close</button>
   </div>
   <h3>The ocean</h3>
-  <p>The link in your address bar shares this ocean.</p>
+  <p>The link in your address bar shares this ocean, and the sky too if you pick one below.</p>
   <div class="group">
     <button type="button" class="chip" id="newsea">New ocean</button>
     <button type="button" class="chip" id="sound" aria-pressed="false" aria-keyshortcuts="M">Sound</button>
   </div>
+  <h3>The sky</h3>
+  <div class="group" role="group" aria-labelledby="time-label">
+    <span class="glabel" id="time-label">Time</span>
+    <button type="button" class="chip" id="time-clock" aria-pressed="true">Clock</button>
+    <button type="button" class="chip" id="time-day" aria-pressed="false">Day</button>
+    <button type="button" class="chip" id="time-night" aria-pressed="false">Night</button>
+  </div>
+  <div class="group" role="group" aria-labelledby="weather-label">
+    <span class="glabel" id="weather-label">Weather</span>
+    <button type="button" class="chip" id="weather-clock" aria-pressed="true">Clock</button>
+    <button type="button" class="chip" id="weather-calm" aria-pressed="false">Calm</button>
+    <button type="button" class="chip" id="weather-storm" aria-pressed="false">Stormy</button>
+  </div>
+  <p>On Clock, each ocean has its own day and weather, coming and going on their own.</p>
   <h3>Your sub</h3>
   <p id="subname" aria-live="polite"></p>
   <p><a href="../custom-submarine/" id="drawsub">Draw your own sub in Custom Submarine</a>, then sail it from there, or copy it and paste it here.</p>
@@ -221,7 +235,8 @@ reduced = motionQuery.matches;
 motionQuery.addEventListener('change', (e) => { reduced = e.matches; });
 
 // ---------- The ocean's seed ----------
-// the hash holds only the seed, so a shared link opens the same ocean from its beginning
+// the hash holds the seed, so a shared link opens the same ocean from its beginning, plus any sky
+// the player pinned (see the sky clock)
 let SEED = 1;
 function readSeed() {
   const v = parseInt(new URLSearchParams(location.hash.slice(1)).get('ocean') || '', 36);
@@ -373,13 +388,31 @@ function ventAt(c) {
 // sees the same sky at the same moment, while another ocean can be having a stormy night
 const DAY_S = 24 * 60;
 const SKY = { phase: 0, elev: 0, day: 1, glow: 0, wI: 0, storm: 0, dl: 1, above: 1, amp: 1 };
+// the player can pin the time or the weather in Options. a pin rides in the link beside the ocean.
+// day holds the sun at noon and night the moon at midnight. pinned weather still wanders inside
+// its band, so a calm sea keeps a breeze and a storm keeps gusting
+const TIME_PINS = { day: 0.5, night: 0 };
+const WEATHER_PINS = { calm: [0.04, 0.3], storm: [0.8, 1] };
+const PIN = { time: '', weather: '' };
+function readPins() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  const t = p.get('time'), w = p.get('weather');
+  PIN.time = t && Object.hasOwn(TIME_PINS, t) ? t : '';
+  PIN.weather = w && Object.hasOwn(WEATHER_PINS, w) ? w : '';
+}
+function writePins() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  for (const k of ['time', 'weather']) { if (PIN[k]) p.set(k, PIN[k]); else p.delete(k); }
+  history.replaceState(null, '', '#' + p);
+}
 function readSky(now) {
   const t = now / 1000;
-  SKY.phase = ((t + h3(SEED, 0, 401) * DAY_S) % DAY_S) / DAY_S;
+  SKY.phase = PIN.time ? TIME_PINS[PIN.time] : ((t + h3(SEED, 0, 401) * DAY_S) % DAY_S) / DAY_S;
   SKY.elev = Math.sin((SKY.phase - 0.25) * Math.PI * 2);
   SKY.day = smooth(-0.12, 0.22, SKY.elev);
   SKY.glow = Math.exp(-((SKY.elev / 0.13) ** 2));
-  SKY.wI = clamp((fbm(t / 420, SEED + 11) - 0.28) / 0.6, 0, 1);
+  const w = fbm(t / 420, SEED + 11), band = WEATHER_PINS[PIN.weather];
+  SKY.wI = band ? lerp(band[0], band[1], w) : clamp((w - 0.28) / 0.6, 0, 1);
   SKY.storm = smooth(0.6, 0.85, SKY.wI);
   SKY.dl = (0.1 + 0.9 * SKY.day) * (1 - 0.45 * SKY.storm);
   SKY.above = (0.3 + 0.7 * SKY.day) * (1 - 0.35 * SKY.storm);
@@ -2182,6 +2215,20 @@ $('follow').addEventListener('click', () => setFollow(!sub.follow));
 for (const L of LIGHTS) $(L.btn).addEventListener('click', () => setLight(L.id, !L.on));
 $('sound').addEventListener('click', () => setSound(!prefs.sound));
 $('newsea').addEventListener('click', () => { const s = freshSeed(); writeSeed(s); startWorld(s); say('A new ocean.'); });
+function paintPins() {
+  for (const v of ['clock', ...Object.keys(TIME_PINS)]) $('time-' + v).setAttribute('aria-pressed', (PIN.time || 'clock') === v);
+  for (const v of ['clock', ...Object.keys(WEATHER_PINS)]) $('weather-' + v).setAttribute('aria-pressed', (PIN.weather || 'clock') === v);
+}
+const PIN_SAID = {
+  time: { clock: 'Day and night follow the clock again.', day: 'Always day.', night: 'Always night.' },
+  weather: { clock: 'The weather follows the clock again.', calm: 'Always calm.', storm: 'Always stormy.' },
+};
+for (const k of ['time', 'weather']) {
+  for (const v in PIN_SAID[k]) $(k + '-' + v).addEventListener('click', () => {
+    PIN[k] = v === 'clock' ? '' : v;
+    writePins(); paintPins(); say(PIN_SAID[k][v]);
+  });
+}
 // rise and dive move while held, and a press from the keyboard gives a short nudge
 function holdButton(btn, v) {
   btn.addEventListener('pointerdown', (e) => { hold.v = v; btn.setPointerCapture(e.pointerId); });
@@ -2244,7 +2291,11 @@ $('yellow').addEventListener('click', () => {
   $('subcap').textContent = 'Back in the yellow sub.';
   $('drawsub').focus();
 });
-window.addEventListener('hashchange', () => { const s = readSeed(); if (s && s !== SEED) startWorld(s); });
+window.addEventListener('hashchange', () => {
+  const s = readSeed();
+  if (s && s !== SEED) startWorld(s);
+  readPins(); paintPins();
+});
 let rz = 0;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
 
@@ -2254,6 +2305,7 @@ applyShow();
 layout();
 SEED = readSeed() || freshSeed();
 writeSeed(SEED);
+readPins(); paintPins();
 readSky(Date.now());
 startWorld(SEED);
 let last = performance.now(), acc = 0;
