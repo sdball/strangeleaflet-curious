@@ -35,8 +35,12 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 #depth { display: block; font-size: 26px; font-weight: 700; color: var(--lamp); line-height: 1; font-variant-numeric: tabular-nums; }
 #zone, #floor, #where, #water, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
 #floor, #where, #water, #weather { color: var(--muted); }
-#seen { display: block; font-size: 11px; margin-top: 5px; color: var(--lamp); opacity: 0; transition: opacity 0.6s; white-space: nowrap; }
+#seen { display: block; margin-top: 5px; opacity: 0; transition: opacity 0.6s; }
 #seen.on { opacity: 1; }
+#seen b { display: block; font-size: 11px; font-weight: 400; color: var(--lamp); white-space: nowrap; }
+/* the note wraps to the gauge's own width rather than widening it */
+#seen span { display: block; width: 0; min-width: 100%; margin-top: 4px; font-size: 10px; line-height: 1.5; }
+#seen span:empty { display: none; }
 #tray {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: max(10px, env(safe-area-inset-bottom));
   width: min(780px, calc(100% - 16px)); padding: 8px 10px 7px;
@@ -81,7 +85,8 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   #corner { flex-direction: column; gap: 6px; }
   #opts { font-size: 11px; padding: 6px 7px; }
   #depth { font-size: 20px; }
-  #zone, #floor, #where, #water, #weather, #seen { font-size: 10px; }
+  #zone, #floor, #where, #water, #weather, #seen b { font-size: 10px; }
+  #seen span { font-size: 9px; }
   .row { gap: 6px 8px; }
   .chip { font-size: 12px; padding: 6px 8px; }
   #speed { min-width: 5.8em; font-size: 11px; }
@@ -117,7 +122,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <span id="where">Coordinates: 0</span>
   <span id="water">Water 14 °C</span>
   <span id="weather">Day, calm</span>
-  <span id="seen"></span>
+  <span id="seen"><b id="seen-name"></b><span id="seen-note"></span></span>
 </div>
 <p id="said" class="sr" aria-live="polite"></p>
 <section id="tray" class="panel" aria-label="Submarine controls">
@@ -352,11 +357,12 @@ function ventAt(c) {
   const cx = Math.round(c * VENT + 150 + r(1) * 350);
   let f = null;
   if (r(0) < 0.55 && mOf(baseFloor(cx)) > 5600) {
-    f = { cx, chimneys: [], worms: [], seen: false };
+    f = { cx, chimneys: [], worms: [] };
     const n = 1 + Math.floor(r(2) * 3);
     for (let i = 0; i < n; i++) f.chimneys.push({ dx: Math.round((i - (n - 1) / 2) * (14 + r(3 + i) * 10)), h: 16 + Math.floor(r(10 + i) * 26), w: 4 + Math.floor(r(20 + i) * 4), heat: 330 + r(95 + i) * 70 });
     for (let i = 0; i < 26; i++) f.worms.push({ dx: Math.round((r(30 + i) - 0.5) * (n * 26 + 14)), h: 2 + Math.floor(r(60 + i) * 5) });
     f.crab = Math.round((r(90) - 0.5) * 30);
+    f.half = (n * 26 + 14) / 2;
   }
   ventCache.set(c, f);
   return f;
@@ -745,40 +751,76 @@ const ART = {
 };
 
 // ---------- Animals ----------
-// min and max are depths in meters. weight is how often each turns up among those that fit
+// min and max are depths in meters. weight is how often each turns up among those that fit.
+// name and note come up whenever one comes near the sub, and a rare one names itself with its rare line
 const SPECIES = [
-  { id: 'sardine', art: 'sardine', min: 0, max: 200, weight: 3, speed: [10, 16], school: [8, 16], bob: 3 },
-  { id: 'clown', art: 'clown', min: 0, max: 40, weight: 2, climate: 'warm', speed: [5, 9], school: [1, 3], bob: 2 },
-  { id: 'tang', art: 'tang', min: 0, max: 50, weight: 2, climate: 'warm mild', speed: [6, 10], school: [1, 4], bob: 2 },
-  { id: 'jelly', art: 'jelly', min: 0, max: 700, weight: 1.5, speed: [1, 3], bob: 5, fps: 1.5 },
-  { id: 'turtle', art: 'turtle', min: 0, max: 120, weight: 0.6, climate: 'warm mild', speed: [6, 9], bob: 2 },
-  { id: 'shark', art: 'shark', min: 0, max: 700, weight: 0.8, speed: [11, 16], bob: 2 },
-  { id: 'dolphin', art: 'dolphin', min: 0, max: 60, weight: 0.6, climate: 'warm mild', speed: [22, 30], school: [2, 4], bob: 6, leap: 'dolphinLeap' },
-  { id: 'seal', art: 'seal', min: 0, max: 120, weight: 1.2, climate: 'cold', speed: [14, 20], bob: 5 },
-  { id: 'orca', art: 'orca', min: 0, max: 300, weight: 0.3, climate: 'cold mild', speed: [18, 24], school: [2, 3], bob: 3, rare: 'A pod of orcas!' },
-  { id: 'humpback', art: 'humpback', min: 5, max: 250, weight: 0.5, speed: [7, 10], bob: 2, rare: 'A humpback whale!' },
-  { id: 'sperm', art: 'sperm', min: 20, max: 2200, weight: 0.3, speed: [8, 11], bob: 2, rare: 'A sperm whale!' },
-  { id: 'squid', art: 'squid', min: 60, max: 900, weight: 1.4, speed: [8, 14], burst: true, school: [1, 4], bob: 2 },
-  { id: 'octopus', art: 'octopus', floor: true, min: 0, max: 200, weight: 1, speed: [1.5, 3], fps: 2 },
-  { id: 'crab', art: 'crab', floor: true, min: 0, max: 400, weight: 1.6, speed: [2, 5], fps: 6 },
-  { id: 'lantern', art: 'lantern', min: 200, max: 1200, weight: 3, speed: [6, 10], school: [6, 14], bob: 2 },
-  { id: 'hatchet', art: 'hatchet', min: 200, max: 1200, weight: 1.6, speed: [3, 6], school: [2, 6], bob: 2 },
-  { id: 'atolla', art: 'atolla', min: 400, max: 4000, weight: 1.2, speed: [1, 2], bob: 4, fps: 2 },
-  { id: 'comb', art: 'comb', min: 100, max: 3000, weight: 1, speed: [1, 2], bob: 3, fps: 4 },
-  { id: 'vampire', art: 'vampire', min: 600, max: 1500, weight: 0.8, speed: [3, 5], bob: 3 },
-  { id: 'siphon', art: 'siphon', min: 500, max: 3500, weight: 0.6, speed: [1.5, 3], bob: 2 },
-  { id: 'giantsquid', art: 'giantsquid', min: 300, max: 1200, weight: 0.25, speed: [6, 9], burst: true, bob: 2, rare: 'A giant squid!' },
-  { id: 'spidercrab', art: 'spidercrab', floor: true, min: 150, max: 1500, weight: 1, speed: [1, 2], fps: 3 },
-  { id: 'angler', art: 'angler', min: 900, max: 4000, weight: 1.4, speed: [2, 4], bob: 2 },
-  { id: 'gulper', art: 'gulper', min: 600, max: 3000, weight: 0.8, speed: [4, 7], bob: 2 },
-  { id: 'dumbo', art: 'dumbo', min: 1000, max: 7000, weight: 1.2, speed: [2, 4], bob: 6, fps: 2.5 },
-  { id: 'rattail', art: 'rattail', min: 1000, max: 6000, weight: 1.6, speed: [4, 7], bob: 1 },
-  { id: 'tripod', art: 'tripod', floor: true, min: 900, max: 6000, weight: 1.2, speed: [0, 0] },
-  { id: 'seapig', art: 'seapig', floor: true, min: 1000, max: 9500, weight: 1.4, speed: [0.5, 1.2], fps: 1 },
-  { id: 'snailfish', art: 'snailfish', min: 6000, max: 8300, weight: 2, speed: [3, 5], school: [1, 4], bob: 2 },
-  { id: 'amphipod', art: 'amphipod', min: 5000, max: 11500, weight: 1.6, speed: [3, 6], school: [8, 18], bob: 3 },
+  { id: 'sardine', art: 'sardine', min: 0, max: 200, weight: 3, speed: [10, 16], school: [8, 16], bob: 3,
+    name: 'Sardines', note: 'Little silver fish that swim in schools of thousands and turn as one.' },
+  { id: 'clown', art: 'clown', min: 0, max: 40, weight: 2, climate: 'warm', speed: [5, 9], school: [1, 3], bob: 2,
+    name: 'Clownfish', note: "It lives among an anemone's stinging tentacles, kept safe by its slime." },
+  { id: 'tang', art: 'tang', min: 0, max: 50, weight: 2, climate: 'warm mild', speed: [6, 10], school: [1, 4], bob: 2,
+    name: 'Yellow tang', note: 'It spends its days grazing algae off the reef.' },
+  { id: 'jelly', art: 'jelly', min: 0, max: 700, weight: 1.5, speed: [1, 3], bob: 5, fps: 1.5,
+    name: 'Moon jelly', note: 'No brain, no heart, no bones, and almost all water.' },
+  { id: 'turtle', art: 'turtle', min: 0, max: 120, weight: 0.6, climate: 'warm mild', speed: [6, 9], bob: 2,
+    name: 'Green sea turtle', note: 'Resting, it can stay down for hours on one breath.' },
+  { id: 'shark', art: 'shark', min: 0, max: 700, weight: 0.8, speed: [11, 16], bob: 2,
+    name: 'Blue shark', note: "It can feel the faint electric pulse of a fish's muscles." },
+  { id: 'dolphin', art: 'dolphin', min: 0, max: 60, weight: 0.6, climate: 'warm mild', speed: [22, 30], school: [2, 4], bob: 6, leap: 'dolphinLeap',
+    name: 'Bottlenose dolphins', note: 'Each one has a signature whistle that works like its name.' },
+  { id: 'seal', art: 'seal', min: 0, max: 120, weight: 1.2, climate: 'cold', speed: [14, 20], bob: 5,
+    name: 'Harbor seal', note: 'Its whiskers can follow the trail a fish leaves in the water.' },
+  { id: 'orca', art: 'orca', min: 0, max: 300, weight: 0.3, climate: 'cold mild', speed: [18, 24], school: [2, 3], bob: 3, rare: 'A pod of orcas!',
+    name: 'Orcas', note: 'The biggest dolphins. Each family has calls of its own.' },
+  { id: 'humpback', art: 'humpback', min: 5, max: 250, weight: 0.5, speed: [7, 10], bob: 2, rare: 'A humpback whale!',
+    name: 'Humpback whale', note: 'The males sing long songs that change from year to year.' },
+  { id: 'sperm', art: 'sperm', min: 20, max: 2200, weight: 0.3, speed: [8, 11], bob: 2, rare: 'A sperm whale!',
+    name: 'Sperm whale', note: 'It dives past 1,000 m on one breath to hunt squid.' },
+  { id: 'squid', art: 'squid', min: 60, max: 900, weight: 1.4, speed: [8, 14], burst: true, school: [1, 4], bob: 2,
+    name: 'Humboldt squid', note: 'It hunts in packs, flashing its skin from red to white.' },
+  { id: 'octopus', art: 'octopus', floor: true, min: 0, max: 200, weight: 1, speed: [1.5, 3], fps: 2,
+    name: 'Common octopus', note: 'Most of its nerve cells are in its arms, which taste what they touch.' },
+  { id: 'crab', art: 'crab', floor: true, min: 0, max: 400, weight: 1.6, speed: [2, 5], fps: 6,
+    name: 'Rock crab', note: 'It walks sideways, the way its legs bend best.' },
+  { id: 'lantern', art: 'lantern', min: 200, max: 1200, weight: 3, speed: [6, 10], school: [6, 14], bob: 2,
+    name: 'Lanternfish', note: 'Every night it rises hundreds of meters to feed, and sinks again by dawn.' },
+  { id: 'hatchet', art: 'hatchet', min: 200, max: 1200, weight: 1.6, speed: [3, 6], school: [2, 6], bob: 2,
+    name: 'Hatchetfish', note: 'Lights on its belly match the glow from above, so it casts no shadow.' },
+  { id: 'atolla', art: 'atolla', min: 400, max: 4000, weight: 1.2, speed: [1, 2], bob: 4, fps: 2,
+    name: 'Atolla jellyfish', note: 'Grabbed, it flashes a ring of blue lights to call in bigger hunters.' },
+  { id: 'comb', art: 'comb', min: 100, max: 3000, weight: 1, speed: [1, 2], bob: 3, fps: 4,
+    name: 'Comb jelly', note: 'Rows of beating hairs ripple down its sides and split light into rainbows.' },
+  { id: 'vampire', art: 'vampire', min: 600, max: 1500, weight: 0.8, speed: [3, 5], bob: 3,
+    name: 'Vampire squid', note: 'Neither a vampire nor a squid. It eats the scraps that sink from above.' },
+  { id: 'siphon', art: 'siphon', min: 500, max: 3500, weight: 0.6, speed: [1.5, 3], bob: 2,
+    name: 'Siphonophore', note: 'A colony of tiny animals living as one, some longer than a blue whale.' },
+  { id: 'giantsquid', art: 'giantsquid', min: 300, max: 1200, weight: 0.25, speed: [6, 9], burst: true, bob: 2, rare: 'A giant squid!',
+    name: 'Giant squid', note: 'Its eyes are as big as dinner plates, among the largest of any animal.' },
+  { id: 'spidercrab', art: 'spidercrab', floor: true, min: 150, max: 1500, weight: 1, speed: [1, 2], fps: 3,
+    name: 'Japanese spider crab', note: 'Its legs can span nearly 4 m, claw to claw.' },
+  { id: 'angler', art: 'angler', min: 900, max: 4000, weight: 1.4, speed: [2, 4], bob: 2,
+    name: 'Anglerfish', note: 'It dangles a glowing lure to bring its dinner close.' },
+  { id: 'gulper', art: 'gulper', min: 600, max: 3000, weight: 0.8, speed: [4, 7], bob: 2,
+    name: 'Gulper eel', note: 'Its huge mouth opens like a net, and the tip of its tail glows.' },
+  { id: 'dumbo', art: 'dumbo', min: 1000, max: 7000, weight: 1.2, speed: [2, 4], bob: 6, fps: 2.5,
+    name: 'Dumbo octopus', note: 'It swims by flapping ear-like fins, deeper than any other octopus.' },
+  { id: 'rattail', art: 'rattail', min: 1000, max: 6000, weight: 1.6, speed: [4, 7], bob: 1,
+    name: 'Rattail', note: 'A big head and a long thin tail. It noses along just above the floor.' },
+  { id: 'tripod', art: 'tripod', floor: true, min: 900, max: 6000, weight: 1.2, speed: [0, 0],
+    name: 'Tripod fish', note: 'It stands on three long fins, facing the current, and waits for food to drift in.' },
+  { id: 'seapig', art: 'seapig', floor: true, min: 1000, max: 9500, weight: 1.4, speed: [0.5, 1.2], fps: 1,
+    name: 'Sea pig', note: 'A sea cucumber that walks on its tube feet, eating the mud as it goes.' },
+  { id: 'snailfish', art: 'snailfish', min: 6000, max: 8300, weight: 2, speed: [3, 5], school: [1, 4], bob: 2,
+    name: 'Hadal snailfish', note: 'The deepest fish ever seen alive, more than 8,000 m down.' },
+  { id: 'amphipod', art: 'amphipod', min: 5000, max: 11500, weight: 1.6, speed: [3, 6], school: [8, 18], bob: 3,
+    name: 'Amphipods', note: 'Tiny shrimp-like scavengers that live even at the bottom of the deepest trench.' },
 ];
-for (const sp of SPECIES) { sp.spr = ART[sp.art]; if (sp.leap) sp.leapSpr = ART[sp.leap]; }
+for (const sp of SPECIES) {
+  sp.spr = ART[sp.art];
+  if (sp.leap) sp.leapSpr = ART[sp.leap];
+  // something that glows can be seen in the dark without the sub's lights
+  sp.glows = sp.spr.frames.some((fr) => fr.f.some((v) => v & 1));
+}
 
 // ---------- State ----------
 const sub = { x: 0, y: 2, vx: 0, vy: 0, speed: 1, face: 1, sx: 0, hold: 0, brake: false, coast: 0, follow: false };
@@ -820,6 +862,7 @@ function startWorld(seed) {
   setFollow(false, true);
   sub.sx = LW * 0.33; cam.x = sub.x - sub.sx; cam.y = -LH * 0.47;
   spawnIn = 1; rareAt = 0;
+  hideCallout();
   seedSnow();
   lastZone = ''; zoneSince = 0;
   sub.face = 1; setSpeed(1, true); showHeading();
@@ -975,7 +1018,7 @@ function trySpawn() {
     for (let i = 0; i < n; i++) members.push(i === 0 ? { dx: 0, dy: 0, ph: 0 } : { dx: rand(0, 10 + n * 2), dy: rand(-8, 8), ph: rand(0, 6) });
     const span = sp.spr.w + (n > 1 ? 10 + n * 2 : 0);
     actors.push({ sp, x: side > 0 ? edge : edge - span, y, v: v * dir, face: dir, t: rand(0, 5), ph: rand(0, 6), members, span });
-    if (sp.rare) { rareAt = T + 40; seen(sp.rare); }
+    if (sp.rare) rareAt = T + 40;
     return;
   }
 }
@@ -1362,6 +1405,7 @@ function drawDecor() {
   }
 }
 function drawVents() {
+  ventsInView = [];
   for (let c = Math.floor((X0 - 60) / VENT); c <= Math.floor((X0 + LW + 60) / VENT); c++) {
     const f = ventAt(c);
     if (!f) continue;
@@ -1400,7 +1444,7 @@ function drawVents() {
     }
     const cx = f.cx + f.crab;
     blit(ART.yeti, 0, cx - X0 - 3, Math.round(floorY(cx)) - Y0 - 4, false);
-    if (!f.seen && Math.abs(f.cx - (X0 + LW / 2)) < LW / 2 && Math.round(floorY(f.cx)) - Y0 < LH) { f.seen = true; seen('Black smokers!'); }
+    ventsInView.push(f);
   }
 }
 
@@ -1564,13 +1608,74 @@ function draw() {
 // ---------- Words on screen ----------
 const ZONES = [[1, 'At the surface'], [200, 'Sunlit zone'], [1000, 'Twilight zone'], [4000, 'Midnight zone'], [6000, 'Abyssal zone'], [Infinity, 'Hadal zone']];
 const zoneOf = (m) => ZONES.find(([max]) => m < max)[1];
-let lastZone = '', zoneSince = 0, seenTimer = 0, lastSky = '';
+let lastZone = '', zoneSince = 0, lastSky = '';
 function say(text) { const el = $('said'); el.textContent = ''; setTimeout(() => { el.textContent = text; }, 30); }
-function seen(text) {
-  const el = $('seen');
-  el.textContent = text; el.classList.add('on');
-  clearTimeout(seenTimer); seenTimer = setTimeout(() => el.classList.remove('on'), 4500);
-  say(text);
+// the callout under the gauges names the animal nearest the sub's nose, where the front light sits,
+// out of those close to the hull that you can see: by daylight, in one of the sub's lights, or by their
+// own glow. close is measured hull to body, so a whale counts when its nose comes near, not only its
+// middle. a callout stays up while its animal stays within STAY_NEAR, a little farther out so one at
+// the edge doesn't flicker it, and goes when it does: to read about one, stay near it
+const NEAR = 28, STAY_NEAR = NEAR + 14;
+const VENT_NOTE = 'Chimneys pouring out water hotter than 300 °C. Shrimp and yeti crabs live off the bacteria around them.';
+const call = { key: null, since: 0 };
+let ventsInView = [];
+// how far a box (center i, j and half sizes, in screen pixels) is from the sub's hull, 0 if they touch
+function gapToSub(i, j, hw, hh) {
+  const g = SUBG, top = sub.y - Y0 + g.oy, bottom = sub.y - Y0 + 4;
+  const dx = Math.max(0, Math.abs(i - sub.sx) - hw - g.half);
+  const dy = Math.max(0, Math.abs(j - (top + bottom) / 2) - hh - (bottom - top) / 2);
+  return Math.hypot(dx, dy);
+}
+function canSee(sp, wy, i, j) {
+  if (sp.glows || ambAt(mOf(Math.max(0, wy)), SKY.dl) > 0.1) return true;
+  for (const L of LIGHTS) {
+    if (!L.on) continue;
+    const dx = i - L.sx, dy = j - L.sy, d = Math.hypot(dx, dy) || 1;
+    if (d < 18 || (d < L.r * 0.85 && (dx * L.dx + dy * L.dy) / d > L.c0)) return true;
+  }
+  return false;
+}
+// everything close enough to call out, with d its distance from the nose. the one already up only has
+// to stay within STAY_NEAR, and doesn't need to stay lit
+function nearby() {
+  const out = [], F = lightById('front');
+  for (const a of actors) {
+    const sp = a.sp, hw = sp.spr.w / 2, hh = sp.spr.h / 2, up = a === call.key;
+    let d = Infinity;
+    for (const mb of a.members) {
+      const [x, y] = memberAt(a, mb), i = x + hw - X0, j = y + hh - Y0;
+      if (i < 2 || j < 2 || i > LW - 2 || j > LH - 2) continue;
+      if (gapToSub(i, j, hw, hh) >= (up ? STAY_NEAR : NEAR)) continue;
+      if (!up && !canSee(sp, y + hh, i, j)) continue;
+      d = Math.min(d, Math.hypot(i - F.sx, j - F.sy));
+    }
+    if (d < Infinity) out.push({ key: a, name: sp.rare || sp.name, note: sp.note, d });
+  }
+  // black smokers glow, so they never need a light
+  for (const f of ventsInView) {
+    const i = f.cx - X0, j = floorY(f.cx) - Y0 - 21;
+    if (gapToSub(i, j, f.half, 21) >= (f === call.key ? STAY_NEAR : NEAR)) continue;
+    out.push({ key: f, name: 'Black smokers!', note: VENT_NOTE, d: Math.hypot(Math.max(0, Math.abs(i - F.sx) - f.half), Math.max(0, Math.abs(j - F.sy) - 21)) });
+  }
+  return out;
+}
+function showCallout(c) {
+  call.key = c.key; call.since = T;
+  $('seen-name').textContent = c.name; $('seen-note').textContent = c.note;
+  $('seen').classList.add('on');
+  say(`${c.name}${/[!.]$/.test(c.name) ? '' : '.'} ${c.note}`);
+}
+function hideCallout() {
+  call.key = null;
+  $('seen').classList.remove('on');
+}
+// a closer one takes over once the current one has been up a second, so two side by side don't flicker
+function updateCallout() {
+  const near = nearby(), cur = near.find((c) => c.key === call.key);
+  let best = null;
+  for (const c of near) if (!best || c.d < best.d) best = c;
+  if (best && best !== cur && (!cur || (T - call.since > 1 && best.d < cur.d - 2))) { showCallout(best); return; }
+  if (!cur && call.key) hideCallout();
 }
 function lightsSaid() {
   const on = LIGHTS.filter((L) => L.on).map((L) => L.name);
@@ -1611,6 +1716,7 @@ function hud(dt) {
   } else zoneSince = 0;
   if (sky !== lastSky) { lastSky = sky; describe(); }
   if ((labelIn -= 0.2) <= 0) { labelIn = 5; describe(); }
+  updateCallout();
 }
 
 // ---------- Sound ----------
