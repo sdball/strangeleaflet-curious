@@ -30,11 +30,12 @@ body { background: #06121C; color: var(--paper); font-family: var(--font); -webk
 #head { padding: 7px 11px 8px; }
 #head h1 { margin: 0; font-size: 17px; font-weight: 700; color: var(--lamp); line-height: 1.1; letter-spacing: 0.3px; }
 #head a { display: inline-block; margin-top: 5px; font-size: 11px; color: var(--paper); text-underline-offset: 2px; }
-#head[hidden], #gauge[hidden], #tray[hidden], .group[hidden], #yellow[hidden] { display: none; }
+#head[hidden], #gauge[hidden], #tray[hidden], .group[hidden], #yellow[hidden], #era[hidden] { display: none; }
 #gauge { position: fixed; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); padding: 7px 11px 8px; text-align: right; pointer-events: none; }
 #depth { display: block; font-size: 26px; font-weight: 700; color: var(--lamp); line-height: 1; font-variant-numeric: tabular-nums; }
-#zone, #floor, #where, #water, #weather { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
+#zone, #floor, #where, #water, #weather, #era { display: block; font-size: 11px; margin-top: 5px; white-space: nowrap; }
 #floor, #where, #water, #weather { color: var(--muted); }
+#era { color: var(--lamp); }
 #seen { display: block; margin-top: 5px; opacity: 0; transition: opacity 0.6s; }
 #seen.on { opacity: 1; }
 #seen b { display: block; font-size: 11px; font-weight: 400; color: var(--lamp); white-space: nowrap; }
@@ -85,7 +86,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   #corner { flex-direction: column; gap: 6px; }
   #opts { font-size: 11px; padding: 6px 7px; }
   #depth { font-size: 20px; }
-  #zone, #floor, #where, #water, #weather, #seen b { font-size: 10px; }
+  #zone, #floor, #where, #water, #weather, #era, #seen b { font-size: 10px; }
   #seen span { font-size: 9px; }
   .row { gap: 6px 8px; }
   .chip { font-size: 12px; padding: 6px 8px; }
@@ -122,6 +123,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <span id="where">Coordinates: 0</span>
   <span id="water">Water 14 °C</span>
   <span id="weather">Day, calm</span>
+  <span id="era" hidden></span>
   <span id="seen"><b id="seen-name"></b><span id="seen-note"></span></span>
 </div>
 <p id="said" class="sr" aria-live="polite"></p>
@@ -152,11 +154,18 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
     <button type="button" class="chip" id="menu-close" aria-keyshortcuts="Escape">Close</button>
   </div>
   <h3>The ocean</h3>
-  <p>The link in your address bar shares this ocean, and the sky too if you pick one below.</p>
+  <p>The link in your address bar shares this ocean and its era, and the sky too if you pick one below.</p>
   <div class="group">
     <button type="button" class="chip" id="newsea">New ocean</button>
     <button type="button" class="chip" id="sound" aria-pressed="false" aria-keyshortcuts="M">Sound</button>
   </div>
+  <div class="group" role="group" aria-labelledby="era-label">
+    <span class="glabel" id="era-label">Era</span>
+    <button type="button" class="chip" id="era-today" aria-pressed="true">Today</button>
+    <button type="button" class="chip" id="era-prehistoric" aria-pressed="false">Prehistoric</button>
+    <button type="button" class="chip" id="era-ammonites" aria-pressed="false">Oops, all ammonites</button>
+  </div>
+  <p>Prehistoric takes this ocean back 80 million years, to the Cretaceous: ammonites and sea reptiles, warmer water, no polar ice, and nobody home on the islands. Oops, all ammonites is the same sea, but every animal is an ammonite, and so are you.</p>
   <h3>The sky</h3>
   <div class="group" role="group" aria-labelledby="time-label">
     <span class="glabel" id="time-label">Time</span>
@@ -249,6 +258,15 @@ function writeSeed(s) {
 }
 const freshSeed = () => ((Math.random() * 4294967295) >>> 0) || 1;
 
+// ---------- Era ----------
+// any ocean can be sailed today or 80 million years ago, in the Cretaceous: the same floor and islands,
+// with its own animals, warmer water, no polar ice, and nobody living on the islands. Oops, all
+// ammonites is the Cretaceous again, with every animal (and the sub) drawn as an ammonite. the era
+// rides in the link beside the ocean, the way a pinned sky does
+const ERAS = ['today', 'prehistoric', 'ammonites'];
+let ERA = 'today';
+const past = () => ERA !== 'today';
+
 // ---------- Depth scale ----------
 // real meters, squashed: half a meter per pixel at the surface, about three at the bottom of a trench.
 // above the surface it stays at half a meter per pixel
@@ -296,9 +314,13 @@ const climV = (x) => fbm(x / 24000, SEED + 10);
 const climate = (x) => { const v = climV(x); return v < 0.4 ? 'cold' : v > 0.6 ? 'warm' : 'mild'; };
 // ---------- Water temperature ----------
 // the sun warms only the top of the sea, from about -1 °C in polar water to 29 °C in the tropics.
-// below a well-mixed top layer it cools fast, and under 1,000 m it's 2 to 4 °C everywhere
+// below a well-mixed top layer it cools fast, and under 1,000 m it's 2 to 4 °C everywhere.
+// the Cretaceous sea was warmer all through: about 10 °C at the surface near the poles, over 30 °C in
+// the tropics, and around 10 °C in the deep
 function seaTemp(x, m) {
-  const top = clamp(-1 + (climV(x) - 0.2) * 50, -1.5, 29), deep = 2 + 2.5 * Math.exp(-m / 1200);
+  const v = climV(x);
+  const top = past() ? clamp(11 + (v - 0.2) * 40, 10, 34) : clamp(-1 + (v - 0.2) * 50, -1.5, 29);
+  const deep = (past() ? 9 : 2) + 2.5 * Math.exp(-m / 1200);
   return deep + (top - deep) * Math.exp(-Math.max(0, m - 50) / 200);
 }
 // a black smoker vents water at 330 to 400 °C, but it mixes into the cold sea within a meter or two.
@@ -339,8 +361,9 @@ function isleAt(c) {
   const cx = Math.round(c * ISLE + 250 + r(1) * (ISLE - 500));
   const cl = climate(cx);
   let f = null;
+  // the Cretaceous was too warm for polar ice, so its cold seas have no icebergs
   if (cl === 'cold') {
-    if (r(0) < 0.5) f = { kind: 'berg', cx, w: 20 + r(2) * 60, h: 7 + r(3) * 20, peaked: r(4) < 0.4, s: c * 7 + 3 };
+    if (!past() && r(0) < 0.5) f = { kind: 'berg', cx, w: 20 + r(2) * 60, h: 7 + r(3) * 20, peaked: r(4) < 0.4, s: c * 7 + 3 };
   } else if (r(0) < 0.42 && mOf(baseFloor(cx)) < 130) {
     const w = 36 + r(2) * 78;
     f = { kind: 'isle', cx, w, h: 16 + r(3) * 34, warm: cl === 'warm', crater: r(5) < 0.6, smoke: r(5) < 0.22, s: c * 7 + 5, houses: [], palms: [] };
@@ -393,16 +416,18 @@ const SKY = { phase: 0, elev: 0, day: 1, glow: 0, wI: 0, storm: 0, dl: 1, above:
 // its band, so a calm sea keeps a breeze and a storm keeps gusting
 const TIME_PINS = { day: 0.5, night: 0 };
 const WEATHER_PINS = { calm: [0.04, 0.3], storm: [0.8, 1] };
-const PIN = { time: '', weather: '' };
+// the era is kept with the pins, and today drops out of the link like Clock does
+const PIN = { time: '', weather: '', era: '' };
 function readPins() {
   const p = new URLSearchParams(location.hash.slice(1));
-  const t = p.get('time'), w = p.get('weather');
+  const t = p.get('time'), w = p.get('weather'), e = p.get('era');
   PIN.time = t && Object.hasOwn(TIME_PINS, t) ? t : '';
   PIN.weather = w && Object.hasOwn(WEATHER_PINS, w) ? w : '';
+  PIN.era = e && e !== 'today' && ERAS.includes(e) ? e : '';
 }
 function writePins() {
   const p = new URLSearchParams(location.hash.slice(1));
-  for (const k of ['time', 'weather']) { if (PIN[k]) p.set(k, PIN[k]); else p.delete(k); }
+  for (const k of ['time', 'weather', 'era']) { if (PIN[k]) p.set(k, PIN[k]); else p.delete(k); }
   history.replaceState(null, '', '#' + p);
 }
 function readSky(now) {
@@ -525,15 +550,16 @@ function fitSub(pal, rows) {
   SUB = spr({ ...pal, L: LENS_OFF, U: LENS_OFF, T: LENS_OFF }, rows);
   SUBG = subGeometry(SUB, rows);
 }
+// in Oops, all ammonites you sail the ammonite sub from the sprite data, whatever sub you've drawn
 function loadSub() {
   let own = null;
   try { own = cleanSub(JSON.parse(localStorage.getItem(SUB_KEY))); } catch (e) {}
   ownSub = !!own;
-  if (own) fitSub(own.pal, own.rows);
+  if (ERA === 'ammonites') fitSub(SPRITES.ammoniteSub.palette, SPRITES.ammoniteSub.frames[0]);
+  else if (own) fitSub(own.pal, own.rows);
   else fitSub(SUB_PAL, SUB_ROWS);
   $('yellow').hidden = !ownSub;
 }
-loadSub();
 
 // ---------- Sprite data ----------
 // every creature as data: a palette of letters, then one or more frames of rows, a letter per pixel
@@ -930,37 +956,222 @@ const SPRITES = {
       "     SSSaaaaSSSSSS  ",
       "            SSSkS   "
     ]
+  ] },
+  "ammonite": { "name": "Ammonite", "use": "Swims shell first, in groups of 2 to 5 from 0 to 350 m in the prehistoric ocean. In Oops, all ammonites, it stands in for the middle-sized animals", "palette": { "S": "#E2C796", "s": "#C4A672", "r": "#8A6640", "o": "#4E3A28", "h": "#9A5442", "t": "#C47A5E", "k": "#120C08" }, "frames": [
+    [
+      "     SsSsS  ",
+      "    SrrrrrS ",
+      "   SrSSSSSrS",
+      "   SrSrrrSrs",
+      "  hhSrSorSrS",
+      " tkhrSSrrSrs",
+      " tthrrSSSSrS",
+      "ttthSrrrrrS ",
+      "  t  sSsSs  "
+    ],
+    [
+      "     SsSsS  ",
+      "    SrrrrrS ",
+      "   SrSSSSSrS",
+      "   SrSrrrSrs",
+      "  hhSrSorSrS",
+      "ttkhrSSrrSrs",
+      " tthrrSSSSrS",
+      "t thSrrrrrS ",
+      "  t  sSsSs  "
+    ]
+  ] },
+  "scaphites": { "name": "Scaphites", "use": "Swims shell first, in groups of 3 to 7 from 0 to 150 m in the prehistoric ocean. In Oops, all ammonites, it stands in for the small animals", "palette": { "S": "#D8B47E", "s": "#B8925E", "r": "#7A5634", "o": "#4E3A28", "h": "#9A5442", "t": "#C47A5E", "k": "#120C08" }, "frames": [
+    [
+      "    SsS ",
+      " sSSrrrS",
+      "SSrrSors",
+      "Sh SSrrS",
+      "hkt sSs ",
+      "  t     "
+    ]
+  ] },
+  "baculites": { "name": "Baculites", "use": "Swims shell first, in groups of 2 to 4 from 0 to 250 m in the prehistoric ocean. In Oops, all ammonites, it stands in for the long, thin animals", "palette": { "S": "#D9C29A", "s": "#B8A078", "r": "#8E7650", "h": "#9A5442", "t": "#C47A5E", "k": "#120C08" }, "frames": [
+    [
+      "     SsSsSsSsS         ",
+      "  khSSsSsSsSsSsSsSsSsSr",
+      "ttthsrsrsrsrsrsrsrsrr  ",
+      " t  t                  "
+    ]
+  ] },
+  "giantAmmonite": { "name": "Giant ammonite", "use": "Swims shell first, from 0 to 300 m in the prehistoric ocean, a rare sight. In Oops, all ammonites, it stands in for the biggest animals", "palette": { "S": "#D8BE8E", "s": "#B89C6C", "r": "#7E5E3C", "w": "#C8AC7C", "o": "#3E2E20", "h": "#8A4A3A", "H": "#A86250", "t": "#B8705A", "k": "#120C08" }, "frames": [
+    [
+      "          SsSsSsS      ",
+      "        SsSrrrrrSsS    ",
+      "       SsrrSSSSSrrsS   ",
+      "      SrrSSwSwSwSSrrS  ",
+      "     SsrSSrrrrrrrSSrsS ",
+      "     SrSSrrSSSSSrrSSrS ",
+      "    SsrSrrSwSwSwSrrSrsS",
+      "    SrSSrSSrrrrrSSrSSrs",
+      "    SrSwrSrrSSSrrSrwSrS",
+      "  hhhrSSrSrSSorSrSrSSrs",
+      " tHkhrSwrSrSrrrSrSrwSrS",
+      " ttHhrSSrSrrSSSSrSrSSrs",
+      "tttHhhSwrSSrrrrrSSrwSrS",
+      " ttHHhSSrrSSSSSSSrrSSrs",
+      " t tthhSSrrrrrrrrrSSrS ",
+      "   t thhSSwSwSwSwSSrsS ",
+      "  t t  SrSSSSSSSSSrrS  ",
+      "        SsrrrrrrrrsS   ",
+      "         SsSsSsSsSs    ",
+      "          sSsSsSs      "
+    ]
+  ] },
+  "ammoniteGlow": { "name": "Glowing ammonite", "use": "In Oops, all ammonites, it stands in for the middle-sized animals that glow", "like": "ammonite", "palette": { "S": "#4E4458", "s": "#3E3648", "r": "*#7FE0FF", "o": "#16121C", "h": "#5A2A3A", "t": "#7A3E52", "k": "#0A080C" } },
+  "scaphitesGlow": { "name": "Glowing Scaphites", "use": "In Oops, all ammonites, it stands in for the small animals that glow", "like": "scaphites", "palette": { "S": "#4E4458", "s": "#3E3648", "r": "*#7FE0FF", "o": "#16121C", "h": "#5A2A3A", "t": "#7A3E52", "k": "#0A080C" } },
+  "baculitesGlow": { "name": "Glowing Baculites", "use": "In Oops, all ammonites, it stands in for the long, thin animals that glow", "like": "baculites", "palette": { "S": "#4E4458", "s": "#3E3648", "r": "*#7FE0FF", "o": "#16121C", "h": "#5A2A3A", "t": "#7A3E52", "k": "#0A080C" } },
+  "belemnite": { "name": "Belemnite", "use": "Swims in groups of 3 to 7 from 20 to 600 m in the prehistoric ocean", "palette": { "b": "#C98A7A", "B": "#E0A898", "g": "#8A6A5E", "f": "#B87868", "a": "#B06A5A", "k": "#141010" }, "frames": [
+    [
+      "    ff       ",
+      "ggbbBBBBBBk  ",
+      " gbbbbbbbbaaa",
+      "    ff    a a"
+    ]
+  ] },
+  "enchodus": { "name": "Enchodus", "use": "Swims in groups of 6 to 14 from 0 to 200 m in the prehistoric ocean", "palette": { "b": "#7E8E8A", "s": "#D6DCD4", "k": "#141816", "W": "#F4F0E4" }, "frames": [
+    [
+      "t bbb  ",
+      "tbbbbkb",
+      "t sssWs"
+    ]
+  ] },
+  "xiphactinus": { "name": "Xiphactinus", "use": "Swims from 0 to 300 m in the prehistoric ocean", "palette": { "b": "#5A6E86", "s": "#C6D0D8", "m": "#8A9CB0", "k": "#10141A", "W": "#EEEEE6", "f": "#4A5C72" }, "frames": [
+    [
+      "f            bb           ",
+      "ff     bbbbbbbbbbbbbb     ",
+      " fbbbbbbbbbbbbbbbbbbbbbb  ",
+      " fbbbbmmmmmmmmmmmmmmmbbkb ",
+      " fsssssssssssssssssssssWsb",
+      "ff     ss       ss    ssWs",
+      "f                         "
+    ]
+  ] },
+  "cretoxyrhina": { "name": "Cretoxyrhina", "use": "Swims from 0 to 500 m in the prehistoric ocean. The blue shark's drawing in its own colors", "like": "shark", "palette": { "g": "#6E6A64", "W": "#D8D2C6", "k": "#16140F" } },
+  "archelon": { "name": "Archelon", "use": "Swims from 0 to 150 m in warm and mild seas in the prehistoric ocean", "palette": { "B": "#3E4A40", "b": "#5E6C58", "r": "#78866E", "s": "#8A8A6E", "k": "#14160F" }, "frames": [
+    [
+      "      bbbbbbbb        ",
+      "    bbrbbrbbrbbb      ",
+      "  bbBbbBbbBbbBbbb sss ",
+      " bbbbbbbbbbbbbbbbbsssk",
+      "ss   ssss    ssss  ss ",
+      "      ss      ss      "
+    ]
+  ] },
+  "hesperornis": { "name": "Hesperornis", "use": "Swims from 0 to 25 m in cold and mild seas in the prehistoric ocean", "palette": { "g": "#6E6A62", "G": "#4E4A44", "w": "#D8D4C8", "y": "#C8A048", "k": "#141210" }, "frames": [
+    [
+      "          gg  ",
+      "         gkgyy",
+      "         gw   ",
+      "  GGgggggww   ",
+      " GggggggwW    ",
+      "  www y       ",
+      "     yy       "
+    ]
+  ] },
+  "mosasaur": { "name": "Tylosaurus", "use": "Swims from 0 to 400 m in the prehistoric ocean, a rare sight", "palette": { "d": "#4A5A5E", "D": "#3A484C", "l": "#B8C0B4", "k": "#101416", "W": "#EEE8D8", "f": "#3E4C50" }, "frames": [
+    [
+      "                     dd                  ",
+      "             dddddddddddddd              ",
+      "        ddddddddddddddddddddddddd        ",
+      "dd ddddddddddddddddddddddddddddddddkdd   ",
+      " ddddddddddddddddddddddddddddddddddddddd ",
+      "  dd   llllllllllllllllllllllllllllWlWlWd",
+      " dd        ff        llllll   ff  lllll  ",
+      "dd          ff                 ff        ",
+      "d                                        "
+    ]
+  ] },
+  "elasmosaur": { "name": "Elasmosaurus", "use": "Swims from 0 to 250 m in the prehistoric ocean, a rare sight", "palette": { "d": "#6A6252", "l": "#C2B89C", "f": "#57503F", "k": "#14120C" }, "frames": [
+    [
+      "                                     ddd    ",
+      "                               ddddddddddkdd",
+      "                          ddddddddllllllll  ",
+      "                     ddddddddlll            ",
+      "      dddddddddddddddddllll                 ",
+      "  dddddddddddddddddddddd                    ",
+      "dddddddddddddddddddddd                      ",
+      "   lllllllllllllllllll                      ",
+      "     fff       ffff                         ",
+      "  ffff      ffff                            "
+    ],
+    [
+      "                                     ddd    ",
+      "                               ddddddddddkdd",
+      "                          ddddddddllllllll  ",
+      "                     ddddddddlll            ",
+      "      dddddddddddddddddllll                 ",
+      "  dddddddddddddddddddddd                    ",
+      "dddddddddddddddddddddd                      ",
+      "   lllllllllllllllllll                      ",
+      "     ffff       ffff                        ",
+      "       fff        fff                       "
+    ]
+  ] },
+  "platyceramus": { "name": "Platyceramus", "use": "Lies on the sea floor from 20 to 500 m in the prehistoric ocean", "palette": { "s": "#C8BCA4", "S": "#E0D6C0", "r": "#9A8E78", "d": "#6E6454" }, "frames": [
+    [
+      "   SSsSSsSSsSSsS   ",
+      " SSsrrsrrsrrsrrsSS ",
+      "SsrrrrrrrrrrrrrrrsS",
+      "ddddddddddddddddddd"
+    ]
+  ] },
+  "ammoniteSub": { "name": "Ammonite sub", "use": "Your sub in Oops, all ammonites, shell first. L, U, and T are the front, bottom, and rear lights, which the game colors itself", "palette": { "D": "#3B2A1C", "d": "#7A6A58", "Y": "#F2C14E", "h": "#FFE6A3", "y": "#C98E32", "P": "*#FFC56A", "L": "#8A8676", "U": "#8A8676", "T": "#8A8676", "b": "#B4573E", "B": "#D47A58", "k": "#1A1210" }, "frames": [
+    [
+      "             dD     ",
+      "             DD     ",
+      "          DDDDDD    ",
+      "        DDYhYhYhDD  ",
+      "       DYhyyyyyyyhD ",
+      "       DYyYYYYYYyYD ",
+      "      DhYyYYyyyyYyhD",
+      "   DBBDYyPPYyPPyYyYL",
+      "  TBBBbYyPPYYPPyYyhD",
+      " DBkBBbbYyYYyyyYYyYD",
+      "  DBBBbbYyYYYYYYYyD ",
+      "   DbbbbbhyyyyyyyhD ",
+      "   DbDbDbDDYhYhYDD  ",
+      "          DDUDDD    "
+    ]
   ] }
 };
-const ART = Object.fromEntries(Object.entries(SPRITES).map(([id, s]) => [id, spr(s.palette, ...s.frames)]));
+// a sprite "like" another borrows that one's frames and brings its own palette
+const ART = Object.fromEntries(Object.entries(SPRITES).map(([id, s]) => [id, spr(s.palette, ...(s.like ? SPRITES[s.like] : s).frames)]));
 
 // ---------- Animals ----------
 // min and max are depths in meters. weight is how often each turns up among those that fit.
-// name and note come up whenever one comes near the sub, and a rare one names itself with its rare line
+// name and note come up whenever one comes near the sub, and a rare one names itself with its rare line.
+// era 'now' lives only in today's ocean and 'then' only in the prehistoric one. the rest turn up in
+// both: drifters and crawlers whose kind is older than the ammonites, and the animals of the deep
 const SPECIES = [
-  { id: 'sardine', art: 'sardine', min: 0, max: 200, weight: 3, speed: [10, 16], school: [8, 16], bob: 3,
+  { id: 'sardine', art: 'sardine', era: 'now', min: 0, max: 200, weight: 3, speed: [10, 16], school: [8, 16], bob: 3,
     name: 'Sardines', note: 'Little silver fish that swim in schools of thousands and turn as one.' },
-  { id: 'clown', art: 'clown', min: 0, max: 40, weight: 2, climate: 'warm', speed: [5, 9], school: [1, 3], bob: 2,
+  { id: 'clown', art: 'clown', era: 'now', min: 0, max: 40, weight: 2, climate: 'warm', speed: [5, 9], school: [1, 3], bob: 2,
     name: 'Clownfish', note: "It lives among an anemone's stinging tentacles, kept safe by its slime." },
-  { id: 'tang', art: 'tang', min: 0, max: 50, weight: 2, climate: 'warm mild', speed: [6, 10], school: [1, 4], bob: 2,
+  { id: 'tang', art: 'tang', era: 'now', min: 0, max: 50, weight: 2, climate: 'warm mild', speed: [6, 10], school: [1, 4], bob: 2,
     name: 'Yellow tang', note: 'It spends its days grazing algae off the reef.' },
   { id: 'jelly', art: 'jelly', min: 0, max: 700, weight: 1.5, speed: [1, 3], bob: 5, fps: 1.5,
     name: 'Moon jelly', note: 'No brain, no heart, no bones, and almost all water.' },
-  { id: 'turtle', art: 'turtle', min: 0, max: 120, weight: 0.6, climate: 'warm mild', speed: [6, 9], bob: 2,
+  { id: 'turtle', art: 'turtle', era: 'now', min: 0, max: 120, weight: 0.6, climate: 'warm mild', speed: [6, 9], bob: 2,
     name: 'Green sea turtle', note: 'Resting, it can stay down for hours on one breath.' },
-  { id: 'shark', art: 'shark', min: 0, max: 700, weight: 0.8, speed: [11, 16], bob: 2,
+  { id: 'shark', art: 'shark', era: 'now', min: 0, max: 700, weight: 0.8, speed: [11, 16], bob: 2,
     name: 'Blue shark', note: "It can feel the faint electric pulse of a fish's muscles." },
-  { id: 'dolphin', art: 'dolphin', min: 0, max: 60, weight: 0.6, climate: 'warm mild', speed: [22, 30], school: [2, 4], bob: 6, leap: 'dolphinLeap',
+  { id: 'dolphin', art: 'dolphin', era: 'now', min: 0, max: 60, weight: 0.6, climate: 'warm mild', speed: [22, 30], school: [2, 4], bob: 6, leap: 'dolphinLeap',
     name: 'Bottlenose dolphins', note: 'Each one has a signature whistle that works like its name.' },
-  { id: 'seal', art: 'seal', min: 0, max: 120, weight: 1.2, climate: 'cold', speed: [14, 20], bob: 5,
+  { id: 'seal', art: 'seal', era: 'now', min: 0, max: 120, weight: 1.2, climate: 'cold', speed: [14, 20], bob: 5,
     name: 'Harbor seal', note: 'Its whiskers can follow the trail a fish leaves in the water.' },
-  { id: 'orca', art: 'orca', min: 0, max: 300, weight: 0.3, climate: 'cold mild', speed: [18, 24], school: [2, 3], bob: 3, rare: 'A pod of orcas!',
+  { id: 'orca', art: 'orca', era: 'now', min: 0, max: 300, weight: 0.3, climate: 'cold mild', speed: [18, 24], school: [2, 3], bob: 3, rare: 'A pod of orcas!',
     name: 'Orcas', note: 'The biggest dolphins. Each family has calls of its own.' },
-  { id: 'humpback', art: 'humpback', min: 5, max: 250, weight: 0.5, speed: [7, 10], bob: 2, rare: 'A humpback whale!',
+  { id: 'humpback', art: 'humpback', era: 'now', min: 5, max: 250, weight: 0.5, speed: [7, 10], bob: 2, rare: 'A humpback whale!',
     name: 'Humpback whale', note: 'The males sing long songs that change from year to year.' },
-  { id: 'sperm', art: 'sperm', min: 20, max: 2200, weight: 0.3, speed: [8, 11], bob: 2, rare: 'A sperm whale!',
+  { id: 'sperm', art: 'sperm', era: 'now', min: 20, max: 2200, weight: 0.3, speed: [8, 11], bob: 2, rare: 'A sperm whale!',
     name: 'Sperm whale', note: 'It dives past 1,000 m on one breath to hunt squid.' },
-  { id: 'squid', art: 'squid', min: 60, max: 900, weight: 1.4, speed: [8, 14], burst: true, school: [1, 4], bob: 2,
+  { id: 'squid', art: 'squid', era: 'now', min: 60, max: 900, weight: 1.4, speed: [8, 14], burst: true, school: [1, 4], bob: 2,
     name: 'Humboldt squid', note: 'It hunts in packs, flashing its skin from red to white.' },
   { id: 'octopus', art: 'octopus', floor: true, min: 0, max: 200, weight: 1, speed: [1.5, 3], fps: 2,
     name: 'Common octopus', note: 'Most of its nerve cells are in its arms, which taste what they touch.' },
@@ -983,9 +1194,9 @@ const SPECIES = [
     name: 'Vampire squid', note: 'Neither a vampire nor a squid. It eats the scraps that sink from above.' },
   { id: 'siphon', art: 'siphon', min: 500, max: 3500, weight: 0.6, speed: [1.5, 3], bob: 2,
     name: 'Siphonophore', note: 'A colony of tiny animals living as one, some longer than a blue whale.' },
-  { id: 'giantsquid', art: 'giantsquid', min: 300, max: 1200, weight: 0.25, speed: [6, 9], burst: true, bob: 2, rare: 'A giant squid!',
+  { id: 'giantsquid', art: 'giantsquid', era: 'now', min: 300, max: 1200, weight: 0.25, speed: [6, 9], burst: true, bob: 2, rare: 'A giant squid!',
     name: 'Giant squid', note: 'Its eyes are as big as dinner plates, among the largest of any animal.' },
-  { id: 'spidercrab', art: 'spidercrab', floor: true, min: 150, max: 1500, weight: 1, speed: [1, 2], fps: 3,
+  { id: 'spidercrab', art: 'spidercrab', era: 'now', floor: true, min: 150, max: 1500, weight: 1, speed: [1, 2], fps: 3,
     name: 'Japanese spider crab', note: 'Its legs can span nearly 4 m, claw to claw.' },
   { id: 'angler', art: 'angler', min: 900, max: 4000, weight: 1.4, speed: [2, 4], bob: 2,
     name: 'Anglerfish', note: 'It dangles a glowing lure to bring its dinner close.' },
@@ -1003,6 +1214,34 @@ const SPECIES = [
     name: 'Hadal snailfish', note: 'The deepest fish ever seen alive, more than 8,000 m down.' },
   { id: 'amphipod', art: 'amphipod', min: 5000, max: 11500, weight: 1.6, speed: [3, 6], school: [8, 18], bob: 3,
     name: 'Amphipods', note: 'Tiny shrimp-like scavengers that live even at the bottom of the deepest trench.' },
+  // the Cretaceous, about 80 million years ago. ammonite marks the ammonites themselves, which
+  // Oops, all ammonites leaves as they are. jet swims in pushes, shell first, squirting water out behind
+  { id: 'enchodus', art: 'enchodus', era: 'then', min: 0, max: 200, weight: 3, speed: [10, 16], school: [6, 14], bob: 3,
+    name: 'Enchodus', note: 'Nicknamed the saber-toothed herring for its long fangs, though it was no herring.' },
+  { id: 'ammonite', art: 'ammonite', era: 'then', ammonite: true, jet: true, min: 0, max: 350, weight: 2.5, speed: [3, 6], school: [2, 5], bob: 4, fps: 2,
+    name: 'Ammonites', note: 'Kin to squid and octopus, in a coiled shell. Gas in its chambers held it up in the water.' },
+  { id: 'scaphites', art: 'scaphites', era: 'then', ammonite: true, jet: true, min: 0, max: 150, weight: 1.6, speed: [2, 4], school: [3, 7], bob: 3,
+    name: 'Scaphites', note: 'A small ammonite that coiled, then grew out straight and hooked back, like the handle of a cane.' },
+  { id: 'baculites', art: 'baculites', era: 'then', ammonite: true, jet: true, min: 0, max: 250, weight: 1.2, speed: [3, 5], school: [2, 4], bob: 2,
+    name: 'Baculites', note: 'An ammonite whose shell grew straight instead of coiling, up to 2 m long.' },
+  { id: 'giantammonite', art: 'giantAmmonite', era: 'then', ammonite: true, jet: true, min: 0, max: 300, weight: 0.3, speed: [2, 4], bob: 3, rare: 'A giant ammonite!',
+    name: 'Giant ammonite', note: 'The biggest ammonite ever found is 1.8 m across, and part of its shell is missing.' },
+  { id: 'belemnite', art: 'belemnite', era: 'then', min: 20, max: 600, weight: 1.6, speed: [8, 14], burst: true, school: [3, 7], bob: 2,
+    name: 'Belemnites', note: 'Squid-like, with a hard, bullet-shaped rod in its tail. Their fossils are so common that people once took them for thunderbolts.' },
+  { id: 'xiphactinus', art: 'xiphactinus', era: 'then', min: 0, max: 300, weight: 0.6, speed: [14, 20], bob: 2,
+    name: 'Xiphactinus', note: 'A fish longer than a car. One fossil has a fish nearly 2 m long inside it, swallowed whole.' },
+  { id: 'cretoxyrhina', art: 'cretoxyrhina', era: 'then', min: 0, max: 500, weight: 0.7, speed: [12, 17], bob: 2,
+    name: 'Cretoxyrhina', note: 'A shark about the size of a great white, nicknamed the Ginsu shark for its slicing teeth.' },
+  { id: 'archelon', art: 'archelon', era: 'then', min: 0, max: 150, weight: 0.5, climate: 'warm mild', speed: [5, 8], bob: 2,
+    name: 'Archelon', note: 'The biggest sea turtle ever found, over 4 m long. Its shell was a bony frame under leathery skin.' },
+  { id: 'hesperornis', art: 'hesperornis', era: 'then', min: 0, max: 25, weight: 1, climate: 'cold mild', speed: [10, 16], bob: 5,
+    name: 'Hesperornis', note: "A bird with teeth that couldn't fly. It dove after fish, kicking with its big feet." },
+  { id: 'mosasaur', art: 'mosasaur', era: 'then', min: 0, max: 400, weight: 0.3, speed: [14, 20], bob: 2, rare: 'A mosasaur!',
+    name: 'Tylosaurus', note: 'A sea lizard as long as a bus. Its closest living kin are monitor lizards and snakes.' },
+  { id: 'elasmosaur', art: 'elasmosaur', era: 'then', min: 0, max: 250, weight: 0.3, speed: [7, 10], bob: 2, fps: 1.5, rare: 'An elasmosaur!',
+    name: 'Elasmosaurus', note: 'Its neck alone was about 7 m long, with more than 70 bones in it.' },
+  { id: 'platyceramus', art: 'platyceramus', era: 'then', floor: true, min: 20, max: 500, weight: 0.8, speed: [0, 0],
+    name: 'Platyceramus', note: 'A clam up to 3 m across. Small fish have been found fossilized inside its shell.' },
 ];
 for (const sp of SPECIES) {
   sp.spr = ART[sp.art];
@@ -1010,6 +1249,22 @@ for (const sp of SPECIES) {
   // something that glows can be seen in the dark without the sub's lights
   sp.glows = sp.spr.frames.some((fr) => fr.f.some((v) => v & 1));
 }
+// Oops, all ammonites keeps each animal's depths, speed, and school, and swaps its drawing for the
+// ammonite nearest its size and shape: the giant for the biggest, Baculites for the long and thin ones,
+// and a glowing one for anything that glowed. those that swam jet along like the rest. it has no callouts
+const AMMO_GLOWS = ['scaphites', 'ammonite', 'baculites'];
+function asAmmonite(sp) {
+  if (sp.ammonite) return sp;
+  const s = sp.spr, area = s.w * s.h;
+  const shape = area >= 200 ? 'giantAmmonite' : s.w >= 12 && s.w >= 3 * s.h ? 'baculites' : area >= 30 ? 'ammonite' : 'scaphites';
+  const glow = sp.glows && AMMO_GLOWS.includes(shape), art = ART[glow ? shape + 'Glow' : shape];
+  return { ...sp, spr: art, leapSpr: sp.leap ? art : undefined, glows: glow, fps: sp.fps || 2, jet: !sp.floor };
+}
+const rosterFor = (era) =>
+  era === 'today' ? SPECIES.filter((sp) => sp.era !== 'then') :
+  era === 'prehistoric' ? SPECIES.filter((sp) => sp.era !== 'now') :
+  SPECIES.map(asAmmonite);
+let ROSTER = rosterFor('today');
 
 // ---------- State ----------
 const sub = { x: 0, y: 2, vx: 0, vy: 0, speed: 1, face: 1, sx: 0, hold: 0, brake: false, coast: 0, follow: false };
@@ -1055,6 +1310,19 @@ function startWorld(seed) {
   seedSnow();
   lastZone = ''; zoneSince = 0;
   sub.face = 1; setSpeed(1, true); showHeading();
+}
+// a new era keeps the sub where it is, clears away the other era's animals, and redraws the islands
+const ERA_GAUGE = { today: '', prehistoric: '80 million years ago', ammonites: 'Oops, all ammonites' };
+function setEra(e) {
+  ERA = ERAS.includes(e) ? e : 'today';
+  ROSTER = rosterFor(ERA);
+  isleCache.clear(); floorCache.clear();
+  actors = []; spawnIn = 0.3; rareAt = 0;
+  hideCallout();
+  loadSub();
+  $('era').textContent = ERA_GAUGE[ERA];
+  $('era').hidden = ERA === 'today';
+  for (const v of ERAS) $('era-' + v).setAttribute('aria-pressed', ERA === v);
 }
 
 // ---------- Layout ----------
@@ -1180,7 +1448,7 @@ function trySpawn() {
   for (let tries = 0; tries < 4; tries++) {
     const sy = top + Math.random() * Math.max(0, bot - top);
     const cands = []; let tot = 0;
-    for (const sp of SPECIES) {
+    for (const sp of ROSTER) {
       if (sp.climate && !sp.climate.includes(cl)) continue;
       if (sp.rare && T < rareAt) continue;
       if (!moving && sp.speed[1] === 0) continue;
@@ -1225,8 +1493,9 @@ function moveActors(dt) {
       a.y = floorY(a.x + sp.spr.w / 2) - sp.spr.h;
     } else {
       if (sp.leap) leapAbout(a, dt);
-      const push = sp.burst ? 0.3 + 1.1 * Math.max(0, Math.sin(a.t * 2.2)) : 1;
+      const stroke = Math.max(0, Math.sin(a.t * 2.2)), push = sp.burst || sp.jet ? 0.3 + 1.1 * stroke : 1;
       a.x += a.v * dt * push;
+      if (sp.jet && a.v && Math.random() < dt * 2.5 * stroke) puff(a);
       a.y += Math.sin(a.t * 0.9 + a.ph) * (sp.bob || 0) * dt;
       const lo = floorY(a.x + a.span / 2) - sp.spr.h - (a.members.length > 1 ? 9 : 2);
       if (a.y > lo) a.y = lo;
@@ -1237,6 +1506,13 @@ function moveActors(dt) {
   actors = actors.filter((a) => a.x > cam.x - 260 - a.span && a.x < cam.x + LW + 260 && a.y > cam.y - LH * 1.5 && a.y < cam.y + LH * 2.5);
 }
 
+// an ammonite's body squirts water out behind its shell with each push, and the water carries bubbles
+function puff(a) {
+  const sp = a.sp, mb = a.members[Math.floor(Math.random() * a.members.length)], [x, y] = memberAt(a, mb);
+  const bx = a.face > 0 ? x - 1 : x + sp.spr.w, by = y + sp.spr.h * 0.6;
+  if (bx < cam.x - 10 || bx > cam.x + LW + 10 || by < cam.y - 10 || by > cam.y + LH + 10 || by < waveY(bx, T) + 2) return;
+  parts.push({ type: 'bub', x: bx, y: by, vx: -a.face * rand(8, 16), vy: -rand(3, 8), life: 2 });
+}
 // where one animal of a group is, by its top-left corner. a leaping one rides its arc on top of that
 function memberAt(a, mb) {
   const sp = a.sp, dx = a.face > 0 ? mb.dx : a.span - sp.spr.w - mb.dx;
@@ -1300,7 +1576,9 @@ function moveParts(dt) {
   // bubbles off the propeller, and deep down a glow of stirred-up plankton
   const stern = sub.x - sub.face * (SUBG.cx - SUBG.left + 2), hub = sub.y + SUBG.oy + SUBG.hub;
   const churn = Math.abs(sub.vx) / 14 + Math.abs(sub.vy) / 30;
-  if (under && Math.random() < churn * dt * 3) parts.push({ type: 'bub', x: stern + rand(-1, 1), y: hub + rand(-1, 2), vx: -sub.face * rand(2, 6), vy: -rand(10, 18), life: 5 });
+  // the ammonite sub has no propeller: it squirts a jet of water out behind, in pushes
+  const ammo = ERA === 'ammonites', jet = ammo ? 2.5 * (0.4 + 0.6 * Math.max(0, Math.sin(T * 4))) : 1;
+  if (under && Math.random() < churn * dt * 3 * jet) parts.push({ type: 'bub', x: stern + rand(-1, 1), y: hub + rand(-1, 2), vx: -sub.face * (ammo ? rand(12, 24) : rand(2, 6)), vy: -rand(ammo ? 4 : 10, ammo ? 9 : 18), life: 5 });
   if (m > 250 && Math.random() < churn * dt * 6) parts.push({ type: 'spark', x: stern - sub.face * rand(0, 6), y: hub + rand(-4, 3), vx: -sub.face * rand(1, 4), vy: rand(-2, 2), life: rand(0.4, 0.9) });
   if (m > 300 && Math.random() < dt * 0.6) parts.push({ type: 'spark', x: cam.x + Math.random() * LW, y: cam.y + Math.random() * LH, vx: 0, vy: 0, life: rand(0.3, 0.7) });
   // smoke from black smokers and from a few volcanoes
@@ -1474,7 +1752,8 @@ function drawIsle(f) {
     const tx = x + 1 + sway - X0, ty = g - 7 - Y0;
     for (const [a, b] of [[-3, 1], [-2, 0], [-1, 0], [0, -1], [1, 0], [2, 0], [3, 1], [-3, 2], [3, 2], [0, 0]]) put(tx + a, ty + b, hex('#3E9A44'));
   }
-  for (const hs of f.houses) {
+  // nobody lived on the islands 80 million years ago, so the houses and jetty only stand today
+  for (const hs of past() ? [] : f.houses) {
     const x = f.cx + hs.dx;
     let g = -Infinity;
     for (let k = 0; k < hs.w; k++) g = Math.max(g, groundAt(x + k));
@@ -1495,7 +1774,7 @@ function drawIsle(f) {
       if (i >= 0 && i < LW && j >= 0 && j < LH && h3(i, r, Math.floor(T * 4)) > 0.35) put(i, j, mix(hex('#8A6A30'), hex('#FFD27A'), 0.6 - r * 0.12), K_GLOW);
     }
   }
-  if (f.jetty) {
+  if (f.jetty && !past()) {
     const x0 = f.cx + f.jetty * (f.w - 3);
     for (let k = 0; k < 10; k++) {
       const x = x0 + f.jetty * k;
@@ -1558,7 +1837,20 @@ function drawDecor() {
     const fy = Math.round(floorY(wx)), j = fy - Y0;
     if (j < -50 || j > LH + 2) continue;
     const m = mOf(fy), cv = climV(wx), i = wx - X0, h2 = h3(wx, SEED, 8);
-    if (m < 70 && cv < 0.6 && h < 0.035) {
+    if (m < 70 && cv < 0.6 && h < 0.035 && past()) {
+      // sea lilies stand where kelp grows today, since kelp forests came some 30 million years after
+      // the last ammonites. a sea lily is an animal, kin to starfish, holding up feathery arms to feed
+      const H = Math.min(6 + Math.floor(h2 * 14), Math.floor(fy - 14)), sw = (0.5 + SKY.amp * 0.3 * Math.exp(-m / 25)) * sw0;
+      if (H < 3) continue;
+      let x = i;
+      for (let k = 1; k <= H; k++) {
+        x = i + Math.round(Math.sin(T * 0.7 + wx * 0.3) * sw * (k / H) * 1.5);
+        put(x, j - k, k % 2 ? hex('#B8A48C') : hex('#9A876E'));
+      }
+      const top = j - H - 1;
+      for (const [a, b] of [[0, 0], [-1, -1], [0, -1], [1, -1], [-1, -2], [-2, -3], [-2, -4], [-3, -5], [1, -2], [2, -3], [2, -4], [3, -5], [0, -2], [0, -3], [-1, -4], [1, -4], [0, -5]])
+        put(x + a, top + b, b > -2 ? hex('#8E4A66') : (a + b) % 2 ? hex('#C8708C') : hex('#E094AA'));
+    } else if (m < 70 && cv < 0.6 && h < 0.035) {
       // kelp, swaying harder near the surface in rough weather
       const H = 12 + Math.floor(h2 * 32), sw = (0.8 + SKY.amp * 0.5 * Math.exp(-m / 25)) * sw0;
       for (let k = 1; k <= H; k++) {
@@ -1634,8 +1926,8 @@ function drawVents() {
         put(sx, sy, hex('#E8B0A0'));
       }
     }
-    const cx = f.cx + f.crab;
-    blit(ART.yeti, 0, cx - X0 - 3, Math.round(floorY(cx)) - Y0 - 4, false);
+    const cx = f.cx + f.crab, crab = ERA === 'ammonites' ? ART.scaphites : ART.yeti;
+    blit(crab, 0, cx - X0 - (crab.w >> 1), Math.round(floorY(cx)) - Y0 - crab.h, false);
     ventsInView.push(f);
   }
 }
@@ -1664,6 +1956,7 @@ function drawSub() {
     L.sx = col(i); L.sy = sy + j; L.dx = flip ? -L.fx : L.fx; L.dy = L.fy;
     if (L.on) for (const [a, b] of g.lens[L.id]) put(col(a), sy + b, hex(LENS_ON), K_GLOW);
   }
+  if (ERA === 'ammonites') return;
   const px = col(g.left - 2), hy = sy + g.hub, spin = Math.abs(sub.vx) > 0.5 ? Math.floor(T * 14) % 2 : 0, pc = hex('#6E6A62');
   if (spin) { put(px, hy - 2, pc); put(px, hy, pc); put(px, hy + 2, pc); }
   else { put(px, hy - 1, pc); put(px, hy + 1, pc); }
@@ -1863,6 +2156,7 @@ function hideCallout() {
 }
 // a closer one takes over once the current one has been up a second, so two side by side don't flicker
 function updateCallout() {
+  if (ERA === 'ammonites') { if (call.key) hideCallout(); return; }
   const near = nearby(), cur = near.find((c) => c.key === call.key);
   let best = null;
   for (const c of near) if (!best || c.d < best.d) best = c;
@@ -1879,7 +2173,9 @@ function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
   const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
-  canvas.setAttribute('aria-label', `${ownSub ? 'Your own little submarine' : 'A little yellow submarine'} ${where} in water at ${fmtTemp(waterTemp())}, ${going}, ${lightsSaid()}, at coordinates ${coord()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.`);
+  const who = ERA === 'ammonites' ? 'A little ammonite submarine' : ownSub ? 'Your own little submarine' : 'A little yellow submarine';
+  const when = ERA === 'today' ? '' : ' It is 80 million years ago.';
+  canvas.setAttribute('aria-label', `${who} ${where} in water at ${fmtTemp(waterTemp())}, ${going}, ${lightsSaid()}, at coordinates ${coord()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.${when}`);
 }
 // coordinates count meters east of where you set out, and below zero going west. a pixel is half a
 // meter across, the same as near the surface going down. the start is the same spot every time for
@@ -1976,6 +2272,11 @@ const SOUNDS = {
     { "kind": "tone", "wave": "triangle", "freq": 110.6, "gain": 0.04, "attack": 0.4, "dur": 1.5 },
     { "kind": "tone", "wave": "sine", "freq": 165, "gain": 0.015, "attack": 0.4, "dur": 1.5 },
     { "kind": "noise", "filter": "lowpass", "freq": 240, "q": 1.5, "gain": 0.12, "attack": 0.4, "dur": 1.5 }
+  ] },
+  "jet": { "name": "Ammonite jet", "use": "The ammonite sub's jet of water in Oops, all ammonites, in place of the engine: held while it moves, surging with each push", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 520, "q": 1.2, "gain": 0.3, "attack": 0.4, "dur": 1.5 },
+    { "kind": "noise", "filter": "lowpass", "freq": 180, "q": 1, "gain": 0.2, "attack": 0.4, "dur": 1.5 },
+    { "kind": "noise", "filter": "bandpass", "freq": 1500, "q": 3, "gain": 0.04, "attack": 0.4, "dur": 1.5 }
   ] },
   "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones, held", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
@@ -2127,7 +2428,11 @@ function listenTick(dt) {
   const pace = Math.min(1, Math.abs(sub.vx) / SPEEDS[4] + Math.abs(sub.vy) / 400);
   // about a tenth lower by 200 m, a fifth by 1,000 m, and nearly half at the bottom of a trench
   const sink = 1 - 0.45 * Math.log1p(m / 150) / Math.log1p(11000 / 150);
-  steady('engine', smooth(0, 0.04, pace) * (0.6 + 0.4 * pace) * (1 - up * 0.4), lerp(0.75, 1.6, pace) * sink);
+  const level = smooth(0, 0.04, pace) * (0.6 + 0.4 * pace) * (1 - up * 0.4);
+  // the ammonite sub swaps the engine for a rush of water that surges with each push of its jet
+  const ammo = ERA === 'ammonites';
+  steady('engine', ammo ? 0 : level, lerp(0.75, 1.6, pace) * sink);
+  if (ammo || held.jet) steady('jet', ammo ? level * (0.55 + 0.45 * Math.max(0, Math.sin(T * 4))) : 0, lerp(0.8, 1.3, pace) * sink);
 }
 
 // ---------- Controls ----------
@@ -2186,7 +2491,8 @@ function setClear(on) {
 const menu = $('menu');
 function openMenu() { if (!menu.open) { menu.showModal(); showSubName(); } }
 function showSubName() {
-  $('subname').textContent = ownSub ? "You're sailing your own sub." : "You're sailing the yellow sub.";
+  $('subname').textContent = ERA === 'ammonites' ? "Oops, all ammonites: you're sailing an ammonite. Pick another era to get your sub back." :
+    ownSub ? "You're sailing your own sub." : "You're sailing the yellow sub.";
 }
 $('opts').addEventListener('click', openMenu);
 $('menu-close').addEventListener('click', () => menu.close());
@@ -2201,7 +2507,7 @@ $('usesub').addEventListener('click', () => {
   try { localStorage.setItem(SUB_KEY, JSON.stringify({ palette: data.pal, rows: data.rows })); } catch (e) {}
   loadSub(); describe(); showSubName();
   $('paste').value = '';
-  $('subcap').textContent = 'Your sub is in the water.';
+  $('subcap').textContent = ERA === 'ammonites' ? 'Saved. It sails once the ammonites are gone.' : 'Your sub is in the water.';
 });
 // the arrows step up while held. a click from the keyboard is one press, and a held Enter doesn't
 // repeat, so it can't race to Full
@@ -2232,6 +2538,11 @@ for (const k of ['time', 'weather']) {
     writePins(); paintPins(); say(PIN_SAID[k][v]);
   });
 }
+const ERA_SAID = { today: 'Back to today.', prehistoric: 'The Cretaceous, 80 million years ago.', ammonites: 'Oops, all ammonites.' };
+for (const v of ERAS) $('era-' + v).addEventListener('click', () => {
+  PIN.era = v === 'today' ? '' : v;
+  writePins(); setEra(v); showSubName(); describe(); say(ERA_SAID[v]);
+});
 // rise and dive move while held, and a press from the keyboard gives a short nudge
 function holdButton(btn, v) {
   btn.addEventListener('pointerdown', (e) => { hold.v = v; btn.setPointerCapture(e.pointerId); });
@@ -2291,13 +2602,14 @@ window.addEventListener('storage', (e) => { if (e.key === SUB_KEY || e.key === n
 $('yellow').addEventListener('click', () => {
   try { localStorage.removeItem(SUB_KEY); } catch (e) {}
   loadSub(); describe(); showSubName();
-  $('subcap').textContent = 'Back in the yellow sub.';
+  $('subcap').textContent = ERA === 'ammonites' ? 'Saved. The yellow sub sails once the ammonites are gone.' : 'Back in the yellow sub.';
   $('drawsub').focus();
 });
 window.addEventListener('hashchange', () => {
   const s = readSeed();
   if (s && s !== SEED) startWorld(s);
   readPins(); paintPins();
+  if ((PIN.era || 'today') !== ERA) { setEra(PIN.era); describe(); }
 });
 let rz = 0;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
@@ -2309,6 +2621,7 @@ layout();
 SEED = readSeed() || freshSeed();
 writeSeed(SEED);
 readPins(); paintPins();
+setEra(PIN.era);
 readSky(Date.now());
 startWorld(SEED);
 let last = performance.now(), acc = 0;

@@ -561,6 +561,11 @@ const COZY_SUBMARINE_SOUNDS = {
     { "kind": "tone", "wave": "sine", "freq": 165, "gain": 0.015, "attack": 0.4, "dur": 1.5 },
     { "kind": "noise", "filter": "lowpass", "freq": 240, "q": 1.5, "gain": 0.12, "attack": 0.4, "dur": 1.5 }
   ] },
+  "jet": { "name": "Ammonite jet", "use": "The ammonite sub's jet of water in Oops, all ammonites, in place of the engine: held while it moves, surging with each push", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 520, "q": 1.2, "gain": 0.3, "attack": 0.4, "dur": 1.5 },
+    { "kind": "noise", "filter": "lowpass", "freq": 180, "q": 1, "gain": 0.2, "attack": 0.4, "dur": 1.5 },
+    { "kind": "noise", "filter": "bandpass", "freq": 1500, "q": 3, "gain": 0.04, "attack": 0.4, "dur": 1.5 }
+  ] },
   "wash": { "name": "Water wash", "use": "The hush of moving water in the sunlit and twilight zones, held", "layers": [
     { "kind": "noise", "filter": "lowpass", "freq": 420, "to": 300, "q": 0.7, "gain": 0.12, "attack": 1.2, "dur": 3.4 }
   ] },
