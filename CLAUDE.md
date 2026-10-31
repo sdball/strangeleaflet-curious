@@ -176,7 +176,9 @@ Game sounds are synthesized with Web Audio, never recorded files. A curio with s
 
 Pixel-art sprites are data too: an object of sprites, each `{ "name", "use", "palette", "frames" }`. The palette maps single letters to colors (`"#RRGGBB"`, `"*#RRGGBB"` glows in the dark, `"~#RRGGBB"` is see-through), and each frame is an array of row strings, one letter per pixel and a space for nothing. Art faces right. Keep one row per line and one sprite per stanza (see `SPRITES` in `cozy-submarine`).
 
-`pixel-bench` holds an identical copy of every curio's sprites, one set per curio (`COZY_SUBMARINE_SPRITES`, registered in its `GROUPS`), the same way `sound-bench` holds sounds. When one copy changes, change the other to match in the same commit. A Pixel Bench export (`{ "format": "pixel-bench/1", "group": "cozy-submarine", "sprites": {...} }`) writes `sprites` in the same layout, so it pastes straight into both pages.
+Two optional fields: `"poses": { "perch": [0], "fly": [2, 3] }` names frames so a game can ask for one pose rather than cycling through every frame, and `"like": "bird"` makes a sprite borrow another's frames and poses while bringing its own palette (no `frames` of its own). `pocket-places` uses both: one bird drawing is its gull, crow, pigeon, and flock. Pad a sprite's frames to one size, placed so each pixel lands where the game draws it.
+
+`pixel-bench` holds an identical copy of every curio's sprites, one set per curio (`COZY_SUBMARINE_SPRITES`, `POCKET_PLACES_SPRITES`, registered in its `GROUPS`), the same way `sound-bench` holds sounds. When one copy changes, change the other to match in the same commit. A Pixel Bench export (`{ "format": "pixel-bench/1", "group": "cozy-submarine", "sprites": {...} }`) writes `sprites` in the same layout, so it pastes straight into both pages. A new curio with sprites adds its set to `pixel-bench` too, with a `scene` for the bench's preview.
 
 Cozy Submarine's own sub is not in that set. Players draw their own in `custom-submarine`, which saves it to `localStorage` for the game to sail.
 
