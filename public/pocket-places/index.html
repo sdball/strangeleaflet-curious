@@ -1094,7 +1094,7 @@ function mspr(x, y, z, rows, pal, flip, a, em, always) {
     const row = rows[r];
     for (let c = 0; c < w; c++) {
       const ch = row[c];
-      if (ch === '.') continue;
+      if (ch === ' ') continue;
       let cc = cache[ch];
       if (cc === undefined) {
         const glow = em && em.includes(ch) && (always || R.T.light > 0);
@@ -1158,23 +1158,190 @@ function drawWater(W) {
   }
 }
 
-// ===================== ambient life =====================
-const SPR = {
-  chick: [['..r.', 'wwwo', '.ww.'], ['....', 'www.', '.wwr']],
-  duck: ['...g.', 'bbbgo', '.bb..'],
-  rabbit: ['...e', 'bbbb', 'wb.b'],
-  fox: ['......o.', '.....ooo', 'woooooow', '..d..d..'],
-  crab: [['c...c', '.ccc.', 'c.c.c'], ['.c.c.', 'cccc.', '.c.c.']],
-  owl: ['b.b', 'yby', 'bbb', 'bbb'],
-  owlFly: [['b...b', 'bbybb', '..b..'], ['.....', 'bbybb', 'b.b.b']],
-  perch: ['..h.', '..ho', 'wbb.', '.y..'],
-  peck: ['....', '....', 'wbbh', '.y.o'],
-  fly: [['w...w', '.wbw.'], ['.....', 'wwbww']],
-  cat: [['t...kk', '.kkkky', '.k..k.'], ['t...kk', '.kkkky', 'k...k.']],
-  catSit: ['....kk', 't.kkky', '.kkkk.'],
-  bfly: [['a.a', '.b.'], ['.a.', '.b.']],
+// ===================== sprite data =====================
+// every critter as data: a palette of letters, then frames of rows, a letter per pixel and a space for
+// nothing. art faces right, and a color starting with * glows at night. poses name frames, so the game
+// can ask for a bird's fly frames or its perch. a sprite "like" another borrows its frames and poses and
+// brings its own palette, which is how one drawing makes a gull, a crow, and a pigeon. Pixel Bench
+// (../pixel-bench/) has an identical copy to look at and edit, and its export pastes straight in here,
+// so a change here goes there too, and the other way round
+const SPRITES = {
+  "chick": { "name": "Chicken", "use": "Scratches around the farm by day, and sleeps at night", "palette": { "r": "#D8432F", "w": "#F4F1EA", "o": "#E9A23B" }, "poses": { "stand": [0], "peck": [1], "sleep": [2] }, "frames": [
+    [
+      "  r ",
+      "wwwo",
+      " ww "
+    ],
+    [
+      "    ",
+      "www ",
+      " wwr"
+    ],
+    [
+      "    ",
+      "www ",
+      "www "
+    ]
+  ] },
+  "duck": { "name": "Duck", "use": "Paddles in circles on the farm pond", "palette": { "g": "#2F7A4E", "b": "#A4835E", "o": "#E9A23B" }, "frames": [
+    [
+      "   g ",
+      "bbbgo",
+      " bb  "
+    ]
+  ] },
+  "rabbit": { "name": "Rabbit", "use": "Hops through the forest", "palette": { "e": "#9C8E80", "b": "#B3A595", "w": "#F4F1EA" }, "frames": [
+    [
+      "   e",
+      "bbbb",
+      "wb b"
+    ]
+  ] },
+  "fox": { "name": "Fox", "use": "Trots through the forest", "palette": { "o": "#D9722E", "w": "#F2EDE4", "d": "#3A2A22" }, "frames": [
+    [
+      "      o ",
+      "     ooo",
+      "woooooow",
+      "  d  d  "
+    ]
+  ] },
+  "crab": { "name": "Crab", "use": "Scuttles on the sand near the water at the beach", "palette": { "c": "#D9573F" }, "poses": { "stand": [0], "walk": [1, 0] }, "frames": [
+    [
+      "c   c",
+      " ccc ",
+      "c c c"
+    ],
+    [
+      " c c ",
+      "cccc ",
+      " c c "
+    ]
+  ] },
+  "owl": { "name": "Owl", "use": "Perches in the forest, blinks now and then, and flies off. Its eyes glow at night", "palette": { "b": "#8A6E52", "y": "*#F6D35B" }, "poses": { "perch": [0], "blink": [1], "fly": [2, 3] }, "frames": [
+    [
+      " b b ",
+      " yby ",
+      " bbb ",
+      " bbb "
+    ],
+    [
+      " b b ",
+      " bbb ",
+      " bbb ",
+      " bbb "
+    ],
+    [
+      "     ",
+      "b   b",
+      "bbybb",
+      "  b  "
+    ],
+    [
+      "     ",
+      "     ",
+      "bbybb",
+      "b b b"
+    ]
+  ] },
+  "bird": { "name": "Bird", "use": "The drawing every small bird shares. Each kind brings its own palette", "palette": { "w": "#8A6A4A", "b": "#7A5C40", "h": "#8A6A4A", "o": "#E9B83B", "y": "#E9A23B" }, "poses": { "perch": [0], "peck": [1], "fly": [2, 3] }, "frames": [
+    [
+      "  h  ",
+      "  ho ",
+      "wbb  ",
+      " y   "
+    ],
+    [
+      "     ",
+      "     ",
+      "wbbh ",
+      " y o "
+    ],
+    [
+      "     ",
+      "     ",
+      "w   w",
+      " wbw "
+    ],
+    [
+      "     ",
+      "     ",
+      "     ",
+      "wwbww"
+    ]
+  ] },
+  "gull": { "name": "Gull", "use": "Perches at the beach and flies off", "like": "bird", "palette": { "w": "#F4F2EC", "b": "#D9DCDE", "h": "#F7F6F2", "o": "#E9B83B", "y": "#E9A23B" } },
+  "crow": { "name": "Crow", "use": "Perches on the farm, on the scarecrow if there is one", "like": "bird", "palette": { "w": "#2A2B30", "b": "#1E1F24", "h": "#2E3036", "o": "#4A4440", "y": "#3A3532" } },
+  "pigeon": { "name": "Pigeon", "use": "Pecks along the city sidewalk and flies off", "like": "bird", "palette": { "w": "#8C939C", "b": "#6E747C", "h": "#5E7A72", "o": "#3A3A3A", "y": "#D9735E" } },
+  "flock-bird": { "name": "Bird in a flock", "use": "Flies over the forest in a flock of five", "like": "bird", "palette": { "w": "#3A3F48", "b": "#2E323A", "h": "#3A3F48", "o": "#2E323A", "y": "#2E323A" } },
+  "cat": { "name": "Black cat", "use": "Walks through the city, sits a while, and walks on. Its eyes glow at night", "palette": { "k": "#2A2A2E", "t": "#2A2A2E", "y": "*#F6D35B" }, "poses": { "walk": [0, 1], "sit": [2] }, "frames": [
+    [
+      "t   kk",
+      " kkkky",
+      " k  k "
+    ],
+    [
+      "t   kk",
+      " kkkky",
+      "k   k "
+    ],
+    [
+      "    kk",
+      "t kkky",
+      " kkkk "
+    ]
+  ] },
+  "cat-ginger": { "name": "Ginger cat", "use": "The black cat's other coat, half the time", "like": "cat", "palette": { "k": "#D98A3E", "t": "#D98A3E", "y": "*#F6D35B" } },
+  "butterfly": { "name": "Yellow butterfly", "use": "Flutters over the farm", "palette": { "a": "#F2C230", "b": "#3A2E2A" }, "frames": [
+    [
+      "a a",
+      " b "
+    ],
+    [
+      " a ",
+      " b "
+    ]
+  ] },
+  "butterfly-orange": { "name": "Orange butterfly", "use": "Flutters over the farm", "like": "butterfly", "palette": { "a": "#F08A3C", "b": "#3A2E2A" } },
+  "butterfly-violet": { "name": "Violet butterfly", "use": "Flutters over the farm", "like": "butterfly", "palette": { "a": "#9C7FE0", "b": "#3A2E2A" } },
+  "butterfly-white": { "name": "White butterfly", "use": "Flutters over the farm", "like": "butterfly", "palette": { "a": "#F5F1EA", "b": "#3A2E2A" } },
+  "balloon": { "name": "Hot-air balloon", "use": "Drifts across the sky on a clear day", "palette": { "a": "#E2765A", "b": "#F4C542", "l": "#6B5A4A", "c": "#9C774F" }, "frames": [
+    [
+      "  aaaaa  ",
+      " aabbbaa ",
+      "aabbbbbaa",
+      "aabbbbbaa",
+      "aabbbbbaa",
+      " aabbbaa ",
+      "  aabaa  ",
+      "   aaa   ",
+      "   l l   ",
+      "   ccc   ",
+      "   ccc   "
+    ]
+  ] },
+  "balloon-teal": { "name": "Teal hot-air balloon", "use": "Drifts across the sky on a clear day", "like": "balloon", "palette": { "a": "#5FA8B8", "b": "#F2EFE6", "l": "#6B5A4A", "c": "#9C774F" } },
+  "balloon-violet": { "name": "Violet hot-air balloon", "use": "Drifts across the sky on a clear day", "like": "balloon", "palette": { "a": "#9C7FE0", "b": "#F2C230", "l": "#6B5A4A", "c": "#9C774F" } }
 };
+const LOOKS = {};
+function look(id) {
+  if (LOOKS[id]) return LOOKS[id];
+  const s = SPRITES[id], base = s.like ? SPRITES[s.like] : s, pal = {};
+  let em = '';
+  for (const [k, v] of Object.entries(s.palette)) { pal[k] = hex(v.replace(/^[*~]/, '')); if (v[0] === '*') em += k; }
+  return (LOOKS[id] = { pal, em, frames: base.frames, poses: base.poses || {} });
+}
+// the rows for a pose, or for the whole sprite with no pose. step picks among its frames
+function poseRows(id, pose, step) {
+  const L = look(id), fs = pose ? L.poses[pose] : L.frames.map((_, i) => i);
+  return L.frames[fs[((step % fs.length) + fs.length) % fs.length]];
+}
+// which half-turn a phase is in: step cyc(t * 12) flips frames each time sin(t * 12) changes sign
+const cyc = (arg) => Math.floor(arg / Math.PI);
+function drawSpr(x, y, z, id, pose, step, flip, a) {
+  mspr(x, y, z, poseRows(id, pose, step), look(id).pal, flip, a, look(id).em);
+}
 
+// ===================== ambient life =====================
 function initActors(W) {
   A.acts = []; A.parts = []; A.amb = []; A.next = rnd(2, 4);
   for (const a of W.ambient) {
@@ -1263,19 +1430,16 @@ function drawAmbient(W) {
     }
     if (a.type === 'fountain') vox(a.x, a.y, a.z, hex('#BFE6F0'), 0, 0.75);
     if (a.type === 'chickens') {
-      const pal = { r: hex('#D8432F'), w: hex('#F4F1EA'), o: hex('#E9A23B') };
       for (const ch of a.list) {
         const xi = Math.round(ch.x), yi = Math.round(ch.y);
-        const fr = night ? ['....', 'www.', 'www.'] : SPR.chick[ch.peck];
-        mspr(ch.x, ch.y, W.h(xi, yi) + 1, fr, pal, ch.f);
+        drawSpr(ch.x, ch.y, W.h(xi, yi) + 1, 'chick', night ? 'sleep' : ch.peck ? 'peck' : 'stand', 0, ch.f);
       }
     }
     if (a.type === 'ducks') {
-      const pal = { g: hex('#2F7A4E'), b: hex('#A4835E'), o: hex('#E9A23B') };
       for (const d of a.list) {
         const an = t * 0.25 + d.p * 2.2, x = a.x + Math.cos(an) * d.r, y = a.y + Math.sin(an) * d.r * 0.9;
         const vx = -Math.sin(an), vy = Math.cos(an);
-        mspr(x, y, 0.8, SPR.duck, pal, sdx(vx, vy) < 0);
+        drawSpr(x, y, 0.8, 'duck', null, 0, sdx(vx, vy) < 0);
         if (Math.sin(t * 3 + d.p * 9) > 0.6) dpix(x - vx * 0.8, y - vy * 0.8, 0.2, hex('#BEE3EC'), 1, 0.7);
       }
     }
@@ -1481,14 +1645,14 @@ FL.deer = W => walker(W, {
 FL.fox = W => walker(W, {
   lo: 6, hi: 11, speed: 2.4, pause: 1.6,
   draw(x, y, z, fx, fy, walking, t, a) {
-    mspr(x, y, z, SPR.fox, { o: hex('#D9722E'), w: hex('#F2EDE4'), d: hex('#3A2A22') }, sdx(fx, fy) < 0, a);
+    drawSpr(x, y, z, 'fox', null, 0, sdx(fx, fy) < 0, a);
   },
 });
 FL.rabbit = W => walker(W, {
   lo: 4, hi: 8, speed: 1.8, pause: 2.5,
   draw(x, y, z, fx, fy, walking, t, a) {
     const hop = walking ? Math.abs(Math.sin(t * 7)) * 0.6 : 0;
-    mspr(x, y, z + hop, SPR.rabbit, { e: hex('#9C8E80'), b: hex('#B3A595'), w: hex('#F4F1EA') }, sdx(fx, fy) < 0, a);
+    drawSpr(x, y, z + hop, 'rabbit', null, 0, sdx(fx, fy) < 0, a);
   },
 });
 FL.crab = W => walker(W, {
@@ -1498,27 +1662,23 @@ FL.crab = W => walker(W, {
     for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (isWater(W, x + dx, y + dy)) return true;
     return false;
   },
-  draw(x, y, z, fx, fy, walking, t, a) { mspr(x, y, z, SPR.crab[walking && Math.sin(t * 12) > 0 ? 1 : 0], { c: hex('#D9573F') }, false, a); },
+  draw(x, y, z, fx, fy, walking, t, a) { drawSpr(x, y, z, 'crab', walking ? 'walk' : 'stand', cyc(t * 12), false, a); },
 });
 function perchBird(W, kind) {
   let ps = W.perches.filter(p => (kind === 'crow' ? true : !p.scare));
   if (kind === 'crow' && W.perches.some(p => p.scare) && chance(0.7)) ps = W.perches.filter(p => p.scare);
   if (!ps.length) return null;
   const p = rpick(ps);
-  const pal = kind === 'gull' ? { w: hex('#F4F2EC'), b: hex('#D9DCDE'), h: hex('#F7F6F2'), o: hex('#E9B83B'), y: hex('#E9A23B') }
-    : kind === 'crow' ? { w: hex('#2A2B30'), b: hex('#1E1F24'), h: hex('#2E3036'), o: hex('#4A4440'), y: hex('#3A3532') }
-      : { w: hex('#8A6A4A'), b: hex('#7A5C40'), h: hex('#8A6A4A'), o: hex('#E9B83B'), y: hex('#E9A23B') };
   return flyer({
     x: p.x, y: p.y, z: p.z, fly: 3.4, stay: rnd(4, 7),
     draw(x, y, z, flying, flip, t) {
       if (kind === 'owl') {
-        const op = { b: hex('#8A6E52'), y: hex('#F6D35B') };
-        if (flying) mspr(x, y, z, SPR.owlFly[Math.sin(t * 10) > 0 ? 0 : 1], op, flip, 1, 'y');
-        else mspr(x, y, z, Math.sin(t * 1.3) > 0.95 ? ['b.b', 'bbb', 'bbb', 'bbb'] : SPR.owl, op, false, 1, 'y');
+        if (flying) drawSpr(x, y, z, 'owl', 'fly', cyc(t * 10), flip, 1);
+        else drawSpr(x, y, z, 'owl', Math.sin(t * 1.3) > 0.95 ? 'blink' : 'perch', 0, false, 1);
         return;
       }
-      if (flying) mspr(x, y, z, SPR.fly[Math.sin(t * 14) > 0 ? 0 : 1], pal, flip);
-      else mspr(x, y, z, SPR.perch, pal, flip);
+      if (flying) drawSpr(x, y, z, kind, 'fly', cyc(t * 14), flip);
+      else drawSpr(x, y, z, kind, 'perch', 0, flip);
     },
   });
 }
@@ -1530,14 +1690,13 @@ FL.birds = W => {
   const ax = cx + Math.cos(an) * D, ay = cy + Math.sin(an) * D, bx = cx - Math.cos(an) * D, by = cy - Math.sin(an) * D;
   const offs = [[0, 0], [-1, -1.2], [-1, 1.2], [-2, -2.4], [-2, 2.4]];
   const T = 9; let t = 0;
-  const pal = { w: hex('#3A3F48'), b: hex('#2E323A') };
   return {
     upd(dt) { t += dt; return t < T; },
     draw() {
       const u = t / T, x = ax + (bx - ax) * u, y = ay + (by - ay) * u, fx = Math.cos(an + Math.PI), fy = Math.sin(an + Math.PI);
       for (let i = 0; i < offs.length; i++) {
         const [b, s] = offs[i];
-        mspr(x + fx * b * 1.2 - fy * s, y + fy * b * 1.2 + fx * s, z + Math.sin(t * 2 + i) * 0.3, SPR.fly[Math.sin(t * 12 + i * 1.7) > 0 ? 0 : 1], pal, sdx(fx, fy) < 0);
+        drawSpr(x + fx * b * 1.2 - fy * s, y + fy * b * 1.2 + fx * s, z + Math.sin(t * 2 + i) * 0.3, 'flock-bird', 'fly', cyc(t * 12 + i * 1.7), sdx(fx, fy) < 0);
       }
     },
   };
@@ -1552,16 +1711,15 @@ FL.pigeons = W => {
   const birds = spots.map(([x, y]) => flyer({
     x: x + rnd(-0.3, 0.3), y: y + rnd(-0.3, 0.3), z: W.h(x, y) + 1, fly: rnd(2.6, 3.4), stay: 6,
     draw(x, y, z, flying, flip, t, st) {
-      const pal = { w: hex('#8C939C'), b: hex('#6E747C'), h: hex('#5E7A72'), o: hex('#3A3A3A'), y: hex('#D9735E') };
-      if (flying) mspr(x, y, z, SPR.fly[Math.sin(t * 15) > 0 ? 0 : 1], pal, flip);
-      else mspr(x, y, z, Math.sin(st * 4 + x) > 0.4 ? SPR.peck : SPR.perch, pal, flip);
+      if (flying) drawSpr(x, y, z, 'pigeon', 'fly', cyc(t * 15), flip);
+      else drawSpr(x, y, z, 'pigeon', Math.sin(st * 4 + x) > 0.4 ? 'peck' : 'perch', 0, flip);
     },
   }));
   return { upd(dt) { let any = false; for (const b of birds) any = b.upd(dt) || any; return any; }, draw() { for (const b of birds) b.draw(); } };
 };
 FL.butterflies = W => {
-  const cols = [hex('#F2C230'), hex('#F08A3C'), hex('#9C7FE0'), hex('#F5F1EA')];
-  const bs = Array.from({ length: 3 }, (_, i) => ({ cx: rnd(13, 26), cy: rnd(12, 26), p: rnd(0, 10), c: cols[i % cols.length] }));
+  const kinds = ['butterfly', 'butterfly-orange', 'butterfly-violet', 'butterfly-white'];
+  const bs = Array.from({ length: 3 }, (_, i) => ({ cx: rnd(13, 26), cy: rnd(12, 26), p: rnd(0, 10), id: kinds[i % kinds.length] }));
   let t = 0; const T = 12;
   return {
     upd(dt) { t += dt; return t < T; },
@@ -1570,7 +1728,7 @@ FL.butterflies = W => {
       for (const b of bs) {
         const x = b.cx + Math.sin(t * 0.7 + b.p) * 3, y = b.cy + Math.sin(t * 0.9 + b.p * 2) * 3;
         const z = 4 + Math.sin(t * 2.1 + b.p) * 1.2 + Math.sin(t * 5 + b.p) * 0.3;
-        mspr(x, y, z, SPR.bfly[Math.sin(t * 16 + b.p) > 0 ? 0 : 1], { a: b.c, b: hex('#3A2E2A') }, false, a);
+        drawSpr(x, y, z, b.id, null, cyc(t * 16 + b.p), false, a);
       }
     },
   };
@@ -1640,8 +1798,7 @@ FL.cat = W => {
   if (W.land.name !== 'city') return null;
   const dir = chance(0.5) ? 1 : -1, x0 = dir > 0 ? 10 : 27, x1 = dir > 0 ? 27 : 10;
   const sitAt = rnd(14, 23); let x = x0, t = 0, sit = 0, mode = 'in', a = 0;
-  const pal = { k: chance(0.5) ? hex('#2A2A2E') : hex('#D98A3E'), t: hex('#3A3A3E'), y: hex('#F6D35B') };
-  pal.t = pal.k;
+  const id = chance(0.5) ? 'cat' : 'cat-ginger';
   return {
     upd(dt) {
       t += dt;
@@ -1652,8 +1809,7 @@ FL.cat = W => {
       return true;
     },
     draw() {
-      const fr = mode === 'sit' ? SPR.catSit : SPR.cat[Math.sin(t * 8) > 0 ? 0 : 1];
-      mspr(x, 0, 5, fr, pal, sdx(dir, 0) < 0, a, 'y');
+      drawSpr(x, 0, 5, id, mode === 'sit' ? 'sit' : 'walk', cyc(t * 8), sdx(dir, 0) < 0, a);
     },
   };
 };
@@ -1708,17 +1864,16 @@ FL.shooting = () => {
   };
 };
 FL.hotair = () => {
-  const dir = chance(0.5) ? 1 : -1, y = rnd(R.H * 0.08, R.H * 0.2), T = 40, cols = rpick([[hex('#E2765A'), hex('#F4C542')], [hex('#5FA8B8'), hex('#F2EFE6')], [hex('#9C7FE0'), hex('#F2C230')]]);
-  const art = ['..aaaaa..', '.aabbbaa.', 'aabbbbbaa', 'aabbbbbaa', 'aabbbbbaa', '.aabbbaa.', '..aabaa..', '...aaa...', '...l.l...', '...ccc...', '...ccc...'];
+  const dir = chance(0.5) ? 1 : -1, y = rnd(R.H * 0.08, R.H * 0.2), T = 40, id = rpick(['balloon', 'balloon-teal', 'balloon-violet']);
+  const art = poseRows(id, null, 0), pal = look(id).pal;
   let t = 0;
   return {
     bg: true,
     upd(dt) { t += dt; return t < T; },
     draw() {
       const u = t / T, x = dir > 0 ? -12 + u * (R.W + 24) : R.W + 12 - u * (R.W + 24), yy = y + Math.sin(t * 0.6) * 2;
-      const pal = { a: cols[0], b: cols[1], l: hex('#6B5A4A'), c: hex('#9C774F') };
       for (let r = 0; r < art.length; r++) for (let c = 0; c < art[r].length; c++) {
-        const ch = art[r][c]; if (ch === '.') continue;
+        const ch = art[r][c]; if (ch === ' ') continue;
         px(x + c, yy + r, abgrFromRGB(mixC(pal[ch], R.T.sky[1], 0.25)));
       }
     },
