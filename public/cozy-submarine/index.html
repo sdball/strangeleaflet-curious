@@ -968,9 +968,9 @@ const SPECIES = [
     name: 'Rock crab', note: 'It walks sideways, the way its legs bend best.' },
   // horseshoe crabs crawl the floor of warm shallows, and now and then one swims past upside down
   { id: 'horseshoe', art: 'horseshoe', floor: true, min: 0, max: 40, weight: 0.8, climate: 'warm mild', speed: [1, 2.5], fps: 3,
-    name: 'Horseshoe crab', note: 'Older than the dinosaurs, and more like spiders than crabs.' },
+    name: 'Horseshoe crab!', note: 'Older than the dinosaurs, and more like spiders than crabs.' },
   { id: 'horseshoeswim', art: 'horseshoeSwim', min: 0, max: 30, weight: 0.2, climate: 'warm mild', speed: [3, 5], bob: 2, fps: 4,
-    name: 'Horseshoe crab', note: 'Horseshoe crabs swim upside down!' },
+    name: 'Horseshoe crab!', note: 'Horseshoe crabs swim upside down!' },
   { id: 'lantern', art: 'lantern', min: 200, max: 1200, weight: 3, speed: [6, 10], school: [6, 14], bob: 2,
     name: 'Lanternfish', note: 'Every night it rises hundreds of meters to feed, and sinks again by dawn.' },
   { id: 'hatchet', art: 'hatchet', min: 200, max: 1200, weight: 1.6, speed: [3, 6], school: [2, 6], bob: 2,
@@ -1174,8 +1174,11 @@ function trySpawn() {
   const side = moving ? Math.sign(sub.vx) : (Math.random() < 0.5 ? -1 : 1);
   const edge = side > 0 ? cam.x + LW + 6 : cam.x - 6;
   const cl = climate(edge), fy = floorY(edge);
+  // swimmers start somewhere in the water on screen. picked from the whole screen, most tries in
+  // the shallows landed in the sky or the rock, which left only the floor crawlers to choose from
+  const top = Math.max(cam.y - 10, SKY.amp + 5), bot = Math.min(cam.y + LH + 10, fy - 2);
   for (let tries = 0; tries < 4; tries++) {
-    const sy = cam.y - 10 + Math.random() * (LH + 20);
+    const sy = top + Math.random() * Math.max(0, bot - top);
     const cands = []; let tot = 0;
     for (const sp of SPECIES) {
       if (sp.climate && !sp.climate.includes(cl)) continue;
