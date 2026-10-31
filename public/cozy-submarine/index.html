@@ -108,7 +108,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
         async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
-<canvas id="sea" role="img" aria-label="A little yellow submarine at sea"></canvas>
+<canvas id="sea" role="img" aria-label="A little teal submarine at sea"></canvas>
 <div id="corner">
   <button type="button" class="chip panel" id="opts" aria-haspopup="dialog" aria-keyshortcuts="O">Options</button>
   <header id="head" class="panel">
@@ -186,7 +186,7 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
   <textarea id="paste" aria-label="Paste a sub from Custom Submarine" spellcheck="false" autocomplete="off"></textarea>
   <div class="group">
     <button type="button" class="chip" id="usesub">Sail the pasted sub</button>
-    <button type="button" class="chip" id="yellow" hidden>Back to the yellow sub</button>
+    <button type="button" class="chip" id="yellow" hidden>Back to the teal sub</button>
   </div>
   <p id="subcap" aria-live="polite"></p>
   <h3 id="screen-h">On screen</h3>
@@ -488,19 +488,19 @@ function spr(pal, ...frames) {
   };
 }
 const SUB_ROWS = [
-  '           Dd       ',
-  '           DD       ',
-  '       DDDDDDDD     ',
-  '       DhYYYYYD     ',
-  '   DDDDYYYYYYYYDDD  ',
-  '  ThhYYYYYYYYYYYYYD ',
-  ' DYYPPYYYYPPYYYYYYYD',
-  ' DYYPPYYYYPPYYYYYYYL',
-  ' DyYYYYYYYYYYYYYYYD ',
-  '  DyyyyyyyyyyyyyyD  ',
-  '   DDDDDDDUDDDDDD   ',
+  '                    ',
+  '              DD    ',
+  '               D    ',
+  '               D    ',
+  '   DDDDDDDDDDDDDDD  ',
+  '  DYYYYYYYYYYYYYYYD ',
+  ' DhYPYPYPYPYPYPYPYhD',
+  ' DhYYYYYYYYYYYYYYYhL',
+  ' DyyYYYYYYYYYYYYYyDD',
+  '  DyyyyyyyyyyyyyyDD ',
+  '   DDDDDDDDDDDDDDD  ',
 ];
-const SUB_PAL = { D: '#3B2A1C', d: '#7A6A58', Y: '#F2C14E', h: '#FFE6A3', y: '#C98E32', P: '*#FFC56A' };
+const SUB_PAL = { D: '#696969', d: '#7A6A58', Y: '#008799', h: '#9E9E9E', y: '#005661', P: '*#FFC56A' };
 // the lights' lenses, which the game colors itself: L the front light, U the one underneath, T the rear
 const LENSES = { front: 'L', bottom: 'U', rear: 'T' };
 const LENS_OFF = '#8A8676', LENS_ON = '#FFF7DA';
@@ -522,7 +522,7 @@ function cleanSub(data) {
 }
 // everything else is placed from the art itself: the propeller sits two pixels behind the stern (the
 // leftmost pixels), halfway up them, each light shines from its outermost lens (the frontmost L, the
-// lowest U, the rearmost T), and the keel always rides where the yellow sub's does, so a bigger sub
+// lowest U, the rearmost T), and the keel always rides where the teal sub's does, so a bigger sub
 // grows upward and never into the floor
 function subGeometry(s, rows) {
   const fr = s.frames[0], w = s.w;
@@ -2173,7 +2173,7 @@ function describe() {
   const m = subDepth(), z = zoneOf(m);
   const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
   const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
-  const who = ERA === 'ammonites' ? 'A little ammonite submarine' : ownSub ? 'Your own little submarine' : 'A little yellow submarine';
+  const who = ERA === 'ammonites' ? 'A little ammonite submarine' : ownSub ? 'Your own little submarine' : 'A little teal submarine';
   const when = ERA === 'today' ? '' : ' It is 80 million years ago.';
   canvas.setAttribute('aria-label', `${who} ${where} in water at ${fmtTemp(waterTemp())}, ${going}, ${lightsSaid()}, at coordinates ${coord()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.${when}`);
 }
@@ -2490,7 +2490,7 @@ const menu = $('menu');
 function openMenu() { if (!menu.open) { menu.showModal(); showSubName(); } }
 function showSubName() {
   $('subname').textContent = ERA === 'ammonites' ? "Oops, all ammonites: you're sailing an ammonite. Pick another era to get your sub back." :
-    ownSub ? "You're sailing your own sub." : "You're sailing the yellow sub.";
+    ownSub ? "You're sailing your own sub." : "You're sailing the teal sub.";
 }
 $('opts').addEventListener('click', openMenu);
 $('menu-close').addEventListener('click', () => menu.close());
@@ -2600,7 +2600,7 @@ window.addEventListener('storage', (e) => { if (e.key === SUB_KEY || e.key === n
 $('yellow').addEventListener('click', () => {
   try { localStorage.removeItem(SUB_KEY); } catch (e) {}
   loadSub(); describe(); showSubName();
-  $('subcap').textContent = ERA === 'ammonites' ? 'Saved. The yellow sub sails once the ammonites are gone.' : 'Back in the yellow sub.';
+  $('subcap').textContent = ERA === 'ammonites' ? 'Saved. The teal sub sails once the ammonites are gone.' : 'Back in the teal sub.';
   $('drawsub').focus();
 });
 window.addEventListener('hashchange', () => {

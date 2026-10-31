@@ -199,7 +199,7 @@ textarea {
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Custom Submarine</h1>
-  <p class="lede">Draw your own submarine for <a href="../cozy-submarine/">Cozy Submarine</a>, one pixel at a time. Start from the yellow sub or a clear grid, watch your design sail in the shallows and the deep, then send it out to sea.</p>
+  <p class="lede">Draw your own submarine for <a href="../cozy-submarine/">Cozy Submarine</a>, one pixel at a time. Start from the teal sub or a clear grid, watch your design sail in the shallows and the deep, then send it out to sea.</p>
   <p class="howto">Click or drag on the grid to paint, and right-click to rub out. On the grid, the arrow keys move a cursor and <kbd>Space</kbd> paints. <kbd>P</kbd> pencil, <kbd>F</kbd> fill, <kbd>I</kbd> picker, <kbd>0</kbd>–<kbd>9</kbd> pick a color, <kbd>L</kbd> lights, <kbd>Ctrl</kbd> <kbd>Z</kbd> undo. To redraw the creatures you meet at sea, use <a href="../pixel-bench/">Pixel Bench</a>.</p>
 
   <section class="panel" aria-labelledby="draw-h">
@@ -251,7 +251,7 @@ textarea {
     </div>
     <div class="row" role="group" aria-label="Start over">
       <span class="label">Start over with</span>
-      <button type="button" id="o-yellow">The yellow sub</button>
+      <button type="button" id="o-yellow">The teal sub</button>
       <button type="button" id="o-clear">A clear grid</button>
     </div>
   </section>
@@ -285,7 +285,7 @@ textarea {
     <p class="cap" id="s-status"></p>
     <div class="row">
       <button type="button" class="primary" id="s-send">Sail it in Cozy Submarine</button>
-      <button type="button" id="s-yellow">Put the yellow sub back</button>
+      <button type="button" id="s-yellow">Put the teal sub back</button>
       <a href="../cozy-submarine/">Open Cozy Submarine</a>
     </div>
     <p class="cap" id="s-cap" aria-live="polite"></p>
@@ -313,8 +313,8 @@ textarea {
       <li><b>Art faces right.</b> The game flips it when you turn around, so draw the nose on the right and the stern on the left.</li>
       <li><b>The propeller finds its own place.</b> It goes two pixels behind the stern (your leftmost pixels), halfway up them. The grid shows it faintly in the strip on the left. It isn't part of the drawing, so it spins the same for every sub.</li>
       <li><b>Each light shines from its lens.</b> The sub has three lights, front, bottom, and rear, and each has its own swatch, with an arrow for the way it shines. Paint a lens where you want that beam to come out. With more than one, the outermost shines: the frontmost, the lowest, the rearmost. With none, the beam leaves from the nose, the middle of the keel, or the stern.</li>
-      <li><b>The keel sets the waterline.</b> The bottom of your drawing rides where the yellow sub's does, so a taller sub grows upward and still clears the sea floor, and a long one keeps its distance from the slopes.</li>
-      <li><b>Glowing colors light themselves.</b> Deep down there's no sunlight, and anything that doesn't glow fades to a shadow. The yellow sub's portholes glow so you can find it in the dark.</li>
+      <li><b>The keel sets the waterline.</b> The bottom of your drawing rides where the teal sub's does, so a taller sub grows upward and still clears the sea floor, and a long one keeps its distance from the slopes.</li>
+      <li><b>Glowing colors light themselves.</b> Deep down there's no sunlight, and anything that doesn't glow fades to a shadow. The teal sub's portholes glow so you can find it in the dark.</li>
     </ul>
   </section>
 
@@ -331,22 +331,22 @@ let reduced = false;
 const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 reduced = motionQuery.matches;
 
-// ---------- The yellow sub ----------
+// ---------- The teal sub ----------
 // Cozy Submarine's sub, exactly as public/cozy-submarine/index.html has it. change both together
 const SUB_ROWS = [
-  '           Dd       ',
-  '           DD       ',
-  '       DDDDDDDD     ',
-  '       DhYYYYYD     ',
-  '   DDDDYYYYYYYYDDD  ',
-  '  ThhYYYYYYYYYYYYYD ',
-  ' DYYPPYYYYPPYYYYYYYD',
-  ' DYYPPYYYYPPYYYYYYYL',
-  ' DyYYYYYYYYYYYYYYYD ',
-  '  DyyyyyyyyyyyyyyD  ',
-  '   DDDDDDDUDDDDDD   ',
+  '                    ',
+  '              DD    ',
+  '               D    ',
+  '               D    ',
+  '   DDDDDDDDDDDDDDD  ',
+  '  DYYYYYYYYYYYYYYYD ',
+  ' DhYPYPYPYPYPYPYPYhD',
+  ' DhYYYYYYYYYYYYYYYhL',
+  ' DyyYYYYYYYYYYYYYyDD',
+  '  DyyyyyyyyyyyyyyDD ',
+  '   DDDDDDDDDDDDDDD  ',
 ];
-const SUB_PAL = { D: '#3B2A1C', d: '#7A6A58', Y: '#F2C14E', h: '#FFE6A3', y: '#C98E32', P: '*#FFC56A' };
+const SUB_PAL = { D: '#696969', d: '#7A6A58', Y: '#008799', h: '#9E9E9E', y: '#005661', P: '*#FFC56A' };
 // the lights' lenses, which the game colors itself: L the front light, U the one underneath, T the rear
 const LENS = "LUT", LENS_OFF = '#8A8676', LENS_ON = '#FFF7DA';
 const LIGHTS = [
@@ -899,7 +899,7 @@ $("m-up").addEventListener("click", () => shift(0, -1));
 $("m-down").addEventListener("click", () => shift(0, 1));
 $("o-yellow").addEventListener("click", () => {
   begin(); art = yellowSub(); settle(); commit();
-  say("Back to the yellow sub. Undo brings your drawing back.");
+  say("Back to the teal sub. Undo brings your drawing back.");
 });
 $("o-clear").addEventListener("click", () => {
   begin(); for (const r of art.cells) r.fill(" "); commit();
@@ -925,7 +925,7 @@ function drawStatus() {
   const there = stored(SUB_KEY);
   let mine = false;
   try { mine = there !== null && JSON.stringify(JSON.parse(there).rows) === JSON.stringify(toData(art).rows) && JSON.stringify(JSON.parse(there).palette) === JSON.stringify(toData(art).palette); } catch (e) {}
-  $("s-status").textContent = there === null ? "Cozy Submarine is sailing the yellow sub."
+  $("s-status").textContent = there === null ? "Cozy Submarine is sailing the teal sub."
     : mine ? "Cozy Submarine is sailing this drawing."
     : "Cozy Submarine is sailing a sub of yours, but not quite this drawing.";
   $("s-yellow").disabled = there === null;
@@ -942,7 +942,7 @@ $("s-send").addEventListener("click", () => {
 });
 $("s-yellow").addEventListener("click", () => {
   try { localStorage.removeItem(SUB_KEY); } catch (e) {}
-  $("s-cap").textContent = "Cozy Submarine is back to the yellow sub. Your drawing here is untouched.";
+  $("s-cap").textContent = "Cozy Submarine is back to the teal sub. Your drawing here is untouched.";
   drawStatus();
 });
 window.addEventListener("storage", (e) => { if (e.key === SUB_KEY || e.key === null) drawStatus(); });
