@@ -154,18 +154,20 @@ kbd { font: inherit; font-size: 10px; border: 1px solid #3B5A64; padding: 0 3px;
     <button type="button" class="chip" id="menu-close" aria-keyshortcuts="Escape">Close</button>
   </div>
   <h3>The ocean</h3>
-  <p>The link in your address bar shares this ocean and its era, and the sky too if you pick one below.</p>
+  <p>The link in your address bar shares this ocean and its world, and the sky too if you pick one below.</p>
   <div class="group">
     <button type="button" class="chip" id="newsea">New ocean</button>
     <button type="button" class="chip" id="sound" aria-pressed="false" aria-keyshortcuts="M">Sound</button>
   </div>
   <div class="group" role="group" aria-labelledby="era-label">
-    <span class="glabel" id="era-label">Era</span>
+    <span class="glabel" id="era-label">World</span>
     <button type="button" class="chip" id="era-today" aria-pressed="true">Today</button>
     <button type="button" class="chip" id="era-prehistoric" aria-pressed="false">Prehistoric</button>
     <button type="button" class="chip" id="era-ammonites" aria-pressed="false">Oops, all ammonites</button>
+    <button type="button" class="chip" id="era-cave" aria-pressed="false">Cave</button>
   </div>
   <p>Prehistoric takes this ocean back 80 million years, to the Cretaceous: ammonites and sea reptiles, warmer water, no polar ice, and nobody home on the islands. Oops, all ammonites is the same sea, but every animal is an ammonite, and so are you.</p>
+  <p>Cave trades the open sea for a flooded limestone cave under the jungle. Sinkholes called cenotes let daylight down to the water every so often, and between them it's dark enough to need your lights. Look for axolotls.</p>
   <h3>The sky</h3>
   <div class="group" role="group" aria-labelledby="time-label">
     <span class="glabel" id="time-label">Time</span>
@@ -262,10 +264,11 @@ const freshSeed = () => ((Math.random() * 4294967295) >>> 0) || 1;
 // any ocean can be sailed today or 80 million years ago, in the Cretaceous: the same floor and islands,
 // with its own animals, warmer water, no polar ice, and nobody living on the islands. Oops, all
 // ammonites is the Cretaceous again, with every animal (and the sub) drawn as an ammonite. the era
-// rides in the link beside the ocean, the way a pinned sky does
-const ERAS = ['today', 'prehistoric', 'ammonites'];
-let ERA = 'today';
-const past = () => ERA !== 'today';
+// rides in the link beside the ocean, the way a pinned sky does. the cave rides in the same spot: it
+// isn't an era, but it is another world for the same seed, with a floor, roof, and animals of its own
+const ERAS = ['today', 'prehistoric', 'ammonites', 'cave'];
+let ERA = 'today', CAVE = false;
+const past = () => ERA === 'prehistoric' || ERA === 'ammonites';
 
 // ---------- Depth scale ----------
 // real meters, squashed: half a meter per pixel at the surface, about three at the bottom of a trench.
@@ -276,8 +279,10 @@ const mOf = (y) => y >= 0 ? D0 * Math.expm1(y / KY) : y / 2;
 const MIN_FLOOR = yOf(8), SHORE_Y = yOf(9);
 
 // ---------- The sea floor ----------
-// broad basins and shallow seas, continental slopes between them, seamounts, and now and then a trench
-function baseFloor(x) {
+// broad basins and shallow seas, continental slopes between them, seamounts, and now and then a trench.
+// the cave has a floor of its own (see the flooded cave)
+const baseFloor = (x) => CAVE ? caveFloor(x) : oceanFloor(x);
+function oceanFloor(x) {
   const m = fbm(x / 10000, SEED + 1);
   const shallow = 16 + 130 * fbm(x / 1700, SEED + 2) ** 2;
   const abyss = 3800 + 2400 * fbm(x / 2600, SEED + 3);
@@ -317,7 +322,10 @@ const climate = (x) => { const v = climV(x); return v < 0.4 ? 'cold' : v > 0.6 ?
 // below a well-mixed top layer it cools fast, and under 1,000 m it's 2 to 4 °C everywhere.
 // the Cretaceous sea was warmer all through: about 10 °C at the surface near the poles, over 30 °C in
 // the tropics, and around 10 °C in the deep
+// cave water barely changes all year: about 24 °C in the fresh water on top, a little warmer in the
+// salt water under the halocline
 function seaTemp(x, m) {
+  if (CAVE) return 24.2 + 1.4 * smooth(-1.5, 1.5, m - haloM(x));
   const v = climV(x);
   const top = past() ? clamp(11 + (v - 0.2) * 40, 10, 34) : clamp(-1 + (v - 0.2) * 50, -1.5, 29);
   const deep = (past() ? 9 : 2) + 2.5 * Math.exp(-m / 1200);
@@ -357,6 +365,7 @@ const ISLE = 1700;
 const isleCache = new Map();
 function isleAt(c) {
   if (isleCache.has(c)) return isleCache.get(c);
+  if (CAVE) { isleCache.set(c, null); return null; }
   const r = (k) => h3(c, SEED, 100 + k);
   const cx = Math.round(c * ISLE + 250 + r(1) * (ISLE - 500));
   const cl = climate(cx);
@@ -406,6 +415,78 @@ function ventAt(c) {
   return f;
 }
 
+// ---------- The flooded cave ----------
+// a limestone cave under the jungle, flooded up to the water table at y 0. a rock roof covers the water,
+// and every CEN or so the roof has fallen in to make a cenote, a sinkhole open to the sky: sometimes a
+// straight well, sometimes a bell that widens under its lip, often with a mound of fallen rock under it.
+// between cenotes the roof now and then rises above the water into a dark air pocket. all in pixels,
+// with the rock between groundY (the jungle floor) and ceilY (the underside of the roof)
+const CEN = 1000, CAVE_GAP = 36;
+const cenCache = new Map(), ceilCache = new Map();
+function cenAt(c) {
+  if (cenCache.has(c)) return cenCache.get(c);
+  const r = (k) => h3(c, SEED, 500 + k);
+  const cx = Math.round(c * CEN + 250 + r(1) * (CEN - 500));
+  const wo = 9 + Math.round(r(2) * 18), bell = r(3) < 0.35 ? 0 : Math.round(8 + r(4) * 34);
+  const f = { cx, wo, bell, half: wo + bell, mound: r(5) < 0.65, top: 9 + r(6) * 9, roots: [], lilies: [], log: r(7) < 0.5 ? Math.round((r(8) - 0.5) * wo) : null, room: null };
+  // roots hang down the walls from the jungle above, and a few lilies float in the sun
+  if (r(9) < 0.7) for (let i = 0; i < 4 + Math.floor(r(10) * 8); i++) {
+    const side = r(20 + i) < 0.5 ? -1 : 1;
+    f.roots.push({ dx: side * Math.round(wo - 1 - r(40 + i) * Math.min(7, wo - 2)), more: Math.round(r(60 + i) * 14) - 6 });
+  }
+  if (r(11) < 0.5) for (let i = 0; i < 2 + Math.floor(r(12) * 4); i++) f.lilies.push(Math.round((r(80 + i) * 2 - 1) * (wo - 3)));
+  // the air pocket sits about where this stretch meets the next one, well clear of both cenotes
+  if (r(13) < 0.45) f.room = { cx: Math.round((c + 1) * CEN + (r(14) - 0.5) * 120), w: Math.round(24 + r(15) * 30), h: 8 + r(16) * 12, glow: r(17) < 0.5 };
+  cenCache.set(c, f);
+  return f;
+}
+// how far x is from the edge of the nearest cenote's opening, below zero inside it
+function cenDist(x) {
+  const c = Math.floor(x / CEN);
+  let d = Infinity;
+  for (let k = c - 1; k <= c + 1; k++) { const f = cenAt(k); d = Math.min(d, Math.abs(x - f.cx) - f.wo); }
+  return d;
+}
+// how much daylight gets in: all of it under an opening, fading into the cave beside it, and spreading
+// a little wider the deeper it goes
+const openFrom = (d, y) => d <= 0 ? 1 : Math.exp(-d / (y < 0 ? 16 : 14 + 0.45 * y));
+const openAt = (x, y) => openFrom(cenDist(x), y);
+const groundY = (x) => Math.round(-(26 + 14 * fbm(x / 700, SEED + 33)) + (n1(x / 7, SEED + 34) - 0.5) * 2);
+function caveFloor(x) {
+  let m = 20 + 50 * fbm(x / 1100, SEED + 30) ** 1.3;
+  // now and then the floor drops into a deep pit
+  m = lerp(m, 80 + 80 * n1(x / 300, SEED + 32), smooth(0.8, 0.9, n1(x / 1700, SEED + 31)));
+  let y = yOf(m);
+  const f = cenAt(Math.floor(x / CEN));
+  if (f.mound) y = Math.min(y, yOf(f.top) + Math.abs(x - f.cx) * 0.55);
+  return y;
+}
+function ceilY(x) {
+  x = Math.round(x);
+  let y = ceilCache.get(x);
+  if (y !== undefined) return y;
+  if (ceilCache.size > 60000) ceilCache.clear();
+  const G = groundY(x), c = Math.floor(x / CEN), f = cenAt(c);
+  y = yOf(2.5 + 13 * fbm(x / 380, SEED + 25)) + (n1(x / 9, SEED + 26) - 0.5) * 3;
+  // a dome of air under the roof, with at least a few pixels of rock over it
+  for (let k = c - 1; k <= c; k++) {
+    const rm = cenAt(k).room;
+    if (!rm) continue;
+    const u = Math.abs(x - rm.cx) / rm.w;
+    if (u < 1) y = Math.min(y, Math.max(G + 6, -rm.h * Math.sqrt(1 - u * u) + 2 + (n1(x / 5, SEED + 27) - 0.5) * 2));
+  }
+  // the cenote: open all the way up, then a thin lip curving down into the roof under a bell
+  const d = Math.abs(x - f.cx);
+  if (d < f.wo) y = G - 1;
+  else if (d < f.half) y = Math.min(y, lerp(G + 3, y, ((d - f.wo) / f.bell) ** 2));
+  // the cave always leaves room for the biggest sub to pass
+  y = Math.round(Math.min(y, floorY(x) - CAVE_GAP));
+  ceilCache.set(x, y);
+  return y;
+}
+// where fresh rainwater floats on salt water from the sea, about 20 m down
+const haloM = (x) => 17 + 5 * n1(x / 900, SEED + 35);
+
 // ---------- Sky clock ----------
 // day, night, and the weather run on the wall clock, shifted by the seed: everyone in one ocean
 // sees the same sky at the same moment, while another ocean can be having a stormy night
@@ -441,7 +522,8 @@ function readSky(now) {
   SKY.storm = smooth(0.6, 0.85, SKY.wI);
   SKY.dl = (0.1 + 0.9 * SKY.day) * (1 - 0.45 * SKY.storm);
   SKY.above = (0.3 + 0.7 * SKY.day) * (1 - 0.35 * SKY.storm);
-  SKY.amp = (0.6 + 5.4 * SKY.wI ** 1.7) * (reduced ? 0.45 : 1);
+  // the water in a cave lies nearly still, whatever the weather up above
+  SKY.amp = CAVE ? 0.25 + 0.3 * SKY.wI : (0.6 + 5.4 * SKY.wI ** 1.7) * (reduced ? 0.45 : 1);
 }
 const weatherName = () => SKY.wI < 0.38 ? 'calm' : SKY.wI < 0.66 ? 'rough seas' : 'storm';
 function timeName() {
@@ -467,6 +549,12 @@ const C = {
   ice: hex('#F3F9FC'), ice2: hex('#CFE3EF'), ice3: hex('#A6CCE2'), iceDeep: hex('#86BCD8'),
   cloudDay: hex('#F4F6F8'), cloudNight: hex('#39466A'), cloudDusk: hex('#F0C2AE'), cloudStorm: hex('#5E6873'),
   foam: hex('#F2FAFB'), surf: hex('#DDF3F6'),
+  // the flooded cave: pale limestone, white silt, jungle on top, and clear blue-green water
+  grass: hex('#4E9A3E'), grass2: hex('#3D8034'), soil: hex('#8A4E30'),
+  lime: hex('#B9AD90'), lime2: hex('#A79B7E'), limeIn: hex('#8E8268'), limeIn2: hex('#81765E'),
+  wall: hex('#9C9076'), wall2: hex('#8C8068'), silt: hex('#D6CCB0'), silt2: hex('#BBAE90'),
+  stal: hex('#DDD2B8'), stal2: hex('#C4B79A'), root: hex('#6A4A2E'), root2: hex('#563C24'),
+  caveTop: hex('#3FC0C8'), caveMid: hex('#1F7E9A'), caveDeep: hex('#155774'), halo: hex('#8ED8C4'),
 };
 
 // ---------- Sprites ----------
@@ -544,7 +632,9 @@ function subGeometry(s, rows) {
   at.front = outer('front', ([i]) => i, [right, hub]);
   at.bottom = outer('bottom', ([i, j]) => j * 100 - Math.abs(i - cx), [cx, bottom]);
   at.rear = outer('rear', ([i]) => -i, [left, hub]);
-  return { w, left, cx, oy: 4 - bottom, hub, lens, at, half: Math.ceil((right - left) / 2) + 1 };
+  let top = 0;
+  while (top < s.h && ![...Array(w).keys()].some((i) => fr.c[top * w + i] >= 0)) top++;
+  return { w, left, cx, oy: 4 - bottom, top, hub, lens, at, half: Math.ceil((right - left) / 2) + 1 };
 }
 function fitSub(pal, rows) {
   SUB = spr({ ...pal, L: LENS_OFF, U: LENS_OFF, T: LENS_OFF }, rows);
@@ -1138,6 +1228,133 @@ const SPRITES = {
       "   DbDbDbDDYhYhYDD  ",
       "          DDUDDD    "
     ]
+  ] },
+  "axolotl": { "name": "Axolotl", "use": "Swims, or walks the floor, from 0 to 70 m in the cave, in its wild olive colors", "palette": { "b": "#5E6A44", "B": "#76805A", "g": "#8A5268", "f": "~#7E8A62", "l": "#58623E", "k": "#D8C060" }, "frames": [
+    [
+      "         g g   ",
+      "        g ggg  ",
+      " ff  bbbbbbbbb ",
+      "fffbbbbbbbbbbkb",
+      " ff  BBBBBBBBBb",
+      "     l    l    "
+    ],
+    [
+      "         g g   ",
+      "        g ggg  ",
+      "ff   bbbbbbbbb ",
+      " ffbbbbbbbbbbkb",
+      "ff   BBBBBBBBBb",
+      "      l    l   "
+    ]
+  ] },
+  "axolotlPink": { "name": "Pink axolotl", "use": "Swims, or walks the floor, from 0 to 70 m in the cave. The axolotl's drawing in the pale pink of most pets", "like": "axolotl", "palette": { "b": "#F4B6C4", "B": "#E89CB0", "g": "#D9466E", "f": "~#F8D0DA", "l": "#EAA0B4", "k": "#2A1418" } },
+  "axolotlGold": { "name": "Golden axolotl", "use": "Swims from 0 to 70 m in the cave, a rare sight. The axolotl's drawing as a golden albino", "like": "axolotl", "palette": { "b": "#F2D47A", "B": "#E6BE5E", "g": "#F09A66", "f": "~#F6E2A4", "l": "#E8C66E", "k": "#D87878" } },
+  "olm": { "name": "Olm", "use": "Swims from 5 to 120 m in the dark of the cave", "palette": { "s": "#F2DCD0", "t": "~#F6E4DA", "r": "#E4687A", "n": "#E8C8BA", "l": "#ECD2C6" }, "frames": [
+    [
+      "            r r  ",
+      "ttssssssssssssssn",
+      "    l      l     "
+    ],
+    [
+      "            r r  ",
+      "ttssssssssssssssn",
+      "     l      l    "
+    ]
+  ] },
+  "blindSalamander": { "name": "Texas blind salamander", "use": "Walks the floor from 10 to 100 m in the dark of the cave", "palette": { "s": "#F4F2EC", "t": "#E6E2DA", "r": "#E8667A", "n": "#EEEAE2", "l": "#E2DED6", "k": "#8A8890" }, "frames": [
+    [
+      "        r r  ",
+      "ttssssssssksn",
+      "  l  l   l  l",
+      " l  l   l  l "
+    ],
+    [
+      "        r r  ",
+      "ttssssssssksn",
+      "   l l    l l",
+      "   l l    l l"
+    ]
+  ] },
+  "cavefish": { "name": "Blind cavefish", "use": "Swims in groups of 4 to 10 from 0 to 150 m in the dark of the cave. e is where an eye would be", "palette": { "p": "#F2D8D2", "P": "#E6C0B8", "t": "#E8BCB2", "e": "#EBCBC4" }, "frames": [
+    [
+      "  ppp ",
+      "tppppe",
+      "  pP  "
+    ]
+  ] },
+  "tetra": { "name": "Mexican tetra", "use": "Swims in groups of 4 to 10 from 0 to 25 m in a cenote's daylight. The blind cavefish's drawing, with eyes", "like": "cavefish", "palette": { "p": "#C4C6A8", "P": "#A8AA8C", "t": "#E0A848", "e": "#141414" } },
+  "caveShrimp": { "name": "Cave shrimp", "use": "Swims in groups of 5 to 12 from 0 to 150 m in the cave", "palette": { "s": "~#E6EEF2", "t": "~#CCD8DE", "l": "~#D6E0E6", "a": "~#BCCAD2" }, "frames": [
+    [
+      "tsssa",
+      " l l "
+    ],
+    [
+      "tsssa",
+      "l l  "
+    ]
+  ] },
+  "remipede": { "name": "Remipede", "use": "Swims upside down from 15 to 150 m in the dark of the cave", "palette": { "b": "#EEE6D6", "t": "#D8CDB9", "l": "#E2D8C6", "h": "#E8DCCB", "a": "#CABDA6" }, "frames": [
+    [
+      "  l l l l  ",
+      "ttbbbbbbbha"
+    ],
+    [
+      " l l l l   ",
+      "ttbbbbbbbha"
+    ]
+  ] },
+  "crayfish": { "name": "Cave crayfish", "use": "Crawls the floor from 5 to 160 m in the dark of the cave", "palette": { "w": "#F2EEE6", "t": "#E2DCD0", "c": "#F4E6DC", "a": "#D6CEC2", "l": "#DCD6CA" }, "frames": [
+    [
+      "       a  a",
+      "twwwwwww cc",
+      "ttwwwwwwwc ",
+      "  l l l l  "
+    ],
+    [
+      "       a  a",
+      "twwwwwww cc",
+      "ttwwwwwwwc ",
+      " l l l l   "
+    ]
+  ] },
+  "brotula": { "name": "Blind brotula", "use": "Swims from 10 to 150 m in the dark of the cave", "palette": { "b": "#E8C8B4", "f": "~#F0DACC", "n": "#DCB49E" }, "frames": [
+    [
+      "  fffffff   ",
+      "fbbbbbbbbbbn",
+      "  ffffff    "
+    ]
+  ] },
+  "catfish": { "name": "Cenote catfish", "use": "Swims from 0 to 40 m in the cave, in daylight or out of it", "palette": { "d": "#6E6A5E", "l": "#A8A292", "t": "#5E5A50", "k": "#141412", "b": "#8A8474" }, "frames": [
+    [
+      "      dd      ",
+      "tt dddddddddd ",
+      "ttddddddddddkd",
+      "t   llllll  bb"
+    ]
+  ] },
+  "cichlid": { "name": "Mayan cichlid", "use": "Swims in groups of 1 to 3 from 0 to 15 m in a cenote's daylight", "palette": { "d": "#8E9C50", "b": "#3E4A2A", "r": "#D85A3C", "o": "#1E2416", "k": "#141410" }, "frames": [
+    [
+      "   dd   ",
+      "d dbdbd ",
+      "oddbdbdk",
+      "d rrrrr ",
+      "   rr   "
+    ]
+  ] },
+  "slider": { "name": "Mesoamerican slider", "use": "Swims from 0 to 12 m in a cenote's daylight. The green sea turtle's drawing in its own colors", "like": "turtle", "palette": { "B": "#3E4A2E", "b": "#5E6E3A", "s": "#8A9A5A", "k": "#141810" } },
+  "caveDiver": { "name": "Cave diver", "use": "Swims from 3 to 120 m in the cave, a rare sight, breathing out bubbles as it goes", "palette": { "T": "#E8C040", "k": "#1E2228", "h": "#2C3038", "m": "#8FD0E0", "f": "#2E70C8", "a": "#D8A07A", "L": "*#FFF4C8" }, "frames": [
+    [
+      "      TTTTTTT     ",
+      "f  kkkkkkkkkkkhh  ",
+      "ffkkkkkkkkkkkkhmm ",
+      "f         kkkkkkaL"
+    ],
+    [
+      "      TTTTTTT     ",
+      "   kkkkkkkkkkkhh  ",
+      "fkkkkkkkkkkkkkhmm ",
+      "ff        kkkkkkaL"
+    ]
   ] }
 };
 // a sprite "like" another borrows that one's frames and brings its own palette
@@ -1146,8 +1363,9 @@ const ART = Object.fromEntries(Object.entries(SPRITES).map(([id, s]) => [id, spr
 // ---------- Animals ----------
 // min and max are depths in meters. weight is how often each turns up among those that fit.
 // name and note come up whenever one comes near the sub, and a rare one names itself with its rare line.
-// era 'now' lives only in today's ocean and 'then' only in the prehistoric one. the rest turn up in
-// both: drifters and crawlers whose kind is older than the ammonites, and the animals of the deep
+// era 'now' lives only in today's ocean, 'then' only in the prehistoric one, and 'cave' only in the
+// flooded cave. the rest turn up in both oceans: drifters and crawlers whose kind is older than the
+// ammonites, and the animals of the deep
 const SPECIES = [
   { id: 'sardine', art: 'sardine', era: 'now', min: 0, max: 200, weight: 3, speed: [10, 16], school: [8, 16], bob: 3,
     name: 'Sardines', note: 'Little silver fish that swim in schools of thousands and turn as one.' },
@@ -1242,6 +1460,42 @@ const SPECIES = [
     name: 'Elasmosaurus', note: 'Its neck alone was about 7 m long, with more than 70 bones in it.' },
   { id: 'platyceramus', art: 'platyceramus', era: 'then', floor: true, min: 20, max: 500, weight: 0.8, speed: [0, 0],
     name: 'Platyceramus', note: 'A clam up to 3 m across. Small fish have been found fossilized inside its shell.' },
+  // the flooded cave. light 'day' turns up only where a cenote lets daylight in, and 'dark' only
+  // beyond it. breathes puts out a stream of bubbles
+  { id: 'axolotl', art: 'axolotl', era: 'cave', min: 0, max: 70, weight: 2.2, speed: [2, 5], school: [1, 2], bob: 3, fps: 2,
+    name: 'Axolotl', note: 'A salamander that never grows up. It keeps its feathery gills and stays in the water all its life.' },
+  { id: 'axolotlwalk', art: 'axolotl', era: 'cave', floor: true, min: 0, max: 70, weight: 1.6, speed: [1, 2.5], fps: 3,
+    name: 'Axolotl', note: 'It walks the bottom on four little legs, and can grow back a lost leg, its gills, even parts of its heart.' },
+  { id: 'axolotlpink', art: 'axolotlPink', era: 'cave', min: 0, max: 70, weight: 1.4, speed: [2, 5], bob: 3, fps: 2,
+    name: 'Pink axolotl', note: 'Most pet axolotls are this pale pink. Wild ones are dark olive, and live only in the canals of Lake Xochimilco, in Mexico City.' },
+  { id: 'axolotlpinkwalk', art: 'axolotlPink', era: 'cave', floor: true, min: 0, max: 70, weight: 1, speed: [1, 2.5], fps: 3,
+    name: 'Pink axolotl', note: 'Its smile is only the shape of its mouth. It sucks in worms, snails, and little fish whole.' },
+  { id: 'axolotlgold', art: 'axolotlGold', era: 'cave', min: 0, max: 70, weight: 0.4, speed: [2, 4], bob: 3, fps: 2, rare: 'A golden axolotl!',
+    name: 'Golden axolotl', note: 'A golden albino, bred by axolotl keepers. With no dark color anywhere, even its eyes are pale.' },
+  { id: 'olm', art: 'olm', era: 'cave', light: 'dark', min: 5, max: 120, weight: 1.2, speed: [2, 4], bob: 2, fps: 1.5,
+    name: 'Olm', note: 'A blind cave salamander from Europe, pale as a candle. Some are thought to live past 100 years.' },
+  { id: 'blindsalamander', art: 'blindSalamander', era: 'cave', light: 'dark', floor: true, min: 10, max: 100, weight: 0.8, speed: [1, 2], fps: 3,
+    name: 'Texas blind salamander', note: 'It lives only in the flooded caves under San Marcos, Texas. Its eyes are two dark specks under the skin.' },
+  { id: 'cavefish', art: 'cavefish', era: 'cave', light: 'dark', min: 0, max: 150, weight: 2.5, speed: [5, 9], school: [4, 10], bob: 2,
+    name: 'Blind cavefish', note: 'Its eyes start to grow, then sink back under the skin. Its cousins in the rivers outside can still see.' },
+  { id: 'tetra', art: 'tetra', era: 'cave', light: 'day', min: 0, max: 25, weight: 2, speed: [6, 10], school: [4, 10], bob: 2,
+    name: 'Mexican tetra', note: 'The same kind of fish as the blind cavefish, but with eyes. The two can still have young together.' },
+  { id: 'caveshrimp', art: 'caveShrimp', era: 'cave', min: 0, max: 150, weight: 1.8, speed: [2, 4], school: [5, 12], bob: 3, fps: 3,
+    name: 'Cave shrimp', note: 'Blind and clear as glass. It grazes on the thin film of bacteria that grows in the dark.' },
+  { id: 'remipede', art: 'remipede', era: 'cave', light: 'dark', min: 15, max: 150, weight: 0.7, speed: [2, 3], bob: 1, fps: 4,
+    name: 'Remipede', note: 'A blind cave crustacean first found in 1979. It swims on its back and has venom in its fangs.' },
+  { id: 'crayfish', art: 'crayfish', era: 'cave', light: 'dark', floor: true, min: 5, max: 160, weight: 1.2, speed: [1, 2.5], fps: 4,
+    name: 'Cave crayfish', note: 'White and blind. It finds its way by touch and taste, sweeping its long feelers ahead.' },
+  { id: 'brotula', art: 'brotula', era: 'cave', light: 'dark', min: 10, max: 150, weight: 0.9, speed: [3, 5], bob: 1,
+    name: 'Blind brotula', note: 'A blind fish of the caves of Yucatán. It feels the water move around it to find its food.' },
+  { id: 'catfish', art: 'catfish', era: 'cave', min: 0, max: 40, weight: 1, speed: [3, 6], bob: 1,
+    name: 'Cenote catfish', note: 'It swims out of the daylight and into the caves, tasting its way along with its whiskers.' },
+  { id: 'cichlid', art: 'cichlid', era: 'cave', light: 'day', min: 0, max: 15, weight: 1.4, speed: [5, 9], school: [1, 3], bob: 2,
+    name: 'Mayan cichlid', note: 'A red-throated fish of the Yucatán. The dark spot on its tail may fool a hungry fish into biting the wrong end.' },
+  { id: 'slider', art: 'slider', era: 'cave', light: 'day', min: 0, max: 12, weight: 0.5, speed: [4, 7], bob: 2,
+    name: 'Mesoamerican slider', note: 'A turtle that suns itself on rocks and slides into the water when startled, which is how it got its name.' },
+  { id: 'diver', art: 'caveDiver', era: 'cave', breathes: true, min: 3, max: 120, weight: 0.25, speed: [4, 7], bob: 1, fps: 1.5, rare: 'A cave diver!',
+    name: 'Cave diver', note: 'Cave divers unroll a thin guideline as they swim in, so they can follow it back out to daylight.' },
 ];
 for (const sp of SPECIES) {
   sp.spr = ART[sp.art];
@@ -1261,9 +1515,10 @@ function asAmmonite(sp) {
   return { ...sp, spr: art, leapSpr: sp.leap ? art : undefined, glows: glow, fps: sp.fps || 2, jet: !sp.floor };
 }
 const rosterFor = (era) =>
-  era === 'today' ? SPECIES.filter((sp) => sp.era !== 'then') :
-  era === 'prehistoric' ? SPECIES.filter((sp) => sp.era !== 'now') :
-  SPECIES.map(asAmmonite);
+  era === 'cave' ? SPECIES.filter((sp) => sp.era === 'cave') :
+  era === 'today' ? SPECIES.filter((sp) => !sp.era || sp.era === 'now') :
+  era === 'prehistoric' ? SPECIES.filter((sp) => !sp.era || sp.era === 'then') :
+  SPECIES.filter((sp) => sp.era !== 'cave').map(asAmmonite);
 let ROSTER = rosterFor('today');
 
 // ---------- State ----------
@@ -1290,17 +1545,25 @@ const SPEED_NAMES = ['Stopped', 'Dead slow', 'Slow', 'Half', 'Full'];
 let canvas = $('sea'), ctx = canvas.getContext('2d');
 let LW = 0, LH = 0, X0 = 0, Y0 = 0, img = null, out32 = null, colB = null, kindB = null;
 let surfI = null, rowAlb = null, rowAmb = null, rowM = null, skyRow = null;
-// rock is solid ground below the floor's skin, which the lamp doesn't reach into
-const K_SKY = 0, K_WATER = 1, K_SOLID = 2, K_GLOW = 3, K_ROCK = 4;
+// in the cave, each column's jungle floor, roof, and distance from a cenote's opening, and the sunbeams
+// coming down through the openings, RAY_PAD columns to either side so slanting ones still land
+let gI = null, cI = null, openD = null, rayA = null;
+const RAY_PAD = 320;
+// rock is solid ground below the floor's skin, which the lamp doesn't reach into. wall is the far wall
+// of a cenote or air pocket, seen through the air above the water in the cave
+const K_SKY = 0, K_WATER = 1, K_SOLID = 2, K_GLOW = 3, K_ROCK = 4, K_WALL = 5;
 
 // ---------- World start ----------
+// the ocean starts over shallow water, and the cave in the first cenote, bobbing in the sunlight
 function findStart() {
+  if (CAVE) return cenAt(0).cx;
   for (let x = 0; x < 600000; x += 150) if (mOf(baseFloor(x)) < 110) return x;
   return 0;
 }
+let started = false;
 function startWorld(seed) {
-  SEED = seed;
-  floorCache.clear(); isleCache.clear(); ventCache.clear();
+  SEED = seed; started = true;
+  floorCache.clear(); isleCache.clear(); ventCache.clear(); cenCache.clear(); ceilCache.clear();
   actors = []; parts = [];
   sub.x = home = findStart(); sub.y = 2; sub.vx = 0; sub.vy = 0;
   setFollow(false, true);
@@ -1311,12 +1574,16 @@ function startWorld(seed) {
   lastZone = ''; zoneSince = 0;
   sub.face = 1; setSpeed(1, true); showHeading();
 }
-// a new era keeps the sub where it is, clears away the other era's animals, and redraws the islands
-const ERA_GAUGE = { today: '', prehistoric: '80 million years ago', ammonites: 'Oops, all ammonites' };
+// a new era keeps the sub where it is, clears away the other era's animals, and redraws the islands.
+// going into the cave or back out to sea starts over at that world's start, since it's another place
+const ERA_GAUGE = { today: '', prehistoric: '80 million years ago', ammonites: 'Oops, all ammonites', cave: 'Flooded cave' };
 function setEra(e) {
+  const wasCave = CAVE;
   ERA = ERAS.includes(e) ? e : 'today';
+  CAVE = ERA === 'cave';
   ROSTER = rosterFor(ERA);
-  isleCache.clear(); floorCache.clear();
+  isleCache.clear(); floorCache.clear(); cenCache.clear(); ceilCache.clear();
+  if (CAVE !== wasCave && started) startWorld(SEED);
   actors = []; spawnIn = 0.3; rareAt = 0;
   hideCallout();
   loadSub();
@@ -1339,6 +1606,7 @@ function layout() {
   colB = new Int32Array(LW * LH); kindB = new Uint8Array(LW * LH);
   surfI = new Int32Array(LW);
   rowAlb = new Int32Array(LH); rowAmb = new Float32Array(LH); rowM = new Float32Array(LH); skyRow = new Int32Array(LH);
+  gI = new Int32Array(LW); cI = new Float32Array(LW); openD = new Float32Array(LW); rayA = new Float32Array(LW + 2 * RAY_PAD);
   if (oldW) sub.sx = sub.sx * LW / oldW;
   seedSnow(); seedRain();
 }
@@ -1408,6 +1676,22 @@ function tick(dt) {
   const float = waveY(sub.x, T) + 2;
   if (sub.y < float || (sub.y < float + 2 && wantVy <= 0)) { sub.y = float; if (sub.vy < 0) sub.vy = 0; }
 
+  // in the cave the roof holds the sub down, and a roof coming down ahead pushes it under
+  if (CAVE) {
+    const lift = SUBG.oy + SUBG.top - 2;
+    let roof = -Infinity;
+    for (let dx = -SUBG.half; dx <= SUBG.half; dx += 2) roof = Math.max(roof, ceilY(sub.x + dx));
+    if (Math.abs(sub.vx) > 0.5) {
+      // a shorter look ahead than the floor's, so you can still cruise around a cenote at the surface
+      const d = Math.sign(sub.vx), reach = 10 + Math.abs(sub.vx) * 0.45;
+      let ahead = -Infinity;
+      for (let s = SUBG.half; s <= SUBG.half + reach; s += 2) ahead = Math.max(ahead, ceilY(sub.x + d * s));
+      ahead -= lift - 1;
+      if (sub.y < ahead) sub.y += Math.min(ahead - sub.y, (30 + Math.abs(sub.vx) * 2.5) * dt);
+    }
+    roof -= lift;
+    if (sub.y < roof) { sub.y = roof; if (sub.vy < 0) sub.vy = 0; }
+  }
   // rise ahead of a climbing sea floor, and never sink into it
   let hard = Infinity;
   for (let dx = -SUBG.half; dx <= SUBG.half; dx += 2) hard = Math.min(hard, floorY(sub.x + dx));
@@ -1442,9 +1726,11 @@ function trySpawn() {
   const side = moving ? Math.sign(sub.vx) : (Math.random() < 0.5 ? -1 : 1);
   const edge = side > 0 ? cam.x + LW + 6 : cam.x - 6;
   const cl = climate(edge), fy = floorY(edge);
+  // in the cave, swimmers stay under the roof, and some keep to the daylight or the dark
+  const roof = CAVE ? Math.max(SKY.amp + 5, ceilY(edge) + 3) : SKY.amp + 5;
   // swimmers start somewhere in the water on screen. picked from the whole screen, most tries in
   // the shallows landed in the sky or the rock, which left only the floor crawlers to choose from
-  const top = Math.max(cam.y - 10, SKY.amp + 5), bot = Math.min(cam.y + LH + 10, fy - 2);
+  const top = Math.max(cam.y - 10, roof), bot = Math.min(cam.y + LH + 10, fy - 2);
   for (let tries = 0; tries < 4; tries++) {
     const sy = top + Math.random() * Math.max(0, bot - top);
     const cands = []; let tot = 0;
@@ -1458,10 +1744,11 @@ function trySpawn() {
         y = fy - sp.spr.h;
       } else {
         y = sy;
-        if (y < SKY.amp + 5 || y + sp.spr.h + (sp.school ? 8 : 0) > fy - 2) continue;
+        if (y < roof + (sp.school ? 8 : 0) || y + sp.spr.h + (sp.school ? 8 : 0) > fy - 2) continue;
       }
       const m = mOf(sp.floor ? fy : y + sp.spr.h / 2);
       if (m < sp.min || m > sp.max) continue;
+      if (sp.light) { const day = openAt(edge, sp.floor ? fy : y); if (sp.light === 'day' ? day < 0.3 : day > 0.15) continue; }
       cands.push([sp, y]); tot += sp.weight;
     }
     if (!cands.length) continue;
@@ -1499,8 +1786,11 @@ function moveActors(dt) {
       a.y += Math.sin(a.t * 0.9 + a.ph) * (sp.bob || 0) * dt;
       const lo = floorY(a.x + a.span / 2) - sp.spr.h - (a.members.length > 1 ? 9 : 2);
       if (a.y > lo) a.y = lo;
-      const hi = SKY.amp + 4 + (a.members.length > 1 ? 8 : 0);
+      let hi = SKY.amp + 4;
+      if (CAVE) hi = Math.max(hi, ceilY(a.x) + 2, ceilY(a.x + a.span / 2) + 2, ceilY(a.x + a.span) + 2);
+      hi += a.members.length > 1 ? 8 : 0;
       if (a.y < hi) a.y = hi;
+      if (sp.breathes && Math.random() < dt * 1.4) exhale(a);
     }
   }
   actors = actors.filter((a) => a.x > cam.x - 260 - a.span && a.x < cam.x + LW + 260 && a.y > cam.y - LH * 1.5 && a.y < cam.y + LH * 2.5);
@@ -1512,6 +1802,12 @@ function puff(a) {
   const bx = a.face > 0 ? x - 1 : x + sp.spr.w, by = y + sp.spr.h * 0.6;
   if (bx < cam.x - 10 || bx > cam.x + LW + 10 || by < cam.y - 10 || by > cam.y + LH + 10 || by < waveY(bx, T) + 2) return;
   parts.push({ type: 'bub', x: bx, y: by, vx: -a.face * rand(8, 16), vy: -rand(3, 8), life: 2 });
+}
+// a diver breathes out a burst of bubbles from the front of the mask, and they rise
+function exhale(a) {
+  const sp = a.sp, [x, y] = memberAt(a, a.members[0]);
+  const bx = a.face > 0 ? x + sp.spr.w - 2 : x + 1;
+  for (let i = 0; i < 3; i++) parts.push({ type: 'bub', x: bx + rand(-1, 1), y: y + 1 + rand(-1, 1), vx: rand(-2, 2), vy: -rand(10, 18), life: 4 });
 }
 // where one animal of a group is, by its top-left corner. a leaping one rides its arc on top of that
 function memberAt(a, mb) {
@@ -1598,7 +1894,11 @@ function moveParts(dt) {
   }
   for (const p of parts) {
     p.life -= dt;
-    if (p.type === 'bub') { p.x += (p.vx + Math.sin(p.life * 7) * 4) * dt; p.vx *= 1 - dt; p.y += p.vy * dt; if (p.y < waveY(p.x, T) + 1) p.life = 0; }
+    if (p.type === 'bub') {
+      p.x += (p.vx + Math.sin(p.life * 7) * 4) * dt; p.vx *= 1 - dt; p.y += p.vy * dt;
+      // in the cave, bubbles gather under the roof and break there
+      if (p.y < waveY(p.x, T) + 1 || (CAVE && p.y < ceilY(p.x) + 1)) p.life = 0;
+    }
     else if (p.type === 'smoke') { p.x += p.vx * dt; p.y += p.vy * dt; p.vx += rand(-3, 3) * dt; p.vy *= 1 - dt * 0.25; }
     else if (p.type === 'spray') { p.vy += 110 * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.vy > 0 && p.y > waveY(p.x, T)) p.life = 0; }
     else { p.x += p.vx * dt; p.y += p.vy * dt; }
@@ -1618,7 +1918,7 @@ function moveParts(dt) {
   // lightning, and thunder a moment later
   flash = Math.max(0, flash - dt * 4);
   if (bolt) { bolt.life -= dt; if (bolt.life <= 0) bolt = null; }
-  if (!reduced && SKY.wI > 0.74 && Math.random() < dt * (SKY.wI - 0.72) * 1.4) {
+  if (!reduced && !CAVE && SKY.wI > 0.74 && Math.random() < dt * (SKY.wI - 0.72) * 1.4) {
     flash = 1;
     const pts = [];
     let x = Math.random() * LW;
@@ -1816,14 +2116,17 @@ function sediment(m, cv) {
   if (m < 5000) return mix(C.ooze, C.abyssMud, smooth(1500, 5000, m));
   return mix(C.abyssMud, C.hadal, smooth(5000, 8000, m));
 }
+// the cave's floor is white limestone silt, a little darker in the deep pits
+const caveSilt = (m) => mix(C.silt, C.silt2, smooth(10, 120, m));
 function drawFloor() {
+  const rock = CAVE ? C.limeIn : C.rock;
   for (let i = 0; i < LW; i++) {
     const wx = X0 + i, fy = Math.round(floorY(wx)), j0 = fy - Y0;
     if (j0 >= LH) continue;
-    const top = sediment(mOf(fy), climV(wx));
+    const top = CAVE ? caveSilt(mOf(fy)) : sediment(mOf(fy), climV(wx));
     for (let j = Math.max(0, j0); j < LH; j++) {
       const d = j - j0, h = h3(wx, Y0 + j, 3);
-      let c = d === 0 ? shade(top, 1.12) : d < 3 + (h < 0.3 ? 1 : 0) ? top : mix(top, C.rock, smooth(2, 10, d));
+      let c = d === 0 ? shade(top, 1.12) : d < 3 + (h < 0.3 ? 1 : 0) ? top : mix(top, rock, smooth(2, 10, d));
       if (h > 0.55) c = shade(c, 0.9);
       put(i, j, c, d < 3 ? K_SOLID : K_ROCK);
     }
@@ -1885,6 +2188,130 @@ function drawDecor() {
       else { for (let b = 1; b <= 6; b++) put(i, j - b, hex('#A8889A')); for (const [a, b] of [[-1, 7], [1, 7], [-2, 8], [2, 8], [0, 7]]) put(i + a, j - b, hex('#C9A0D0')); }
     } else if (m >= 250 && h > 0.1 && h < 0.11) {
       for (let a = 0; a < 3; a++) { put(i + a, j, hex('#4A4644')); if (a === 1) put(i + a, j - 1, hex('#5A5654')); }
+    }
+  }
+}
+// ---------- Drawing the cave ----------
+// the rock from the jungle floor down to the roof, with grass and red soil on top and a pale skin
+// underneath, then the far wall wherever there's air above the water, and the halocline's shimmer.
+// it also notes each column's ground, roof, and distance from an opening for the light to use
+function drawCave() {
+  const t = reduced ? 0 : T;
+  for (let i = 0; i < LW; i++) {
+    const wx = X0 + i, G = groundY(wx), Cl = ceilY(wx), s = surfI[i], open = Cl < G;
+    gI[i] = G; cI[i] = Cl; openD[i] = cenDist(wx);
+    if (!open) {
+      for (let wy = Math.max(G, Y0), end = Math.min(Cl - 1, Y0 + LH - 1); wy <= end; wy++) {
+        const dT = wy - G, dB = Cl - 1 - wy, h = h3(wx, wy, 52);
+        if (dT === 0) put(i, wy - Y0, h < 0.5 ? C.grass : C.grass2);
+        else if (dT === 1) put(i, wy - Y0, C.soil);
+        else if (dB < 3) put(i, wy - Y0, h < 0.6 ? C.lime : C.lime2);
+        else put(i, wy - Y0, h < 0.5 ? C.limeIn : C.limeIn2, K_ROCK);
+      }
+    }
+    // down a cenote the far wall starts at the far rim, fringed with plants
+    const streak = n1(wx / 3, SEED + 54);
+    for (let wy = Math.max(open ? G : Cl, Y0), end = Math.min(s, Y0 + LH); wy < end; wy++) {
+      const h = h3(wx, wy >> 1, 53);
+      put(i, wy - Y0, open && wy - G < 2 ? (h < 0.5 ? C.grass2 : C.grass) : mix(C.wall, C.wall2, streak * 0.8 + h * 0.2), K_WALL);
+    }
+    const hy = yOf(haloM(wx)), hw = Math.sin(wx * 0.12 + t * 0.8) * 1.5 + Math.sin(wx * 0.31 - t * 1.3) * 0.8;
+    for (let wy = Math.round(hy - 4); wy <= hy + 4; wy++) {
+      const j = wy - Y0;
+      if (j < 0 || j >= LH) continue;
+      const p = j * LW + i, b = Math.abs(wy - hy - hw);
+      if (kindB[p] === K_WATER && b < 2.5) colB[p] = mix(colB[p], C.halo, 0.35 * (1 - b / 2.5));
+    }
+  }
+  // sunbeams: how bright the light is coming down through each column of an opening, in stripes that
+  // drift and shimmer the way light through moving leaves does
+  if (SKY.day * (1 - SKY.storm) > 0.05) for (let k = 0; k < rayA.length; k++) {
+    const wx = X0 - RAY_PAD + k, d = cenDist(wx);
+    rayA[k] = d >= 0 ? 0 : smooth(0, 3, -d) * (0.55 + 0.45 * Math.sin(wx * 0.33 + Math.sin(wx * 0.07 + t * 0.4) * 2 + t * 0.25));
+  }
+}
+function tree(i, gj, h2) {
+  const H = 4 + Math.floor(h2 * 6), r = 2 + Math.floor(h2 * 3), cy = gj - H - r + 1;
+  for (let k = 1; k <= H; k++) put(i, gj - k, hex('#6A4A30'));
+  for (let b = -r; b <= r; b++) for (let a = -r - 1; a <= r + 1; a++) {
+    if (a * a * 0.7 + b * b <= r * r + 0.5) put(i + a, cy + b, h3(i + X0 + a, b, 63) < 0.6 ? C.grass2 : C.grass);
+  }
+}
+function drawCaveDecor() {
+  for (let wx = X0 - 14; wx < X0 + LW + 14; wx++) {
+    const i = wx - X0, h = h3(wx, SEED, 55), h2 = h3(wx, SEED, 56);
+    const G = groundY(wx), Cl = ceilY(wx), fy = Math.round(floorY(wx)), open = Cl < G;
+    const gj = G - Y0, cj = Cl - Y0, fj = fy - Y0, away = cenDist(wx);
+    // trees and bushes in the jungle up top, kept back from a cenote's edge
+    if (!open && gj > -2 && gj < LH + 20 && away > 4) {
+      if (h < 0.02) tree(i, gj, h2);
+      else if (h < 0.09) for (let a = -1; a <= 1; a++) for (let b = 1; b <= (a === 0 ? 2 : 1); b++) put(i + a, gj - b, h3(wx + a, b, 64) < 0.5 ? C.grass : C.grass2);
+    }
+    // stalactites hang from the roof, in the water and in the air pockets. they grew drip by drip
+    // back when the cave was dry
+    if (!open && h2 < 0.07 && cj > -12 && cj < LH + 2) {
+      const L = 2 + Math.floor(h3(wx, SEED, 57) * 10);
+      if (Cl + L < fy - 14) {
+        for (let k = 0; k < L; k++) put(i, cj + k, k % 3 ? C.stal : C.stal2);
+        if (L > 6) for (let k = 0; k < L / 2; k++) put(i + 1, cj + k, C.stal2);
+      }
+    }
+    // stalagmites rise from the floor, away from the rubble under a cenote
+    if (h > 0.5 && h < 0.545 && fj > -4 && fj < LH + 14 && away > 30) {
+      const L = 2 + Math.floor(h3(wx, SEED, 58) * 8);
+      if (fy - L > Cl + 14) {
+        for (let k = 1; k <= L; k++) put(i, fj - k, k === L || k % 3 === 0 ? C.stal : C.stal2);
+        if (L > 4) for (let k = 1; k <= L / 2; k++) put(i - 1, fj - k, C.stal2);
+      }
+    }
+    // where roof and floor come close, now and then the two have grown into one column
+    if (h > 0.7 && h < 0.7035 && !open && fy - Cl < 70 && away > 30 && cj < LH && fj > 0) {
+      for (let wy = Cl; wy < fy; wy++) {
+        const u = (wy - Cl) / (fy - Cl), half = 1 + Math.round(1.6 * (1 - Math.sin(u * Math.PI)));
+        for (let a = -half; a <= half; a++) put(i + a, wy - Y0, a === half ? C.stal2 : C.stal);
+      }
+    }
+    // weed in the sunny shallows under a cenote
+    if (away < 6 && h > 0.2 && h < 0.32 && fj > -2 && fj < LH + 6 && mOf(fy) < 30) {
+      for (let k = 1; k <= 2 + Math.floor(h2 * 3); k++) put(i + (k > 2 && !reduced && Math.sin(T + wx) > 0 ? 1 : 0), fj - k, hex('#4E8E3E'));
+    }
+  }
+  // each cenote in view: roots down its walls, lilies on its water, and maybe a sunken tree on the rubble
+  for (let c = Math.floor((X0 - 80) / CEN); c <= Math.floor((X0 + LW + 80) / CEN); c++) {
+    const f = cenAt(c);
+    // roots hang straight and still. any sway at this size read as something flowing along them
+    for (const rt of f.roots) {
+      const x = f.cx + rt.dx, G = groundY(x), len = -G + rt.more;
+      for (let k = 0; k < len; k++) {
+        put(x - X0, G + k - Y0, k % 4 === 3 ? C.root2 : C.root);
+      }
+    }
+    for (const dx of f.lilies) {
+      const i0 = f.cx + dx - X0;
+      if (i0 < -2 || i0 > LW + 1) continue;
+      const j = surfI[clamp(i0, 0, LW - 1)] - Y0;
+      for (let a = -1; a <= 1; a++) put(i0 + a, j, hex('#4E8A3A'));
+      if ((dx & 3) === 0) put(i0, j - 1, hex('#F0A8C8'));
+    }
+    if (f.log !== null && f.mound) for (let a = 0; a < 12; a++) {
+      const x = f.cx + f.log + a, j = Math.round(floorY(x)) - Y0;
+      put(x - X0, j - 1, hex('#5A3E26')); put(x - X0, j - 2, a < 11 ? hex('#6E4E32') : hex('#5A3E26'));
+      if (a === 4) { put(x - X0, j - 3, hex('#5A3E26')); put(x - X0 + 1, j - 4, hex('#5A3E26')); }
+    }
+  }
+  // glowworms on the roofs of some air pockets, with sticky threads hanging below them and a faint
+  // blue glow on the water underneath
+  for (let c = Math.floor((X0 - 200) / CEN) - 1; c <= Math.floor((X0 + LW) / CEN); c++) {
+    const rm = cenAt(c).room;
+    if (!rm || !rm.glow) continue;
+    for (let x = rm.cx - rm.w; x <= rm.cx + rm.w; x++) {
+      const i0 = x - X0, cy = ceilY(x);
+      if (i0 < 0 || i0 >= LW || cy >= -1 || h3(x, SEED, 59) > 0.45) continue;
+      const tw = reduced ? 0.8 : 0.55 + 0.45 * Math.sin(T * (0.6 + h3(x, SEED, 60)) + x);
+      put(i0, cy - Y0, mix(hex('#123038'), hex('#7FE8FF'), tw), K_GLOW);
+      const th = 1 + Math.floor(h3(x, SEED, 61) * 4);
+      for (let k = 1; k <= th && cy + k < -1; k++) put(i0, cy + k - Y0, hex('#9FB4BA'));
+      if (h3(x, SEED, 62) < 0.5) put(i0, surfI[i0] - Y0, mix(hex('#0A1C22'), hex('#3A8A9A'), tw * 0.6), K_GLOW);
     }
   }
 }
@@ -1980,10 +2407,12 @@ function drawParts() {
 }
 function drawSurface() {
   if (Y0 > 10) return;
-  const foam = SKY.wI > 0.35;
+  const foam = !CAVE && SKY.wI > 0.35;
   for (let i = 0; i < LW; i++) {
     const j = surfI[i] - Y0;
     if (j < 0 || j >= LH) continue;
+    // under the cave's roof there's no surface to see
+    if (CAVE && cI[i] > surfI[i]) continue;
     const crest = surfI[i] <= -SKY.amp * 0.7;
     if (foam && crest && h3(X0 + i, Math.floor(T * 3), 41) < SKY.wI) put(i, j, C.foam, K_WATER);
     else blend(i, j, C.surf, 0.55);
@@ -1995,7 +2424,10 @@ function drawSurface() {
       const i = Math.round(d.x), j = Math.round(d.y);
       for (let k = 0; k < 3; k++) {
         const a = i + Math.round(k * 0.4), b = j - k;
-        if (a >= 0 && b >= 0 && a < LW && b < LH && above(a, b)) { blend(a, b, rc, 0.55); kindB[b * LW + a] = K_SKY; }
+        if (a < 0 || b < 0 || a >= LW || b >= LH || !above(a, b)) continue;
+        // in the cave, rain only falls under the open sky
+        if (CAVE && kindB[b * LW + a] !== K_SKY && openD[a] > 0) continue;
+        blend(a, b, rc, 0.55); kindB[b * LW + a] = K_SKY;
       }
     }
   }
@@ -2013,6 +2445,8 @@ function waterColor(m, top) {
   if (m < 400) return mix(C.mid, C.deep, (m - 60) / 340);
   return mix(C.deep, C.abyss, clamp((m - 400) / 3000, 0, 1));
 }
+// cenote water is clear turquoise in the sun, and a deep blue-green down in the pits
+const caveWater = (m) => m < 25 ? mix(C.caveTop, C.caveMid, m / 25) : mix(C.caveMid, C.caveDeep, clamp((m - 25) / 120, 0, 1));
 // most light is gone by 200 m, a dim blue lasts through the twilight zone, and below 1,000 m it's black
 const ambAt = (m, dl) => Math.pow(dl * (0.82 * Math.exp(-m / 50) + 0.18 * Math.exp(-m / 300)), 0.7);
 function light() {
@@ -2058,6 +2492,58 @@ function light() {
   }
 }
 
+// in the cave, daylight only gets in through the cenotes: it fills the water under an opening, comes
+// down in slanting beams, and fades away into the cave beside it. the rock in between stays dark, and
+// past the daylight only the sub's lights and glowing things show anything at all
+function lightCave() {
+  const beams = LIGHTS.filter((L) => L.on), nb = beams.length;
+  const sunny = SKY.day * (1 - SKY.storm), ab = SKY.above, t = reduced ? 0 : T;
+  // the beams slant down from the east in the morning and the west in the afternoon
+  const slope = clamp((0.5 - SKY.phase) * 1.4, -0.55, 0.55), rockE = 0.1 + 0.08 * ab;
+  for (let j = 0; j < LH; j++) {
+    const wy = Y0 + j, m = rowM[j], amb = rowAmb[j];
+    const caK = m < 45 && sunny > 0.05 ? 0.3 * sunny * Math.exp(-m / 12) : 0;
+    const rk = wy > 0 && sunny > 0.05 ? 0.9 * sunny * Math.exp(-wy / 150) : 0;
+    const spread = wy < 0 ? 16 : 14 + 0.45 * wy, shift = Math.round(slope * wy) - RAY_PAD;
+    const fog = rowAlb[j], fR = R8(fog) * amb * 0.12, fG = G8(fog) * amb * 0.12, fB = B8(fog) * amb * 0.12;
+    let p = j * LW;
+    for (let i = 0; i < LW; i++, p++) {
+      const k = kindB[p], c = colB[p];
+      let r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+      if (k === K_ROCK) { r *= rockE; g *= rockE; b *= rockE; }
+      else if (k !== K_SKY && k !== K_GLOW) {
+        const d = openD[i], open = d <= 0 ? 1 : d > spread * 6 ? 0 : Math.exp(-d / spread);
+        let lv = 0;
+        for (let n = 0; n < nb; n++) {
+          const B = beams[n], ddx = i - B.sx, ddy = j - B.sy, d2 = ddx * ddx + ddy * ddy;
+          if (d2 >= B.r * B.r) continue;
+          const dd = Math.sqrt(d2) || 1, cone = smooth(B.c0, B.c1, (ddx * B.dx + ddy * B.dy) / dd);
+          lv += cone * (1 - dd / B.r) ** 1.4;
+          if (dd < 18) lv += (1 - dd / 18) ** 2 * 0.5;
+        }
+        if (wy < surfI[i]) {
+          // above the water: the jungle in full daylight, the cave's walls in whatever reaches them
+          const G = gI[i], day = wy < G + 2 ? ab : ab * open * (0.95 - 0.35 * clamp((wy - G) / Math.max(1, -G), 0, 1));
+          const e = Math.max(day, 0.03) + lv * 1.1;
+          r *= e; g *= e; b *= e;
+        } else {
+          const q = rk ? rayA[i - shift] || 0 : 0;
+          let L = amb * (open * (1 - 0.3 * rk) + q * rk);
+          if (caK && open > 0.05) {
+            const wx = X0 + i;
+            const cs = Math.abs(Math.sin(wx * 0.19 + Math.sin(wy * 0.13 + t * 0.9) * 1.6 + t * 0.6) + Math.sin(wx * 0.11 - wy * 0.21 + Math.sin(wx * 0.05 - t * 0.7) * 2));
+            L *= 1 + caK * open * (1 - smooth(0, 0.3, cs));
+          }
+          if (k === K_WATER) { r = r * L + 200 * lv * 0.2; g = g * L + 228 * lv * 0.22; b = b * L + 220 * lv * 0.21; }
+          else { const e = Math.max(L, 0.06) + lv * 1.25; r = r * e * 0.88 + fR * open; g = g * e * 0.88 + fG * open; b = b * e * 0.88 + fB * open; }
+          r += 1; g += 3; b += 7;
+        }
+      }
+      out32[p] = 0xFF000000 | ((b > 255 ? 255 : b | 0) << 16) | ((g > 255 ? 255 : g | 0) << 8) | (r > 255 ? 255 : r | 0);
+    }
+  }
+}
+
 // ---------- A frame ----------
 function draw() {
   // the sub holds a whole-pixel column and the world scrolls under it, so it doesn't shimmy
@@ -2067,7 +2553,7 @@ function draw() {
   const top = cv < 0.5 ? mix(C.seaCold, C.seaMild, smooth(0.32, 0.48, cv)) : mix(C.seaMild, C.seaWarm, smooth(0.52, 0.66, cv));
   for (let j = 0; j < LH; j++) {
     const wy = Y0 + j, m = mOf(Math.max(0, wy));
-    rowM[j] = m; rowAlb[j] = waterColor(m, top); rowAmb[j] = ambAt(m, SKY.dl);
+    rowM[j] = m; rowAlb[j] = CAVE ? caveWater(m) : waterColor(m, top); rowAmb[j] = ambAt(m, SKY.dl);
     skyRow[j] = wy < 8 ? skyColor(-wy) : 0;
   }
   for (let j = 0, p = 0; j < LH; j++) {
@@ -2078,21 +2564,29 @@ function draw() {
     }
   }
   drawSky();
-  drawBackdrop();
+  if (CAVE) drawCave(); else drawBackdrop();
   drawFloor();
-  drawDecor();
+  if (CAVE) drawCaveDecor(); else drawDecor();
   drawVents();
   drawActors();
   drawSub();
   drawParts();
   drawSurface();
-  light();
+  if (CAVE) lightCave(); else light();
   ctx.putImageData(img, 0, 0);
 }
 
 // ---------- Words on screen ----------
 const ZONES = [[1, 'At the surface'], [200, 'Sunlit zone'], [1000, 'Twilight zone'], [4000, 'Midnight zone'], [6000, 'Abyssal zone'], [Infinity, 'Hadal zone']];
 const zoneOf = (m) => ZONES.find(([max]) => m < max)[1];
+// cave divers call the water within sight of daylight the cavern, and everything past it the cave
+function caveZone() {
+  const m = subDepth(), day = openAt(sub.x, sub.y);
+  if (m < 1) return day > 0.3 ? 'At the surface' : 'In an air pocket';
+  if (cenDist(sub.x) <= 0) return 'Cenote';
+  return day > 0.05 ? 'Cavern zone' : 'Cave zone';
+}
+const zoneNow = () => CAVE ? caveZone() : zoneOf(subDepth());
 let lastZone = '', zoneSince = 0, lastSky = '';
 function say(text) { const el = $('said'); el.textContent = ''; setTimeout(() => { el.textContent = text; }, 30); }
 // the callout under the gauges names the animal nearest the sub's nose, where the front light sits,
@@ -2112,7 +2606,7 @@ function gapToSub(i, j, hw, hh) {
   return Math.hypot(dx, dy);
 }
 function canSee(sp, wy, i, j) {
-  if (sp.glows || ambAt(mOf(Math.max(0, wy)), SKY.dl) > 0.1) return true;
+  if (sp.glows || ambAt(mOf(Math.max(0, wy)), SKY.dl) * (CAVE ? openAt(X0 + i, wy) : 1) > 0.1) return true;
   for (const L of LIGHTS) {
     if (!L.on) continue;
     const dx = i - L.sx, dy = j - L.sy, d = Math.hypot(dx, dy) || 1;
@@ -2142,7 +2636,27 @@ function nearby() {
     if (gapToSub(i, j, f.half, 21) >= (f === call.key ? STAY_NEAR : NEAR)) continue;
     out.push({ key: f, name: 'Black smokers!', note: VENT_NOTE, d: Math.hypot(Math.max(0, Math.abs(i - F.sx) - f.half), Math.max(0, Math.abs(j - F.sy) - 21)) });
   }
+  if (CAVE) caveSights(out);
   return out;
+}
+// the cave's own sights come up behind any animal close by: the cenote you're bobbing in, the
+// halocline as you pass through it, and glowworms over an air pocket
+const CAVE_NOTES = {
+  cenote: 'A sinkhole where the cave roof fell in and let daylight down to the water. The Maya drew their water from cenotes.',
+  halocline: 'Fresh rainwater floating on salt water that seeps in from the sea. The two mix so slowly that the line between them shimmers.',
+  glow: 'Gnat larvae that glow blue on the cave roof, luring insects into the sticky threads they hang below.',
+};
+function caveSights(out) {
+  const f = cenAt(Math.floor(sub.x / CEN)), up = (key) => key === call.key;
+  if (Math.abs(sub.x - f.cx) < f.wo + (up(f) ? 8 : 0) && subDepth() < (up(f) ? 14 : 10)) out.push({ key: f, name: 'Cenote', note: CAVE_NOTES.cenote, d: 40 });
+  const hy = yOf(haloM(sub.x)), pad = up('halocline') ? 8 : 2;
+  if (hy > sub.y + SUBG.oy + SUBG.top - pad && hy < sub.y + 4 + pad) out.push({ key: 'halocline', name: 'Halocline', note: CAVE_NOTES.halocline, d: 45 });
+  for (let c = Math.floor(sub.x / CEN) - 1; c <= Math.floor(sub.x / CEN); c++) {
+    const rm = cenAt(c).room;
+    if (!rm || !rm.glow) continue;
+    const i = rm.cx - X0, j = -rm.h * 0.6 - Y0;
+    if (gapToSub(i, j, rm.w * 0.7, rm.h * 0.5) < (up(rm) ? STAY_NEAR : NEAR)) out.push({ key: rm, name: 'Glowworms!', note: CAVE_NOTES.glow, d: 35 });
+  }
 }
 function showCallout(c) {
   call.key = c.key; call.since = T;
@@ -2170,11 +2684,11 @@ function lightsSaid() {
   return `${on.join(' and ')} ${on.length > 1 ? 'lights' : 'light'} on`;
 }
 function describe() {
-  const m = subDepth(), z = zoneOf(m);
-  const where = m < 1 ? 'bobbing at the surface' : `${fmt(m)} m down in the ${z.toLowerCase()}`;
+  const m = subDepth(), z = zoneNow();
+  const where = m < 1 ? (z === 'In an air pocket' ? 'bobbing in an air pocket' : 'bobbing at the surface') : `${fmt(m)} m down in the ${z.toLowerCase()}`;
   const going = `facing ${sub.face > 0 ? 'east' : 'west'}, ${sub.speed ? SPEED_NAMES[sub.speed].toLowerCase() : 'stopped'}` + (sub.follow ? ', following the floor' : '');
   const who = ERA === 'ammonites' ? 'A little ammonite submarine' : ownSub ? 'Your own little submarine' : 'A little teal submarine';
-  const when = ERA === 'today' ? '' : ' It is 80 million years ago.';
+  const when = CAVE ? ' This is a flooded cave.' : past() ? ' It is 80 million years ago.' : '';
   canvas.setAttribute('aria-label', `${who} ${where} in water at ${fmtTemp(waterTemp())}, ${going}, ${lightsSaid()}, at coordinates ${coord()}. Up above: ${timeName().toLowerCase()}, ${weatherName()}.${when}`);
 }
 // coordinates count meters east of where you set out, and below zero going west. a pixel is half a
@@ -2184,15 +2698,20 @@ function coord() {
   const c = Math.round((sub.x - home) / 2);
   return c < 0 ? `−${-c}` : `${c}`;
 }
+// in the cave the gauge also says what's overhead
+function roofSaid() {
+  const c = ceilY(sub.x);
+  return c < groundY(sub.x) ? 'open sky' : c < 0 ? 'air above' : `roof ${fmt(mOf(c))} m`;
+}
 let hudIn = 0, labelIn = 5;
 function hud(dt) {
   hudIn -= dt;
   if (hudIn > 0) return;
   hudIn = 0.2;
-  const m = subDepth(), z = zoneOf(m), fm = mOf(floorY(sub.x));
+  const m = subDepth(), z = zoneNow(), fm = mOf(floorY(sub.x));
   $('depth').textContent = `${fmt(m)} m`;
   $('zone').textContent = z;
-  $('floor').textContent = `Sea floor ${fmt(fm)} m`;
+  $('floor').textContent = CAVE ? `Floor ${fmt(fm)} m, ${roofSaid()}` : `Sea floor ${fmt(fm)} m`;
   $('where').textContent = `Coordinates: ${coord()}`;
   $('water').textContent = `Water ${fmtTemp(waterTemp())}`;
   const sky = `${timeName()}, ${weatherName()}`;
@@ -2307,6 +2826,12 @@ const SOUNDS = {
   "dolphin-splash": { "name": "Dolphin splash", "use": "A leaping dolphin diving back into the sea, heard near the surface", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 3230, "to": 1960, "q": 1.63, "gain": 0.18, "attack": 0.003, "dur": 0.718, "vary": 0.0335 }
   ] },
+  "drip": { "name": "Cave drip", "use": "Water dripping into the flooded cave, heard now and then at the surface there, echoing", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 760, "to": 1900, "gain": 0.12, "attack": 0.002, "dur": 0.09 },
+    { "kind": "noise", "filter": "highpass", "freq": 4200, "q": 0.7, "gain": 0.03, "attack": 0.001, "dur": 0.015 },
+    { "kind": "tone", "wave": "sine", "freq": 760, "to": 1900, "gain": 0.04, "attack": 0.002, "dur": 0.09, "at": 0.21 },
+    { "kind": "tone", "wave": "sine", "freq": 760, "to": 1900, "gain": 0.014, "attack": 0.002, "dur": 0.09, "at": 0.42 }
+  ] },
   "lights": { "name": "Lamp switch", "use": "Switching the lights on or off", "layers": [
     { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
     { "kind": "noise", "filter": "highpass", "freq": 3000, "q": 0.7, "gain": 0.12, "attack": 0.001, "dur": 0.02 },
@@ -2401,7 +2926,7 @@ function sustain(id) {
 // rumbles overhead just under the waves. below, a wash of water turns to a low hum as you go down,
 // and the engine hums while you move, sinking in pitch the deeper you are
 const atSurface = () => 1 - smooth(0.5, 10, subDepth());
-const ambient = { creak: 30 };
+const ambient = { creak: 30, drip: 2 };
 // the steady sounds run the whole time, each turned up and down as you go. restarting them on a
 // timer would swell and fade on every restart, and that beat is what steady sounds avoid
 const held = {};
@@ -2416,8 +2941,14 @@ function listenTick(dt) {
   for (const k in ambient) ambient[k] -= dt;
   // the wind gusts on its own slow noise, harder and higher in rough weather
   const gust = n1(T * 0.35, 55);
-  steady('wind', up * (0.15 + 0.85 * SKY.wI) * (0.6 + 0.4 * gust), 0.7 + 0.6 * SKY.wI + 0.35 * gust);
-  steady('rain', SKY.storm * up);
+  // in the cave, wind and rain only reach you down a cenote, and drips echo in the stillness
+  const sky = CAVE ? openAt(sub.x, -1) : 1;
+  steady('wind', up * sky * (0.15 + 0.85 * SKY.wI) * (0.6 + 0.4 * gust), 0.7 + 0.6 * SKY.wI + 0.35 * gust);
+  steady('rain', SKY.storm * up * sky);
+  if (ambient.drip <= 0) {
+    ambient.drip = rand(0.6, 3);
+    if (CAVE && up > 0.3) play('drip', 0, 0, up * rand(0.35, 1));
+  }
   const deep = smooth(150, 2500, m);
   steady('wash', (1 - deep) * (1 - up * 0.6) * (0.6 + moving * 0.4));
   steady('hum', deep);
@@ -2536,7 +3067,7 @@ for (const k of ['time', 'weather']) {
     writePins(); paintPins(); say(PIN_SAID[k][v]);
   });
 }
-const ERA_SAID = { today: 'Back to today.', prehistoric: 'The Cretaceous, 80 million years ago.', ammonites: 'Oops, all ammonites.' };
+const ERA_SAID = { today: 'Back to today.', prehistoric: 'The Cretaceous, 80 million years ago.', ammonites: 'Oops, all ammonites.', cave: 'A flooded cave. You start in a cenote.' };
 for (const v of ERAS) $('era-' + v).addEventListener('click', () => {
   PIN.era = v === 'today' ? '' : v;
   writePins(); setEra(v); showSubName(); describe(); say(ERA_SAID[v]);

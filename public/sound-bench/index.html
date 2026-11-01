@@ -595,6 +595,12 @@ const COZY_SUBMARINE_SOUNDS = {
   "dolphin-splash": { "name": "Dolphin splash", "use": "A leaping dolphin diving back into the sea, heard near the surface", "layers": [
     { "kind": "noise", "filter": "bandpass", "freq": 3230, "to": 1960, "q": 1.63, "gain": 0.18, "attack": 0.003, "dur": 0.718, "vary": 0.0335 }
   ] },
+  "drip": { "name": "Cave drip", "use": "Water dripping into the flooded cave, heard now and then at the surface there, echoing", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 760, "to": 1900, "gain": 0.12, "attack": 0.002, "dur": 0.09 },
+    { "kind": "noise", "filter": "highpass", "freq": 4200, "q": 0.7, "gain": 0.03, "attack": 0.001, "dur": 0.015 },
+    { "kind": "tone", "wave": "sine", "freq": 760, "to": 1900, "gain": 0.04, "attack": 0.002, "dur": 0.09, "at": 0.21 },
+    { "kind": "tone", "wave": "sine", "freq": 760, "to": 1900, "gain": 0.014, "attack": 0.002, "dur": 0.09, "at": 0.42 }
+  ] },
   "lights": { "name": "Lamp switch", "use": "Switching the lights on or off", "layers": [
     { "kind": "tone", "wave": "square", "freq": 1900, "to": 1400, "gain": 0.04, "attack": 0.001, "dur": 0.018 },
     { "kind": "noise", "filter": "highpass", "freq": 3000, "q": 0.7, "gain": 0.12, "attack": 0.001, "dur": 0.02 },
