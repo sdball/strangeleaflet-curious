@@ -818,5 +818,1903 @@
   "yank",
   "yes",
   "z"
+ ],
+ "routines": [
+  {
+   "name": "GO",
+   "locals": []
+  },
+  {
+   "name": "CHKWORD?",
+   "locals": [
+    "W",
+    "PS",
+    "P1",
+    "F"
+   ]
+  },
+  {
+   "name": "GETWORD?",
+   "locals": [
+    "N",
+    "R"
+   ]
+  },
+  {
+   "name": "PRINT-WORD",
+   "locals": [
+    "N",
+    "I",
+    "MAX"
+   ]
+  },
+  {
+   "name": "CLEAR-NOUN-PHRASE",
+   "locals": [
+    "NP"
+   ]
+  },
+  {
+   "name": "COPY-NOUN-PHRASE",
+   "locals": [
+    "SRC",
+    "DEST",
+    "C"
+   ]
+  },
+  {
+   "name": "MERGE-PRSTBL",
+   "locals": [
+    "SRC",
+    "DEST",
+    "SCNT",
+    "DCNT",
+    "RES"
+   ]
+  },
+  {
+   "name": "SAVE-PARSER-RESULT",
+   "locals": [
+    "DEST"
+   ]
+  },
+  {
+   "name": "RESTORE-PARSER-RESULT",
+   "locals": [
+    "SRC",
+    "L",
+    "OW"
+   ]
+  },
+  {
+   "name": "HANDLE-ORPHAN-RESPONSE",
+   "locals": [
+    "WN",
+    "N",
+    "CNT",
+    "MAX",
+    "TBL",
+    "O",
+    "OUT",
+    "NY",
+    "QREQ",
+    "?TMP"
+   ]
+  },
+  {
+   "name": "PARSE-ORPHAN-COUNT?",
+   "locals": [
+    "WN",
+    "W",
+    "C"
+   ]
+  },
+  {
+   "name": "REFERS-PSEUDO?",
+   "locals": [
+    "SPEC",
+    "PDO",
+    "NA",
+    "NN",
+    "AT",
+    "NT",
+    "A",
+    "N"
+   ]
+  },
+  {
+   "name": "MATCH-PSEUDO",
+   "locals": [
+    "SPEC",
+    "PT",
+    "CNT"
+   ]
+  },
+  {
+   "name": "MAKE-PSEUDO",
+   "locals": [
+    "PDO"
+   ]
+  },
+  {
+   "name": "THIS-IS-IT",
+   "locals": [
+    "O"
+   ]
+  },
+  {
+   "name": "CONTENTS-ARE-IT",
+   "locals": [
+    "CTNR",
+    "FILTER",
+    "N",
+    "I"
+   ]
+  },
+  {
+   "name": "PRO-TRY-SET-IT",
+   "locals": [
+    "X",
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-FORCE-SET-IT",
+   "locals": [
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-TRY-SET-THEM",
+   "locals": [
+    "X",
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-FORCE-SET-THEM",
+   "locals": [
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-TRY-SET-HIM",
+   "locals": [
+    "X",
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-FORCE-SET-HIM",
+   "locals": [
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-TRY-SET-HER",
+   "locals": [
+    "X",
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "PRO-FORCE-SET-HER",
+   "locals": [
+    "PRO?OBJS"
+   ]
+  },
+  {
+   "name": "SET-PRONOUNS",
+   "locals": [
+    "O",
+    "OBJS",
+    "PT",
+    "MAX",
+    "I"
+   ]
+  },
+  {
+   "name": "EXPAND-PRONOUN",
+   "locals": [
+    "W",
+    "OBJS",
+    "CNT"
+   ]
+  },
+  {
+   "name": "V-PRONOUNS",
+   "locals": []
+  },
+  {
+   "name": "MAIN-LOOP",
+   "locals": [
+    "?RESULT"
+   ]
+  },
+  {
+   "name": "PARSER",
+   "locals": [
+    "NOBJ",
+    "VAL",
+    "DIR",
+    "DIR-WN",
+    "O-R",
+    "KEEP",
+    "OW",
+    "OH",
+    "OHL",
+    "I",
+    "W",
+    "V"
+   ]
+  },
+  {
+   "name": "STORE-OOPS",
+   "locals": [
+    "WN"
+   ]
+  },
+  {
+   "name": "HANDLE-OOPS",
+   "locals": [
+    "N",
+    "W",
+    "WN",
+    "SS",
+    "SL",
+    "DS",
+    "DL",
+    "BL",
+    "MAX",
+    "DELTA",
+    "LBUF",
+    "RBUF",
+    "I"
+   ]
+  },
+  {
+   "name": "REPLACE-HELD-WORD",
+   "locals": [
+    "N",
+    "NEW-WORD",
+    "S",
+    "OL",
+    "NL",
+    "BL",
+    "MAX",
+    "DELTA",
+    "LBUF",
+    "RBUF",
+    "I"
+   ]
+  },
+  {
+   "name": "INSERT-HELD-WORD",
+   "locals": [
+    "N",
+    "NEW-WORD",
+    "LBUF",
+    "RBUF",
+    "LEN",
+    "BL",
+    "S",
+    "MAX",
+    "NL",
+    "DELTA",
+    "I"
+   ]
+  },
+  {
+   "name": "CONVERT-ORDER-TO-TELL?",
+   "locals": [
+    "P",
+    "W"
+   ]
+  },
+  {
+   "name": "NUMBER-F",
+   "locals": []
+  },
+  {
+   "name": "PARSE-NUMBER?",
+   "locals": [
+    "WN",
+    "I",
+    "MAX",
+    "V",
+    "C",
+    "NEG"
+   ]
+  },
+  {
+   "name": "COPY-TABLE",
+   "locals": [
+    "SRC",
+    "DEST",
+    "LEN",
+    "I"
+   ]
+  },
+  {
+   "name": "COPY-TABLE-B",
+   "locals": [
+    "SRC",
+    "DEST",
+    "LEN",
+    "I"
+   ]
+  },
+  {
+   "name": "STARTS-NOUN-PHRASE?",
+   "locals": [
+    "W"
+   ]
+  },
+  {
+   "name": "IS-ENGLISH-NUM?",
+   "locals": [
+    "W"
+   ]
+  },
+  {
+   "name": "ENGLISH-NUM-VALUE?",
+   "locals": [
+    "W"
+   ]
+  },
+  {
+   "name": "QUANTIFIER-VALUE?",
+   "locals": [
+    "W",
+    "V"
+   ]
+  },
+  {
+   "name": "PARSE-NOUN-PHRASE",
+   "locals": [
+    "WN",
+    "NP",
+    "SILENT?",
+    "SPEC",
+    "CNT",
+    "W",
+    "VAL",
+    "MODE?1",
+    "ADJ",
+    "NOUN",
+    "QUANT",
+    "BUT",
+    "SPEC-WN",
+    "NEXTW",
+    "NW"
+   ]
+  },
+  {
+   "name": "HAVE-TAKE-POSSIBLE?",
+   "locals": [
+    "OBJ",
+    "OPTS"
+   ]
+  },
+  {
+   "name": "TRIAL-MATCH-NOUN-PHRASE",
+   "locals": [
+    "NP",
+    "FIND",
+    "OPTS",
+    "NY",
+    "NN",
+    "MODE?1",
+    "SPEC",
+    "BITS",
+    "CNT",
+    "Q",
+    "HAS-FIND",
+    "HAS-HAVE",
+    "I"
+   ]
+  },
+  {
+   "name": "TRIAL-GWIM-SLOT",
+   "locals": [
+    "BIT",
+    "OPTS",
+    "CNT",
+    "SOPTS",
+    "I"
+   ]
+  },
+  {
+   "name": "MATCH-SYNTAX",
+   "locals": [
+    "PTR",
+    "CNT",
+    "S",
+    "BEST",
+    "BEST-SCORE"
+   ]
+  },
+  {
+   "name": "TOPIC-NP-POSSIBLE?",
+   "locals": [
+    "SLOT",
+    "PTR",
+    "CNT",
+    "NOBJ",
+    "PREP1",
+    "PREP2"
+   ]
+  },
+  {
+   "name": "TOPIC-NP-REQUIRED?",
+   "locals": [
+    "SLOT",
+    "PTR",
+    "CNT",
+    "NOBJ",
+    "PREP1",
+    "PREP2",
+    "SAW-TOPIC",
+    "SAW-OBJECT"
+   ]
+  },
+  {
+   "name": "MATCH-SYNTAX-LINE?",
+   "locals": [
+    "PTR",
+    "NOBJ",
+    "PREP1",
+    "PREP2",
+    "R",
+    "BONUS",
+    "F1",
+    "O1",
+    "F2",
+    "O2"
+   ]
+  },
+  {
+   "name": "EVERYWHERE-SCOPE-STAGE",
+   "locals": [
+    "INIT"
+   ]
+  },
+  {
+   "name": "INVENTORY-SCOPE-STAGE",
+   "locals": [
+    "INIT"
+   ]
+  },
+  {
+   "name": "VEHICLE-SCOPE-STAGE",
+   "locals": [
+    "INIT",
+    "O"
+   ]
+  },
+  {
+   "name": "LOCATION-SCOPE-STAGE",
+   "locals": [
+    "INIT",
+    "C"
+   ]
+  },
+  {
+   "name": "LOCAL-GLOBALS-SCOPE-STAGE",
+   "locals": [
+    "INIT",
+    "N"
+   ]
+  },
+  {
+   "name": "GLOBALS-SCOPE-STAGE",
+   "locals": [
+    "INIT"
+   ]
+  },
+  {
+   "name": "GENERIC-SCOPE-STAGE",
+   "locals": [
+    "INIT"
+   ]
+  },
+  {
+   "name": "MAP-SCOPE-INIT-STAGES-FROM-BITS",
+   "locals": [
+    "BITS",
+    "CNT"
+   ]
+  },
+  {
+   "name": "MAP-SCOPE-START",
+   "locals": [
+    "V",
+    "LEN",
+    "NEED-LIGHT"
+   ]
+  },
+  {
+   "name": "MAP-SCOPE-NEXT",
+   "locals": [
+    "S",
+    "N",
+    "LEN",
+    "INIT",
+    "NEED-LIGHT"
+   ]
+  },
+  {
+   "name": "SCOPE-CRAWL",
+   "locals": [
+    "OMNI?",
+    "O",
+    "N",
+    "C",
+    "L"
+   ]
+  },
+  {
+   "name": "FIND-OBJECTS",
+   "locals": [
+    "KEEP",
+    "F"
+   ]
+  },
+  {
+   "name": "SET-TOPIC-SPAN",
+   "locals": [
+    "SLOT",
+    "START",
+    "END"
+   ]
+  },
+  {
+   "name": "FIND-PRSO",
+   "locals": [
+    "KEEP",
+    "F",
+    "O",
+    "SNOBJ"
+   ]
+  },
+  {
+   "name": "FIND-PRSI",
+   "locals": [
+    "KEEP",
+    "F",
+    "O",
+    "SNOBJ"
+   ]
+  },
+  {
+   "name": "WHAT-DO-YOU-WANT",
+   "locals": [
+    "SN",
+    "SP1",
+    "SP2",
+    "F"
+   ]
+  },
+  {
+   "name": "PRINT-VERB",
+   "locals": []
+  },
+  {
+   "name": "MANY-CHECK",
+   "locals": [
+    "OBJ",
+    "OPTS",
+    "INDIRECT?"
+   ]
+  },
+  {
+   "name": "HAVE-TAKE-CHECK-TBL",
+   "locals": [
+    "TBL",
+    "OPTS",
+    "MAX",
+    "O",
+    "N",
+    "ORM",
+    "I"
+   ]
+  },
+  {
+   "name": "HAVE-TAKE-CHECK",
+   "locals": [
+    "OBJ",
+    "OPTS"
+   ]
+  },
+  {
+   "name": "SHOULD-IMPLICIT-TAKE?",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "FAILS-HAVE-CHECK?",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "TOUCH-CHECK-TBL",
+   "locals": [
+    "TBL",
+    "OPTS",
+    "PRSI?",
+    "MAX",
+    "O",
+    "OPRSO",
+    "OPRSI",
+    "I"
+   ]
+  },
+  {
+   "name": "TOUCH-CHECK",
+   "locals": [
+    "OBJ",
+    "V"
+   ]
+  },
+  {
+   "name": "QUERY-TOUCH-BLOCKERS",
+   "locals": [
+    "OBJ1",
+    "OBJ2",
+    "CEIL",
+    "V",
+    "L"
+   ]
+  },
+  {
+   "name": "STILL-VISIBLE-CHECK",
+   "locals": [
+    "TBL",
+    "CNT",
+    "I"
+   ]
+  },
+  {
+   "name": "NOT-VISIBLE?",
+   "locals": [
+    "O"
+   ]
+  },
+  {
+   "name": "GWIM",
+   "locals": [
+    "BIT",
+    "OPTS",
+    "PREP",
+    "O",
+    "PW",
+    "SOPTS",
+    "I"
+   ]
+  },
+  {
+   "name": "GET-PREP-WORD",
+   "locals": [
+    "PREP",
+    "MAX",
+    "I"
+   ]
+  },
+  {
+   "name": "SEARCH-FOR-LIGHT",
+   "locals": [
+    "L",
+    "I"
+   ]
+  },
+  {
+   "name": "SEE-INSIDE?",
+   "locals": [
+    "OBJ",
+    "?TMP"
+   ]
+  },
+  {
+   "name": "MATCH-NOUN-PHRASE",
+   "locals": [
+    "NP",
+    "OUT",
+    "BITS",
+    "F",
+    "NY",
+    "NN",
+    "SPEC",
+    "MODE?1",
+    "NOUT",
+    "OBITS",
+    "ONOUT",
+    "BEST",
+    "Q",
+    "J",
+    "I"
+   ]
+  },
+  {
+   "name": "ALL-INCLUDES?",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "TRY-NARROW-INDISTINGUISHABLE",
+   "locals": [
+    "TBL",
+    "CNT",
+    "OBJ",
+    "I",
+    "J"
+   ]
+  },
+  {
+   "name": "APPLY-GENERIC-FCN",
+   "locals": [
+    "TBL",
+    "MAX",
+    "F",
+    "R",
+    "I"
+   ]
+  },
+  {
+   "name": "WHICH-DO-YOU-MEAN",
+   "locals": [
+    "TBL"
+   ]
+  },
+  {
+   "name": "ANY-SPEC-REFERS?",
+   "locals": [
+    "TBL",
+    "N",
+    "O",
+    "I"
+   ]
+  },
+  {
+   "name": "ANY-SPEC-REFERS-PSEUDO?",
+   "locals": [
+    "TBL",
+    "N",
+    "PDO",
+    "I"
+   ]
+  },
+  {
+   "name": "GLOBAL-IN?",
+   "locals": [
+    "O",
+    "R"
+   ]
+  },
+  {
+   "name": "REFERS?",
+   "locals": [
+    "SPEC",
+    "O",
+    "A",
+    "N",
+    "Q"
+   ]
+  },
+  {
+   "name": "NOUN-MATCH-QUALITY",
+   "locals": [
+    "O",
+    "N"
+   ]
+  },
+  {
+   "name": "IN-PWTBL?",
+   "locals": [
+    "O",
+    "P",
+    "V",
+    "PT"
+   ]
+  },
+  {
+   "name": "IN-PBTBL?",
+   "locals": [
+    "O",
+    "P",
+    "V",
+    "PT"
+   ]
+  },
+  {
+   "name": "IN-WTBL?",
+   "locals": [
+    "TBL",
+    "CNT",
+    "V",
+    "I"
+   ]
+  },
+  {
+   "name": "IN-BTBL?",
+   "locals": [
+    "TBL",
+    "CNT",
+    "V",
+    "I"
+   ]
+  },
+  {
+   "name": "COPY-LEXBUF",
+   "locals": [
+    "SRC",
+    "DEST",
+    "WDS"
+   ]
+  },
+  {
+   "name": "COPY-READBUF",
+   "locals": [
+    "SRC",
+    "DEST"
+   ]
+  },
+  {
+   "name": "READBUF-LENGTH",
+   "locals": [
+    "TBL",
+    "P"
+   ]
+  },
+  {
+   "name": "READLINE",
+   "locals": [
+    "PROMPT?",
+    "OHERE"
+   ]
+  },
+  {
+   "name": "PERFORM",
+   "locals": [
+    "ACT",
+    "DOBJ",
+    "IOBJ",
+    "PRTN",
+    "RTN",
+    "OA",
+    "OD",
+    "ODD",
+    "OI",
+    "WON",
+    "CNT",
+    "ORM",
+    "I"
+   ]
+  },
+  {
+   "name": "COUNT-PRS-APPEARANCES",
+   "locals": [
+    "O",
+    "R",
+    "MAX",
+    "I"
+   ]
+  },
+  {
+   "name": "PERFORM-CALL-HANDLERS",
+   "locals": [
+    "PRTN",
+    "RTN",
+    "AC",
+    "RM"
+   ]
+  },
+  {
+   "name": "GOTO",
+   "locals": [
+    "RM",
+    "WAS-LIT",
+    "F",
+    "OWINNER"
+   ]
+  },
+  {
+   "name": "PICK-ONE-R",
+   "locals": [
+    "TABL",
+    "RND"
+   ]
+  },
+  {
+   "name": "JIGS-UP",
+   "locals": [
+    "TEXT",
+    "W"
+   ]
+  },
+  {
+   "name": "YES?",
+   "locals": [
+    "RESP"
+   ]
+  },
+  {
+   "name": "VISIBLE?",
+   "locals": [
+    "OBJ",
+    "P",
+    "CEIL"
+   ]
+  },
+  {
+   "name": "VIS-CEILING",
+   "locals": [
+    "L"
+   ]
+  },
+  {
+   "name": "ACCESSIBLE?",
+   "locals": [
+    "OBJ",
+    "L"
+   ]
+  },
+  {
+   "name": "HELD?",
+   "locals": [
+    "OBJ",
+    "HLDR"
+   ]
+  },
+  {
+   "name": "META-LOC",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "NOW-DARK?",
+   "locals": []
+  },
+  {
+   "name": "NOW-LIT?",
+   "locals": [
+    "?TMP"
+   ]
+  },
+  {
+   "name": "DEL-EVENT",
+   "locals": [
+    "IQPOS"
+   ]
+  },
+  {
+   "name": "IQUEUE-CLEANUP",
+   "locals": [
+    "S",
+    "Z"
+   ]
+  },
+  {
+   "name": "CLOCKER",
+   "locals": [
+    "S",
+    "C",
+    "FIRED"
+   ]
+  },
+  {
+   "name": "YOU-MASHER",
+   "locals": [
+    "WHOM",
+    "LM?"
+   ]
+  },
+  {
+   "name": "NOT-POSSIBLE",
+   "locals": [
+    "V",
+    "LM?"
+   ]
+  },
+  {
+   "name": "RHETORICAL",
+   "locals": [
+    "LM?"
+   ]
+  },
+  {
+   "name": "BE-SPECIFIC",
+   "locals": [
+    "LM?"
+   ]
+  },
+  {
+   "name": "SILLY",
+   "locals": [
+    "LM?"
+   ]
+  },
+  {
+   "name": "TSD",
+   "locals": [
+    "LM?"
+   ]
+  },
+  {
+   "name": "PRE-REQUIRES-LIGHT",
+   "locals": []
+  },
+  {
+   "name": "V-LOOK",
+   "locals": []
+  },
+  {
+   "name": "DESCRIBE-ROOM",
+   "locals": [
+    "RM",
+    "LONG",
+    "P",
+    "V"
+   ]
+  },
+  {
+   "name": "DARKNESS-F",
+   "locals": [
+    "ARG",
+    "?TMP"
+   ]
+  },
+  {
+   "name": "DESCRIBE-OBJECTS",
+   "locals": [
+    "RM",
+    "P",
+    "N",
+    "I"
+   ]
+  },
+  {
+   "name": "GENERIC-DESC?",
+   "locals": [
+    "OBJ",
+    "P"
+   ]
+  },
+  {
+   "name": "NPC-DESC?",
+   "locals": [
+    "OBJ",
+    "P"
+   ]
+  },
+  {
+   "name": "CONTENTS-DESC?",
+   "locals": [
+    "OBJ",
+    "P"
+   ]
+  },
+  {
+   "name": "PRINT-CAP-STR",
+   "locals": [
+    "S",
+    "MAX",
+    "C",
+    "I",
+    "?TMP"
+   ]
+  },
+  {
+   "name": "DESCRIBE-CONTENTS",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "NOT-WINNER?",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "LIST-OBJECTS",
+   "locals": [
+    "O",
+    "FILTER",
+    "FLAGS",
+    "N",
+    "F",
+    "S",
+    "MAX",
+    "J",
+    "I"
+   ]
+  },
+  {
+   "name": "LIST-OBJECTS-PRINT",
+   "locals": [
+    "O",
+    "FLAGS",
+    "CNT",
+    "CAP?"
+   ]
+  },
+  {
+   "name": "PRINT-ENGLISH-NUM",
+   "locals": [
+    "N",
+    "CAP?"
+   ]
+  },
+  {
+   "name": "LIST-OBJECTS-TAG-COUNTS",
+   "locals": [
+    "TBL",
+    "TAGS",
+    "IND-FUNC",
+    "C",
+    "MAX",
+    "O",
+    "P",
+    "N",
+    "I",
+    "J"
+   ]
+  },
+  {
+   "name": "V-WALK",
+   "locals": [
+    "PT",
+    "PTS",
+    "RM",
+    "D"
+   ]
+  },
+  {
+   "name": "V-ENTER",
+   "locals": [
+    "O"
+   ]
+  },
+  {
+   "name": "V-EXIT",
+   "locals": [
+    "O"
+   ]
+  },
+  {
+   "name": "DO-WALK",
+   "locals": [
+    "DIR",
+    "ORIG?PRSO-DIR",
+    "?RESULT"
+   ]
+  },
+  {
+   "name": "DOOR-DIR",
+   "locals": [
+    "DOOR",
+    "D",
+    "PT"
+   ]
+  },
+  {
+   "name": "V-QUIT",
+   "locals": []
+  },
+  {
+   "name": "V-EXAMINE",
+   "locals": [
+    "P",
+    "N"
+   ]
+  },
+  {
+   "name": "V-LOOK-UNDER",
+   "locals": []
+  },
+  {
+   "name": "V-SEARCH",
+   "locals": []
+  },
+  {
+   "name": "V-INVENTORY",
+   "locals": [
+    "N",
+    "O",
+    "I"
+   ]
+  },
+  {
+   "name": "INV-DESCRIBE-CONTENTS",
+   "locals": [
+    "OBJ",
+    "F"
+   ]
+  },
+  {
+   "name": "INV-PRINT-DETAILS",
+   "locals": [
+    "O"
+   ]
+  },
+  {
+   "name": "INV-INDISTINGUISHABLE?",
+   "locals": [
+    "A",
+    "B",
+    "?TMP"
+   ]
+  },
+  {
+   "name": "V-TAKE",
+   "locals": []
+  },
+  {
+   "name": "TRY-TAKE",
+   "locals": [
+    "OBJ",
+    "SILENT",
+    "HOLDER"
+   ]
+  },
+  {
+   "name": "TAKE-HOLDER",
+   "locals": [
+    "OBJ",
+    "TAKER",
+    "CEIL",
+    "BLOCKER",
+    "ALLOWER",
+    "HAD-ALLOWER?",
+    "L"
+   ]
+  },
+  {
+   "name": "BLOCKS-TAKE?",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "COMMON-PARENT-R",
+   "locals": [
+    "A",
+    "B",
+    "ROOT",
+    "N",
+    "F",
+    "R",
+    "I"
+   ]
+  },
+  {
+   "name": "TAKE-CAPACITY-CHECK",
+   "locals": [
+    "O",
+    "SILENT",
+    "CAP",
+    "CWT",
+    "NWT",
+    "?TMP"
+   ]
+  },
+  {
+   "name": "PRE-DROP",
+   "locals": []
+  },
+  {
+   "name": "V-DROP",
+   "locals": [
+    "L"
+   ]
+  },
+  {
+   "name": "PRE-PUT-ON",
+   "locals": []
+  },
+  {
+   "name": "V-PUT-ON",
+   "locals": [
+    "S",
+    "CCAP",
+    "X",
+    "W",
+    "B"
+   ]
+  },
+  {
+   "name": "PRE-PUT-IN",
+   "locals": []
+  },
+  {
+   "name": "V-PUT-IN",
+   "locals": [
+    "S",
+    "CCAP",
+    "CSIZE",
+    "X",
+    "W",
+    "B"
+   ]
+  },
+  {
+   "name": "CONTENTS-WEIGHT",
+   "locals": [
+    "O",
+    "W",
+    "I"
+   ]
+  },
+  {
+   "name": "WEIGHT",
+   "locals": [
+    "O",
+    "X",
+    "W",
+    "I"
+   ]
+  },
+  {
+   "name": "PRE-TAKE-FROM",
+   "locals": []
+  },
+  {
+   "name": "V-TAKE-FROM",
+   "locals": []
+  },
+  {
+   "name": "V-WEAR",
+   "locals": []
+  },
+  {
+   "name": "V-UNWEAR",
+   "locals": []
+  },
+  {
+   "name": "V-EAT",
+   "locals": []
+  },
+  {
+   "name": "V-VERSION",
+   "locals": [
+    "?TMP"
+   ]
+  },
+  {
+   "name": "V-THINK-ABOUT",
+   "locals": []
+  },
+  {
+   "name": "V-OPEN",
+   "locals": []
+  },
+  {
+   "name": "V-CLOSE",
+   "locals": []
+  },
+  {
+   "name": "V-LOCK",
+   "locals": []
+  },
+  {
+   "name": "V-UNLOCK",
+   "locals": []
+  },
+  {
+   "name": "V-WAIT",
+   "locals": [
+    "T",
+    "INTERRUPT",
+    "ENDACT"
+   ]
+  },
+  {
+   "name": "V-AGAIN",
+   "locals": []
+  },
+  {
+   "name": "V-READ",
+   "locals": [
+    "T"
+   ]
+  },
+  {
+   "name": "V-TURN-ON",
+   "locals": []
+  },
+  {
+   "name": "V-TURN-OFF",
+   "locals": []
+  },
+  {
+   "name": "V-FLIP",
+   "locals": []
+  },
+  {
+   "name": "V-PUSH",
+   "locals": []
+  },
+  {
+   "name": "V-PULL",
+   "locals": []
+  },
+  {
+   "name": "V-YES",
+   "locals": []
+  },
+  {
+   "name": "V-NO",
+   "locals": []
+  },
+  {
+   "name": "V-DRINK",
+   "locals": []
+  },
+  {
+   "name": "V-FILL",
+   "locals": []
+  },
+  {
+   "name": "V-EMPTY",
+   "locals": []
+  },
+  {
+   "name": "V-SMELL",
+   "locals": []
+  },
+  {
+   "name": "V-ATTACK",
+   "locals": []
+  },
+  {
+   "name": "V-THROW-AT",
+   "locals": []
+  },
+  {
+   "name": "V-GIVE",
+   "locals": []
+  },
+  {
+   "name": "V-SGIVE",
+   "locals": []
+  },
+  {
+   "name": "PRE-TELL",
+   "locals": []
+  },
+  {
+   "name": "V-TELL-ABOUT",
+   "locals": []
+  },
+  {
+   "name": "V-TELL",
+   "locals": []
+  },
+  {
+   "name": "V-WAVE-HANDS",
+   "locals": []
+  },
+  {
+   "name": "V-WAVE",
+   "locals": []
+  },
+  {
+   "name": "V-CLIMB",
+   "locals": []
+  },
+  {
+   "name": "V-SWIM",
+   "locals": []
+  },
+  {
+   "name": "V-JUMP",
+   "locals": []
+  },
+  {
+   "name": "V-SING",
+   "locals": []
+  },
+  {
+   "name": "V-DANCE",
+   "locals": []
+  },
+  {
+   "name": "V-WAKE",
+   "locals": []
+  },
+  {
+   "name": "V-RUB",
+   "locals": []
+  },
+  {
+   "name": "V-BURN",
+   "locals": []
+  },
+  {
+   "name": "V-UNDO",
+   "locals": []
+  },
+  {
+   "name": "V-SAVE",
+   "locals": []
+  },
+  {
+   "name": "V-RESTORE",
+   "locals": []
+  },
+  {
+   "name": "V-RESTART",
+   "locals": []
+  },
+  {
+   "name": "V-BRIEF",
+   "locals": []
+  },
+  {
+   "name": "V-VERBOSE",
+   "locals": []
+  },
+  {
+   "name": "V-SUPERBRIEF",
+   "locals": []
+  },
+  {
+   "name": "V-SCRIPT",
+   "locals": []
+  },
+  {
+   "name": "V-UNSCRIPT",
+   "locals": []
+  },
+  {
+   "name": "V-SCORE",
+   "locals": [
+    "DEAD?"
+   ]
+  },
+  {
+   "name": "V-FULLSCORE",
+   "locals": [
+    "DEAD?",
+    "MAX",
+    "ANY?",
+    "I",
+    "P"
+   ]
+  },
+  {
+   "name": "PRINTN-RIGHT-ALIGNED",
+   "locals": [
+    "N"
+   ]
+  },
+  {
+   "name": "V-NOTIFY-ON",
+   "locals": []
+  },
+  {
+   "name": "V-NOTIFY-OFF",
+   "locals": []
+  },
+  {
+   "name": "NOTIFY-SCORE",
+   "locals": [
+    "D",
+    "DOWN?"
+   ]
+  },
+  {
+   "name": "AWARD-POINTS",
+   "locals": [
+    "PTS",
+    "ACH",
+    "P",
+    "F"
+   ]
+  },
+  {
+   "name": "PLAYER-F",
+   "locals": []
+  },
+  {
+   "name": "PRINT-GAME-OVER",
+   "locals": []
+  },
+  {
+   "name": "V-WIND",
+   "locals": []
+  },
+  {
+   "name": "V-TURN",
+   "locals": []
+  },
+  {
+   "name": "V-TAP",
+   "locals": []
+  },
+  {
+   "name": "V-SEND",
+   "locals": []
+  },
+  {
+   "name": "V-LIGHT",
+   "locals": []
+  },
+  {
+   "name": "V-EXTINGUISH",
+   "locals": []
+  },
+  {
+   "name": "V-LIFT",
+   "locals": []
+  },
+  {
+   "name": "V-CLIMB-DOWN",
+   "locals": []
+  },
+  {
+   "name": "V-XYZZY",
+   "locals": []
+  },
+  {
+   "name": "MORSE-UNLATCHES?",
+   "locals": [
+    "I",
+    "N"
+   ]
+  },
+  {
+   "name": "MORSE-INTERCEPT",
+   "locals": [
+    "W",
+    "I",
+    "C",
+    "SYMBOLS",
+    "GAP"
+   ]
+  },
+  {
+   "name": "MORSE-PUT",
+   "locals": [
+    "C"
+   ]
+  },
+  {
+   "name": "MORSE-MATCHES?",
+   "locals": [
+    "WANT",
+    "I",
+    "J",
+    "WLEN",
+    "C"
+   ]
+  },
+  {
+   "name": "PRINT-MORSE-CHART",
+   "locals": [
+    "L",
+    "N",
+    "B",
+    "LEN"
+   ]
+  },
+  {
+   "name": "PRINT-MORSE",
+   "locals": [
+    "I",
+    "N",
+    "LEN",
+    "C"
+   ]
+  },
+  {
+   "name": "DOOR-GENERIC",
+   "locals": [
+    "TBL"
+   ]
+  },
+  {
+   "name": "FRONT-DOOR-R",
+   "locals": []
+  },
+  {
+   "name": "DOORMAT-R",
+   "locals": []
+  },
+  {
+   "name": "KEY-GENERIC-F",
+   "locals": [
+    "TBL"
+   ]
+  },
+  {
+   "name": "LEAFLET-R",
+   "locals": []
+  },
+  {
+   "name": "BACK-DOOR-R",
+   "locals": []
+  },
+  {
+   "name": "OPEN-BACK-DOOR",
+   "locals": []
+  },
+  {
+   "name": "GALLERY-R",
+   "locals": [
+    "RARG"
+   ]
+  },
+  {
+   "name": "GALLERY-SCENERY-R",
+   "locals": []
+  },
+  {
+   "name": "SHELF-R",
+   "locals": []
+  },
+  {
+   "name": "HOOK-R",
+   "locals": []
+  },
+  {
+   "name": "ODOMETER-R",
+   "locals": []
+  },
+  {
+   "name": "SET-ODOMETER-LDESC",
+   "locals": []
+  },
+  {
+   "name": "SEAT-CRANK",
+   "locals": []
+  },
+  {
+   "name": "WIND-ODOMETER",
+   "locals": [
+    "FITTED"
+   ]
+  },
+  {
+   "name": "MATCHBOOK-R",
+   "locals": []
+  },
+  {
+   "name": "WORKBENCH-R",
+   "locals": []
+  },
+  {
+   "name": "LANTERN-R",
+   "locals": []
+  },
+  {
+   "name": "LIGHT-LANTERN",
+   "locals": []
+  },
+  {
+   "name": "CRANK-R",
+   "locals": []
+  },
+  {
+   "name": "TELEGRAPH-KEY-R",
+   "locals": []
+  },
+  {
+   "name": "CARD-R",
+   "locals": []
+  },
+  {
+   "name": "MORSE-CHART-R",
+   "locals": []
+  },
+  {
+   "name": "BACK-ROOM-R",
+   "locals": [
+    "RARG"
+   ]
+  },
+  {
+   "name": "LADDER-UP-F",
+   "locals": []
+  },
+  {
+   "name": "HOLDING-MORE-THAN-ONE?",
+   "locals": [
+    "N",
+    "I"
+   ]
+  },
+  {
+   "name": "LADDER-DOWN-F",
+   "locals": [
+    "O",
+    "I"
+   ]
+  },
+  {
+   "name": "LADDER-R",
+   "locals": []
+  },
+  {
+   "name": "CRATES-R",
+   "locals": []
+  },
+  {
+   "name": "ROUND-WINDOW-R",
+   "locals": []
+  },
+  {
+   "name": "BRASS-BOX-R",
+   "locals": []
+  },
+  {
+   "name": "WIN-GAME",
+   "locals": []
+  },
+  {
+   "name": "ITALICIZE",
+   "locals": [
+    "STR"
+   ]
+  },
+  {
+   "name": "POINTLESS-IMPL",
+   "locals": [
+    "VING",
+    "PREP",
+    "FLAGS",
+    "F",
+    "S",
+    "REV?",
+    "LM?"
+   ]
+  },
+  {
+   "name": "PRINT-INDEF",
+   "locals": [
+    "OBJ",
+    "A"
+   ]
+  },
+  {
+   "name": "PRINT-DEF",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "PRINT-PLURAL",
+   "locals": [
+    "OBJ",
+    "P"
+   ]
+  },
+  {
+   "name": "PRINT-CINDEF",
+   "locals": [
+    "OBJ",
+    "A"
+   ]
+  },
+  {
+   "name": "PRINT-CDEF",
+   "locals": [
+    "OBJ"
+   ]
+  },
+  {
+   "name": "PRINT-CAP-OBJ",
+   "locals": [
+    "OBJ",
+    "MAX",
+    "C",
+    "I",
+    "?TMP"
+   ]
+  }
  ]
 }
