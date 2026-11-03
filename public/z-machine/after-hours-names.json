@@ -1,0 +1,822 @@
+{
+ "about": "Names from ZILF's assembly listing of After Hours at the Cabinet. The story file itself keeps only numbers.",
+ "attributes": {
+  "4": "VEHBIT",
+  "5": "TRYTAKEBIT",
+  "6": "TRANSBIT",
+  "7": "ONBIT",
+  "8": "INVISIBLE",
+  "9": "FEMALEBIT",
+  "10": "TOUCHBIT",
+  "11": "NARTICLEBIT",
+  "12": "VOWELBIT",
+  "13": "PLURALBIT",
+  "14": "LIGHTBIT",
+  "15": "NDESCBIT",
+  "16": "PERSONBIT",
+  "17": "ATTACKBIT",
+  "18": "EDIBLEBIT",
+  "19": "READBIT",
+  "20": "DEVICEBIT",
+  "21": "LOCKEDBIT",
+  "22": "TOOLBIT",
+  "23": "OPENBIT",
+  "24": "OPENABLEBIT",
+  "25": "SURFACEBIT",
+  "26": "CONTBIT",
+  "27": "WORNBIT",
+  "28": "WEARBIT",
+  "29": "TAKEBIT",
+  "30": "DOORBIT",
+  "31": "KLUDGEBIT"
+ },
+ "properties": {
+  "2": "ACTION",
+  "3": "SYNONYM",
+  "4": "PLURAL",
+  "5": "PDESC",
+  "6": "GENERIC",
+  "7": "THINGS",
+  "8": "PRONOUN",
+  "9": "ARTICLE",
+  "10": "CAPACITY",
+  "11": "TEXT-HELD",
+  "12": "DESCFCN",
+  "13": "CONTFCN",
+  "14": "TEXT",
+  "15": "GLOBAL",
+  "16": "FDESC",
+  "17": "LDESC",
+  "18": "ADJECTIVE",
+  "19": "SIZE",
+  "20": "DOWN",
+  "21": "UP",
+  "22": "OUT",
+  "23": "IN",
+  "24": "SW",
+  "25": "SE",
+  "26": "NW",
+  "27": "NE",
+  "28": "WEST",
+  "29": "EAST",
+  "30": "SOUTH",
+  "31": "NORTH"
+ },
+ "objects": {
+  "1": "BRASS-BOX",
+  "2": "ROUND-WINDOW",
+  "3": "ATTIC",
+  "4": "CRATES",
+  "5": "LADDER",
+  "6": "BACK-ROOM",
+  "7": "MORSE-CHART",
+  "8": "CARD",
+  "9": "TELEGRAPH-KEY",
+  "10": "TELEGRAPH-OFFICE",
+  "11": "CRANK",
+  "12": "LANTERN",
+  "13": "WORKBENCH",
+  "14": "WORKSHOP",
+  "15": "MATCHBOOK",
+  "16": "ODOMETER",
+  "17": "HOOK",
+  "18": "SHELF",
+  "19": "GALLERY-SCENERY",
+  "20": "BACK-DOOR",
+  "21": "GALLERY",
+  "22": "LEAFLET",
+  "23": "IRON-KEY",
+  "24": "DOORMAT",
+  "25": "FRONT-DOOR",
+  "26": "FRONT-STEPS",
+  "27": "PLAYER",
+  "28": "LOCAL-GLOBALS",
+  "29": "GLOBAL-OBJECTS",
+  "30": "ROOMS",
+  "31": "GENERIC-OBJECTS",
+  "32": "NUMBER",
+  "33": "MANY-OBJECTS",
+  "34": "PSEUDO-OBJECT"
+ },
+ "globals": [
+  "HERE",
+  "SCORE",
+  "MOVES",
+  "IQ-LENGTH",
+  "STANDARD-WAIT",
+  "USAVE",
+  "HERE-LIT",
+  "MODE",
+  "REPORT-MODE",
+  "READBUF",
+  "LEXBUF",
+  "WINNER",
+  "PRSA",
+  "PRSO",
+  "PRSI",
+  "PRSO-DIR",
+  "P-LEN",
+  "P-V",
+  "P-V-WORD",
+  "P-V-WORDN",
+  "P-NOBJ",
+  "P-P1",
+  "P-P2",
+  "P-SYNTAX",
+  "P-CONT",
+  "P-P1-WN",
+  "P-P2-WN",
+  "P-NP1-WN",
+  "P-NP2-WN",
+  "P-CMD-END-WN",
+  "P-TOPIC-SLOT",
+  "P-TOPIC-START",
+  "P-TOPIC-END",
+  "P-PRSOS",
+  "P-PRSIS",
+  "P-XOBJS",
+  "P-LOBJS",
+  "P-O-REASON",
+  "P-O-CONT",
+  "PSEUDO-LOC",
+  "P-NUMBER",
+  "MAP-SCOPE-STATUS",
+  "SCOPE-CURRENT-STAGE",
+  "MAP-SCOPE-OPTIONS",
+  "PREV-SCORE",
+  "NOTIFY-SCORE?",
+  "CURRENT-PLAYER",
+  "MORSE-LEN",
+  "MORSE-WORDS?",
+  "KEY-FOUND",
+  "BACK-DOOR-OPEN",
+  "ODOMETER-WOUND",
+  "CRANK-IN-SOCKET",
+  "HATCH-OPEN",
+  "PREPOSITIONS",
+  "ACTIONS",
+  "PREACTIONS",
+  "VERBS"
+ ],
+ "abbreviations": [
+  {
+   "uses": 128,
+   "saved": 379
+  },
+  {
+   "uses": 83,
+   "saved": 244
+  },
+  {
+   "uses": 53,
+   "saved": 154
+  },
+  {
+   "uses": 74,
+   "saved": 144
+  },
+  {
+   "uses": 43,
+   "saved": 124
+  },
+  {
+   "uses": 42,
+   "saved": 121
+  },
+  {
+   "uses": 15,
+   "saved": 96
+  },
+  {
+   "uses": 8,
+   "saved": 96
+  },
+  {
+   "uses": 96,
+   "saved": 93
+  },
+  {
+   "uses": 81,
+   "saved": 78
+  },
+  {
+   "uses": 39,
+   "saved": 74
+  },
+  {
+   "uses": 4,
+   "saved": 70
+  },
+  {
+   "uses": 37,
+   "saved": 70
+  },
+  {
+   "uses": 19,
+   "saved": 70
+  },
+  {
+   "uses": 69,
+   "saved": 66
+  },
+  {
+   "uses": 33,
+   "saved": 62
+  },
+  {
+   "uses": 32,
+   "saved": 60
+  },
+  {
+   "uses": 20,
+   "saved": 55
+  },
+  {
+   "uses": 55,
+   "saved": 52
+  },
+  {
+   "uses": 14,
+   "saved": 50
+  },
+  {
+   "uses": 14,
+   "saved": 50
+  },
+  {
+   "uses": 52,
+   "saved": 49
+  },
+  {
+   "uses": 4,
+   "saved": 49
+  },
+  {
+   "uses": 26,
+   "saved": 48
+  },
+  {
+   "uses": 7,
+   "saved": 46
+  },
+  {
+   "uses": 48,
+   "saved": 45
+  },
+  {
+   "uses": 12,
+   "saved": 42
+  },
+  {
+   "uses": 43,
+   "saved": 40
+  },
+  {
+   "uses": 7,
+   "saved": 40
+  },
+  {
+   "uses": 42,
+   "saved": 39
+  },
+  {
+   "uses": 41,
+   "saved": 38
+  },
+  {
+   "uses": 41,
+   "saved": 38
+  },
+  {
+   "uses": 21,
+   "saved": 38
+  },
+  {
+   "uses": 9,
+   "saved": 38
+  },
+  {
+   "uses": 3,
+   "saved": 36
+  },
+  {
+   "uses": 38,
+   "saved": 35
+  },
+  {
+   "uses": 13,
+   "saved": 34
+  },
+  {
+   "uses": 35,
+   "saved": 32
+  },
+  {
+   "uses": 33,
+   "saved": 30
+  },
+  {
+   "uses": 17,
+   "saved": 30
+  },
+  {
+   "uses": 7,
+   "saved": 28
+  },
+  {
+   "uses": 7,
+   "saved": 28
+  },
+  {
+   "uses": 11,
+   "saved": 28
+  },
+  {
+   "uses": 8,
+   "saved": 26
+  },
+  {
+   "uses": 8,
+   "saved": 26
+  },
+  {
+   "uses": 3,
+   "saved": 26
+  },
+  {
+   "uses": 10,
+   "saved": 25
+  },
+  {
+   "uses": 3,
+   "saved": 24
+  },
+  {
+   "uses": 2,
+   "saved": 24
+  },
+  {
+   "uses": 27,
+   "saved": 24
+  },
+  {
+   "uses": 7,
+   "saved": 22
+  },
+  {
+   "uses": 5,
+   "saved": 22
+  },
+  {
+   "uses": 3,
+   "saved": 22
+  },
+  {
+   "uses": 13,
+   "saved": 22
+  },
+  {
+   "uses": 5,
+   "saved": 22
+  },
+  {
+   "uses": 13,
+   "saved": 22
+  },
+  {
+   "uses": 7,
+   "saved": 22
+  },
+  {
+   "uses": 5,
+   "saved": 22
+  },
+  {
+   "uses": 23,
+   "saved": 20
+  },
+  {
+   "uses": 3,
+   "saved": 20
+  },
+  {
+   "uses": 23,
+   "saved": 20
+  },
+  {
+   "uses": 4,
+   "saved": 19
+  },
+  {
+   "uses": 8,
+   "saved": 19
+  },
+  {
+   "uses": 4,
+   "saved": 19
+  },
+  {
+   "uses": 8,
+   "saved": 19
+  },
+  {
+   "uses": 11,
+   "saved": 18
+  },
+  {
+   "uses": 11,
+   "saved": 18
+  },
+  {
+   "uses": 6,
+   "saved": 18
+  },
+  {
+   "uses": 11,
+   "saved": 18
+  },
+  {
+   "uses": 21,
+   "saved": 18
+  },
+  {
+   "uses": 21,
+   "saved": 18
+  },
+  {
+   "uses": 20,
+   "saved": 17
+  },
+  {
+   "uses": 20,
+   "saved": 17
+  },
+  {
+   "uses": 20,
+   "saved": 17
+  },
+  {
+   "uses": 7,
+   "saved": 16
+  },
+  {
+   "uses": 4,
+   "saved": 16
+  },
+  {
+   "uses": 10,
+   "saved": 16
+  },
+  {
+   "uses": 4,
+   "saved": 16
+  },
+  {
+   "uses": 7,
+   "saved": 16
+  },
+  {
+   "uses": 4,
+   "saved": 16
+  },
+  {
+   "uses": 10,
+   "saved": 16
+  },
+  {
+   "uses": 5,
+   "saved": 14
+  },
+  {
+   "uses": 9,
+   "saved": 14
+  },
+  {
+   "uses": 17,
+   "saved": 14
+  },
+  {
+   "uses": 5,
+   "saved": 14
+  },
+  {
+   "uses": 9,
+   "saved": 14
+  },
+  {
+   "uses": 3,
+   "saved": 14
+  },
+  {
+   "uses": 17,
+   "saved": 14
+  },
+  {
+   "uses": 4,
+   "saved": 13
+  },
+  {
+   "uses": 2,
+   "saved": 13
+  },
+  {
+   "uses": 4,
+   "saved": 13
+  },
+  {
+   "uses": 6,
+   "saved": 13
+  },
+  {
+   "uses": 8,
+   "saved": 12
+  },
+  {
+   "uses": 15,
+   "saved": 12
+  },
+  {
+   "uses": 15,
+   "saved": 12
+  },
+  {
+   "uses": 8,
+   "saved": 12
+  }
+ ],
+ "words": [
+  "\"\"",
+  "'",
+  ",",
+  ",number",
+  ",tell",
+  ".",
+  "a",
+  "about",
+  "again",
+  "all",
+  "alphabet",
+  "an",
+  "and",
+  "any",
+  "at",
+  "attack",
+  "back",
+  "backroom",
+  "bench",
+  "black",
+  "blow",
+  "board",
+  "book",
+  "both",
+  "box",
+  "brass",
+  "break",
+  "brief",
+  "burn",
+  "but",
+  "card",
+  "carry",
+  "chart",
+  "chew",
+  "climb",
+  "close",
+  "code",
+  "consider",
+  "contemplate",
+  "crank",
+  "crate",
+  "crates",
+  "curios",
+  "d",
+  "dance",
+  "deep",
+  "depress",
+  "destroy",
+  "devour",
+  "doff",
+  "don",
+  "door",
+  "doormat",
+  "douse",
+  "down",
+  "drag",
+  "drink",
+  "drop",
+  "dust",
+  "e",
+  "east",
+  "eat",
+  "eight",
+  "empty",
+  "enter",
+  "every",
+  "everything",
+  "examine",
+  "except",
+  "exit",
+  "extinguish",
+  "fill",
+  "first",
+  "fit",
+  "five",
+  "flip",
+  "four",
+  "from",
+  "front",
+  "full",
+  "fullscore",
+  "g",
+  "gallery",
+  "get",
+  "give",
+  "go",
+  "grab",
+  "guide",
+  "gulp",
+  "handle",
+  "hang",
+  "hatch",
+  "heavy",
+  "her",
+  "him",
+  "hit",
+  "hook",
+  "i",
+  "ignite",
+  "in",
+  "insert",
+  "inside",
+  "into",
+  "inventory",
+  "iron",
+  "it",
+  "jump",
+  "key",
+  "kill",
+  "kindle",
+  "knob",
+  "l",
+  "label",
+  "ladder",
+  "lamp",
+  "lantern",
+  "leaflet",
+  "leave",
+  "lever",
+  "lift",
+  "light",
+  "little",
+  "lock",
+  "long",
+  "look",
+  "mat",
+  "match",
+  "matchbook",
+  "matches",
+  "me",
+  "message",
+  "moon",
+  "moonlight",
+  "morse",
+  "move",
+  "myself",
+  "n",
+  "narrow",
+  "ne",
+  "nine",
+  "no",
+  "north",
+  "northeast",
+  "northwest",
+  "noscript",
+  "notice",
+  "notify",
+  "nw",
+  "oak",
+  "odometer",
+  "of",
+  "off",
+  "oil",
+  "on",
+  "one",
+  "onto",
+  "oops",
+  "open",
+  "out",
+  "outside",
+  "paper",
+  "passage",
+  "peg",
+  "peruse",
+  "pick",
+  "pinned",
+  "place",
+  "plinth",
+  "plugh",
+  "press",
+  "pronouns",
+  "pull",
+  "push",
+  "put",
+  "quit",
+  "raise",
+  "read",
+  "remove",
+  "restart",
+  "restore",
+  "roast",
+  "room",
+  "round",
+  "rub",
+  "s",
+  "save",
+  "scarf",
+  "score",
+  "script",
+  "se",
+  "sealed",
+  "search",
+  "send",
+  "seven",
+  "sheet",
+  "sheets",
+  "shelf",
+  "shove",
+  "shut",
+  "sing",
+  "six",
+  "small",
+  "smash",
+  "smell",
+  "snuff",
+  "socket",
+  "sounder",
+  "south",
+  "southeast",
+  "southwest",
+  "spare",
+  "steel",
+  "strike",
+  "string",
+  "superbrief",
+  "sw",
+  "swim",
+  "switch",
+  "tag",
+  "tags",
+  "take",
+  "tap",
+  "telegraph",
+  "tell",
+  "ten",
+  "the",
+  "them",
+  "then",
+  "think",
+  "three",
+  "through",
+  "throw",
+  "thru",
+  "to",
+  "toggle",
+  "tools",
+  "torch",
+  "toss",
+  "transcript",
+  "turn",
+  "two",
+  "u",
+  "under",
+  "undo",
+  "unlock",
+  "unscript",
+  "unwear",
+  "up",
+  "verbose",
+  "version",
+  "w",
+  "wait",
+  "wake",
+  "walk",
+  "wave",
+  "wear",
+  "welcome",
+  "west",
+  "wheels",
+  "wick",
+  "wind",
+  "winding",
+  "window",
+  "with",
+  "wooden",
+  "workbench",
+  "worn",
+  "x",
+  "xyzzy",
+  "y",
+  "yank",
+  "yes",
+  "z"
+ ]
+}
