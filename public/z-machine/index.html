@@ -327,6 +327,7 @@ select {
 .room-map .room .start-t, .room-map .room.sel .start-t { font: 600 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; fill: var(--accent); }
 .room-map .path { stroke: var(--muted); stroke-width: 1.4; fill: none; }
 .room-map .path.cond { stroke-dasharray: 2 3; }
+.room-map .path.maybe { stroke-dasharray: 6 4; }
 .room-map .path.hot { stroke: var(--accent); stroke-width: 2.4; }
 .room-map .stub { stroke: var(--muted); stroke-width: 1.3; stroke-dasharray: 3 3; }
 .room-map .stub.hot { stroke: var(--accent); }
@@ -615,7 +616,7 @@ footer p { margin: 0 0 .5rem; }
     <div class="panel-head">
       <p class="station">Station 7</p>
       <h2 id="s7-h">The map, as best the file can tell</h2>
-      <p>An exit is just a property. A room's north exit holds the room you reach by going north, a message saying you can't, or a routine that decides. Follow every exit and you have the map, except that nothing in the file says where a room sits on the page. So this map is a guess: each room goes one step in the direction of the exit that reaches it, or to the nearest free spot when that one's taken. Games bend space, with passages that curve and mazes that loop, so expect some lines to cross.</p>
+      <p>An exit is just a property. A room's north exit holds the room you reach by going north, a message saying you can't, or a routine that decides. Follow every exit and you have the map. Where a routine decides, the page reads it for the rooms it can send you to. Nothing in the file says where a room sits on the page, though. So this map is a guess: each room goes one step in the direction of the exit that reaches it, or to the nearest free spot when that one's taken. Games bend space, with passages that curve and mazes that loop, so expect some lines to cross.</p>
       <p class="howto">Pick a room on the map or from the list below it. Press <kbd>N</kbd>, <kbd>S</kbd>, <kbd>E</kbd>, <kbd>W</kbd>, <kbd>U</kbd>, <kbd>D</kbd>, <kbd>I</kbd>, or <kbd>O</kbd> to walk, as you'd type in the game. With the map focused, the arrow keys walk too.</p>
     </div>
     <p class="map-summary" id="roomSummary"></p>
@@ -2340,12 +2341,58 @@ function roomGraph() {
     rooms = [...withExits];
   }
   const roomSet = new Set(rooms);
-  const exits = new Map(rooms.map((n) => [n, exitsOf(s.obj(n)).filter((ex) => ex.kind !== "room" || roomSet.has(ex.to))]));
+  // read each exit routine for the rooms it can send you to; for Inform, a
+  // top-level object one of them returns is a room too
+  const found = new Map();
+  for (let i = 0; i < rooms.length; i++) {
+    const list = exitsOf(s.obj(rooms[i]));
+    for (const ex of list) {
+      if (ex.kind !== "routine" || !ex.addr) continue;
+      ex.can = routineReturns(ex.addr);
+      if (!zil) for (const t of ex.can) if (!roomSet.has(t) && !s.obj(t).parent) { roomSet.add(t); rooms.push(t); }
+    }
+    found.set(rooms[i], list);
+  }
+  for (const list of found.values()) for (const ex of list) if (ex.can) ex.leads = ex.can.filter((t) => roomSet.has(t));
+  const exits = new Map(rooms.map((n) => [n, found.get(n).filter((ex) => ex.kind !== "room" || roomSet.has(ex.to)).map((ex) => (ex.leads ? { ...ex, leads: ex.leads.filter((t) => t !== n) } : ex))]));
   const graph = { rooms, exits, dirs };
   graph.start = rooms.length && dirs.size ? findStartRoom(graph) : 0;
   roomCache = { story, graph };
   return graph;
 }
+
+// Where an exit routine can send you: the rooms it returns. A room can be
+// returned directly, kept in a variable or on the stack and returned from
+// there, or returned by a routine it calls. One routine can serve several
+// exits, so these are the rooms it can return, not always the one it will.
+let leadsCache = { story: null, map: new Map() };
+function routineReturns(addr, depth = 0) {
+  if (leadsCache.story !== story) leadsCache = { story, map: new Map() };
+  const cache = leadsCache.map;
+  if (cache.has(addr)) return cache.get(addr);
+  cache.set(addr, []);
+  const d = decodeRoutine(addr), out = new Set(), held = new Map();
+  if (!d) return [];
+  const keep = (n, x) => { if (!held.has(n)) held.set(n, new Set()); held.get(n).add(x); };
+  for (const x of d.ins) {
+    if (x.bad) break;
+    const [a, b] = x.ops;
+    if (x.name === "store" && a && b && !a.var && !b.var) keep(a.v, b.v);
+    else if (x.name === "push" && a && !a.var) keep(0, a.v);
+    else if (x.name.startsWith("call") && x.store !== undefined && a && !a.var && a.v && depth < 2) for (const t of routineReturns(story.unpack(a.v, false), depth + 1)) keep(x.store, t);
+  }
+  for (const x of d.ins) {
+    const a = x.ops[0];
+    if (x.name === "ret" && a) { if (!a.var) out.add(a.v); else for (const t of held.get(a.v) || []) out.add(t); }
+    if (x.name === "ret_popped") for (const t of held.get(0) || []) out.add(t);
+  }
+  const list = [...out].filter((n) => story.obj(n));
+  cache.set(addr, list);
+  return list;
+}
+// more rooms than this from one exit is a routine shared by many places
+const MAX_LEADS = 6;
+const drawnLeads = (ex) => (ex.kind === "routine" && ex.leads?.length && ex.leads.length <= MAX_LEADS ? ex.leads : []);
 
 // ---------- Station 7: laying out the map ----------
 // Grid cells: each room goes one step the way its exit points, or to the
@@ -2358,7 +2405,11 @@ const CW = 168, CH = 92, BW = 134, BH = 48, PAD = 26;
 let layoutCache = null;
 function layoutRooms(g, start) {
   if (layoutCache?.story === story) return layoutCache.lay;
-  const toRooms = (n) => (g.exits.get(n) || []).filter((e) => e.kind === "room" && e.to !== n);
+  // plain exits first, then the rooms a routine can send you to
+  const toRooms = (n) => {
+    const ex = g.exits.get(n) || [];
+    return [...ex.filter((e) => e.kind === "room" && e.to !== n), ...ex.flatMap((e) => drawnLeads(e).map((to) => ({ to, dir: e.dir, maybe: true })))];
+  };
   const adj = new Map(g.rooms.map((n) => [n, new Set()]));
   for (const n of g.rooms) for (const e of toRooms(n)) { adj.get(n).add(e.to); adj.get(e.to).add(n); }
 
@@ -2394,7 +2445,7 @@ function layoutRooms(g, start) {
     while (queue.length) {
       const a = queue.shift(), [ax, ay] = at.get(a);
       // compass exits first, then the others, then rooms that only lead here
-      const outs = toRooms(a).sort((p, q) => !COMPASS[p.dir] - !COMPASS[q.dir]);
+      const outs = toRooms(a).sort((p, q) => !!p.maybe - !!q.maybe || !COMPASS[p.dir] - !COMPASS[q.dir]);
       const ins = [...adj.get(a)].filter((b) => !outs.some((e) => e.to === b)).map((b) => {
         const back = toRooms(b).find((e) => e.to === a);
         return { to: b, dir: back ? OPPOSITE[back.dir] || "" : "" };
@@ -2447,7 +2498,9 @@ function exitText(ex, link) {
     return `${link ? `<button type="button" class="linkish" data-room="${ex.to}">${esc(roomName(ex.to))}</button>` : esc(roomName(ex.to))}${via}${ex.when ? ", once a flag is set" : ""}`;
   }
   if (ex.kind === "message") return `blocked: ${ex.text ? quoted(ex.text) : "with a message"}`;
-  return `a routine${ex.addr ? ` at ${link ? routineLink(ex.addr) : hx(ex.addr)}` : ""} decides${ex.door ? ` (through ${link ? objLink(ex.door) : esc(roomName(ex.door))})` : ""}`;
+  const leads = ex.leads || [], name = (n) => (link ? `<button type="button" class="linkish" data-room="${n}">${esc(roomName(n))}</button>` : esc(roomName(n)));
+  const can = leads.length ? `. It can send you to ${leads.length > 1 ? leads.slice(0, -1).map(name).join(", ") + " or " + name(leads[leads.length - 1]) : name(leads[0])}` : "";
+  return `a routine${ex.addr ? ` at ${link ? routineLink(ex.addr) : hx(ex.addr)}` : ""} decides${ex.door ? ` (through ${link ? objLink(ex.door) : esc(roomName(ex.door))})` : ""}${can}`;
 }
 
 let roomUi = { sel: 0 };
@@ -2473,9 +2526,9 @@ function renderRooms() {
   const holder = story.ids ? 0 : story.obj(g.rooms[0])?.parent;
   const how = story.ids ? "the objects at the top of the tree that have exits, or that an exit leads to"
     : holder ? `the children of object ${holder}${usingNames() && nameOfObj(holder) ? ` (${esc(nameOfObj(holder))})` : ""}, which holds every room` : "";
-  const routines = count("routine"), messages = count("message");
+  const routines = count("routine"), messages = count("message"), followed = all.filter((e) => drawnLeads(e).length).length;
   $("roomSummary").innerHTML = `<b>${g.rooms.length} rooms</b>${how ? `, found as ${how}` : ""}. ${count("room")} exits lead straight to a room and are drawn as lines.`
-    + (routines ? ` ${routines} are decided by a routine as you play, so they're drawn as dashed stubs ending in “?”.` : "")
+    + (routines ? ` ${routines} are decided by a routine as you play. The page read those routines: ${followed === routines ? "every one" : followed ? `${followed} of them` : "none of them"} named the rooms ${followed === 1 ? "it" : "they"} can send you to, drawn as dashed arrows${followed < routines ? `, and the rest end in dashed stubs with a “?”` : ""}.` : "")
     + (messages ? ` ${messages} only print a message.` : "")
     + (g.start ? ` The file doesn't say where you start either, so the page read the game's opening instructions until they put you somewhere: <b>${esc(roomName(g.start))}</b>.` : "")
     + (lay.pieces > 1 ? ` The map comes in ${lay.pieces} pieces that no drawn exit joins.` : "");
@@ -2525,11 +2578,29 @@ function renderRooms() {
       if (odd.length) marks.append(svgEl("text", { class: "way", x: sx + dx * 14, y: sy + dy * 14 + 3.5, "text-anchor": "middle", "data-a": pr.a, "data-b": pr.b }, odd.join("/")));
     }
   }
-  // stubs for exits a routine decides
+  // dashed arrows to the rooms a routine can send you to, where no plain
+  // exit already joins the two
+  const maybe = new Map();
+  for (const a of g.rooms) for (const ex of g.exits.get(a)) for (const b of drawnLeads(ex)) {
+    const k = Math.min(a, b) + "-" + Math.max(a, b);
+    if (pairs.has(k)) continue;
+    if (!maybe.has(k)) maybe.set(k, { a, b, ab: false, ba: false });
+    const pr = maybe.get(k);
+    if (pr.a === a) pr.ab = true; else pr.ba = true;
+  }
+  for (const pr of maybe.values()) {
+    const [ax, ay] = centre(pr.a), [bx, by] = centre(pr.b);
+    const len = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / len, uy = (by - ay) / len;
+    const [x1, y1] = edge(ax, ay, ux, uy), [x2, y2] = edge(bx, by, -ux, -uy);
+    const attrs = { class: "path maybe", x1, y1, x2, y2, "data-a": pr.a, "data-b": pr.b };
+    if (!(pr.ab && pr.ba)) attrs[pr.ab ? "marker-end" : "marker-start"] = "url(#oneway)";
+    paths.append(svgEl("line", attrs));
+  }
+  // stubs for exits a routine decides without naming a room
   for (const a of g.rooms) {
     const dirsDone = new Set();
     for (const ex of g.exits.get(a)) {
-      if (ex.kind !== "routine" || dirsDone.has(ex.dir)) continue;
+      if (ex.kind !== "routine" || drawnLeads(ex).length || dirsDone.has(ex.dir)) continue;
       dirsDone.add(ex.dir);
       const v = COMPASS[ex.dir] || STUB_ANGLE[ex.dir] || [0.92, -0.38];
       const l = Math.hypot(v[0], v[1]), ux = v[0] / l, uy = v[1] / l;
@@ -2612,6 +2683,8 @@ function walkMap(dir) {
   if (!roomUi.sel || !roomGraph().rooms.length) return;
   const ex = roomGraph().exits.get(roomUi.sel)?.find((x) => x.dir === dir);
   if (ex?.kind === "room") { selectRoom(ex.to, { scroll: true }); $("mapSay").textContent = `${dir[0].toUpperCase() + dir.slice(1)} to ${roomName(ex.to)}.`; }
+  else if (ex?.kind === "routine" && ex.leads?.length === 1) { selectRoom(ex.leads[0], { scroll: true }); $("mapSay").textContent = `${dir[0].toUpperCase() + dir.slice(1)} to ${roomName(ex.leads[0])}, the one room the routine names.`; }
+  else if (ex?.kind === "routine" && ex.leads?.length) $("mapSay").textContent = `Going ${dir} from ${roomName(roomUi.sel)}: a routine decides between ${ex.leads.length} rooms, listed beside the map.`;
   else $("mapSay").textContent = ex ? `Going ${dir} from ${roomName(roomUi.sel)}: ${ex.kind === "message" ? "blocked with a message" : "a routine decides"}.` : `There's no way ${dir} from ${roomName(roomUi.sel)}.`;
 }
 $("mapBox").addEventListener("keydown", (e) => {
