@@ -419,6 +419,20 @@ select {
 .run-trail .str { font-family: var(--serif); }
 .run-trail .linkish { min-height: 0; padding: 0; font-family: inherit; }
 .run-trail li.next { background: var(--hl); color: var(--hl-ink); }
+.run-reads { margin: .5rem 0 .2rem; font-size: .98rem; }
+.run-state .lbl { display: block; margin: 0 0 .2rem; font: 600 .7rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.run-reads .lbl { display: inline; margin-right: .4rem; }
+.run-reads .var, .run-locals th { font: 400 .85rem var(--mono); color: var(--z2); }
+.run-vars { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem 1rem; margin-top: .7rem; }
+.run-vars .hint { margin: 0; }
+.run-locals { border-collapse: collapse; font-size: .95rem; }
+.run-locals th { text-align: left; font-weight: 400; padding: .1rem .7rem .1rem 0; vertical-align: top; white-space: nowrap; }
+.run-locals td { padding: .1rem 0; overflow-wrap: anywhere; }
+.run-stack { list-style: none; margin: 0; padding: 0; font-size: .95rem; }
+.run-stack li { padding: .1rem 0; border-bottom: 1px dotted var(--line); }
+.run-stack .top { font: 600 .62rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.run-state .linkish { min-height: 0; padding: 0; }
+.run-state .maybe { color: var(--muted); font-size: .92rem; }
 .run-trail li.next .var { color: inherit; }
 .screen.run { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 18rem; max-height: 30rem; overflow-y: auto; }
 /* the status line and upper window stay put while the text scrolls under them */
@@ -429,6 +443,31 @@ select {
 .screen.run .status.grid { font-size: min(1em, calc((100cqw - 2.6rem) / (var(--cols, 80) * .6))); }
 .screen.run .caret { animation: blink 1.1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- Station 10: where the instructions went ---------- */
+.profile { margin-top: 1.8rem; padding-top: .3rem; border-top: 1px solid var(--line); }
+.profile h3 { margin: .9rem 0 .3rem; font-size: 1.2rem; }
+.profile h4 { margin: 1.2rem 0 .45rem; font-size: 1rem; }
+.profile > p { max-width: 70ch; }
+.work-bars { list-style: none; margin: 0; padding: 0; max-width: 46rem; }
+.work-bars li { display: grid; grid-template-columns: 12.5rem minmax(0, 1fr) 7.5rem; align-items: center; gap: .7rem; padding: .25rem 0; }
+.work-bars .w-name { font-size: .95rem; }
+.work-bars .w-num, .prof-num { font: 400 .78rem var(--mono); color: var(--muted); }
+/* one hue for every bar: these compare amounts, not identities */
+.w-bar span, .prof-bar span { display: block; height: 10px; background: var(--stat); border-radius: 0 4px 4px 0; }
+.prof-bar { max-width: 30rem; margin: .3rem 0 .2rem; background: var(--bar); border-radius: 0 4px 4px 0; }
+.prof-tree, .prof-tree ul { list-style: none; margin: 0; padding: 0; }
+.prof-tree ul { margin-left: .95rem; padding-left: 1.05rem; border-left: 1px dotted var(--edge); }
+.prof-row { display: flex; align-items: flex-start; gap: .2rem; padding: .4rem 0; }
+.prof-tree .tog { flex: none; width: 1.9rem; height: 2.2rem; padding: 0; background: none; border: 0; color: var(--muted); font: 400 .8rem var(--mono); cursor: pointer; }
+.prof-tree .tog[aria-expanded="true"] { color: var(--ink); }
+.prof-tree .spacer { flex: none; width: 1.9rem; }
+.prof-main { flex: 1; min-width: 0; }
+.prof-name { margin: .35rem 0 0; font: 400 .85rem var(--mono); overflow-wrap: anywhere; }
+.prof-name .about { font: 400 1rem var(--serif); }
+.prof-name .times { font: 400 .95rem var(--serif); color: var(--muted); }
+.prof-num .linkish { min-height: 0; padding: 0; margin-left: .3rem; }
+.prof-did { margin: .1rem 0 0; font-size: .95rem; max-width: 62ch; }
 
 /* ---------- Text sections ---------- */
 .find, .notes, .sources { max-width: 70ch; margin: 2.5rem 0 0; }
@@ -452,6 +491,9 @@ footer p { margin: 0 0 .5rem; }
   .two-col, .obj-grid, .map-grid, .str-grid, .rt-grid, .run-grid { grid-template-columns: minmax(0, 1fr); }
   .rt-go { margin-left: 0; }
   .rt-code-box { max-height: 28rem; }
+  .work-bars li { grid-template-columns: minmax(0, 1fr) auto; row-gap: .15rem; }
+  .work-bars .w-bar { grid-column: 1 / -1; grid-row: 2; }
+  .run-vars { grid-template-columns: minmax(0, 1fr); }
   .str-list { max-height: 18rem; }
   .map-box { max-height: 26rem; }
   .tree-box { max-height: 20rem; }
@@ -703,6 +745,7 @@ footer p { margin: 0 0 .5rem; }
       <div class="run-state" id="runState"></div>
       <div class="screen-scroll"><pre class="screen run" id="runScreen" aria-label="The game's screen"></pre></div>
     </div>
+    <div class="profile" id="profile"></div>
   </section>
 
   <section class="find" aria-labelledby="find-h">
@@ -731,6 +774,7 @@ footer p { margin: 0 0 .5rem; }
       <li><b>A saved game is small.</b> Everything the game can change lives in dynamic memory, so a save only needs that, plus the interpreter's own place in the program. Station 3 shows how much of the file that is.</li>
       <li><b>The interpreter doesn't know English.</b> It splits what you type into words and looks them up in the dictionary. Working out what <kbd>put the crank in the socket</kbd> means is Z-code in the story file, so every game brings its own parser.</li>
       <li><b>An Inform game starts in two instructions.</b> Open Photopia, Lost Pig, or The Dreamhold and Station 9 shows the same start: call the main routine, then quit. The quit is only there in case the main routine ever returns, and in a working game it never does. ZIL games put their setup right in the first routine, so <i>After Hours</i> starts by printing its opening.</li>
+      <li><b>Some games take a hundred times longer to say hello.</b> In the games tried while building this page, ZILF's reached their first prompt in a few hundred instructions, and Inform's took from about 2,000 to nearly 40,000. Station 10's breakdown shows where they go. Lost Pig, for one, reads the <code>found_in</code> property 1,080 times across its 535 objects before the game prints a word, checking which things are found in more than one place.</li>
       <li><b>Nothing marks a room as a room.</b> The format has objects and nothing else. Infocom's games, and ZILF's, keep every room as a child of one object, here called <code>ROOMS</code>, and a room is an object found there.</li>
     </ul>
   </section>
@@ -3435,6 +3479,7 @@ function stepMachine(m) {
   m.count++;
   m.pc = ins.next;
   const name = ins.name, vals = ins.ops.map((op) => (op.var ? getVar(m, op.v) : op.v));
+  if (m.watch) m.watch(ins, vals);
   const [a, b, c] = vals;
   const store = (x) => setVar(m, ins.store, x);
   const branch = (cond) => {
@@ -3672,6 +3717,56 @@ const HALT_TEXT = {
   error: (m) => `<p><b>The run stopped.</b> ${esc(m.halted.text)}</p>`,
   long: (m) => `<p><b>The run stopped</b> after ${commas(m.count)} instructions without the game asking for anything. This page gives up there.</p>`,
 };
+// A value as the game would mean it: an object's name, a routine's link, or a number.
+function liveValue(v, role) {
+  const s = story;
+  if (role === "o") return v === 0 ? "0, nothing" : v <= s.objs.count ? `${v}, ${esc(shownName(s.obj(v)) || `object ${v}`)}` : String(v);
+  if (role === "a") return `${v}, ${esc(nameOfAttr(v) || `attribute ${v}`)}`;
+  if (role === "p") return `${v}, ${esc(nameOfProp(v) || `property ${v}`)}`;
+  if (role === "r") return v ? routineLink(s.unpack(v, false)) : "0, no routine";
+  if (role === "s") { const t = s.decodeText(s.unpack(v, true), { max: 300 }).text; return `the string ${quoted(t.length > 50 ? t.slice(0, 48) + "…" : t)}`; }
+  const n = v >= 0xFF00 ? String(v - 65536).replace("-", "−") : v >= 0x8000 ? hx(v) : String(v);
+  return n + guessValue(v);
+}
+// A variable has no type, so a bare number only gets a guess at what it is:
+// the start of a known routine, a packed string, or an object.
+function guessValue(v) {
+  const s = story;
+  if (v < 1) return "";
+  const r = s.unpack(v, false);
+  if (routineIndex().byAddr.has(r)) return ` <span class="maybe">could be the routine ${routineLink(r)}</span>`;
+  const a = s.unpack(v, true);
+  if (a >= textStart() && a < s.h.length) {
+    const t = cleanString(s, a);
+    if (t) return ` <span class="maybe">could be the string ${quoted(t.text.length > 44 ? t.text.slice(0, 42) + "…" : t.text)}</span>`;
+  }
+  // Inform's first four objects are its own Class, Object, Routine, and String,
+  // and a 1 or a 2 in a variable is almost always just a number
+  if (v <= s.objs.count && !(s.ids && v <= 4)) return ` <span class="maybe">could be ${esc(shownName(s.obj(v)) || `object ${v}`)}</span>`;
+  return "";
+}
+// What the next instruction is about to read, from the machine as it stands.
+function nextReads(m, ins, info) {
+  if (!ins || ins.bad) return [];
+  const roles = ins.name.startsWith("call") ? "r" : ROLES[ins.name] || "";
+  const f = frameTop(m), out = [];
+  let popped = 0;
+  const peek = (n) => {
+    if (n === 0) { const i = m.stack.length - 1 - popped++; return i >= f.stackLen ? m.stack[i] : undefined; }
+    if (n < 16) return f.locals[n - 1];
+    return rd(m, story.h.globals + 2 * (n - 16));
+  };
+  ins.ops.forEach((op, i) => {
+    const role = roles[i];
+    // an operand that names a variable: show that variable as it is now
+    if (role === "v" && !op.var) { out.push({ name: varName(op.v, info), value: liveValue(peek(op.v) ?? 0) }); return; }
+    if (!op.var) return;
+    const v = peek(op.v);
+    out.push({ name: op.v === 0 ? "the top of the stack" : varName(op.v, info), value: v === undefined ? "nothing, the stack is empty" : liveValue(v, role === "v" ? "" : role) });
+  });
+  return out;
+}
+
 function renderRun() {
   const m = runUi.m;
   if (runUi.stage < RUN) {
@@ -3694,9 +3789,19 @@ function renderRun() {
     const chain = m.frames.map((f) => routineLink(f.routine)).join(" › ");
     $("runCaption").innerHTML = `<p class="run-stage">Stage 6 of 6</p><h3>Run the game's instructions</h3>` + (m.halted ? HALT_TEXT[m.halted.why](m)
       : `<p>${m.count ? `${commas(m.count)} instruction${m.count === 1 ? "" : "s"} run, ${commas(m.calls)} routine call${m.calls === 1 ? "" : "s"} made.` : "Nothing has run yet."} The highlighted one runs next.</p>`);
+    // the variables the next instruction reads, this routine's locals, and the stack
+    const reads = next && !next.bad ? nextReads(m, next, info) : [];
+    const f = frameTop(m), names = info?.localNames || [];
+    const locals = f.locals.map((v, i) => `<tr><th scope="row">${esc(names[i] || `local ${i + 1}`)}</th><td>${liveValue(v)}</td></tr>`).join("");
+    const stack = m.stack.slice(f.stackLen).reverse().map((v) => liveValue(v));
+    const here = routineName(f.routine) || hx(f.routine);
     $("runState").innerHTML = `<p class="hint">Running inside: <span class="chain">${chain}</span></p>
       <ol class="run-trail" aria-label="The last few instructions, and the next">${trail.join("")}</ol>
-      <p class="hint">${m.stack.length ? `${m.stack.length} value${m.stack.length === 1 ? "" : "s"} on the stack.` : "The stack is empty."}</p>`;
+      ${reads.length ? `<p class="run-reads"><span class="lbl">Right now</span> ${reads.map((r) => `<span class="var">${esc(r.name)}</span> = ${r.value}`).join("; ")}</p>` : ""}
+      <div class="run-vars">
+        <div><p class="lbl">Local variables of ${esc(here)}</p>${locals ? `<table class="run-locals"><tbody>${locals}</tbody></table>` : `<p class="hint">None.</p>`}</div>
+        <div><p class="lbl">The stack, top first</p>${stack.length ? `<ul class="run-stack">${stack.map((v, i) => `<li>${v}${i === 0 ? ` <span class="top">top</span>` : ""}</li>`).join("")}</ul>` : `<p class="hint">Empty.</p>`}</div>
+      </div>`;
     // the screen: the status line or upper window, then the main window
     let status = "";
     // Versions 1 to 3 draw the status line only when the game asks with
@@ -3747,6 +3852,7 @@ function renderRunStart() {
   runUi.changes = [];
   freshMachine();
   renderRun();
+  renderProfile();
 }
 $("runStart").addEventListener("click", renderRunStart);
 $("runBack").addEventListener("click", runBack);
@@ -3757,6 +3863,177 @@ $("runText").addEventListener("click", () => {
   runForward((m) => seen(m) > before && !/^\s*$/.test(m.lower.slice(-1)));
 });
 $("runEnd").addEventListener("click", () => runForward((m) => !!m.halted));
+
+
+// ---------- Station 10: where the instructions went ----------
+// Run the start once more with a watch on every instruction, and build a
+// call tree: each routine with the routines it called beneath it, what it
+// cost in instructions, and what it did with them.
+const WORK = [
+  ["tests", "Tests and jumps", /^(je|jl|jg|jz|jin|test|test_attr|dec_chk|inc_chk|jump|check_arg_count|piracy|verify)$/],
+  ["vars", "Arithmetic and variables", /^(store|load|push|pull|pop|inc|dec|add|sub|mul|div|mod|and|or|not|random|log_shift|art_shift)$/],
+  ["tables", "Tables in memory", /^(loadw|loadb|storew|storeb|copy_table|scan_table)$/],
+  ["objects", "Objects and properties", /prop|attr|_obj|parent|child|sibling/],
+  ["calls", "Calls and returns", /^(call|ret|rtrue|rfalse|ret_popped|catch|throw)/],
+  ["print", "Printing", /^(print|new_line)/],
+];
+const workOf = (name) => (WORK.find(([, , re]) => re.test(name)) || ["other"])[0];
+let profileCache = null;
+function profileStart() {
+  if (profileCache?.story === story) return profileCache.p;
+  const m = freshMachine();
+  const node = (r, at) => ({ r, at, calls: 0, self: 0, kids: new Map(), props: new Map(), attrs: new Map(), objs: new Set(), loops: 0, writes: 0, chars: 0, text: "", textAt: Infinity });
+  const root = node(m.frames[0].routine, 0);
+  root.calls = 1;
+  const path = [root], work = {};
+  let firstText = 0;
+  const objectOps = /prop|attr|_obj|parent|child|sibling|jin/;
+  m.watch = (ins, vals) => {
+    // a read stops the run before it counts
+    if (/^(sread|aread|read_char)$/.test(ins.name)) return;
+    while (path.length > m.frames.length) path.pop();
+    if (m.frames.length > path.length) {
+      const parent = path[path.length - 1], r = m.frames[m.frames.length - 1].routine;
+      let k = parent.kids.get(r);
+      if (!k) { k = node(r, m.count - 1); parent.kids.set(r, k); }
+      k.calls++;
+      path.push(k);
+    }
+    const n = path[path.length - 1], name = ins.name;
+    n.self++;
+    const w = workOf(name);
+    work[w] = (work[w] || 0) + 1;
+    if (objectOps.test(name) && vals[0] && vals[0] <= story.objs.count) n.objs.add(vals[0]);
+    if (/^(get_prop|get_prop_addr|get_next_prop|put_prop)$/.test(name) && vals[1] !== undefined) n.props.set(vals[1], (n.props.get(vals[1]) || 0) + 1);
+    if (/_attr$/.test(name)) n.attrs.set(vals[1], (n.attrs.get(vals[1]) || 0) + 1);
+    if ((name === "jump" && ins.jumpTo < ins.addr) || (typeof ins.branch?.to === "number" && ins.branch.to < ins.addr)) n.loops++;
+    if (name === "storew" || name === "storeb") n.writes++;
+    if (!m.streams.length) {
+      const t = name === "print" || name === "print_ret" ? ins.text : name === "print_paddr" ? story.decodeText(story.unpack(vals[0], true), { max: 600 }).text : "";
+      const chars = t ? t.length : /^print_(num|char|obj)$/.test(name) ? 1 : 0;
+      if (chars) { n.chars += chars; if (!n.text && t.trim()) { n.text = t.trim(); n.textAt = m.count; } if (!firstText) firstText = m.count; }
+    }
+  };
+  runMachine(m, (x) => !!x.halted);
+  // add up each node with everything beneath it
+  const total = (n) => {
+    n.kidList = [...n.kids.values()];
+    n.all = n.self; n.allChars = n.chars; n.allLoops = n.loops; n.allWrites = n.writes;
+    n.allObjs = new Set(n.objs); n.allProps = new Map(n.props); n.allAttrs = new Map(n.attrs); n.firstText = n.text; n.firstTextAt = n.textAt;
+    for (const k of n.kidList) {
+      total(k);
+      n.all += k.all; n.allChars += k.allChars; n.allLoops += k.allLoops; n.allWrites += k.allWrites;
+      for (const o of k.allObjs) n.allObjs.add(o);
+      for (const [p, c] of k.allProps) n.allProps.set(p, (n.allProps.get(p) || 0) + c);
+      for (const [a, c] of k.allAttrs) n.allAttrs.set(a, (n.allAttrs.get(a) || 0) + c);
+      // the text it printed first, whether itself or through a routine it called
+      if (k.firstText && k.firstTextAt < n.firstTextAt) { n.firstText = k.firstText; n.firstTextAt = k.firstTextAt; }
+    }
+    n.kidList.sort((a, b) => b.all - a.all);
+  };
+  total(root);
+  const routines = new Set();
+  const visit = (n) => { routines.add(n.r); n.kidList.forEach(visit); };
+  visit(root);
+  const p = { root, m, work, firstText, routines: routines.size };
+  profileCache = { story, p };
+  return p;
+}
+
+// What a routine is: its name, the property that holds it, or nothing.
+function routineAbout(addr) {
+  const r = routineIndex().byAddr.get(addr);
+  if (r?.name) return esc(r.name);
+  const pr = r?.props?.[0];
+  if (pr) return `${esc(nameOfProp(pr.prop) || `property ${pr.prop}`)} of ${esc(shownName(story.obj(pr.obj)) || `object ${pr.obj}`)}`;
+  return "";
+}
+// What it did with its instructions, in a line.
+function workDone(n) {
+  const said = [];
+  const top = (map, nameOf) => [...map].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, c]) => `${esc(nameOf(k))} ${c === 1 ? "once" : `${commas(c)} times`}`);
+  if (n.allObjs.size >= 5) said.push(`touches ${commas(n.allObjs.size)} objects`);
+  // Inform keeps an object's classes in property 2 and its own properties' table in 3
+  const propName = (p) => nameOfProp(p) || (story.ids && p === 2 ? "its classes" : story.ids && p === 3 ? "its own-property table" : `property ${p}`);
+  const props = top(n.allProps, propName);
+  if (props.length && [...n.allProps.values()].reduce((s, c) => s + c, 0) >= 5) said.push(`reads ${props.join(" and ")}`);
+  const attrs = top(n.allAttrs, (a) => nameOfAttr(a) || `attribute ${a}`);
+  if (attrs.length && [...n.allAttrs.values()].reduce((s, c) => s + c, 0) >= 5) said.push(`checks ${attrs.join(" and ")}`);
+  if (n.allWrites >= 10) said.push(`writes ${commas(n.allWrites)} table entries`);
+  if (n.allLoops >= 10) said.push(`goes round its loops ${commas(n.allLoops)} times`);
+  if (n.allChars) said.push(`prints ${commas(n.allChars)} characters, starting “${esc(n.firstText.slice(0, 40))}${n.firstText.length > 40 ? "…" : ""}”`);
+  else said.push("prints nothing");
+  const s = said.join(", ");
+  return s[0].toUpperCase() + s.slice(1) + ".";
+}
+
+const profUi = { open: new Set() };
+function profRow(first, total, depth) {
+  // a routine that does almost nothing but call one other shares its row
+  const chain = [first];
+  let n = first;
+  while (n.kidList.length === 1 && n.kidList[0].all >= n.all - 3) { n = n.kidList[0]; chain.push(n); }
+  const pct = (100 * first.all) / total, key = `${depth}:${first.r}:${first.at}`;
+  const kids = n.kidList.filter((k) => k.all >= total * 0.005);
+  const open = profUi.open.has(key);
+  const tog = kids.length
+    ? `<button type="button" class="tog" data-key="${key}" aria-expanded="${open}" aria-label="${open ? "Collapse" : "Expand"} the routines it called">${open ? "▾" : "▸"}</button>`
+    : `<span class="spacer"></span>`;
+  return `<li><div class="prof-row">${tog}<div class="prof-main">
+      <p class="prof-name">${chain.map((c) => { const a = routineAbout(c.r); return routineLink(c.r) + (a && !routineName(c.r) ? ` <span class="about">${a}</span>` : ""); }).join(" › ")}${first.calls > 1 ? ` <span class="times">called ${commas(first.calls)} times</span>` : ""}</p>
+      <div class="prof-bar" title="${commas(first.all)} instructions, ${pct.toFixed(1)}% of the run"><span style="width:${Math.max(0.6, pct)}%"></span></div>
+      <p class="prof-num">${commas(first.all)} instructions, ${pct < 1 ? pct.toFixed(1) : Math.round(pct)}% <button type="button" class="linkish" data-runto="${first.at}">run to its start</button></p>
+      <p class="prof-did">${workDone(n)}</p>
+    </div></div>${open && kids.length ? `<ul>${kids.map((k) => profRow(k, total, depth + 1)).join("")}</ul>` : ""}</li>`;
+}
+function renderProfile() {
+  const p = profileStart(), m = p.m, total = m.count;
+  if (!total) { $("profile").innerHTML = ""; return; }
+  // open the big branches to begin with
+  if (!profUi.story || profUi.story !== story) {
+    profUi.story = story;
+    profUi.open = new Set();
+    // keys match the rows: a chain's row is keyed by its first routine
+    const openBig = (first, depth) => {
+      if (depth > 6) return;
+      let n = first;
+      while (n.kidList.length === 1 && n.kidList[0].all >= n.all - 3) n = n.kidList[0];
+      if (first.all >= total * 0.2 && n.kidList.some((k) => k.all >= total * 0.005)) { profUi.open.add(`${depth}:${first.r}:${first.at}`); n.kidList.forEach((k) => openBig(k, depth + 1)); }
+    };
+    openBig(p.root, 0);
+  }
+  const how = m.halted?.why === "input" ? "to reach its first prompt" : "before the run stopped";
+  const firstAt = p.firstText ? `The first text reached the screen at instruction ${commas(p.firstText)}${p.firstText > total / 2 ? `, so most of the work came before the game said a word` : ""}.` : "Nothing reached the screen.";
+  const rows = Object.entries(p.work).sort((a, b) => b[1] - a[1]);
+  const max = rows[0][1];
+  const label = (k) => (WORK.find(([id]) => id === k) || [, "Everything else"])[1];
+  $("profile").innerHTML = `
+    <h3 id="prof-h">Where the instructions went</h3>
+    <p>This game ran <b>${commas(total)} instructions</b> ${how}, in ${commas(p.routines)} different routines called ${commas(m.calls)} times. ${firstAt}</p>
+    <h4>What kind of work</h4>
+    <ul class="work-bars" aria-label="Instructions by the kind of work they do, most first">${rows.map(([k, c]) => `<li title="${esc(label(k))}: ${commas(c)} instructions, ${(100 * c / total).toFixed(1)}%">
+      <span class="w-name">${esc(label(k))}</span><span class="w-bar"><span style="width:${(100 * c) / max}%"></span></span><span class="w-num">${commas(c)}, ${(100 * c) / total < 1 ? "under 1" : Math.round((100 * c) / total)}%</span></li>`).join("")}</ul>
+    <h4>Which routines</h4>
+    <p class="hint">Each routine with the routines it called beneath it. A routine's count includes everything it called. ${routineIndex().list.some((r) => r.name) ? "" : "Story files don't keep routine names, so each is named by its address, and by the property that holds it where there is one. "}Run to its start sets the run above to that moment.</p>
+    <ul class="prof-tree">${profRow(p.root, total, 0)}</ul>`;
+}
+$("profile").addEventListener("click", (e) => {
+  const t = e.target.closest(".tog");
+  if (t) {
+    const k = t.dataset.key;
+    if (profUi.open.has(k)) profUi.open.delete(k); else profUi.open.add(k);
+    renderProfile();
+    $("profile").querySelector(`.tog[data-key="${k}"]`)?.focus();
+    return;
+  }
+  const r = e.target.closest("[data-runto]");
+  if (r) {
+    runUi.stage = RUN;
+    runUi.m = runTo(+r.dataset.runto);
+    renderRun();
+    $("s10-h").scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" });
+  }
+});
 
 // redraw the two diagrams when their width changes
 let lastWidths = "";
