@@ -473,7 +473,7 @@ footer p { margin: 0 0 .5rem; }
     <div class="panel-head">
       <p class="station">Station 6</p>
       <h2 id="s6-h">Rooms and things: the object tree</h2>
-      <p>Every room, thing, and person is an <b>object</b>, and objects nest. Each one records its parent, its next sibling, and its first child, so the whole world is one tree. Picking up the lantern is a single instruction that moves it from the room to you. Each object also has 32 on-off <b>attributes</b> and a list of <b>properties</b>: its description, the words that name it, its exits, and anything else the game needs.</p>
+      <p>Every room, thing, and person is an <b>object</b>, and objects nest. Each one records its parent, its next sibling, and its first child, so the whole world is one tree. Picking up the lantern is a single instruction that moves it from the room to you. Each object also has 32 on-off <b>attributes</b> (48 from Version 4) and a list of <b>properties</b>: its description, the words that name it, its exits, and anything else the game needs.</p>
     </div>
     <div class="obj-grid">
       <div class="tree-box"><ul class="tree" id="tree" aria-label="Object tree"></ul></div>
@@ -502,7 +502,7 @@ footer p { margin: 0 0 .5rem; }
   <section class="notes" aria-labelledby="notice-h">
     <h2 id="notice-h">Things to notice</h2>
     <ul id="noticeList">
-      <li><b>A story file keeps numbers, not names.</b> In the source, the front steps are <code>FRONT-STEPS</code> and the lantern is lit with <code>ONBIT</code>. In the file they're object 26 and attribute 7. The names on this page come from the listing the compiler wrote while building <i>After Hours</i>. Open another file and you'll see numbers, which is all an interpreter ever sees.</li>
+      <li><b>A story file keeps numbers, not names.</b> In the source, the front steps are <code>FRONT-STEPS</code> and the lantern is lit with <code>ONBIT</code>. In the file they're object 26 and attribute 7. The names on this page come from the listing the compiler wrote while building <i>After Hours</i>. Most other files show numbers, which is all an interpreter needs. Games built with Inform 6 are the exception: they carry their property and attribute names, so they can print them in error messages, and Station 6 reads them.</li>
       <li><b>An odometer and an odometry are the same word.</b> Version 3 keeps six Z-characters of each word, so both pack to <code>odomet</code>. Type <kbd>examine odometry</kbd> in the game and it examines the odometer.</li>
       <li><b>A saved game is small.</b> Everything the game can change lives in dynamic memory, so a save only needs that, plus the interpreter's own place in the program. Station 3 shows how much of the file that is.</li>
       <li><b>The interpreter doesn't know English.</b> It splits what you type into words and looks them up in the dictionary. Working out what <kbd>put the crank in the socket</kbd> means is Z-code in the story file, so every game brings its own parser.</li>
@@ -527,6 +527,7 @@ footer p { margin: 0 0 .5rem; }
     <ul>
       <li>Marc S. Blank and S. W. Galley, "How to Fit a Large Program Into a Small Machine, or How to Fit the Great Underground Empire on Your Desk-Top," <i>Creative Computing</i> 6, no. 7 (July 1980), pp. 80–87. <a href="https://archive.org/details/creativecomputing-1980-07">Scan at the Internet Archive</a>.</li>
       <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): the preface, §1 (memory map), §3 (text), §11 (header), §12 (objects), §13 (dictionary), and Appendix D, "A short history of the Z-machine". <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
+      <li>Graham Nelson, <i>The Inform Technical Manual</i>, for Inform 6.21 (1996, revised to 1999): §8.5 (the memory map of an Inform game), §9.3 (properties 2 and 3), §9.6 (individual property tables), and §9.7 (symbol names at run time). <a href="https://www.inform-fiction.org/source/tm/TechMan.txt">inform-fiction.org</a>.</li>
       <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and wrote the listing its names come from. <a href="https://zilf.io/">zilf.io</a>.</li>
     </ul>
   </section>
@@ -569,14 +570,26 @@ function unwrap(buf) {
   const tag = (a) => String.fromCharCode(b[a], b[a + 1], b[a + 2], b[a + 3]);
   if (b.length >= 4 && tag(0) === "Glul") throw new Error("That's a Glulx game, made for a different virtual machine, so there's no Z-machine story file in it.");
   if (b.length < 12 || tag(0) !== "FORM" || tag(8) !== "IFRS") return { bytes: b, blorb: false };
-  let a = 12;
+  let a = 12, story = null, about = {};
   while (a + 8 <= b.length) {
     const len = ((b[a + 4] << 24) | (b[a + 5] << 16) | (b[a + 6] << 8) | b[a + 7]) >>> 0;
-    if (tag(a) === "ZCOD") return { bytes: b.slice(a + 8, a + 8 + len), blorb: true };
+    if (tag(a) === "ZCOD") story = b.slice(a + 8, a + 8 + len);
     if (tag(a) === "GLUL") throw new Error("That Blorb holds a Glulx game, made for a different virtual machine.");
+    // IFmd is the game's catalogue card, in iFiction XML
+    if (tag(a) === "IFmd") about = blorbAbout(new TextDecoder().decode(b.slice(a + 8, a + 8 + len)));
     a += 8 + len + (len & 1);
   }
-  throw new Error("That Blorb file doesn't hold a Z-machine story file.");
+  if (!story) throw new Error("That Blorb file doesn't hold a Z-machine story file.");
+  return { bytes: story, blorb: true, ...about };
+}
+function blorbAbout(xml) {
+  const field = (name) => {
+    const m = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(xml);
+    if (!m) return "";
+    return m[1].replace(/&#(x?)([0-9a-f]+);/gi, (_, x, n) => String.fromCodePoint(parseInt(n, x ? 16 : 10)))
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&").trim();
+  };
+  return { title: field("title"), author: field("author") };
 }
 
 function readStory(buf) {
@@ -779,7 +792,50 @@ function readStory(buf) {
   if (!objs.count) problems.push("No objects could be read from the object table.");
   const obj = (n) => (n >= 1 && n <= objs.count ? objs.list[n] : null);
 
-  return { bytes: b, v, h, problems, u8, u16, unpack, decodeText, zscii, alpha, abbrevs, dict, dictAt, objs, obj };
+  // ---------- Inform's own names ----------
+  // Inform 6 compiles its property and attribute names into the file for its
+  // run-time error messages (Technical Manual §9.7): a count P, then the names
+  // of properties 1 to P−1, then of attributes 0 to 47. Property 1 is "name".
+  const ids = (() => {
+    const ident = /^[A-Za-z_][A-Za-z0-9_]*$/;
+    const nameAt = (a) => {
+      const w = u16(a);
+      if (!w) return "";
+      const t = decodeText(unpack(w, true), { max: 20 });
+      return !t.bad && ident.test(t.text) ? t.text : "";
+    };
+    for (let a = 0x40; a + 4 < Math.min(h.staticMem, b.length); a++) {
+      const n = u16(a), first = u16(a + 2);
+      if (n < 2 || n > 4000 || !first) continue;
+      const addr = unpack(first, true);
+      if (addr < h.highMem || addr >= b.length || decodeText(addr, { max: 2 }).text !== "name") continue;
+      const props = {}, attrs = {};
+      for (let i = 1; i < n; i++) { const s = nameAt(a + 2 * i); if (s) props[i] = s; }
+      for (let i = 0; i < 48; i++) { const s = nameAt(a + 2 * (n + i)); if (s) attrs[i] = s; }
+      return { addr: a, end: a + 2 * (n + 48), count: n - 1, props, attrs };
+    }
+    return null;
+  })();
+
+  // Inform keeps properties only some objects have in a second table per
+  // object, and property 3 points at it (Technical Manual §9.6).
+  if (ids) {
+    for (const o of objs.list.slice(1)) {
+      const p3 = o.propList.find((p) => p.num === 3 && p.len === 2);
+      if (!p3) continue;
+      let a = (p3.bytes[0] << 8) | p3.bytes[1];
+      if (a < 0x40 || a >= h.staticMem) continue;
+      o.indivAt = a;
+      o.indiv = [];
+      for (let guard = 0; guard < 300 && a + 3 <= b.length && u16(a); guard++) {
+        const id = u16(a), len = u8(a + 2);
+        o.indiv.push({ num: id & 0x7FFF, priv: !!(id & 0x8000), len, at: a, head: 3, data: a + 3, bytes: Array.from(b.slice(a + 3, a + 3 + len)), indiv: true });
+        a += 3 + len;
+      }
+    }
+  }
+
+  return { bytes: b, v, h, problems, u8, u16, unpack, decodeText, zscii, alpha, abbrevs, dict, dictAt, objs, obj, ids };
 }
 
 // A string we can show without embarrassment: it ends, and it's mostly letters.
@@ -807,8 +863,10 @@ let demoBuffer = null;
 
 const ui = { field: "version", part: null, textKey: null, step: 0, obj: null, expanded: new Set(), dictQuery: "" };
 
-const nameOfProp = (n) => (names && names.properties[n]) || "";
-const nameOfAttr = (n) => (names && names.attributes[n]) || "";
+// names come from the demo's listing, or from the table an Inform game carries
+const nameOfProp = (n) => (usingNames() ? names.properties[n] : story?.ids?.props[n]) || "";
+const nameOfAttr = (n) => (usingNames() ? names.attributes[n] : story?.ids?.attrs[n]) || "";
+const hasNames = () => !!(usingNames() || story?.ids);
 const nameOfObj = (n) => (names && names.objects[n]) || "";
 const findObjByZil = (zil) => {
   if (!names) return 0;
@@ -820,10 +878,18 @@ const findPropByName = (p) => {
   const hit = Object.entries(names.properties).find(([, v]) => v === p);
   return hit ? Number(hit[0]) : 0;
 };
+// Inform 7 leaves names out of the object table and prints a short_name instead
+function shownName(o) {
+  if (o.name || !story.ids) return o.name;
+  const p = o.propList.find((q) => q.len === 2 && nameOfProp(q.num) === "short_name");
+  const to = p && pointsTo((p.bytes[0] << 8) | p.bytes[1]);
+  return to?.kind === "string" && to.text.length < 60 ? to.text : "";
+}
 const objLabel = (n) => {
   const o = story.obj(n);
   if (!o) return "nothing";
   const zil = usingNames() ? nameOfObj(n) : "";
+  if (!o.name && shownName(o)) return `${n} ${shownName(o)}`;
   if (!o.name) return `${n} ${zil || "(no name)"}`;
   // show the source's name too when it isn't just the printed one in capitals
   return zil && !o.name.toUpperCase().replace(/ /g, "-").includes(zil) ? `${n} ${o.name} (${zil})` : `${n} ${o.name}`;
@@ -860,7 +926,8 @@ function open(buffer, meta) {
     return false;
   }
   story = s;
-  file = { name: meta.name, size: buffer.byteLength, demo: !!meta.demo, blorb: w.blorb };
+  file = { name: meta.name, size: buffer.byteLength, demo: !!meta.demo, blorb: w.blorb,
+    title: meta.demo ? "After Hours at the Cabinet" : w.title || "", author: w.author || "" };
   ui.field = "version";
   ui.part = null;
   ui.textKey = null;
@@ -908,7 +975,8 @@ function renderFileCard() {
   $("fileName").textContent = file.name;
   const bits = [`Version ${h.version}`, `release ${h.release}`, `serial ${h.serial}`, `${commas(story.bytes.length)} bytes`];
   if (file.blorb) bits.push(`taken out of a ${commas(file.size)}-byte Blorb`);
-  $("fileMeta").textContent = (file.demo ? "After Hours at the Cabinet. " : "") + bits.join(", ") + ".";
+  const title = file.title ? `${file.title}${file.author ? ` by ${file.author}` : ""}. ` : "";
+  $("fileMeta").textContent = title + bits.join(", ") + ".";
 }
 
 // ---------- Station 1: the fan-out and the screen ----------
@@ -916,7 +984,8 @@ const MACHINES = ["TRS-80 Model I", "Apple II", "Atari 800", "Commodore 64", "IB
 function drawFanout() {
   const svg = $("fanout");
   svg.replaceChildren();
-  const coreName = file.demo ? "after-hours.z3" : "your story file", coreSize = `story file, ${commas(story.bytes.length)} bytes`;
+  const coreName = file.title || file.name, coreSize = `story file, ${commas(story.bytes.length)} bytes`;
+  svg.setAttribute("aria-label", svg.getAttribute("aria-label").replace(/^One story file(, .*?,)? in the middle/, `One story file, ${coreName}, in the middle`));
   const box = (x, y, m) => {
     const w = m.length * 7.9 + 18;
     svg.append(svgEl("rect", { class: "box", x: x - w / 2, y: y - 15, width: w, height: 30, rx: 4 }));
@@ -926,10 +995,20 @@ function drawFanout() {
     svg.append(svgEl("rect", { class: "zip", x: x - 17, y: y - 9, width: 34, height: 18, rx: 3 }));
     svg.append(svgEl("text", { class: "zip-t", x, y: y + 3.5, "text-anchor": "middle" }, "ZIP"));
   };
-  const core = (cx, cy) => {
-    svg.append(svgEl("rect", { class: "core", x: cx - 84, y: cy - 30, width: 168, height: 60, rx: 5 }));
-    svg.append(svgEl("text", { class: "core-t", x: cx, y: cy - 4, "text-anchor": "middle" }, coreName));
-    svg.append(svgEl("text", { class: "core-s", x: cx, y: cy + 15, "text-anchor": "middle" }, coreSize));
+  // the box grows to fit the name, up to what clears the ZIP chips
+  const core = (cx, cy, most) => {
+    const rect = svgEl("rect", { class: "core", y: cy - 30, height: 60, rx: 5 });
+    const name = svgEl("text", { class: "core-t", x: cx, y: cy - 4, "text-anchor": "middle" }, coreName);
+    svg.append(rect, name, svgEl("text", { class: "core-s", x: cx, y: cy + 15, "text-anchor": "middle" }, coreSize));
+    const width = () => name.getComputedTextLength() || name.textContent.length * 7.9;
+    // too long: keep both ends, so a file name keeps its extension
+    for (let cut = 1; width() > most - 24 && cut < coreName.length - 6; cut++) {
+      const keep = coreName.length - cut, head = Math.ceil(keep / 2);
+      name.textContent = coreName.slice(0, head) + "…" + coreName.slice(coreName.length - (keep - head));
+    }
+    const w = Math.max(168, Math.min(most, width() + 28));
+    rect.setAttribute("x", cx - w / 2);
+    rect.setAttribute("width", w);
   };
   // on a narrow screen: the file on top, the machines in two columns below
   if (svg.clientWidth && svg.clientWidth < 560) {
@@ -943,7 +1022,7 @@ function drawFanout() {
       chip(x, y - 30);
       box(x, y, m);
     });
-    core(170, 34);
+    core(170, 34, 320);
     return;
   }
   svg.setAttribute("viewBox", "0 0 720 300");
@@ -955,7 +1034,7 @@ function drawFanout() {
     chip(cx + (x - cx) * 0.58, cy + (y - cy) * 0.58);
     box(x, y, m);
   });
-  core(cx, cy);
+  core(cx, cy, 236);
 }
 
 // The format has no rooms, so guess: ZIL games keep them in one object with
@@ -988,15 +1067,71 @@ function sampleDescription() {
       if (t) return { title: o.name, text: t.text, obj: o.n, from: `This is the front steps' description, property ${p} of object ${o.n}, decoded from the file just now.` };
     }
   }
-  const found = propertyStrings().filter((f) => f.text.length <= 600 && f.text.length >= 60 && /^[A-Z]/.test(f.text));
+  let found = propertyStrings().filter((f) => f.text.length <= 600 && f.text.length >= 60 && /^[A-Z]/.test(f.text));
+  // when the file names its properties, a real description beats any long string
+  const described = found.filter((f) => nameOfProp(f.prop) === "description");
+  if (described.length) found = described;
   const rooms = likelyRooms();
   const byLength = (a, b) => b.text.length - a.text.length;
   const pick = found.filter((f) => rooms.has(f.obj) && f.text.length <= 450).sort(byLength)[0] || found.sort(byLength)[0];
   if (pick) {
-    const o = story.obj(pick.obj);
-    return { title: rooms.has(o.n) ? o.name : "", text: pick.text, obj: o.n, from: `This is property ${pick.prop} of object ${o.n}${o.name ? `, ${o.name}` : ""}, decoded from the file just now.` };
+    const o = story.obj(pick.obj), pn = nameOfProp(pick.prop);
+    const asRoom = rooms.has(o.n) && (!pn || pn === "description");
+    const nm = shownName(o);
+    return { title: asRoom ? nm : "", text: pick.text, obj: o.n, from: `This is property ${pick.prop}${pn ? ` (${pn})` : ""} of object ${o.n}${nm ? `, ${nm}` : ""}, decoded from the file just now.` };
   }
   return { title: "", text: "This file has no long description this page could find.", from: "" };
+}
+
+// Every two-byte property, the common ones and Inform's per-object extras.
+function* allProps() {
+  for (const o of story.objs.list.slice(1)) {
+    for (const p of o.propList) yield [o, p];
+    for (const p of o.indiv || []) yield [o, p];
+  }
+}
+
+// Compilers put all the routines first in high memory and all the strings
+// after (Inform's Technical Manual §8.5 shows its layout). So the property
+// values pointing into high memory split in two: find the split that best
+// sorts what decodes as clean text from what doesn't.
+let textStartCache = null;
+function textStart() {
+  if (textStartCache && textStartCache.story === story) return textStartCache.at;
+  const seen = new Set();
+  for (const [, p] of allProps()) {
+    if (p.len !== 2) continue;
+    const w = (p.bytes[0] << 8) | p.bytes[1];
+    const addr = story.unpack(w, true);
+    if (w && !story.dictAt.has(w) && addr >= story.h.highMem && addr < story.h.length) seen.add(addr);
+  }
+  const addrs = [...seen].sort((a, b) => a - b);
+  // code read as text can come out as short scraps like " ycp", so only
+  // text that starts with a letter or a mark, and has some length, counts
+  const clean = addrs.map((a) => {
+    const t = cleanString(story, a);
+    return !!t && /^[A-Za-z0-9"'(\[*.]/.test(t.text) && t.text.replace(/[^A-Za-z]/g, "").length >= 4;
+  });
+  // score each split: messy values below it, clean ones from it on
+  let cleanAfter = clean.filter(Boolean).length, messyBefore = 0;
+  let best = cleanAfter, at = addrs.length ? addrs[0] : Infinity;
+  for (let k = 1; k <= addrs.length; k++) {
+    if (clean[k - 1]) cleanAfter--; else messyBefore++;
+    if (messyBefore + cleanAfter > best) { best = messyBefore + cleanAfter; at = k < addrs.length ? addrs[k] : Infinity; }
+  }
+  textStartCache = { story, at };
+  return at;
+}
+
+// What a two-byte value points at in high memory: a routine or a string.
+function pointsTo(w) {
+  if (!w) return null;
+  const addr = story.unpack(w, true);
+  if (addr < story.h.highMem || addr >= story.h.length) return null;
+  // a routine starts with its count of local variables, 0 to 15
+  if (addr < textStart() && story.u8(story.unpack(w, false)) <= 15) return { kind: "routine", addr: story.unpack(w, false) };
+  const t = cleanString(story, addr) || story.decodeText(addr, { max: 600 });
+  return { kind: "string", addr, text: t.text };
 }
 
 let propStringsCache = null;
@@ -1009,7 +1144,7 @@ function propertyStrings() {
       const w = (p.bytes[0] << 8) | p.bytes[1];
       if (!w || story.dictAt.has(w)) continue;
       const addr = story.unpack(w, true);
-      if (seen.has(addr) || addr < story.h.highMem) continue;
+      if (seen.has(addr) || addr < story.h.highMem || addr < textStart()) continue;
       const t = cleanString(story, addr);
       if (t && t.text.length >= 12 && /\s/.test(t.text)) { seen.add(addr); list.push({ obj: o.n, prop: p.num, addr, text: t.text, end: t.end }); }
     }
@@ -1192,6 +1327,7 @@ function memoryParts() {
   add("defaults", "Property defaults", h.objects, s.objs.first, `${s.objs.nDefaults} two-byte values: what a property reads as on an object that doesn't list it.`);
   add("objects", "Objects", s.objs.first, s.objs.end, `${s.objs.count} objects, ${s.objs.entrySize} bytes each: attributes, parent, sibling, child, and where its properties are. Moving a thing rewrites these bytes, so they must be in dynamic memory.`);
   if (s.objs.count) add("props", "Property tables", s.objs.propsStart, s.objs.propsEnd, `Each object's name, then its properties. The game can change a property's value as it plays, so these are in dynamic memory too.`);
+  if (s.ids) add("ids", "Inform's names", s.ids.addr, s.ids.end, `Two-byte pointers to the names of ${s.ids.count} properties and 48 attributes, kept so the game can say which property went wrong in an error message. Station 6 uses them to label things.`);
   add("globals", "Global variables", h.globals, h.globals + 480, `240 variables of two bytes each, shared by the whole game: the score, the number of moves, the room you're in.`);
   add("dict", "Dictionary", h.dict, s.dict.end || h.dict, `${commas(s.dict.count)} words, ${s.dict.entryLen} bytes each, sorted so the interpreter can search them quickly.`);
   add("code", "Routines and strings", h.highMem, end, `The game itself: ${commas(end - h.highMem)} bytes of Z-code routines and the longer strings they print. The game can't read these bytes as data, only run or print them, which is what let them stay on disk.`);
@@ -1423,7 +1559,7 @@ function speech(e) {
     if (parts.includes(p1) && p1 !== "noun") valued.push(p1);
     for (const p of parts) if (p !== "noun" && p !== p1) valued.push(p);
     const say = (p, val) => {
-      if (p === "direction") { const pn = usingNames() ? nameOfProp(val) : ""; return `${p} (property ${val}${pn ? " " + pn : ""})`; }
+      if (p === "direction") { const pn = nameOfProp(val); return `${p} (property ${val}${pn ? " " + pn : ""})`; }
       if (p === "buzz word") return p;
       return `${p} ${val}`;
     };
@@ -1496,10 +1632,92 @@ function stringAt(packed) {
 const objLink = (n) => (story.obj(n) ? `<button type="button" class="linkish" data-o="${n}">${esc(objLabel(n))}</button>` : "nothing");
 const word16 = (bytes, i) => (bytes[i] << 8) | bytes[i + 1];
 
-function readProp(o, p) {
-  const name = usingNames() ? nameOfProp(p.num) : "";
+const quoted = (t) => `“${esc(t.length > 160 ? t.slice(0, 158) + "…" : t)}”`;
+const words16 = (bytes) => { const out = []; for (let i = 0; i + 1 < bytes.length; i += 2) out.push(word16(bytes, i)); return out; };
+
+// What the Inform library does with its standard properties.
+const INFORM_DIRS = { n_to: "north", s_to: "south", e_to: "east", w_to: "west", ne_to: "northeast", nw_to: "northwest", se_to: "southeast", sw_to: "southwest", u_to: "up", d_to: "down", in_to: "in", out_to: "out" };
+const INFORM_TEXT = {
+  description: "Its description",
+  initial: "What's said about it before it's first moved, or about a room as you arrive",
+  when_open: "How it's described while it's open",
+  when_closed: "How it's described while it's closed",
+  when_on: "How it's described while it's on",
+  when_off: "How it's described while it's off",
+  inside_description: "What's added when you're inside it",
+  cant_go: "What you're told if you try a way with no exit",
+  article: "The word printed before its name",
+  short_name: "Its name as printed",
+  plural: "Its name when there are several",
+  invent: "How it's listed in your inventory",
+};
+const INFORM_ROUTINES = {
+  before: "steps in before an action on it happens",
+  after: "reacts once an action on it has happened",
+  life: "handles talking to it, giving it things, and attacking it",
+  react_before: "reacts to actions nearby, before they happen",
+  react_after: "reacts to actions nearby, after they happen",
+  each_turn: "runs every turn while it's in sight",
+  daemon: "runs every turn once it's started",
+  time_out: "runs when its timer reaches zero",
+  describe: "writes its own paragraph in a room description",
+  parse_name: "decides whether the words you typed mean it",
+  orders: "handles orders given to it",
+  grammar: "handles commands spoken to it",
+};
+function readInformProp(name, p) {
   const by = p.bytes, w = p.len === 2 ? word16(by, 0) : null;
-  if (name) {
+  const to = w !== null ? pointsTo(w) : null;
+  const routine = to?.kind === "routine" ? hx(to.addr) : "";
+  if (name === "name") {
+    const ws = words16(by).map(wordAt);
+    if (ws.length && ws.every(Boolean)) return `Words that name it: ${ws.join(", ")}.`;
+  }
+  if (INFORM_DIRS[name] && w !== null) {
+    const dir = INFORM_DIRS[name];
+    if (w === 0) return `There's no way ${dir}.`;
+    if (to?.kind === "string") return `Going ${dir} is blocked with a message: ${quoted(to.text)}`;
+    if (routine) return `Going ${dir} runs a routine at ${routine}, which decides where you end up.`;
+    if (story.obj(w)) return `Going ${dir} leads to ${objLink(w)}.`;
+  }
+  if (INFORM_TEXT[name] && w !== null) {
+    if (to?.kind === "string") return `${INFORM_TEXT[name]}: ${quoted(to.text)}`;
+    if (routine) return `${INFORM_TEXT[name]}, printed by a routine at ${routine}.`;
+  }
+  if (INFORM_ROUTINES[name] && routine) return `A routine at ${routine} that ${INFORM_ROUTINES[name]}.`;
+  if (INFORM_ROUTINES[name] && p.len > 2) {
+    // an additive property: the object's own routine joined by its classes'
+    const rs = words16(by).map(pointsTo);
+    if (rs.every((r) => r?.kind === "routine")) return `Routines at ${rs.map((r) => hx(r.addr)).join(" and ")}. Each one ${INFORM_ROUTINES[name]}.`;
+  }
+  if (name === "found_in" || name === "add_to_scope") {
+    if (routine) return `A routine at ${routine} that decides ${name === "found_in" ? "where it's found" : "what else is in reach with it"}.`;
+    const os = words16(by);
+    if (os.length && os.every((n) => story.obj(n))) return `${name === "found_in" ? "Found in" : "Brings into reach"}: ${os.map(objLink).join(", ")}.`;
+  }
+  if (name === "door_to" && w !== null) {
+    if (routine) return `A routine at ${routine} that decides where it leads.`;
+    if (story.obj(w)) return `It leads to ${objLink(w)}.`;
+  }
+  if (name === "door_dir" && w !== null) {
+    if (routine) return `A routine at ${routine} that decides which way it faces.`;
+    if (INFORM_DIRS[nameOfProp(w)]) return `You go through it by going ${INFORM_DIRS[nameOfProp(w)]} (property ${w}).`;
+  }
+  if (name === "with_key" && w !== null && story.obj(w)) return `It's unlocked with ${objLink(w)}.`;
+  if (name === "capacity" && w !== null && !to) return `It holds up to ${w} things.`;
+  if (name === "time_left" && w !== null && !to) return `Turns left on its timer: ${w}.`;
+  return "";
+}
+
+function readProp(o, p) {
+  const name = nameOfProp(p.num);
+  const by = p.bytes, w = p.len === 2 ? word16(by, 0) : null;
+  if (story.ids) {
+    // Inform keeps properties 2 and 3 for itself (Technical Manual §9.3)
+    if (!p.indiv && p.num === 2) return `It belongs to ${by.length > 2 ? "these classes" : "the class"}: ${words16(by).map(objLink).join(", ")}.`;
+    if (!p.indiv && p.num === 3 && w !== null) return `Points to a second table at ${hx(w)}, for properties only some objects have. They're listed below.`;
+    if (name) { const r = readInformProp(name, p); if (r) return r; }
+  } else if (name) {
     if (name === "SYNONYM" && p.len % 2 === 0) return `Words that name it: ${by.filter((_, i) => i % 2 === 0).map((_, i) => wordAt(word16(by, i * 2)) || "?").join(", ")}.`;
     if (name === "ADJECTIVE") {
       const adj = by.map((n) => story.dict.entries.find((e) => e.bytes[4] & 32 && (e.bytes[4] & 3) === 2 && e.bytes[5] === n));
@@ -1526,8 +1744,10 @@ function readProp(o, p) {
   if (w !== null) {
     const asWord = wordAt(w);
     if (asWord) return `Could be the dictionary word ${asWord}.`;
-    const asString = w ? stringAt(w) : "";
-    if (asString) return `Could be the string ${asString}`;
+    const to = pointsTo(w);
+    // a number this size could also just be a number, so these stay guesses
+    if (to?.kind === "string") return `Could be the string ${quoted(to.text)}`;
+    if (to?.kind === "routine") return `${w}, or a routine at ${hx(to.addr)}: it points into the code, which comes before the strings.`;
     return `${w}`;
   }
   if (p.len === 1) return story.obj(by[0]) ? `${by[0]}, which could be ${objLink(by[0])}` : `${by[0]}`;
@@ -1557,7 +1777,7 @@ function treeHtml(n) {
   const o = story.obj(n), kids = [];
   for (let c = o.child, guard = 0; c && guard < 70000; c = story.obj(c)?.sibling, guard++) kids.push(c);
   const open = ui.expanded.has(n);
-  const label = o.name || (usingNames() ? nameOfObj(n) : "") || "(no name)";
+  const label = shownName(o) || (usingNames() ? nameOfObj(n) : "") || "(no name)";
   const tog = kids.length
     ? `<button type="button" class="tog" data-t="${n}" aria-expanded="${open}" aria-label="${open ? "Collapse" : "Expand"} ${esc(label)}">${open ? "▾" : "▸"}</button>`
     : `<span class="spacer"></span>`;
@@ -1606,29 +1826,36 @@ function renderCard() {
   ].join("");
   let lamps = "";
   for (let i = 0; i < s.objs.nAttrs; i++) {
-    const on = o.attrs.includes(i), nm = usingNames() ? nameOfAttr(i) : "";
+    const on = o.attrs.includes(i), nm = nameOfAttr(i);
     lamps += `<span class="lamp${on ? " on" : ""}" title="${i}${nm ? " " + nm : ""}${on ? ", on" : ""}">${i}</span>`;
   }
   const attrNames = o.attrs.length
-    ? o.attrs.map((i) => (usingNames() && nameOfAttr(i) ? `${i} ${nameOfAttr(i)}` : String(i))).join(", ")
+    ? o.attrs.map((i) => (nameOfAttr(i) ? `${i} ${nameOfAttr(i)}` : String(i))).join(", ")
     : "none";
-  const props = o.propList.map((p) => {
-    const pn = usingNames() ? nameOfProp(p.num) : "";
-    return `<tr><td><span class="mono">${p.num}</span>${pn ? `<span class="pname">${esc(pn)}</span>` : ""}</td>
+  const rows = (list) => list.map((p) => {
+    const pn = nameOfProp(p.num);
+    return `<tr><td><span class="mono">${p.num}</span>${pn ? `<span class="pname">${esc(pn)}</span>` : ""}${p.priv ? `<span class="pname">private</span>` : ""}</td>
       <td class="mono">${p.len}</td><td class="mono">${p.bytes.map((x) => hex(x, 2)).join(" ")}</td><td>${readProp(o, p)}</td></tr>`;
   }).join("");
+  const table = (list) => `<div class="table-wrap"><table class="listing props"><thead><tr><th scope="col">Property</th><th scope="col">Size</th><th scope="col">Bytes</th><th scope="col">Reading</th></tr></thead><tbody>${rows(list)}</tbody></table></div>`;
+  const indiv = o.indiv?.length
+    ? `<p class="hint">The second table, at ${hx(o.indivAt)}, holds ${o.indiv.length === 1 ? "one more property" : `${o.indiv.length} more properties`}. Each entry starts with a two-byte property number and a length byte, since these numbers run past what a size byte can hold.</p>${table(o.indiv)}`
+    : "";
+  const fromTable = s.ids ? `<p class="hint">The names come from a table Inform built into this file at ${hx(s.ids.addr)}, so it could print them in error messages: ${s.ids.count} properties and ${Object.keys(s.ids.attrs).length} attributes.</p>` : "";
   const isRoomsChild = usingNames() && nameOfObj(o.parent) === "ROOMS";
   const src = zil ? zilForm(zil) : "";
   const where = `In ${o.parent ? objLink(o.parent) : "nothing: it's a root of the tree"}. ${kids.length ? `Holds ${kids.map(objLink).join(", ")}.` : "Holds nothing."}`;
   $("card").innerHTML = `
-    <h3>${o.n}: ${esc(o.name || "(no name)")}${zil ? `<span class="zil">${esc(zil)}</span>` : ""}</h3>
+    <h3>${o.n}: ${esc(shownName(o) || "(no name)")}${zil ? `<span class="zil">${esc(zil)}</span>` : ""}</h3>
     <p class="where">${where}${isRoomsChild ? " Its parent is ROOMS, so it's a room." : ""}</p>
     <p class="hint">The entry at ${hx(o.addr)}, ${s.objs.entrySize} bytes:</p>
     <div class="entry">${entry}</div>
-    <p class="hint">Attributes${usingNames() ? "" : ", by number"}. Lit ones are on: ${esc(attrNames)}.</p>
+    <p class="hint">Attributes${hasNames() ? "" : ", by number"}. Lit ones are on: ${esc(attrNames)}.</p>
     <div class="lamps" aria-hidden="true">${lamps}</div>
-    <p class="hint">The property table at ${hx(o.props)} starts with the name, ${s.u8(o.props)} pairs of bytes, then lists ${o.propList.length ? `${o.propList.length} properties, highest number first` : "no properties"}. Each starts with a size byte.</p>
-    ${o.propList.length ? `<div class="table-wrap"><table class="listing props"><thead><tr><th scope="col">Property</th><th scope="col">Size</th><th scope="col">Bytes</th><th scope="col">Reading</th></tr></thead><tbody>${props}</tbody></table></div>` : ""}
+    <p class="hint">The property table at ${hx(o.props)} starts with the name, ${s.u8(o.props) === 1 ? "one pair" : `${s.u8(o.props)} pairs`} of bytes, then lists ${o.propList.length ? `${o.propList.length} properties, highest number first` : "no properties"}. Each starts with a size byte.</p>
+    ${o.propList.length ? table(o.propList) : ""}
+    ${indiv}
+    ${fromTable}
     ${src ? `<h3>In the source</h3><pre class="zil-src">${esc(src)}</pre>` : zil ? `<p class="hint">${esc(zil)} comes from ZILF's library, not from the game's source.</p>` : ""}`;
 }
 $("tree").addEventListener("click", (e) => {
