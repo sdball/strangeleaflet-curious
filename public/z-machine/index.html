@@ -3626,11 +3626,10 @@ function renderRun() {
       <p class="hint">${m.stack.length ? `${m.stack.length} value${m.stack.length === 1 ? "" : "s"} on the stack.` : "The stack is empty."}</p>`;
     // the screen: the status line or upper window, then the main window
     let status = "";
-    if (story.v <= 3 && (m.status || m.count)) {
-      if (!m.status) drawStatus(m);
-      const st = m.status;
-      if (st && st.left) status = `<span class="status row"><span>${esc(st.left)}</span><span>${esc(st.right)}</span></span>`;
-    }
+    // Versions 1 to 3 draw the status line only when the game asks with
+    // show_status or is about to read, so it appears when the machine draws it
+    const st = m.status;
+    if (st && st.left) status = `<span class="status row"><span>${esc(st.left)}</span><span>${esc(st.right)}</span></span>`;
     const upper = m.upper.some((l) => l.trim()) ? `<span class="status grid">${esc(m.upper.join("\n"))}</span>` : "";
     const caret = m.halted?.why === "input" ? `<span class="caret">▌</span>` : "";
     $("runScreen").innerHTML = status + upper + esc(m.lower.replace(/^\n+/, "")) + caret;
