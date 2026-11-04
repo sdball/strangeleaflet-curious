@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💾</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400;1,600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400;1,600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=VT323&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
   /* A beige computer on a desk: paper-white screen, black text, a black status bar */
@@ -31,6 +31,11 @@
   --bar: #1A1916;
   --bar-ink: #FCFBF7;
   --glow: none;
+  --screen-font: var(--mono);
+  --screen-size: 1rem;
+  --screen-lh: 1.5;
+  --screen-full-size: 1rem;
+  --column: 92ch;
 
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -135,8 +140,9 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
   border: 1px solid var(--case-edge);
   border-radius: 8px;
   overflow: hidden;
-  font: 400 1rem/1.5 var(--mono);
+  font: 400 var(--screen-size)/var(--screen-lh) var(--screen-font);
   font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "calt" 0;
   text-shadow: var(--glow);
   cursor: text;
 }
@@ -148,8 +154,8 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .status-bar span { overflow: hidden; text-overflow: ellipsis; }
 .status-bar span + span { flex: none; }
 .status-bar[hidden], .upper[hidden] { display: none; }
-.upper { padding: 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1em * var(--upper-scale, 1)); line-height: 1.5; border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
-.upper .row { min-height: 1.5em; }
+.upper { padding: 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1em * var(--upper-scale, 1)); line-height: var(--screen-lh); border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
+.upper .row { min-height: calc(var(--screen-lh) * 1em); }
 .lower {
   position: relative;
   flex: 1; min-height: 0;
@@ -158,7 +164,7 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
   white-space: pre-wrap; overflow-wrap: anywhere;
   tab-size: 8;
 }
-.ln { min-height: 1.5em; }
+.ln { min-height: calc(var(--screen-lh) * 1em); }
 .ln.open { display: flex; align-items: baseline; flex-wrap: wrap; }
 .ln.open .runs { white-space: pre-wrap; }
 .s1 { background: var(--screen-ink); color: var(--screen); text-shadow: none; }
@@ -191,16 +197,74 @@ html.full-on { overflow: hidden; }
   position: fixed; z-index: 20; left: 0; right: 0;
   top: var(--vv-top, 0px); height: var(--vv-height, 100vh); height: var(--vv-height, 100dvh);
   display: flex; flex-direction: column;
-  background: var(--case);
-  padding: max(.5rem, env(safe-area-inset-top, 0px)) max(.5rem, env(safe-area-inset-right, 0px)) max(.5rem, env(safe-area-inset-bottom, 0px)) max(.5rem, env(safe-area-inset-left, 0px));
+  background: var(--screen);
 }
+/* nothing but the screen, like the hub's text adventure */
 .machine.full .console { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.machine.full .screen { flex: 1; height: auto; min-height: 0; }
-.machine.full .controls { margin-top: .5rem; }
-.machine.full .note, .machine.full #insideLink { display: none; }
+.machine.full .screen { flex: 1; height: auto; min-height: 0; border: 0; border-radius: 0; font-size: var(--screen-full-size); }
+.machine.full .screen:focus-within { box-shadow: none; }
+.machine.full .controls, .machine.full .themes, .machine.full .note { display: none; }
+.machine.full .status-bar { padding-top: calc(.1rem + env(safe-area-inset-top, 0px)); }
+.machine.full .status-bar[hidden] + .upper { padding-top: env(safe-area-inset-top, 0px); }
+.machine.full .lower { padding-bottom: calc(1.5em + env(safe-area-inset-bottom, 0px)); }
 /* on a wide screen the text keeps to a column you can read */
-.machine.full .lower, .machine.full .upper, .machine.full .status-bar { padding-left: max(.75rem, calc((100% - 92ch) / 2)); padding-right: max(.75rem, calc((100% - 92ch) / 2)); }
-@media (min-width: 1100px) { .machine.full .screen { font-size: 1.125rem; } }
+.machine.full .lower, .machine.full .upper, .machine.full .status-bar {
+  padding-left: max(.75rem, env(safe-area-inset-left, 0px), calc((100% - var(--column)) / 2));
+  padding-right: max(.75rem, env(safe-area-inset-right, 0px), calc((100% - var(--column)) / 2));
+}
+/* a phone has no Esc key, so a touch screen gets a way out */
+.leave { display: none; }
+@media (pointer: coarse) {
+  .machine.full .leave {
+    display: grid; place-items: center;
+    position: absolute; z-index: 1; top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px);
+    width: 44px; height: 44px; padding: 0;
+    font: 400 1.5rem/1 var(--sans); color: var(--screen-ink);
+    background: var(--screen); border: 0; border-radius: 0 0 0 10px; cursor: pointer;
+  }
+  .machine.full .status-bar, .machine.full .upper { padding-right: calc(48px + env(safe-area-inset-right, 0px)); }
+}
+.machine.full .console { position: relative; }
+
+/* ---------- Screens ----------
+   Each keeps its own colours whatever the page's theme, like a monitor
+   that came with the machine. Desk follows light and dark. */
+.themes { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .5rem; }
+.themes-lbl { color: var(--muted); font-size: .95rem; margin-right: .25rem; }
+@media (min-width: 1100px) { .machine { --screen-full-size: 1.125rem; } }
+
+/* an Infocom game on an Atari 800, as on the hub */
+.machine[data-screen="atari"] {
+  --screen: #1A4FA3; --screen-ink: #F2F6FF; --screen-dim: #A9C2F0; --typed: #F2F6FF;
+  --bar: #F2F6FF; --bar-ink: #1A4FA3; --glow: none;
+  --screen-font: "VT323", "Courier New", ui-monospace, monospace;
+  --screen-size: 1.375rem; --screen-lh: 1.3;
+  --screen-full-size: clamp(20px, calc(1.6vw + 10px), 40px);
+  --column: 80ch;
+}
+/* green phosphor on black */
+.machine[data-screen="green"] {
+  --screen: #040A05; --screen-ink: #3CFF6E; --screen-dim: #22A447; --typed: #B6FFC8;
+  --bar: #3CFF6E; --bar-ink: #040A05; --glow: 0 0 5px rgba(60, 255, 110, .45);
+  --screen-font: "VT323", "Courier New", ui-monospace, monospace;
+  --screen-size: 1.375rem; --screen-lh: 1.3;
+  --screen-full-size: clamp(20px, calc(1.6vw + 10px), 40px);
+  --column: 80ch;
+}
+/* a printing terminal: typewriter ink on a roll of paper */
+.machine[data-screen="teletype"] {
+  --screen: #F6F0DE; --screen-ink: #26221C; --screen-dim: #7A7060; --typed: #26221C;
+  --bar: transparent; --bar-ink: #26221C; --glow: none;
+  --screen-font: "Courier Prime", "Courier New", ui-monospace, monospace;
+  --screen-size: 1.0625rem; --screen-lh: 1.5;
+  --screen-full-size: clamp(1.0625rem, calc(.7vw + .7rem), 1.5rem);
+  --column: 80ch;
+}
+.machine[data-screen="atari"] .screen, .machine[data-screen="green"] .screen { color-scheme: dark; }
+.machine[data-screen="atari"] .cmd, .machine[data-screen="green"] .cmd { caret-shape: block; }
+.machine[data-screen="teletype"] .screen { color-scheme: light; }
+.machine[data-screen="teletype"] .status-bar { border-bottom: 1px dashed var(--screen-dim); }
+.machine[data-screen="teletype"] .s16 { font-weight: 700; }
 
 /* ---------- Notes ---------- */
 section.find, section.notes, section.sources { margin-top: 2.5rem; max-width: 70ch; }
@@ -211,7 +275,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
 
 @media (max-width: 600px) {
   .lower, .upper { padding-left: .5rem; padding-right: .5rem; }
-  .status-bar { padding: .1rem .5rem; gap: .6rem; font-size: .875rem; }
+  .status-bar { padding: .1rem .5rem; gap: .6rem; font-size: .875em; }
   .screen { height: 70dvh; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -232,7 +296,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Full screen</b> gives the story the whole window, and <kbd>Esc</kbd> brings you back. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, an Atari 800, a green screen, or a teletype's roll of paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -252,13 +316,14 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <p class="load-status" id="loadStatus" role="status" aria-live="polite"></p>
   </section>
 
-  <div class="machine" id="machine">
+  <div class="machine" id="machine" data-screen="desk">
   <section class="console" aria-label="The story">
     <div class="screen" id="screen">
       <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
       <div class="upper" id="upper" hidden aria-hidden="true"></div>
       <div class="lower" id="lower" role="log" aria-live="polite" aria-label="Story text"></div>
     </div>
+    <button type="button" class="leave" id="leaveFull" aria-label="Leave full screen">×</button>
     <input type="text" id="cmd" class="cmd" aria-label="Your command" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send">
   </section>
   <div class="controls">
@@ -267,6 +332,13 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
+  </div>
+  <div class="themes" role="group" aria-labelledby="themesLbl">
+    <span class="themes-lbl" id="themesLbl">Screen:</span>
+    <button type="button" class="btn" data-theme-pick="desk" aria-pressed="true">Desk</button>
+    <button type="button" class="btn" data-theme-pick="atari" aria-pressed="false">Atari 800</button>
+    <button type="button" class="btn" data-theme-pick="green" aria-pressed="false">Green screen</button>
+    <button type="button" class="btn" data-theme-pick="teletype" aria-pressed="false">Teletype</button>
   </div>
   <p class="note" id="note" role="status" aria-live="polite"></p>
   </div>
@@ -1602,11 +1674,28 @@ function fitViewport() {
   machine.style.setProperty("--vv-top", vv.offsetTop + "px");
 }
 $("fullBtn").addEventListener("click", () => setFull(!isFull()));
+$("leaveFull").addEventListener("click", () => setFull(false));
 // the browser's Esc leaves its full screen without a key event, so follow it
 document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && isFull()) setFull(false); });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isFull() && e.target !== cmd) setFull(false);
 });
+
+// ---------- Screens ----------
+// Each screen has its own font, so the columns are measured again once
+// the font is in.
+const SCREENS = { desk: "IBM Plex Mono", atari: "VT323", green: "VT323", teletype: "Courier Prime" };
+function setScreen(name, quiet) {
+  if (!SCREENS[name]) name = "desk";
+  machine.dataset.screen = name;
+  document.querySelectorAll("[data-theme-pick]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.themePick === name));
+  try { localStorage.setItem("zmi:screen", name); } catch { /* storage is off */ }
+  const settle = () => requestAnimationFrame(resizeScreen);
+  document.fonts?.load(`1em "${SCREENS[name]}"`).then(settle, settle);
+  if (!quiet && !cmd.hidden) cmd.focus({ preventScroll: true });
+}
+document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener("click", () => setScreen(b.dataset.themePick, true)));
+try { setScreen(localStorage.getItem("zmi:screen") || "desk", true); } catch { setScreen("desk", true); }
 
 // When the screen changes size, tell the game, the way an interpreter does
 // when its window is resized: the header's screen size, and an upper
