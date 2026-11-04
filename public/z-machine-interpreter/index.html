@@ -23,6 +23,10 @@
   --link: #1E5A73;
   --focus: #1F5FBF;
   --pressed: #F4D77A;
+  --pad: #FFF6C4;
+  --pad-ink: #23201A;
+  --pad-rule: #A9C3DD;
+  --pad-margin: #DE9A92;
 
   --screen: #FCFBF7;
   --screen-ink: #1A1916;
@@ -49,6 +53,7 @@
     /* the same desk after dark, with an amber monitor */
     --bg: #141310; --ink: #E9E3D5; --muted: #A69C8A; --case: #24221D; --case-edge: #3B372F; --paper: #1D1B17; --line: #39352D;
     --accent: #F0915F; --link: #85C4DB; --focus: #8AB4F8; --pressed: #6A5414;
+    --pad: #24211A; --pad-ink: #E9E3D5; --pad-rule: #39465A; --pad-margin: #6B3A33;
     --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
     --glow: 0 0 6px rgba(255, 170, 60, .35);
     color-scheme: dark;
@@ -57,6 +62,7 @@
 :root[data-theme="dark"] {
   --bg: #141310; --ink: #E9E3D5; --muted: #A69C8A; --case: #24221D; --case-edge: #3B372F; --paper: #1D1B17; --line: #39352D;
   --accent: #F0915F; --link: #85C4DB; --focus: #8AB4F8; --pressed: #6A5414;
+  --pad: #24211A; --pad-ink: #E9E3D5; --pad-rule: #39465A; --pad-margin: #6B3A33;
   --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
   --glow: 0 0 6px rgba(255, 170, 60, .35);
   color-scheme: dark;
@@ -145,16 +151,23 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
   font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "calt" 0;
   text-shadow: var(--glow);
   cursor: text;
+  position: relative;
+  /* the corner holds the notepad button (and the way out of full screen on a
+     touch screen); the top lines keep clear of it */
+  --corner-w: 2.25rem;
+  --corner-h: calc(var(--screen-lh) * 1em + .2rem);
+  --corner-n: 1;
+  --corner-room: calc(var(--corner-n) * var(--corner-w) + .5rem);
 }
 .status-bar {
   display: flex; justify-content: space-between; gap: 1rem;
   background: var(--bar); color: var(--bar-ink); text-shadow: none;
-  padding: .1rem .75rem; white-space: pre; overflow: hidden;
+  padding: .1rem max(.75rem, var(--corner-room)) .1rem .75rem; white-space: pre; overflow: hidden;
 }
 .status-bar span { overflow: hidden; text-overflow: ellipsis; }
 .status-bar span + span { flex: none; }
 .status-bar[hidden], .upper[hidden] { display: none; }
-.upper { padding: 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1em * var(--upper-scale, 1)); line-height: var(--screen-lh); border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
+.upper { padding: 0 max(.75rem, var(--corner-room)) 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1em * var(--upper-scale, 1)); line-height: var(--screen-lh); border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
 .upper .row { min-height: calc(var(--screen-lh) * 1em); }
 .lower {
   position: relative;
@@ -184,6 +197,67 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .screen:focus-within { box-shadow: 0 0 0 2px var(--focus); }
 .cmd::placeholder { color: var(--screen-dim); opacity: 1; }
 
+.corner { position: absolute; z-index: 1; top: 0; right: 0; display: flex; font: inherit; }
+.corner button {
+  display: grid; place-items: center;
+  width: var(--corner-w); height: var(--corner-h); padding: 0;
+  font: inherit; color: var(--screen-ink); background: var(--screen);
+  border: 0; border-radius: 0; cursor: pointer; text-shadow: none;
+}
+.corner > :first-child { border-bottom-left-radius: 10px; }
+.corner svg { width: 1.15em; height: 1.15em; }
+.corner button:focus-visible { outline-offset: -3px; }
+.corner .notes-icon[aria-pressed="true"] svg { fill: color-mix(in srgb, currentColor 22%, transparent); }
+/* on a version 3 game's status line the button is part of the bar */
+.screen.has-bar .corner button { color: var(--bar-ink); background: var(--bar); }
+/* with no top lines at all, a blank one keeps the button off the story */
+.screen.bare::before { content: ""; flex: none; height: var(--corner-h); }
+.corner .leave { display: none; }
+@media (pointer: coarse) {
+  .screen { --corner-w: 44px; --corner-h: 44px; }
+}
+
+/* ---------- The notepad ----------
+   A legal pad beside the computer. Below the screen when there isn't room
+   beside it. */
+.console { container-type: inline-size; }
+.deck { display: flex; flex-direction: column; gap: .75rem; }
+.notepad {
+  display: flex; flex-direction: column; min-height: 0; height: 15rem;
+  background: var(--pad); color: var(--pad-ink);
+  border: 1px solid var(--case-edge); border-radius: 8px; overflow: hidden;
+}
+.notepad[hidden] { display: none; }
+.notepad:focus-within { box-shadow: 0 0 0 2px var(--focus); }
+.pad-head { display: flex; align-items: center; gap: .5rem; padding: 0 0 0 .75rem; border-bottom: 2px solid var(--pad-margin); }
+.pad-head h2 { font: 600 .95rem var(--sans); margin: 0; }
+.pad-for { flex: 1; min-width: 0; color: var(--muted); font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pad-close {
+  flex: none; width: 44px; height: 44px; padding: 0;
+  font: 400 1.4rem/1 var(--sans); color: var(--pad-ink); background: transparent; border: 0; cursor: pointer;
+}
+.pad-close:focus-visible { outline-offset: -4px; }
+.pad-text {
+  flex: 1; min-height: 0; width: 100%; resize: none;
+  font: 400 1rem/1.5rem var(--mono);
+  color: var(--pad-ink); caret-color: var(--pad-ink);
+  border: 0; margin: 0; padding: .25rem .75rem .25rem 2.6rem;
+  /* ruled lines under each line of text, and the red margin, scrolling with the text */
+  background:
+    linear-gradient(to right, transparent 1.9rem, var(--pad-margin) 1.9rem, var(--pad-margin) calc(1.9rem + 1px), transparent calc(1.9rem + 1px)) 0 0 / 100% 100% no-repeat local,
+    linear-gradient(to bottom, transparent calc(1.5rem - 1px), var(--pad-rule) calc(1.5rem - 1px)) 0 .25rem / 100% 1.5rem repeat-y local,
+    var(--pad);
+}
+.pad-text:focus, .pad-text:focus-visible { outline: none; }
+.pad-text::placeholder { color: var(--muted); opacity: 1; }
+.pad-foot { margin: 0; padding: .3rem .75rem; font-size: .8rem; line-height: 1.4; color: var(--muted); border-top: 1px solid var(--pad-rule); }
+.pad-foot.trouble { color: var(--accent); }
+@container (min-width: 720px) {
+  .deck { flex-direction: row; }
+  .deck .screen { flex: 1; min-width: 0; }
+  .notepad { flex: 0 0 clamp(15rem, 34%, 22rem); height: auto; }
+}
+
 .controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .75rem; }
 .controls .spacer { flex: 1; }
 .controls a { font-size: .95rem; padding: .5rem .25rem; }
@@ -201,7 +275,17 @@ html.full-on { overflow: hidden; }
 }
 /* nothing but the screen, like the hub's text adventure */
 .machine.full .console { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.machine.full .deck { flex: 1; min-height: 0; gap: 0; }
 .machine.full .screen { flex: 1; height: auto; min-height: 0; border: 0; border-radius: 0; font-size: var(--screen-full-size); }
+.machine.full .screen { --corner-room: calc(var(--corner-n) * var(--corner-w) + .5rem + env(safe-area-inset-right, 0px)); }
+.machine.full .corner { top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px); }
+.machine.full .screen.bare::before { height: calc(var(--corner-h) + env(safe-area-inset-top, 0px)); }
+.machine.full .notepad { flex: 0 0 40%; height: auto; border-width: 1px 0 0; border-radius: 0; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.machine.full .notepad:focus-within { box-shadow: none; }
+@container (min-width: 720px) {
+  .machine.full .notepad { flex: 0 0 clamp(16rem, 30%, 26rem); border-width: 0 0 0 1px; padding-left: 0; }
+  .machine.full .pad-head { padding-top: env(safe-area-inset-top, 0px); }
+}
 .machine.full .screen:focus-within { box-shadow: none; }
 .machine.full .controls, .machine.full .themes, .machine.full .note { display: none; }
 .machine.full .status-bar { padding-top: calc(.1rem + env(safe-area-inset-top, 0px)); }
@@ -212,19 +296,14 @@ html.full-on { overflow: hidden; }
   padding-left: max(.75rem, env(safe-area-inset-left, 0px), calc((100% - var(--column)) / 2));
   padding-right: max(.75rem, env(safe-area-inset-right, 0px), calc((100% - var(--column)) / 2));
 }
-/* a phone has no Esc key, so a touch screen gets a way out */
-.leave { display: none; }
-@media (pointer: coarse) {
-  .machine.full .leave {
-    display: grid; place-items: center;
-    position: absolute; z-index: 1; top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px);
-    width: 44px; height: 44px; padding: 0;
-    font: 400 1.5rem/1 var(--sans); color: var(--screen-ink);
-    background: var(--screen); border: 0; border-radius: 0 0 0 10px; cursor: pointer;
-  }
-  .machine.full .status-bar, .machine.full .upper { padding-right: calc(48px + env(safe-area-inset-right, 0px)); }
+.machine.full .upper, .machine.full .status-bar {
+  padding-right: max(.75rem, var(--corner-room), calc((100% - var(--column)) / 2));
 }
-.machine.full .console { position: relative; }
+/* a phone has no Esc key, so a touch screen gets a way out */
+@media (pointer: coarse) {
+  .machine.full .screen { --corner-n: 2; }
+  .machine.full .corner .leave { display: grid; font: 400 1.5rem/1 var(--sans); }
+}
 
 /* ---------- Screens ----------
    Each keeps its own colours whatever the page's theme, like a monitor
@@ -275,17 +354,16 @@ html.full-on { overflow: hidden; }
 .machine[data-screen="printout"] .lower,
 .machine[data-screen="printout"] .upper,
 .machine[data-screen="printout"] .status-bar { padding-left: calc(var(--strip) + .9rem); padding-right: calc(var(--strip) + .9rem); }
+.machine[data-screen="printout"] .upper,
+.machine[data-screen="printout"] .status-bar { padding-right: max(calc(var(--strip) + .9rem), var(--corner-room)); }
 @media (max-width: 600px) {
   .machine[data-screen="printout"] { --strip: 18px; }
   /* the status line sits above the holes, so on a phone it keeps the room */
-  .machine[data-screen="printout"] .status-bar, .machine[data-screen="printout"] .upper { padding-left: .5rem; padding-right: .5rem; }
+  .machine[data-screen="printout"] .status-bar, .machine[data-screen="printout"] .upper { padding-left: .5rem; padding-right: max(.5rem, var(--corner-room)); }
 }
 /* full screen: a sheet of paper down the middle, with the dark of the machine either side */
 .machine.full[data-screen="printout"] { --hole-bg: #39342C; background: var(--hole-bg); }
 .machine.full[data-screen="printout"] .screen { width: min(100%, calc(var(--column) + 2 * var(--strip) + 2.5rem)); margin: 0 auto; }
-@media (pointer: coarse) {
-  .machine.full[data-screen="printout"] .status-bar, .machine.full[data-screen="printout"] .upper { padding-right: calc(48px + env(safe-area-inset-right, 0px)); }
-}
 .machine[data-screen="printout"] .status-bar { border-bottom: 1px dashed var(--screen-dim); }
 .machine[data-screen="printout"] .s16 { font-weight: 700; }
 
@@ -298,7 +376,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
 
 @media (max-width: 600px) {
   .lower, .upper { padding-left: .5rem; padding-right: .5rem; }
-  .status-bar { padding: .1rem .5rem; gap: .6rem; font-size: .875em; }
+  .upper { padding-right: max(.5rem, var(--corner-room)); }
+  .status-bar { padding: .1rem max(.5rem, var(--corner-room)) .1rem .5rem; gap: .6rem; font-size: .875em; }
   .screen { height: 70dvh; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -319,7 +398,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b>, or the notepad at the right end of the screen's top line, opens a notepad beside the game for clues, combinations, and what's where. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -343,18 +422,33 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
 
   <div class="machine" id="machine" data-screen="desk">
   <section class="console" aria-label="The story">
-    <div class="screen" id="screen">
+    <div class="deck" id="deck">
+    <div class="screen bare" id="screen">
+      <div class="corner" id="corner">
+        <button type="button" class="notes-icon" data-notes aria-pressed="false" aria-label="Notes" title="Notes"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 2v3M10 2v3M12.5 2v3M7 9h6M7 12h6M7 15h3.5"/></svg></button>
+        <button type="button" class="leave" id="leaveFull" aria-label="Leave full screen">×</button>
+      </div>
       <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
       <div class="upper" id="upper" hidden aria-hidden="true"></div>
       <div class="lower" id="lower" role="log" aria-live="polite" aria-label="Story text"></div>
     </div>
-    <button type="button" class="leave" id="leaveFull" aria-label="Leave full screen">×</button>
+    <aside class="notepad" id="notepad" aria-labelledby="notesH" hidden>
+      <div class="pad-head">
+        <h2 id="notesH">Notes</h2>
+        <span class="pad-for" id="padFor"></span>
+        <button type="button" class="pad-close" id="padClose" aria-label="Close notes">×</button>
+      </div>
+      <textarea id="notesText" class="pad-text" aria-labelledby="notesH padFor" aria-describedby="padFoot" placeholder="Clues, combinations, what's where…" spellcheck="true"></textarea>
+      <p class="pad-foot" id="padFoot">Kept in this browser for this story. Undo, Restart, and Restore leave it alone. <kbd>Esc</kbd> goes back to the game.</p>
+    </aside>
+    </div>
     <input type="text" id="cmd" class="cmd" aria-label="Your command" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send">
   </section>
   <div class="controls">
     <button type="button" class="btn" id="undoBtn" disabled>Undo</button>
     <button type="button" class="btn" id="restartBtn">Restart</button>
     <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
+    <button type="button" class="btn" id="notesBtn" data-notes aria-pressed="false">Notes</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
   </div>
@@ -410,7 +504,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   </section>
 
   <footer>
-    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games stay in this browser's storage.</p>
+    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games and notes stay in this browser's storage.</p>
     <p><i>After Hours at the Cabinet</i> was written for the cabinet: <a href="after-hours.z3">after-hours.z3</a>. Its source, and a station-by-station look inside it, are on <a href="../z-machine/">The Z-Machine and how it runs stories</a>. ZILF's library asks that games built with it name it in their opening credits, and <i>After Hours</i> does.</p>
     <p>The three Zorks were built here with ZILF from the Infocom source Microsoft released, and each is shared under its MIT License: <a href="zork1/zork1.z3">zork1.z3</a> (<a href="zork1/LICENSE">license</a>), <a href="zork2/zork2.z3">zork2.z3</a> (<a href="zork2/LICENSE">license</a>), and <a href="zork3/zork3.z3">zork3.z3</a> (<a href="zork3/LICENSE">license</a>). Zork II needed one bracket moved before ZILF would compile it, and <a href="../z-machine/">the Z-machine exhibit</a> explains why that changes nothing in the game. Zork is a trademark, and the name is used here only to say which game this is.</p>
   </footer>
@@ -1291,7 +1385,7 @@ function flush() {
   // the input sits at the end of the last line, after the prompt
   const last = lower.lastElementChild;
   if (m.waiting && last) { last.classList.add("open"); last.append(cmd); cmd.hidden = false; }
-  else { cmd.hidden = true; $("screen").after(cmd); }
+  else { cmd.hidden = true; $("deck").after(cmd); }
   if (hadFocus && !cmd.hidden) cmd.focus({ preventScroll: true });
   drawTop();
   // scroll so a long answer starts at the top of the screen
@@ -1307,6 +1401,8 @@ function drawTop() {
   const up = $("upper");
   const rows = m.upper.length ? m.upper : [];
   up.hidden = !rows.length || rows.every((r) => r.every(([ch, st]) => ch === " " && !(st & 1)));
+  $("screen").classList.toggle("has-bar", !bar.hidden);
+  $("screen").classList.toggle("bare", bar.hidden && up.hidden);
   if (up.hidden) return;
   up.textContent = "";
   for (const row of rows) {
@@ -1340,7 +1436,8 @@ function measureScreen() {
   probe.remove();
   const ch = box.width / 40, lh = box.height || 24;
   const cs = getComputedStyle(lower);
-  const inner = lower.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  // the top lines keep clear of the corner's buttons, so they hold a little less
+  const inner = Math.min(lower.clientWidth - parseFloat(cs.paddingRight), $("screen").clientWidth - $("corner").offsetWidth - 8) - parseFloat(cs.paddingLeft);
   const fit = ch > 0 && inner > 0 ? Math.floor(inner / ch) : 80;
   // games lay out their status lines for 40 columns or more; on a narrow
   // screen the upper window shrinks its letters to fit them
@@ -1566,6 +1663,7 @@ function start(buffer, meta) {
   if (w.blorb) bits.push(`taken out of a ${commas(buffer.byteLength)}-byte Blorb`);
   $("fileMeta").textContent = (game.title ? meta.name + ". " : "") + (w.author ? `By ${w.author}. ` : "") + bits.join(", ") + ".";
   if (game.builtin) { try { localStorage.setItem("zmi:last", game.builtin); } catch { /* storage is off */ } }
+  loadNotes();
   const back = resume();
   $("loadStatus").textContent = back ? "Picked up where you left off. Restart starts the story over." : "";
   if (back) { flush(); updateButtons(); } else go();
@@ -1638,8 +1736,8 @@ cmd.addEventListener("input", () => {
   if (code && finishChar(game.m, code)) go();
 });
 // a click anywhere on the screen goes to the input, unless you're selecting text
-$("screen").addEventListener("click", () => {
-  if (cmd.hidden || String(getSelection())) return;
+$("screen").addEventListener("click", (e) => {
+  if (cmd.hidden || String(getSelection()) || e.target.closest(".corner")) return;
   cmd.focus({ preventScroll: true });
 });
 
@@ -1653,7 +1751,7 @@ $("restartBtn").addEventListener("click", () => {
   if (!armed) {
     btn.classList.add("armed");
     btn.textContent = "Press again to restart";
-    $("note").textContent = "Restarting starts the story over. Saved games stay.";
+    $("note").textContent = "Restarting starts the story over. Saved games and notes stay.";
     armed = setTimeout(disarm, 4000);
     return;
   }
@@ -1742,8 +1840,9 @@ function resizeScreen() {
   m.upper = m.upper.map((r) => (r.length >= SCREEN.width ? r.slice(0, SCREEN.width) : r.concat(Array.from({ length: SCREEN.width - r.length }, () => [" ", 0]))));
   flush();
 }
+// the window, full screen, and the notepad opening all change the screen's size
 let resizeTimer = 0;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resizeScreen, 150); });
+new ResizeObserver(() => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resizeScreen, 120); }).observe($("screen"));
 
 // keep the input in sight when a phone's keyboard opens
 window.visualViewport?.addEventListener("resize", () => {
@@ -1751,6 +1850,64 @@ window.visualViewport?.addEventListener("resize", () => {
   if (document.activeElement === cmd) cmd.scrollIntoView({ block: "nearest" });
 });
 window.visualViewport?.addEventListener("scroll", fitViewport);
+
+// ---------- Notes ----------
+// One notepad for each story, kept in this browser. Undo, Restart, and
+// Restore leave it alone: what you found out stays found out. A built-in
+// story's notes go by its name, so a rebuilt story file keeps them.
+const notesText = $("notesText");
+const notes = { key: "", dirty: false, timer: 0 };
+const KEPT = $("padFoot").innerHTML;
+function loadNotes() {
+  saveNotes();
+  notes.key = `zmi:notes:${game.builtin || game.key}`;
+  const text = store.get(notes.key);
+  notesText.value = typeof text === "string" ? text : "";
+  $("padFor").textContent = game.builtin ? `for ${game.title.split(":")[0]}` : `for ${game.title || game.name}`;
+}
+function saveNotes() {
+  clearTimeout(notes.timer);
+  if (!notes.key || !notes.dirty) return;
+  notes.dirty = false;
+  let ok = true;
+  if (notesText.value.trim()) ok = store.set(notes.key, notesText.value);
+  else store.del(notes.key);
+  const foot = $("padFoot");
+  if (!ok) { foot.textContent = "This browser wouldn't keep these notes. Its storage may be full or turned off."; foot.classList.add("trouble"); }
+  else if (foot.classList.contains("trouble")) { foot.innerHTML = KEPT; foot.classList.remove("trouble"); }
+}
+notesText.addEventListener("input", () => {
+  notes.dirty = true;
+  clearTimeout(notes.timer);
+  notes.timer = setTimeout(saveNotes, 400);
+});
+notesText.addEventListener("blur", saveNotes);
+window.addEventListener("pagehide", saveNotes);
+document.addEventListener("visibilitychange", () => { if (document.hidden) saveNotes(); });
+
+const notesOpen = () => !$("notepad").hidden;
+// On a touch screen the notepad opens without the keyboard, so you can read
+// it; tap the page to write.
+function setNotes(on, quiet) {
+  $("notepad").hidden = !on;
+  machine.classList.toggle("notes-on", on);
+  document.querySelectorAll("[data-notes]").forEach((b) => b.setAttribute("aria-pressed", on));
+  try { localStorage.setItem("zmi:notes", on ? "open" : ""); } catch { /* storage is off */ }
+  if (!on) saveNotes();
+  if (quiet) return;
+  if (on && !touchFirst) notesText.focus({ preventScroll: true });
+  else if (!on && !cmd.hidden) cmd.focus({ preventScroll: true });
+}
+document.querySelectorAll("[data-notes]").forEach((b) => b.addEventListener("click", () => setNotes(!notesOpen())));
+$("padClose").addEventListener("click", () => setNotes(false));
+// Esc in the notepad goes back to the game, and doesn't leave full screen
+notesText.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  e.preventDefault();
+  e.stopPropagation();
+  setNotes(false);
+});
+try { if (localStorage.getItem("zmi:notes") === "open") setNotes(true, true); } catch { /* storage is off */ }
 
 // ---------- Start ----------
 (async () => {
