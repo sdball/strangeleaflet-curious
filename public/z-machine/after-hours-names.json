@@ -822,7 +822,8 @@
  "routines": [
   {
    "name": "GO",
-   "locals": []
+   "locals": [],
+   "addr": 9798
   },
   {
    "name": "CHKWORD?",
@@ -831,14 +832,16 @@
     "PS",
     "P1",
     "F"
-   ]
+   ],
+   "addr": 9982
   },
   {
    "name": "GETWORD?",
    "locals": [
     "N",
     "R"
-   ]
+   ],
+   "addr": 10032
   },
   {
    "name": "PRINT-WORD",
@@ -846,13 +849,15 @@
     "N",
     "I",
     "MAX"
-   ]
+   ],
+   "addr": 10050
   },
   {
    "name": "CLEAR-NOUN-PHRASE",
    "locals": [
     "NP"
-   ]
+   ],
+   "addr": 10096
   },
   {
    "name": "COPY-NOUN-PHRASE",
@@ -860,7 +865,8 @@
     "SRC",
     "DEST",
     "C"
-   ]
+   ],
+   "addr": 10116
   },
   {
    "name": "MERGE-PRSTBL",
@@ -870,13 +876,15 @@
     "SCNT",
     "DCNT",
     "RES"
-   ]
+   ],
+   "addr": 10192
   },
   {
    "name": "SAVE-PARSER-RESULT",
    "locals": [
     "DEST"
-   ]
+   ],
+   "addr": 10260
   },
   {
    "name": "RESTORE-PARSER-RESULT",
@@ -884,7 +892,8 @@
     "SRC",
     "L",
     "OW"
-   ]
+   ],
+   "addr": 10382
   },
   {
    "name": "HANDLE-ORPHAN-RESPONSE",
@@ -899,7 +908,8 @@
     "NY",
     "QREQ",
     "?TMP"
-   ]
+   ],
+   "addr": 10580
   },
   {
    "name": "PARSE-ORPHAN-COUNT?",
@@ -907,7 +917,8 @@
     "WN",
     "W",
     "C"
-   ]
+   ],
+   "addr": 11092
   },
   {
    "name": "REFERS-PSEUDO?",
@@ -920,7 +931,8 @@
     "NT",
     "A",
     "N"
-   ]
+   ],
+   "addr": 11160
   },
   {
    "name": "MATCH-PSEUDO",
@@ -928,19 +940,22 @@
     "SPEC",
     "PT",
     "CNT"
-   ]
+   ],
+   "addr": 11346
   },
   {
    "name": "MAKE-PSEUDO",
    "locals": [
     "PDO"
-   ]
+   ],
+   "addr": 11384
   },
   {
    "name": "THIS-IS-IT",
    "locals": [
     "O"
-   ]
+   ],
+   "addr": 11402
   },
   {
    "name": "CONTENTS-ARE-IT",
@@ -949,59 +964,68 @@
     "FILTER",
     "N",
     "I"
-   ]
+   ],
+   "addr": 11424
   },
   {
    "name": "PRO-TRY-SET-IT",
    "locals": [
     "X",
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11494
   },
   {
    "name": "PRO-FORCE-SET-IT",
    "locals": [
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11520
   },
   {
    "name": "PRO-TRY-SET-THEM",
    "locals": [
     "X",
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11534
   },
   {
    "name": "PRO-FORCE-SET-THEM",
    "locals": [
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11558
   },
   {
    "name": "PRO-TRY-SET-HIM",
    "locals": [
     "X",
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11572
   },
   {
    "name": "PRO-FORCE-SET-HIM",
    "locals": [
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11600
   },
   {
    "name": "PRO-TRY-SET-HER",
    "locals": [
     "X",
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11614
   },
   {
    "name": "PRO-FORCE-SET-HER",
    "locals": [
     "PRO?OBJS"
-   ]
+   ],
+   "addr": 11642
   },
   {
    "name": "SET-PRONOUNS",
@@ -1011,7 +1035,8 @@
     "PT",
     "MAX",
     "I"
-   ]
+   ],
+   "addr": 11656
   },
   {
    "name": "EXPAND-PRONOUN",
@@ -1019,17 +1044,20 @@
     "W",
     "OBJS",
     "CNT"
-   ]
+   ],
+   "addr": 11738
   },
   {
    "name": "V-PRONOUNS",
-   "locals": []
+   "locals": [],
+   "addr": 11888
   },
   {
    "name": "MAIN-LOOP",
    "locals": [
     "?RESULT"
-   ]
+   ],
+   "addr": 11974
   },
   {
    "name": "PARSER",
@@ -1046,13 +1074,15 @@
     "I",
     "W",
     "V"
-   ]
+   ],
+   "addr": 12074
   },
   {
    "name": "STORE-OOPS",
    "locals": [
     "WN"
-   ]
+   ],
+   "addr": 13372
   },
   {
    "name": "HANDLE-OOPS",
@@ -1070,7 +1100,8 @@
     "LBUF",
     "RBUF",
     "I"
-   ]
+   ],
+   "addr": 13416
   },
   {
    "name": "REPLACE-HELD-WORD",
@@ -1086,7 +1117,8 @@
     "LBUF",
     "RBUF",
     "I"
-   ]
+   ],
+   "addr": 13712
   },
   {
    "name": "INSERT-HELD-WORD",
@@ -1102,18 +1134,21 @@
     "NL",
     "DELTA",
     "I"
-   ]
+   ],
+   "addr": 13936
   },
   {
    "name": "CONVERT-ORDER-TO-TELL?",
    "locals": [
     "P",
     "W"
-   ]
+   ],
+   "addr": 14288
   },
   {
    "name": "NUMBER-F",
-   "locals": []
+   "locals": [],
+   "addr": 14476
   },
   {
    "name": "PARSE-NUMBER?",
@@ -1124,7 +1159,8 @@
     "V",
     "C",
     "NEG"
-   ]
+   ],
+   "addr": 14508
   },
   {
    "name": "COPY-TABLE",
@@ -1133,7 +1169,8 @@
     "DEST",
     "LEN",
     "I"
-   ]
+   ],
+   "addr": 14666
   },
   {
    "name": "COPY-TABLE-B",
@@ -1142,32 +1179,37 @@
     "DEST",
     "LEN",
     "I"
-   ]
+   ],
+   "addr": 14696
   },
   {
    "name": "STARTS-NOUN-PHRASE?",
    "locals": [
     "W"
-   ]
+   ],
+   "addr": 14726
   },
   {
    "name": "IS-ENGLISH-NUM?",
    "locals": [
     "W"
-   ]
+   ],
+   "addr": 14788
   },
   {
    "name": "ENGLISH-NUM-VALUE?",
    "locals": [
     "W"
-   ]
+   ],
+   "addr": 14828
   },
   {
    "name": "QUANTIFIER-VALUE?",
    "locals": [
     "W",
     "V"
-   ]
+   ],
+   "addr": 14910
   },
   {
    "name": "PARSE-NOUN-PHRASE",
@@ -1187,14 +1229,16 @@
     "SPEC-WN",
     "NEXTW",
     "NW"
-   ]
+   ],
+   "addr": 14940
   },
   {
    "name": "HAVE-TAKE-POSSIBLE?",
    "locals": [
     "OBJ",
     "OPTS"
-   ]
+   ],
+   "addr": 15658
   },
   {
    "name": "TRIAL-MATCH-NOUN-PHRASE",
@@ -1212,7 +1256,8 @@
     "HAS-FIND",
     "HAS-HAVE",
     "I"
-   ]
+   ],
+   "addr": 15690
   },
   {
    "name": "TRIAL-GWIM-SLOT",
@@ -1222,7 +1267,8 @@
     "CNT",
     "SOPTS",
     "I"
-   ]
+   ],
+   "addr": 15924
   },
   {
    "name": "MATCH-SYNTAX",
@@ -1232,7 +1278,8 @@
     "S",
     "BEST",
     "BEST-SCORE"
-   ]
+   ],
+   "addr": 16046
   },
   {
    "name": "TOPIC-NP-POSSIBLE?",
@@ -1243,7 +1290,8 @@
     "NOBJ",
     "PREP1",
     "PREP2"
-   ]
+   ],
+   "addr": 16136
   },
   {
    "name": "TOPIC-NP-REQUIRED?",
@@ -1256,7 +1304,8 @@
     "PREP2",
     "SAW-TOPIC",
     "SAW-OBJECT"
-   ]
+   ],
+   "addr": 16234
   },
   {
    "name": "MATCH-SYNTAX-LINE?",
@@ -1271,59 +1320,68 @@
     "O1",
     "F2",
     "O2"
-   ]
+   ],
+   "addr": 16368
   },
   {
    "name": "EVERYWHERE-SCOPE-STAGE",
    "locals": [
     "INIT"
-   ]
+   ],
+   "addr": 16704
   },
   {
    "name": "INVENTORY-SCOPE-STAGE",
    "locals": [
     "INIT"
-   ]
+   ],
+   "addr": 16734
   },
   {
    "name": "VEHICLE-SCOPE-STAGE",
    "locals": [
     "INIT",
     "O"
-   ]
+   ],
+   "addr": 16764
   },
   {
    "name": "LOCATION-SCOPE-STAGE",
    "locals": [
     "INIT",
     "C"
-   ]
+   ],
+   "addr": 16810
   },
   {
    "name": "LOCAL-GLOBALS-SCOPE-STAGE",
    "locals": [
     "INIT",
     "N"
-   ]
+   ],
+   "addr": 16846
   },
   {
    "name": "GLOBALS-SCOPE-STAGE",
    "locals": [
     "INIT"
-   ]
+   ],
+   "addr": 16892
   },
   {
    "name": "GENERIC-SCOPE-STAGE",
    "locals": [
     "INIT"
-   ]
+   ],
+   "addr": 16922
   },
   {
    "name": "MAP-SCOPE-INIT-STAGES-FROM-BITS",
    "locals": [
     "BITS",
     "CNT"
-   ]
+   ],
+   "addr": 16952
   },
   {
    "name": "MAP-SCOPE-START",
@@ -1331,7 +1389,8 @@
     "V",
     "LEN",
     "NEED-LIGHT"
-   ]
+   ],
+   "addr": 17110
   },
   {
    "name": "MAP-SCOPE-NEXT",
@@ -1341,7 +1400,8 @@
     "LEN",
     "INIT",
     "NEED-LIGHT"
-   ]
+   ],
+   "addr": 17188
   },
   {
    "name": "SCOPE-CRAWL",
@@ -1351,14 +1411,16 @@
     "N",
     "C",
     "L"
-   ]
+   ],
+   "addr": 17274
   },
   {
    "name": "FIND-OBJECTS",
    "locals": [
     "KEEP",
     "F"
-   ]
+   ],
+   "addr": 17358
   },
   {
    "name": "SET-TOPIC-SPAN",
@@ -1366,7 +1428,8 @@
     "SLOT",
     "START",
     "END"
-   ]
+   ],
+   "addr": 17412
   },
   {
    "name": "FIND-PRSO",
@@ -1375,7 +1438,8 @@
     "F",
     "O",
     "SNOBJ"
-   ]
+   ],
+   "addr": 17514
   },
   {
    "name": "FIND-PRSI",
@@ -1384,7 +1448,8 @@
     "F",
     "O",
     "SNOBJ"
-   ]
+   ],
+   "addr": 17698
   },
   {
    "name": "WHAT-DO-YOU-WANT",
@@ -1393,11 +1458,13 @@
     "SP1",
     "SP2",
     "F"
-   ]
+   ],
+   "addr": 17880
   },
   {
    "name": "PRINT-VERB",
-   "locals": []
+   "locals": [],
+   "addr": 18032
   },
   {
    "name": "MANY-CHECK",
@@ -1405,7 +1472,8 @@
     "OBJ",
     "OPTS",
     "INDIRECT?"
-   ]
+   ],
+   "addr": 18050
   },
   {
    "name": "HAVE-TAKE-CHECK-TBL",
@@ -1417,26 +1485,30 @@
     "N",
     "ORM",
     "I"
-   ]
+   ],
+   "addr": 18164
   },
   {
    "name": "HAVE-TAKE-CHECK",
    "locals": [
     "OBJ",
     "OPTS"
-   ]
+   ],
+   "addr": 18348
   },
   {
    "name": "SHOULD-IMPLICIT-TAKE?",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 18438
   },
   {
    "name": "FAILS-HAVE-CHECK?",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 18458
   },
   {
    "name": "TOUCH-CHECK-TBL",
@@ -1449,14 +1521,16 @@
     "OPRSO",
     "OPRSI",
     "I"
-   ]
+   ],
+   "addr": 18476
   },
   {
    "name": "TOUCH-CHECK",
    "locals": [
     "OBJ",
     "V"
-   ]
+   ],
+   "addr": 18554
   },
   {
    "name": "QUERY-TOUCH-BLOCKERS",
@@ -1466,7 +1540,8 @@
     "CEIL",
     "V",
     "L"
-   ]
+   ],
+   "addr": 18608
   },
   {
    "name": "STILL-VISIBLE-CHECK",
@@ -1474,13 +1549,15 @@
     "TBL",
     "CNT",
     "I"
-   ]
+   ],
+   "addr": 18728
   },
   {
    "name": "NOT-VISIBLE?",
    "locals": [
     "O"
-   ]
+   ],
+   "addr": 18788
   },
   {
    "name": "GWIM",
@@ -1492,7 +1569,8 @@
     "PW",
     "SOPTS",
     "I"
-   ]
+   ],
+   "addr": 18802
   },
   {
    "name": "GET-PREP-WORD",
@@ -1500,21 +1578,24 @@
     "PREP",
     "MAX",
     "I"
-   ]
+   ],
+   "addr": 18948
   },
   {
    "name": "SEARCH-FOR-LIGHT",
    "locals": [
     "L",
     "I"
-   ]
+   ],
+   "addr": 18998
   },
   {
    "name": "SEE-INSIDE?",
    "locals": [
     "OBJ",
     "?TMP"
-   ]
+   ],
+   "addr": 19084
   },
   {
    "name": "MATCH-NOUN-PHRASE",
@@ -1534,13 +1615,15 @@
     "Q",
     "J",
     "I"
-   ]
+   ],
+   "addr": 19138
   },
   {
    "name": "ALL-INCLUDES?",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 20034
   },
   {
    "name": "TRY-NARROW-INDISTINGUISHABLE",
@@ -1550,7 +1633,8 @@
     "OBJ",
     "I",
     "J"
-   ]
+   ],
+   "addr": 20104
   },
   {
    "name": "APPLY-GENERIC-FCN",
@@ -1560,13 +1644,15 @@
     "F",
     "R",
     "I"
-   ]
+   ],
+   "addr": 20150
   },
   {
    "name": "WHICH-DO-YOU-MEAN",
    "locals": [
     "TBL"
-   ]
+   ],
+   "addr": 20192
   },
   {
    "name": "ANY-SPEC-REFERS?",
@@ -1575,7 +1661,8 @@
     "N",
     "O",
     "I"
-   ]
+   ],
+   "addr": 20220
   },
   {
    "name": "ANY-SPEC-REFERS-PSEUDO?",
@@ -1584,14 +1671,16 @@
     "N",
     "PDO",
     "I"
-   ]
+   ],
+   "addr": 20256
   },
   {
    "name": "GLOBAL-IN?",
    "locals": [
     "O",
     "R"
-   ]
+   ],
+   "addr": 20292
   },
   {
    "name": "REFERS?",
@@ -1601,14 +1690,16 @@
     "A",
     "N",
     "Q"
-   ]
+   ],
+   "addr": 20310
   },
   {
    "name": "NOUN-MATCH-QUALITY",
    "locals": [
     "O",
     "N"
-   ]
+   ],
+   "addr": 20416
   },
   {
    "name": "IN-PWTBL?",
@@ -1617,7 +1708,8 @@
     "P",
     "V",
     "PT"
-   ]
+   ],
+   "addr": 20448
   },
   {
    "name": "IN-PBTBL?",
@@ -1626,7 +1718,8 @@
     "P",
     "V",
     "PT"
-   ]
+   ],
+   "addr": 20480
   },
   {
    "name": "IN-WTBL?",
@@ -1635,7 +1728,8 @@
     "CNT",
     "V",
     "I"
-   ]
+   ],
+   "addr": 20508
   },
   {
    "name": "IN-BTBL?",
@@ -1644,7 +1738,8 @@
     "CNT",
     "V",
     "I"
-   ]
+   ],
+   "addr": 20540
   },
   {
    "name": "COPY-LEXBUF",
@@ -1652,28 +1747,32 @@
     "SRC",
     "DEST",
     "WDS"
-   ]
+   ],
+   "addr": 20572
   },
   {
    "name": "COPY-READBUF",
    "locals": [
     "SRC",
     "DEST"
-   ]
+   ],
+   "addr": 20610
   },
   {
    "name": "READBUF-LENGTH",
    "locals": [
     "TBL",
     "P"
-   ]
+   ],
+   "addr": 20624
   },
   {
    "name": "READLINE",
    "locals": [
     "PROMPT?",
     "OHERE"
-   ]
+   ],
+   "addr": 20648
   },
   {
    "name": "PERFORM",
@@ -1691,7 +1790,8 @@
     "CNT",
     "ORM",
     "I"
-   ]
+   ],
+   "addr": 20694
   },
   {
    "name": "COUNT-PRS-APPEARANCES",
@@ -1700,7 +1800,8 @@
     "R",
     "MAX",
     "I"
-   ]
+   ],
+   "addr": 20946
   },
   {
    "name": "PERFORM-CALL-HANDLERS",
@@ -1709,7 +1810,8 @@
     "RTN",
     "AC",
     "RM"
-   ]
+   ],
+   "addr": 21026
   },
   {
    "name": "GOTO",
@@ -1718,27 +1820,31 @@
     "WAS-LIT",
     "F",
     "OWINNER"
-   ]
+   ],
+   "addr": 21194
   },
   {
    "name": "PICK-ONE-R",
    "locals": [
     "TABL",
     "RND"
-   ]
+   ],
+   "addr": 21346
   },
   {
    "name": "JIGS-UP",
    "locals": [
     "TEXT",
     "W"
-   ]
+   ],
+   "addr": 21364
   },
   {
    "name": "YES?",
    "locals": [
     "RESP"
-   ]
+   ],
+   "addr": 21606
   },
   {
    "name": "VISIBLE?",
@@ -1746,56 +1852,65 @@
     "OBJ",
     "P",
     "CEIL"
-   ]
+   ],
+   "addr": 21664
   },
   {
    "name": "VIS-CEILING",
    "locals": [
     "L"
-   ]
+   ],
+   "addr": 21748
   },
   {
    "name": "ACCESSIBLE?",
    "locals": [
     "OBJ",
     "L"
-   ]
+   ],
+   "addr": 21772
   },
   {
    "name": "HELD?",
    "locals": [
     "OBJ",
     "HLDR"
-   ]
+   ],
+   "addr": 21814
   },
   {
    "name": "META-LOC",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 21842
   },
   {
    "name": "NOW-DARK?",
-   "locals": []
+   "locals": [],
+   "addr": 21860
   },
   {
    "name": "NOW-LIT?",
    "locals": [
     "?TMP"
-   ]
+   ],
+   "addr": 21882
   },
   {
    "name": "DEL-EVENT",
    "locals": [
     "IQPOS"
-   ]
+   ],
+   "addr": 21920
   },
   {
    "name": "IQUEUE-CLEANUP",
    "locals": [
     "S",
     "Z"
-   ]
+   ],
+   "addr": 21932
   },
   {
    "name": "CLOCKER",
@@ -1803,53 +1918,62 @@
     "S",
     "C",
     "FIRED"
-   ]
+   ],
+   "addr": 22036
   },
   {
    "name": "YOU-MASHER",
    "locals": [
     "WHOM",
     "LM?"
-   ]
+   ],
+   "addr": 22162
   },
   {
    "name": "NOT-POSSIBLE",
    "locals": [
     "V",
     "LM?"
-   ]
+   ],
+   "addr": 22216
   },
   {
    "name": "RHETORICAL",
    "locals": [
     "LM?"
-   ]
+   ],
+   "addr": 22252
   },
   {
    "name": "BE-SPECIFIC",
    "locals": [
     "LM?"
-   ]
+   ],
+   "addr": 22282
   },
   {
    "name": "SILLY",
    "locals": [
     "LM?"
-   ]
+   ],
+   "addr": 22312
   },
   {
    "name": "TSD",
    "locals": [
     "LM?"
-   ]
+   ],
+   "addr": 22336
   },
   {
    "name": "PRE-REQUIRES-LIGHT",
-   "locals": []
+   "locals": [],
+   "addr": 22360
   },
   {
    "name": "V-LOOK",
-   "locals": []
+   "locals": [],
+   "addr": 22380
   },
   {
    "name": "DESCRIBE-ROOM",
@@ -1858,14 +1982,16 @@
     "LONG",
     "P",
     "V"
-   ]
+   ],
+   "addr": 22398
   },
   {
    "name": "DARKNESS-F",
    "locals": [
     "ARG",
     "?TMP"
-   ]
+   ],
+   "addr": 22526
   },
   {
    "name": "DESCRIBE-OBJECTS",
@@ -1874,28 +2000,32 @@
     "P",
     "N",
     "I"
-   ]
+   ],
+   "addr": 22636
   },
   {
    "name": "GENERIC-DESC?",
    "locals": [
     "OBJ",
     "P"
-   ]
+   ],
+   "addr": 22896
   },
   {
    "name": "NPC-DESC?",
    "locals": [
     "OBJ",
     "P"
-   ]
+   ],
+   "addr": 22962
   },
   {
    "name": "CONTENTS-DESC?",
    "locals": [
     "OBJ",
     "P"
-   ]
+   ],
+   "addr": 23014
   },
   {
    "name": "PRINT-CAP-STR",
@@ -1905,19 +2035,22 @@
     "C",
     "I",
     "?TMP"
-   ]
+   ],
+   "addr": 23074
   },
   {
    "name": "DESCRIBE-CONTENTS",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 23150
   },
   {
    "name": "NOT-WINNER?",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 23200
   },
   {
    "name": "LIST-OBJECTS",
@@ -1931,7 +2064,8 @@
     "MAX",
     "J",
     "I"
-   ]
+   ],
+   "addr": 23208
   },
   {
    "name": "LIST-OBJECTS-PRINT",
@@ -1940,14 +2074,16 @@
     "FLAGS",
     "CNT",
     "CAP?"
-   ]
+   ],
+   "addr": 23680
   },
   {
    "name": "PRINT-ENGLISH-NUM",
    "locals": [
     "N",
     "CAP?"
-   ]
+   ],
+   "addr": 23792
   },
   {
    "name": "LIST-OBJECTS-TAG-COUNTS",
@@ -1962,7 +2098,8 @@
     "N",
     "I",
     "J"
-   ]
+   ],
+   "addr": 23836
   },
   {
    "name": "V-WALK",
@@ -1971,19 +2108,22 @@
     "PTS",
     "RM",
     "D"
-   ]
+   ],
+   "addr": 23990
   },
   {
    "name": "V-ENTER",
    "locals": [
     "O"
-   ]
+   ],
+   "addr": 24250
   },
   {
    "name": "V-EXIT",
    "locals": [
     "O"
-   ]
+   ],
+   "addr": 24576
   },
   {
    "name": "DO-WALK",
@@ -1991,7 +2131,8 @@
     "DIR",
     "ORIG?PRSO-DIR",
     "?RESULT"
-   ]
+   ],
+   "addr": 24870
   },
   {
    "name": "DOOR-DIR",
@@ -1999,26 +2140,31 @@
     "DOOR",
     "D",
     "PT"
-   ]
+   ],
+   "addr": 24896
   },
   {
    "name": "V-QUIT",
-   "locals": []
+   "locals": [],
+   "addr": 24938
   },
   {
    "name": "V-EXAMINE",
    "locals": [
     "P",
     "N"
-   ]
+   ],
+   "addr": 25004
   },
   {
    "name": "V-LOOK-UNDER",
-   "locals": []
+   "locals": [],
+   "addr": 25116
   },
   {
    "name": "V-SEARCH",
-   "locals": []
+   "locals": [],
+   "addr": 25162
   },
   {
    "name": "V-INVENTORY",
@@ -2026,20 +2172,23 @@
     "N",
     "O",
     "I"
-   ]
+   ],
+   "addr": 25274
   },
   {
    "name": "INV-DESCRIBE-CONTENTS",
    "locals": [
     "OBJ",
     "F"
-   ]
+   ],
+   "addr": 25406
   },
   {
    "name": "INV-PRINT-DETAILS",
    "locals": [
     "O"
-   ]
+   ],
+   "addr": 25458
   },
   {
    "name": "INV-INDISTINGUISHABLE?",
@@ -2047,11 +2196,13 @@
     "A",
     "B",
     "?TMP"
-   ]
+   ],
+   "addr": 25534
   },
   {
    "name": "V-TAKE",
-   "locals": []
+   "locals": [],
+   "addr": 25542
   },
   {
    "name": "TRY-TAKE",
@@ -2059,7 +2210,8 @@
     "OBJ",
     "SILENT",
     "HOLDER"
-   ]
+   ],
+   "addr": 25550
   },
   {
    "name": "TAKE-HOLDER",
@@ -2071,13 +2223,15 @@
     "ALLOWER",
     "HAD-ALLOWER?",
     "L"
-   ]
+   ],
+   "addr": 25956
   },
   {
    "name": "BLOCKS-TAKE?",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 26102
   },
   {
    "name": "COMMON-PARENT-R",
@@ -2089,7 +2243,8 @@
     "F",
     "R",
     "I"
-   ]
+   ],
+   "addr": 26122
   },
   {
    "name": "TAKE-CAPACITY-CHECK",
@@ -2100,21 +2255,25 @@
     "CWT",
     "NWT",
     "?TMP"
-   ]
+   ],
+   "addr": 26180
   },
   {
    "name": "PRE-DROP",
-   "locals": []
+   "locals": [],
+   "addr": 26284
   },
   {
    "name": "V-DROP",
    "locals": [
     "L"
-   ]
+   ],
+   "addr": 26304
   },
   {
    "name": "PRE-PUT-ON",
-   "locals": []
+   "locals": [],
+   "addr": 26360
   },
   {
    "name": "V-PUT-ON",
@@ -2124,11 +2283,13 @@
     "X",
     "W",
     "B"
-   ]
+   ],
+   "addr": 26396
   },
   {
    "name": "PRE-PUT-IN",
-   "locals": []
+   "locals": [],
+   "addr": 26610
   },
   {
    "name": "V-PUT-IN",
@@ -2139,7 +2300,8 @@
     "X",
     "W",
     "B"
-   ]
+   ],
+   "addr": 26646
   },
   {
    "name": "CONTENTS-WEIGHT",
@@ -2147,7 +2309,8 @@
     "O",
     "W",
     "I"
-   ]
+   ],
+   "addr": 26940
   },
   {
    "name": "WEIGHT",
@@ -2156,53 +2319,65 @@
     "X",
     "W",
     "I"
-   ]
+   ],
+   "addr": 26966
   },
   {
    "name": "PRE-TAKE-FROM",
-   "locals": []
+   "locals": [],
+   "addr": 27020
   },
   {
    "name": "V-TAKE-FROM",
-   "locals": []
+   "locals": [],
+   "addr": 27098
   },
   {
    "name": "V-WEAR",
-   "locals": []
+   "locals": [],
+   "addr": 27100
   },
   {
    "name": "V-UNWEAR",
-   "locals": []
+   "locals": [],
+   "addr": 27152
   },
   {
    "name": "V-EAT",
-   "locals": []
+   "locals": [],
+   "addr": 27196
   },
   {
    "name": "V-VERSION",
    "locals": [
     "?TMP"
-   ]
+   ],
+   "addr": 27270
   },
   {
    "name": "V-THINK-ABOUT",
-   "locals": []
+   "locals": [],
+   "addr": 27340
   },
   {
    "name": "V-OPEN",
-   "locals": []
+   "locals": [],
+   "addr": 27414
   },
   {
    "name": "V-CLOSE",
-   "locals": []
+   "locals": [],
+   "addr": 27542
   },
   {
    "name": "V-LOCK",
-   "locals": []
+   "locals": [],
+   "addr": 27624
   },
   {
    "name": "V-UNLOCK",
-   "locals": []
+   "locals": [],
+   "addr": 27636
   },
   {
    "name": "V-WAIT",
@@ -2210,171 +2385,212 @@
     "T",
     "INTERRUPT",
     "ENDACT"
-   ]
+   ],
+   "addr": 27648
   },
   {
    "name": "V-AGAIN",
-   "locals": []
+   "locals": [],
+   "addr": 27696
   },
   {
    "name": "V-READ",
    "locals": [
     "T"
-   ]
+   ],
+   "addr": 27886
   },
   {
    "name": "V-TURN-ON",
-   "locals": []
+   "locals": [],
+   "addr": 27958
   },
   {
    "name": "V-TURN-OFF",
-   "locals": []
+   "locals": [],
+   "addr": 28028
   },
   {
    "name": "V-FLIP",
-   "locals": []
+   "locals": [],
+   "addr": 28100
   },
   {
    "name": "V-PUSH",
-   "locals": []
+   "locals": [],
+   "addr": 28150
   },
   {
    "name": "V-PULL",
-   "locals": []
+   "locals": [],
+   "addr": 28196
   },
   {
    "name": "V-YES",
-   "locals": []
+   "locals": [],
+   "addr": 28244
   },
   {
    "name": "V-NO",
-   "locals": []
+   "locals": [],
+   "addr": 28254
   },
   {
    "name": "V-DRINK",
-   "locals": []
+   "locals": [],
+   "addr": 28264
   },
   {
    "name": "V-FILL",
-   "locals": []
+   "locals": [],
+   "addr": 28284
   },
   {
    "name": "V-EMPTY",
-   "locals": []
+   "locals": [],
+   "addr": 28294
   },
   {
    "name": "V-SMELL",
-   "locals": []
+   "locals": [],
+   "addr": 28304
   },
   {
    "name": "V-ATTACK",
-   "locals": []
+   "locals": [],
+   "addr": 28322
   },
   {
    "name": "V-THROW-AT",
-   "locals": []
+   "locals": [],
+   "addr": 28372
   },
   {
    "name": "V-GIVE",
-   "locals": []
+   "locals": [],
+   "addr": 28428
   },
   {
    "name": "V-SGIVE",
-   "locals": []
+   "locals": [],
+   "addr": 28558
   },
   {
    "name": "PRE-TELL",
-   "locals": []
+   "locals": [],
+   "addr": 28568
   },
   {
    "name": "V-TELL-ABOUT",
-   "locals": []
+   "locals": [],
+   "addr": 28612
   },
   {
    "name": "V-TELL",
-   "locals": []
+   "locals": [],
+   "addr": 28634
   },
   {
    "name": "V-WAVE-HANDS",
-   "locals": []
+   "locals": [],
+   "addr": 28640
   },
   {
    "name": "V-WAVE",
-   "locals": []
+   "locals": [],
+   "addr": 28652
   },
   {
    "name": "V-CLIMB",
-   "locals": []
+   "locals": [],
+   "addr": 28662
   },
   {
    "name": "V-SWIM",
-   "locals": []
+   "locals": [],
+   "addr": 28692
   },
   {
    "name": "V-JUMP",
-   "locals": []
+   "locals": [],
+   "addr": 28702
   },
   {
    "name": "V-SING",
-   "locals": []
+   "locals": [],
+   "addr": 28714
   },
   {
    "name": "V-DANCE",
-   "locals": []
+   "locals": [],
+   "addr": 28756
   },
   {
    "name": "V-WAKE",
-   "locals": []
+   "locals": [],
+   "addr": 28772
   },
   {
    "name": "V-RUB",
-   "locals": []
+   "locals": [],
+   "addr": 28820
   },
   {
    "name": "V-BURN",
-   "locals": []
+   "locals": [],
+   "addr": 28858
   },
   {
    "name": "V-UNDO",
-   "locals": []
+   "locals": [],
+   "addr": 28908
   },
   {
    "name": "V-SAVE",
-   "locals": []
+   "locals": [],
+   "addr": 28930
   },
   {
    "name": "V-RESTORE",
-   "locals": []
+   "locals": [],
+   "addr": 28960
   },
   {
    "name": "V-RESTART",
-   "locals": []
+   "locals": [],
+   "addr": 28974
   },
   {
    "name": "V-BRIEF",
-   "locals": []
+   "locals": [],
+   "addr": 29020
   },
   {
    "name": "V-VERBOSE",
-   "locals": []
+   "locals": [],
+   "addr": 29034
   },
   {
    "name": "V-SUPERBRIEF",
-   "locals": []
+   "locals": [],
+   "addr": 29056
   },
   {
    "name": "V-SCRIPT",
-   "locals": []
+   "locals": [],
+   "addr": 29074
   },
   {
    "name": "V-UNSCRIPT",
-   "locals": []
+   "locals": [],
+   "addr": 29132
   },
   {
    "name": "V-SCORE",
    "locals": [
     "DEAD?"
-   ]
+   ],
+   "addr": 29180
   },
   {
    "name": "V-FULLSCORE",
@@ -2384,28 +2600,33 @@
     "ANY?",
     "I",
     "P"
-   ]
+   ],
+   "addr": 29258
   },
   {
    "name": "PRINTN-RIGHT-ALIGNED",
    "locals": [
     "N"
-   ]
+   ],
+   "addr": 29372
   },
   {
    "name": "V-NOTIFY-ON",
-   "locals": []
+   "locals": [],
+   "addr": 29456
   },
   {
    "name": "V-NOTIFY-OFF",
-   "locals": []
+   "locals": [],
+   "addr": 29476
   },
   {
    "name": "NOTIFY-SCORE",
    "locals": [
     "D",
     "DOWN?"
-   ]
+   ],
+   "addr": 29498
   },
   {
    "name": "AWARD-POINTS",
@@ -2414,58 +2635,71 @@
     "ACH",
     "P",
     "F"
-   ]
+   ],
+   "addr": 29590
   },
   {
    "name": "PLAYER-F",
-   "locals": []
+   "locals": [],
+   "addr": 29652
   },
   {
    "name": "PRINT-GAME-OVER",
-   "locals": []
+   "locals": [],
+   "addr": 29686
   },
   {
    "name": "V-WIND",
-   "locals": []
+   "locals": [],
+   "addr": 29720
   },
   {
    "name": "V-TURN",
-   "locals": []
+   "locals": [],
+   "addr": 29744
   },
   {
    "name": "V-TAP",
-   "locals": []
+   "locals": [],
+   "addr": 29770
   },
   {
    "name": "V-SEND",
-   "locals": []
+   "locals": [],
+   "addr": 29790
   },
   {
    "name": "V-LIGHT",
-   "locals": []
+   "locals": [],
+   "addr": 30178
   },
   {
    "name": "V-EXTINGUISH",
-   "locals": []
+   "locals": [],
+   "addr": 30198
   },
   {
    "name": "V-LIFT",
-   "locals": []
+   "locals": [],
+   "addr": 30216
   },
   {
    "name": "V-CLIMB-DOWN",
-   "locals": []
+   "locals": [],
+   "addr": 30248
   },
   {
    "name": "V-XYZZY",
-   "locals": []
+   "locals": [],
+   "addr": 30270
   },
   {
    "name": "MORSE-UNLATCHES?",
    "locals": [
     "I",
     "N"
-   ]
+   ],
+   "addr": 30300
   },
   {
    "name": "MORSE-INTERCEPT",
@@ -2475,13 +2709,15 @@
     "C",
     "SYMBOLS",
     "GAP"
-   ]
+   ],
+   "addr": 30336
   },
   {
    "name": "MORSE-PUT",
    "locals": [
     "C"
-   ]
+   ],
+   "addr": 30494
   },
   {
    "name": "MORSE-MATCHES?",
@@ -2491,7 +2727,8 @@
     "J",
     "WLEN",
     "C"
-   ]
+   ],
+   "addr": 30508
   },
   {
    "name": "PRINT-MORSE-CHART",
@@ -2500,7 +2737,8 @@
     "N",
     "B",
     "LEN"
-   ]
+   ],
+   "addr": 30600
   },
   {
    "name": "PRINT-MORSE",
@@ -2509,157 +2747,191 @@
     "N",
     "LEN",
     "C"
-   ]
+   ],
+   "addr": 30712
   },
   {
    "name": "DOOR-GENERIC",
    "locals": [
     "TBL"
-   ]
+   ],
+   "addr": 30822
   },
   {
    "name": "FRONT-DOOR-R",
-   "locals": []
+   "locals": [],
+   "addr": 30862
   },
   {
    "name": "DOORMAT-R",
-   "locals": []
+   "locals": [],
+   "addr": 31058
   },
   {
    "name": "KEY-GENERIC-F",
    "locals": [
     "TBL"
-   ]
+   ],
+   "addr": 31190
   },
   {
    "name": "LEAFLET-R",
-   "locals": []
+   "locals": [],
+   "addr": 31210
   },
   {
    "name": "BACK-DOOR-R",
-   "locals": []
+   "locals": [],
+   "addr": 31304
   },
   {
    "name": "OPEN-BACK-DOOR",
-   "locals": []
+   "locals": [],
+   "addr": 31538
   },
   {
    "name": "GALLERY-R",
    "locals": [
     "RARG"
-   ]
+   ],
+   "addr": 31550
   },
   {
    "name": "GALLERY-SCENERY-R",
-   "locals": []
+   "locals": [],
+   "addr": 31656
   },
   {
    "name": "SHELF-R",
-   "locals": []
+   "locals": [],
+   "addr": 31670
   },
   {
    "name": "HOOK-R",
-   "locals": []
+   "locals": [],
+   "addr": 31826
   },
   {
    "name": "ODOMETER-R",
-   "locals": []
+   "locals": [],
+   "addr": 31936
   },
   {
    "name": "SET-ODOMETER-LDESC",
-   "locals": []
+   "locals": [],
+   "addr": 32144
   },
   {
    "name": "SEAT-CRANK",
-   "locals": []
+   "locals": [],
+   "addr": 32188
   },
   {
    "name": "WIND-ODOMETER",
    "locals": [
     "FITTED"
-   ]
+   ],
+   "addr": 32208
   },
   {
    "name": "MATCHBOOK-R",
-   "locals": []
+   "locals": [],
+   "addr": 32546
   },
   {
    "name": "WORKBENCH-R",
-   "locals": []
+   "locals": [],
+   "addr": 32662
   },
   {
    "name": "LANTERN-R",
-   "locals": []
+   "locals": [],
+   "addr": 32720
   },
   {
    "name": "LIGHT-LANTERN",
-   "locals": []
+   "locals": [],
+   "addr": 33028
   },
   {
    "name": "CRANK-R",
-   "locals": []
+   "locals": [],
+   "addr": 33094
   },
   {
    "name": "TELEGRAPH-KEY-R",
-   "locals": []
+   "locals": [],
+   "addr": 33294
   },
   {
    "name": "CARD-R",
-   "locals": []
+   "locals": [],
+   "addr": 33486
   },
   {
    "name": "MORSE-CHART-R",
-   "locals": []
+   "locals": [],
+   "addr": 33576
   },
   {
    "name": "BACK-ROOM-R",
    "locals": [
     "RARG"
-   ]
+   ],
+   "addr": 33680
   },
   {
    "name": "LADDER-UP-F",
-   "locals": []
+   "locals": [],
+   "addr": 33752
   },
   {
    "name": "HOLDING-MORE-THAN-ONE?",
    "locals": [
     "N",
     "I"
-   ]
+   ],
+   "addr": 33974
   },
   {
    "name": "LADDER-DOWN-F",
    "locals": [
     "O",
     "I"
-   ]
+   ],
+   "addr": 33996
   },
   {
    "name": "LADDER-R",
-   "locals": []
+   "locals": [],
+   "addr": 34130
   },
   {
    "name": "CRATES-R",
-   "locals": []
+   "locals": [],
+   "addr": 34216
   },
   {
    "name": "ROUND-WINDOW-R",
-   "locals": []
+   "locals": [],
+   "addr": 34282
   },
   {
    "name": "BRASS-BOX-R",
-   "locals": []
+   "locals": [],
+   "addr": 34356
   },
   {
    "name": "WIN-GAME",
-   "locals": []
+   "locals": [],
+   "addr": 34542
   },
   {
    "name": "ITALICIZE",
    "locals": [
     "STR"
-   ]
+   ],
+   "addr": 34562
   },
   {
    "name": "POINTLESS-IMPL",
@@ -2671,40 +2943,46 @@
     "S",
     "REV?",
     "LM?"
-   ]
+   ],
+   "addr": 34568
   },
   {
    "name": "PRINT-INDEF",
    "locals": [
     "OBJ",
     "A"
-   ]
+   ],
+   "addr": 34670
   },
   {
    "name": "PRINT-DEF",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 34722
   },
   {
    "name": "PRINT-PLURAL",
    "locals": [
     "OBJ",
     "P"
-   ]
+   ],
+   "addr": 34738
   },
   {
    "name": "PRINT-CINDEF",
    "locals": [
     "OBJ",
     "A"
-   ]
+   ],
+   "addr": 34760
   },
   {
    "name": "PRINT-CDEF",
    "locals": [
     "OBJ"
-   ]
+   ],
+   "addr": 34826
   },
   {
    "name": "PRINT-CAP-OBJ",
@@ -2714,7 +2992,8 @@
     "C",
     "I",
     "?TMP"
-   ]
+   ],
+   "addr": 34846
   }
  ]
 }
