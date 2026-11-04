@@ -49,6 +49,16 @@ stories/zork1/check         # build, walk to the cellar, copy into both curios
 
 `check` copies the `.z3` into each curio that carries one and writes the analyzer's names JSON with `names`. Commit the copies in `public/` with the source change that made them. After changing After Hours, add a walkthrough step for anything new.
 
+The interpreter is checked against `dfrotz` with the same walkthroughs. `stories/play.mjs` runs the page's own engine in Node (the script between its `Story file` and `Page` sections), and `stories/compare` diffs its transcript against dfrotz's word by word.
+
+```sh
+stories/check-interpreter                        # every walkthrough, through both
+stories/compare game.z5 commands.txt             # any story file and commands of your own
+node stories/play.mjs game.z5 commands.txt       # just the page's transcript
+```
+
+Run `check-interpreter` after changing the interpreter's engine; each line should say `same`.
+
 ## Rules for every page
 
 - **GoatCounter goes just before `</head>`**, exactly this. The hook and the deploy both grep for the `data-goatcounter` URL, and the deploy fails without it.

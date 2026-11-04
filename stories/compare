@@ -1,0 +1,15 @@
+#!/bin/sh
+# Diff the interpreter page's transcript against dfrotz's for one story and
+# one command file, word by word. Status lines and line breaks are left out,
+# and the page's engine leaves out the commands, as dfrotz does. dfrotz
+# redraws the status line just after each prompt, which moves the next
+# words onto a line of their own, so prompts are left out too.
+#   stories/compare story.z3 commands.txt [dfrotz options]
+story="$1"; cmds="$2"; shift 2
+t="${TMPDIR:-/tmp}"
+words() { tr -s ' \n\t' '\n' | sed 's/^>*//' | grep -v '^$'; }
+dfrotz -m -p -q -w 999 "$@" "$story" < "$cmds" 2>/dev/null \
+  | grep -vE '^ .*(Score:|Time:)' | sed -E 's/^(> *)+ .*(Score:|Time:).*$/>/' | words > "$t/zmi-frotz.txt"
+node "$(dirname "$0")/play.mjs" "$story" "$cmds" --width 999 --no-echo 2>/dev/null \
+  | words > "$t/zmi-page.txt"
+diff "$t/zmi-frotz.txt" "$t/zmi-page.txt" && echo "same: $(basename "$cmds")"
