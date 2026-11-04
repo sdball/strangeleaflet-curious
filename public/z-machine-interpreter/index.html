@@ -278,6 +278,7 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .map-svg .way { stroke: var(--map-line); stroke-width: 1.6; fill: none; }
 .map-svg .way.other { stroke-dasharray: 4 3; }
 .map-svg .way-lbl { font: 600 11.5px var(--sans); fill: var(--map-line); paint-order: stroke; stroke: var(--map-paper); stroke-width: 3px; stroke-linejoin: round; }
+.map-svg .way-arrow { fill: none; stroke: var(--map-line); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .map-svg .room rect { fill: var(--map-room); stroke: var(--map-ink); stroke-width: 1.3; }
 .map-svg .room.here rect { fill: var(--map-here); stroke-width: 2.4; }
 .map-svg .room text { font: 400 13px var(--sans); fill: var(--map-ink); }
@@ -542,7 +543,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>The interpreter doesn't understand a word you type.</b> It turns your line to lower case, splits it at spaces and at the few punctuation marks the game lists as separators, and looks each piece up in the game's dictionary. The game gets back a list: where each word sits in its dictionary, how long it is, and where it was in your line. Working out what <kbd>put the crank in the socket</kbd> means is the game's own code.</li>
       <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
-      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
+      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
@@ -2028,7 +2029,7 @@ const MAP_STEP = { north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0], n
 const MAP_SHORT = { north: "N", south: "S", east: "E", west: "W", northeast: "NE", northwest: "NW", southeast: "SE", southwest: "SW", up: "up", down: "down", in: "in", out: "out" };
 // these change where you are without walking anywhere
 const NOT_A_WAY = /^\s*(undo|restore|restart|load|oops)\b/i;
-const CW = 142, CH = 104, BW = 120, BH = 46;
+const CW = 176, CH = 104, BW = 120, BH = 46;
 const map = { key: "", data: null, pending: null, lastCmd: "", view: { x: 0, y: 0, z: 0.9 }, armed: 0 };
 const blankMap = () => ({ rooms: {}, ways: [], items: {}, player: 0, here: 0, last: 0, found: false });
 
@@ -2072,28 +2073,50 @@ function mapJump(room) {
   map.pending = null;
   if (room !== undefined) { map.data.here = room; if (room) map.data.last = room; saveMap(); centerMap(); drawMap(); }
 }
-const freeNear = (d, x, y, from) => nearestFree(new Set(Object.values(d.rooms).map((r) => `${r.x},${r.y}`)), x, y, from);
-// The free square nearest (x, y). Given the room the new one is reached
-// from, a square whose line back to it would run through another room
-// comes last, so lines don't hide behind boxes.
-function nearestFree(taken, x, y, from) {
-  if (!taken.has(`${x},${y}`)) return [x, y];
-  const hidden = (cx, cy) => {
-    if (!from) return false;
-    const [fx, fy] = from, n = Math.max(Math.abs(cx - fx), Math.abs(cy - fy));
-    for (let i = 1; i < n; i++) if (taken.has(`${Math.round(fx + ((cx - fx) * i) / n)},${Math.round(fy + ((cy - fy) * i) / n)}`)) return true;
-    return false;
-  };
-  for (let r = 1; r < 80; r++) {
-    let best = null, bd = Infinity;
-    for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
-      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || taken.has(`${x + dx},${y + dy}`)) continue;
-      const dd = dx * dx + dy * dy + (hidden(x + dx, y + dy) ? 1000 : 0);
-      if (dd < bd) { bd = dd; best = [x + dx, y + dy]; }
-    }
-    if (best) return best;
+// Does the line between squares a and b run through the box on square s?
+// Measured on the drawing, with a little room around the box.
+function crosses(a, b, s) {
+  if (s[0] < Math.min(a[0], b[0]) || s[0] > Math.max(a[0], b[0]) || s[1] < Math.min(a[1], b[1]) || s[1] > Math.max(a[1], b[1])) return false;
+  if ((s[0] === a[0] && s[1] === a[1]) || (s[0] === b[0] && s[1] === b[1])) return false;
+  const hx = BW / 2 + 6, hy = BH / 2 + 6;
+  const x0 = (a[0] - s[0]) * CW, y0 = (a[1] - s[1]) * CH, dx = (b[0] - a[0]) * CW, dy = (b[1] - a[1]) * CH;
+  // clip the line to the box: if anything is left, it goes through
+  let t0 = 0, t1 = 1;
+  for (const [p, q] of [[-dx, x0 + hx], [dx, hx - x0], [-dy, y0 + hy], [dy, hy - y0]]) {
+    if (!p) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) t0 = Math.max(t0, r); else t1 = Math.min(t1, r);
+    if (t0 > t1) return false;
   }
-  return [x, y];
+  return true;
+}
+// The free square nearest (x, y) where nothing hides: the new room's lines
+// to the rooms it joins (`to`) miss every other box, and no line already on
+// the paper (`lines`, pairs of squares) runs through it. Only when every
+// nearby square hides something does one that does get used.
+function clearSquare(squares, lines, x, y, to = []) {
+  const taken = new Set(squares.map(([a, b]) => `${a},${b}`));
+  let best = null;
+  for (let r = 0; r < 80; r++) {
+    if (best && (r * r > best.score || r > 8)) break;
+    for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const c = [x + dx, y + dy];
+      if (taken.has(`${c[0]},${c[1]}`)) continue;
+      let hides = 0;
+      for (const t of to) for (const sq of squares) if (crosses(c, t, sq)) hides++;
+      for (const [a, b] of lines) if (crosses(a, b, c)) hides++;
+      const score = dx * dx + dy * dy + hides * 1000;
+      if (!best || score < best.score) best = { c, score };
+    }
+  }
+  return best ? best.c : [x, y];
+}
+// the squares and lines already on a map, for clearSquare
+function paperOf(d) {
+  const squares = Object.values(d.rooms).map((r) => [r.x, r.y]);
+  const lines = d.ways.filter(([a, b]) => d.rooms[a] && d.rooms[b] && a !== b).map(([a, b]) => [[d.rooms[a].x, d.rooms[a].y], [d.rooms[b].x, d.rooms[b].y]]);
+  return { squares, lines };
 }
 // called each time the game asks for a line
 function mapTurn() {
@@ -2113,12 +2136,18 @@ function mapTurn() {
     // a new room goes one step the way you went, or to the nearest free square
     const near = d.rooms[from] || d.rooms[d.last];
     const step = from ? MAP_STEP[dir] || [1, 0] : [1, 0];
-    const [x, y] = near ? freeNear(d, near.x + step[0], near.y + step[1], [near.x, near.y]) : [0, 0];
+    const { squares, lines } = paperOf(d);
+    const [x, y] = near ? clearSquare(squares, lines, near.x + step[0], near.y + step[1], from ? [[near.x, near.y]] : []) : [0, 0];
     d.rooms[room] = { name, x, y };
   } else d.rooms[room].name = name;
   if (from && from !== room && !NOT_A_WAY.test(p.cmd)) {
     const how = dir || p.cmd.trim().toLowerCase().slice(0, 24);
     if (!d.ways.some((w) => w[0] === from && w[1] === room && w[2] === how)) d.ways.push([from, room, how]);
+  } else if (from === room && dir && said.objs.has(room)) {
+    // A way that brings you back where you started, like the maze's. A way
+    // you can't take says so without naming the room; one that loops
+    // describes the room again as you arrive.
+    if (!d.ways.some((w) => w[0] === room && w[1] === room && w[2] === dir)) d.ways.push([room, room, dir]);
   }
   // You're the one thing that was in the last room and is now in this one,
   // standing in it rather than carried. Learned on the first walk.
@@ -2189,8 +2218,13 @@ function relayMap(d) {
     links.get(a).push({ to: b, v, sure });
     links.get(b).push({ to: a, v: [-v[0], -v[1]], sure });
   }
-  const pos = new Map(), taken = new Set();
-  const put = (n, [x, y]) => { pos.set(n, [x, y]); taken.add(`${x},${y}`); };
+  // each room placed draws its lines to the rooms placed before it
+  const pos = new Map(), taken = new Set(), lines = [];
+  const put = (n, sq) => {
+    for (const l of links.get(n)) if (pos.has(l.to) && !lines.some(([a, b]) => a === pos.get(l.to) && b === sq)) lines.push([pos.get(l.to), sq]);
+    pos.set(n, sq);
+    taken.add(`${sq[0]},${sq[1]}`);
+  };
   while (pos.size < ids.length) {
     // the surest step from a room already placed to one that isn't, and
     // better still if the square it points at is free
@@ -2201,7 +2235,11 @@ function relayMap(d) {
       const score = l.sure * 2 + (taken.has(`${want[0]},${want[1]}`) ? 0 : 1);
       if (!best || score > best.score) best = { to: l.to, want, from: [x, y], score };
     }
-    if (best) { put(best.to, nearestFree(taken, ...best.want, best.from)); continue; }
+    if (best) {
+      const to = links.get(best.to).filter((l) => pos.has(l.to)).map((l) => pos.get(l.to));
+      put(best.to, clearSquare([...pos.values()], lines, ...best.want, [...new Set(to)]));
+      continue;
+    }
     // a piece joined to nothing placed yet starts to the right of the rest,
     // from its best-connected room
     const next = ids.filter((n) => !pos.has(n)).sort((a, b) => links.get(b).length - links.get(a).length || (b === d.here) - (a === d.here))[0];
@@ -2253,6 +2291,59 @@ function edgeOfBox(cx, cy, dx, dy, h = BH) {
   const k = Math.min(sx, sy);
   return [cx + dx * k, cy + dy * k];
 }
+// A way's label sits by the room it leaves, on the right of the line as
+// you walk it, the way traffic keeps to its lane, so the two ways along one
+// line never land on each other. An arrow after it points where it goes.
+// Several ways out of one room along one line queue up from `start`; the
+// distance to the end of this one comes back for the next.
+function wayLabel(into, fx, fy, ux, uy, t, room, start = 0) {
+  const el = svgEl("text", { "text-anchor": "middle", class: "way-lbl" }, t);
+  into.append(el);
+  const w = el.getComputedTextLength() || t.length * 7, hw = w / 2, hh = 6;
+  const nx = -uy, ny = ux;
+  const along = Math.abs(ux) * hw + Math.abs(uy) * hh, aside = Math.abs(nx) * hw + Math.abs(ny) * hh;
+  let cx = fx + ux * (start + 5 + along) + nx * (3 + aside), cy = fy + uy * (start + 5 + along) + ny * (3 + aside);
+  // a slanting line's lane can tuck back under its own room: slide out
+  for (let i = 0; i < 30 && Math.abs(cx - room.x) < BW / 2 + hw + 3 && Math.abs(cy - room.y) < room.h / 2 + hh + 3; i++) { cx += ux * 2; cy += uy * 2; }
+  el.setAttribute("x", cx);
+  el.setAttribute("y", cy + 4);
+  // a shaft and a head, since a bare triangle on a slant reads as any way
+  const at = (k, side = 0) => `${cx + ux * k + nx * side},${cy + uy * k + ny * side}`;
+  const s0 = along + 4, tip = along + 18;
+  into.append(svgEl("path", { d: `M${at(s0)}L${at(tip)}M${at(tip - 5, 3.5)}L${at(tip)}L${at(tip - 5, -3.5)}`, class: "way-arrow" }));
+  return (cx - fx) * ux + (cy - fy) * uy + tip;
+}
+// A way that leads back into the same room: a small loop out of the box the
+// way you went and back in, with an arrow coming home. A straight way loops
+// off the middle of its side; a slanting one (and up, down, in, out) curls
+// round its corner, out of one edge and into the other.
+function wayLoop(lines, labels, cx, cy, h, how) {
+  const [sx, sy] = MAP_STEP[how];
+  let p0, c1, c2, p1, lx, ly;
+  if (sx && sy) {
+    const kx = cx + sx * BW / 2, ky = cy + sy * h / 2;
+    p0 = [kx - sx * 16, ky]; c1 = [kx - sx * 12, ky + sy * 24];
+    c2 = [kx + sx * 24, ky - sy * 10]; p1 = [kx, ky - sy * 12];
+    [lx, ly] = [kx + sx * 8, ky + sy * 10];
+  } else {
+    // across the side: the side's own direction turned a quarter
+    const ex = cx + sx * BW / 2, ey = cy + sy * h / 2, tx = -sy, ty = sx;
+    const at = (out, side) => [ex + sx * out + tx * side, ey + sy * out + ty * side];
+    [p0, c1, c2, p1] = [at(0, 7), at(24, 13), at(24, -13), at(0, -7)];
+    [lx, ly] = at(22, 0);
+  }
+  lines.append(svgEl("path", { d: `M${p0}C${c1} ${c2} ${p1}`, class: "way" }));
+  // the arrowhead lies along the curve's last stretch, from c2 into p1
+  const ax = p1[0] - c2[0], ay = p1[1] - c2[1], al = Math.hypot(ax, ay), ux = ax / al, uy = ay / al;
+  const head = (side) => `${p1[0] - ux * 5 - uy * side},${p1[1] - uy * 5 + ux * side}`;
+  lines.append(svgEl("path", { d: `M${head(3.5)}L${p1}L${head(-3.5)}`, class: "way-arrow" }));
+  // the label just past the loop, clear of it whichever way it faces
+  const t = MAP_SHORT[how] || how, el = svgEl("text", { "text-anchor": "middle", class: "way-lbl" }, t);
+  labels.append(el);
+  const hw = (el.getComputedTextLength() || t.length * 7) / 2;
+  el.setAttribute("x", lx + sx * (hw + 3));
+  el.setAttribute("y", ly + sy * 9 + 4);
+}
 function drawMap() {
   if (panel !== "map" || !map.data) return;
   const d = map.data;
@@ -2260,7 +2351,7 @@ function drawMap() {
   // one line per pair of rooms, however many ways join them
   const pairs = new Map();
   for (const [a, b, how] of d.ways) {
-    if (!d.rooms[a] || !d.rooms[b]) continue;
+    if (!d.rooms[a] || !d.rooms[b] || a === b) continue;
     const k = a < b ? `${a},${b}` : `${b},${a}`;
     if (!pairs.has(k)) pairs.set(k, { a, b, hows: [] });
     pairs.get(k).hows.push({ from: a, how });
@@ -2273,6 +2364,9 @@ function drawMap() {
     boxes.set(+n, { name, list: list.map((t) => (t.length > 18 ? t.slice(0, 17) + "…" : t)), h: Math.max(BH, 16 + name.length * 15 + (list.length ? 6 + list.length * 14 : 0)) });
   }
   const lines = svgEl("g"), labels = svgEl("g"), rooms = svgEl("g");
+  // on the paper before they fill, so labels can measure their text
+  mapSvg.append(lines, rooms, labels);
+  const queued = {};
   for (const { a, b, hows } of pairs.values()) {
     const [ax, ay] = roomAt(d.rooms[a]), [bx, by] = roomAt(d.rooms[b]);
     const len = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / len, uy = (by - ay) / len;
@@ -2286,9 +2380,13 @@ function drawMap() {
       const fits = st && st[0] === Math.sign(Math.round((dir * ux) * 10) / 10 * 2) && st[1] === Math.sign(Math.round((dir * uy) * 10) / 10 * 2) && !["up", "down", "in", "out"].includes(h.how);
       if (fits) continue;
       const t = MAP_SHORT[h.how] || h.how;
-      labels.append(svgEl("text", { x: fx + dir * ux * 14, y: fy + dir * uy * 14 + 3.5, "text-anchor": "middle", class: "way-lbl" }, t.length > 14 ? t.slice(0, 13) + "…" : t));
+      const [rx, ry] = roomAt(d.rooms[h.from]);
+      // lines leaving a room at one angle lie on top of each other
+      const q = `${h.from}:${Math.round(Math.atan2(dir * uy, dir * ux) * 20)}`;
+      queued[q] = wayLabel(labels, fx, fy, dir * ux, dir * uy, t.length > 14 ? t.slice(0, 13) + "…" : t, { x: rx, y: ry, h: boxes.get(h.from).h }, queued[q]);
     }
   }
+  for (const [a, b, how] of d.ways) if (a === b && d.rooms[a] && MAP_STEP[how]) wayLoop(lines, labels, ...roomAt(d.rooms[a]), boxes.get(a).h, how);
   for (const [n, r] of Object.entries(d.rooms)) {
     const [cx, cy] = roomAt(r), here = +n === d.here;
     const g = svgEl("g", { class: here ? "room here" : "room" }), box = boxes.get(+n), top = cy - box.h / 2;
@@ -2302,7 +2400,6 @@ function drawMap() {
     }
     rooms.append(g);
   }
-  mapSvg.append(lines, rooms, labels);
   setView();
   sayWhere();
 }
@@ -2318,8 +2415,8 @@ function sayWhere() {
   }
   if (!d.here) { say.textContent = "The map can't tell where you are just now. In the dark, perhaps."; return; }
   const name = (n) => d.rooms[n]?.name || "somewhere";
-  const outs = d.ways.filter((w) => w[0] === d.here).map((w) => `${MAP_DIRS[w[2]] ? w[2] : `“${w[2]}”`} to ${name(w[1])}`);
-  const ins = d.ways.filter((w) => w[1] === d.here && !d.ways.some((x) => x[0] === d.here && x[1] === w[0])).map((w) => name(w[0]));
+  const outs = d.ways.filter((w) => w[0] === d.here).map((w) => `${MAP_DIRS[w[2]] ? w[2] : `“${w[2]}”`} ${w[1] === d.here ? "back into this room" : `to ${name(w[1])}`}`);
+  const ins = d.ways.filter((w) => w[1] === d.here && w[0] !== d.here && !d.ways.some((x) => x[0] === d.here && x[1] === w[0])).map((w) => name(w[0]));
   const things = itemsIn(d, d.here);
   const listed = things.length > 1 ? things.slice(0, -1).join(", ") + " and " + things[things.length - 1] : things[0];
   say.textContent = `You're in ${name(d.here)}. ` +
