@@ -148,7 +148,7 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .status-bar span { overflow: hidden; text-overflow: ellipsis; }
 .status-bar span + span { flex: none; }
 .status-bar[hidden], .upper[hidden] { display: none; }
-.upper { padding: 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1rem * var(--upper-scale, 1)); line-height: 1.5; border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
+.upper { padding: 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1em * var(--upper-scale, 1)); line-height: 1.5; border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
 .upper .row { min-height: 1.5em; }
 .lower {
   position: relative;
@@ -168,7 +168,7 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .s32 { color: var(--screen-dim); font-style: italic; }
 .cmd {
   flex: 1 1 8ch; min-width: 8ch;
-  font: inherit; font-size: 1rem;
+  font: inherit; font-size: max(1rem, 1em);
   color: var(--typed); text-shadow: var(--glow);
   background: transparent; border: 0; padding: 0; margin: 0;
   caret-color: var(--screen-ink);
@@ -182,6 +182,25 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .controls .spacer { flex: 1; }
 .controls a { font-size: .95rem; padding: .5rem .25rem; }
 .note { margin: .5rem 0 0; color: var(--muted); font-size: .95rem; min-height: 1.5em; }
+
+/* ---------- Full screen ----------
+   The computer takes the whole window. The top and height follow the
+   visual viewport, so a phone's keyboard doesn't cover the prompt. */
+html.full-on { overflow: hidden; }
+.machine.full {
+  position: fixed; z-index: 20; left: 0; right: 0;
+  top: var(--vv-top, 0px); height: var(--vv-height, 100vh); height: var(--vv-height, 100dvh);
+  display: flex; flex-direction: column;
+  background: var(--case);
+  padding: max(.5rem, env(safe-area-inset-top, 0px)) max(.5rem, env(safe-area-inset-right, 0px)) max(.5rem, env(safe-area-inset-bottom, 0px)) max(.5rem, env(safe-area-inset-left, 0px));
+}
+.machine.full .console { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.machine.full .screen { flex: 1; height: auto; min-height: 0; }
+.machine.full .controls { margin-top: .5rem; }
+.machine.full .note, .machine.full #insideLink { display: none; }
+/* on a wide screen the text keeps to a column you can read */
+.machine.full .lower, .machine.full .upper, .machine.full .status-bar { padding-left: max(.75rem, calc((100% - 92ch) / 2)); padding-right: max(.75rem, calc((100% - 92ch) / 2)); }
+@media (min-width: 1100px) { .machine.full .screen { font-size: 1.125rem; } }
 
 /* ---------- Notes ---------- */
 section.find, section.notes, section.sources { margin-top: 2.5rem; max-width: 70ch; }
@@ -213,7 +232,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Full screen</b> gives the story the whole window, and <kbd>Esc</kbd> brings you back. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -233,6 +252,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <p class="load-status" id="loadStatus" role="status" aria-live="polite"></p>
   </section>
 
+  <div class="machine" id="machine">
   <section class="console" aria-label="The story">
     <div class="screen" id="screen">
       <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
@@ -244,10 +264,12 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <div class="controls">
     <button type="button" class="btn" id="undoBtn" disabled>Undo</button>
     <button type="button" class="btn" id="restartBtn">Restart</button>
+    <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
   </div>
   <p class="note" id="note" role="status" aria-live="polite"></p>
+  </div>
 
   <section class="notes" aria-labelledby="notice-h">
     <h2 id="notice-h">Things to notice</h2>
@@ -1497,6 +1519,7 @@ cmd.addEventListener("keydown", (e) => {
   }
   if (e.key === "Enter") { e.preventDefault(); submit(); return; }
   if (e.key === "Escape" && (game.mode === "save" || game.mode === "restore")) { e.preventDefault(); cancel(); return; }
+  if (e.key === "Escape" && isFull()) { e.preventDefault(); setFull(false); return; }
   if (game.mode !== "line" || !(e.key === "ArrowUp" || e.key === "ArrowDown")) return;
   // walk back and forth through what you typed before
   e.preventDefault();
@@ -1554,10 +1577,59 @@ function disarm() {
   if ($("note").textContent.startsWith("Restarting")) $("note").textContent = "";
 }
 
+// ---------- Full screen ----------
+// The browser's own full screen where it has one; where it doesn't (an
+// iPhone), the computer still fills the browser window.
+const machine = $("machine");
+const isFull = () => machine.classList.contains("full");
+function setFull(on) {
+  if (on === isFull()) return;
+  machine.classList.toggle("full", on);
+  document.documentElement.classList.toggle("full-on", on);
+  $("fullBtn").setAttribute("aria-pressed", on);
+  const root = document.documentElement;
+  if (on && root.requestFullscreen && !document.fullscreenElement) root.requestFullscreen().catch(() => { /* the window will do */ });
+  if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  fitViewport();
+  requestAnimationFrame(resizeScreen);
+  if (!cmd.hidden) cmd.focus({ preventScroll: true });
+  else if (!on) machine.scrollIntoView({ block: "nearest" });
+}
+function fitViewport() {
+  const vv = window.visualViewport;
+  if (!isFull() || !vv) { machine.style.removeProperty("--vv-height"); machine.style.removeProperty("--vv-top"); return; }
+  machine.style.setProperty("--vv-height", vv.height + "px");
+  machine.style.setProperty("--vv-top", vv.offsetTop + "px");
+}
+$("fullBtn").addEventListener("click", () => setFull(!isFull()));
+// the browser's Esc leaves its full screen without a key event, so follow it
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && isFull()) setFull(false); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && isFull() && e.target !== cmd) setFull(false);
+});
+
+// When the screen changes size, tell the game, the way an interpreter does
+// when its window is resized: the header's screen size, and an upper
+// window as wide as the new screen. Games read them when they next draw.
+function resizeScreen() {
+  const before = `${SCREEN.width}x${SCREEN.height}`;
+  measureScreen();
+  const m = game.m;
+  if (!m || before === `${SCREEN.width}x${SCREEN.height}`) return;
+  if (m.v >= 4) { m.mem[0x20] = SCREEN.height; m.mem[0x21] = SCREEN.width; }
+  if (m.v >= 5) { m.mem[0x23] = SCREEN.width; m.mem[0x25] = SCREEN.height; }
+  m.upper = m.upper.map((r) => (r.length >= SCREEN.width ? r.slice(0, SCREEN.width) : r.concat(Array.from({ length: SCREEN.width - r.length }, () => [" ", 0]))));
+  flush();
+}
+let resizeTimer = 0;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resizeScreen, 150); });
+
 // keep the input in sight when a phone's keyboard opens
 window.visualViewport?.addEventListener("resize", () => {
+  fitViewport();
   if (document.activeElement === cmd) cmd.scrollIntoView({ block: "nearest" });
 });
+window.visualViewport?.addEventListener("scroll", fitViewport);
 
 // ---------- Start ----------
 (async () => {
