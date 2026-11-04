@@ -1,0 +1,1572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Z-Machine Interpreter — The Cabinet of Curios</title>
+<meta name="description" content="Play Infocom-style story files in your browser: a small game written for the cabinet, Zork I built from its released source, or a story file of your own. Saves stay in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400;1,600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* A beige computer on a desk: paper-white screen, black text, a black status bar */
+  --bg: #E7E1D3;
+  --ink: #23201A;
+  --muted: #655D50;
+  --case: #D6CDB9;
+  --case-edge: #B3A88F;
+  --paper: #F7F3EA;
+  --line: #CDC3AE;
+  --accent: #9B3F1E;
+  --link: #1E5A73;
+  --focus: #1F5FBF;
+  --pressed: #F4D77A;
+
+  --screen: #FCFBF7;
+  --screen-ink: #1A1916;
+  --screen-dim: #6E685D;
+  --typed: #1E4F8A;
+  --bar: #1A1916;
+  --bar-ink: #FCFBF7;
+  --glow: none;
+
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* the same desk after dark, with an amber monitor */
+    --bg: #141310; --ink: #E9E3D5; --muted: #A69C8A; --case: #24221D; --case-edge: #3B372F; --paper: #1D1B17; --line: #39352D;
+    --accent: #F0915F; --link: #85C4DB; --focus: #8AB4F8; --pressed: #6A5414;
+    --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
+    --glow: 0 0 6px rgba(255, 170, 60, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141310; --ink: #E9E3D5; --muted: #A69C8A; --case: #24221D; --case-edge: #3B372F; --paper: #1D1B17; --line: #39352D;
+  --accent: #F0915F; --link: #85C4DB; --focus: #8AB4F8; --pressed: #6A5414;
+  --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
+  --glow: 0 0 6px rgba(255, 170, 60, .35);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+a { color: var(--link); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code, kbd { font-family: var(--mono); font-size: .85em; }
+kbd { border: 1px solid var(--case-edge); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3em; background: var(--paper); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.back { display: inline-block; color: var(--muted); font-size: 1rem; margin-bottom: 1.25rem; }
+h1 { font-weight: 600; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 .7rem; }
+.lede { margin: 0 0 .8rem; max-width: 64ch; font-size: 1.15rem; }
+.howto { margin: 0 0 1.5rem; max-width: 64ch; color: var(--muted); }
+h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  font: 600 .9rem var(--sans);
+  color: var(--ink); background: var(--paper);
+  border: 1px solid var(--case-edge); border-bottom-width: 3px; border-radius: 6px;
+  padding: .45rem .9rem; min-height: 44px; min-width: 44px;
+  cursor: pointer; text-decoration: none;
+}
+.btn:hover { border-color: var(--ink); }
+.btn:active { transform: translateY(1px); border-bottom-width: 2px; }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn[aria-pressed="true"] { background: var(--pressed); border-color: var(--ink); }
+.btn.armed { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+/* ---------- Which story ---------- */
+.loader {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem;
+  border: 1px dashed var(--case-edge); border-radius: 8px; padding: .8rem 1rem; margin: 0 0 1.25rem;
+}
+.loader.dropping { border-style: solid; border-color: var(--accent); background: var(--paper); }
+.file-card { flex: 1 1 16rem; min-width: 0; }
+.file-name { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.file-meta { display: block; color: var(--muted); font-size: .95rem; }
+.loader-actions, .shelf { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.shelf { flex-basis: 100%; }
+.shelf-lbl { color: var(--muted); font-size: .95rem; margin-right: .25rem; }
+.file-input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+.loader .find-link { font-size: .95rem; padding: .5rem .25rem; }
+.load-status { flex-basis: 100%; margin: 0; font-size: .95rem; color: var(--accent); }
+.load-status:empty { display: none; }
+
+.drop-veil {
+  position: fixed; inset: 0; z-index: 10; display: none; place-items: center;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  font: 600 1.4rem var(--sans); color: var(--accent); pointer-events: none;
+}
+.drop-veil.on { display: grid; }
+
+/* ---------- The computer ---------- */
+.console {
+  background: var(--case);
+  border: 1px solid var(--case-edge);
+  border-radius: 14px;
+  padding: clamp(.6rem, 2.4vw, 1.4rem);
+  box-shadow: 0 18px 30px -26px rgba(30, 20, 5, .7);
+}
+.screen {
+  display: flex; flex-direction: column;
+  height: min(72vh, 46rem); height: min(72dvh, 46rem);
+  min-height: 20rem;
+  background: var(--screen);
+  color: var(--screen-ink);
+  border: 1px solid var(--case-edge);
+  border-radius: 8px;
+  overflow: hidden;
+  font: 400 1rem/1.5 var(--mono);
+  font-variant-ligatures: none;
+  text-shadow: var(--glow);
+  cursor: text;
+}
+.status-bar {
+  display: flex; justify-content: space-between; gap: 1rem;
+  background: var(--bar); color: var(--bar-ink); text-shadow: none;
+  padding: .1rem .75rem; white-space: pre; overflow: hidden;
+}
+.status-bar span { overflow: hidden; text-overflow: ellipsis; }
+.status-bar span + span { flex: none; }
+.status-bar[hidden], .upper[hidden] { display: none; }
+.upper { padding: 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1rem * var(--upper-scale, 1)); line-height: 1.5; border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
+.upper .row { min-height: 1.5em; }
+.lower {
+  position: relative;
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: .6rem .75rem 1rem;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  tab-size: 8;
+}
+.ln { min-height: 1.5em; }
+.ln.open { display: flex; align-items: baseline; flex-wrap: wrap; }
+.ln.open .runs { white-space: pre-wrap; }
+.s1 { background: var(--screen-ink); color: var(--screen); text-shadow: none; }
+.s2 { font-weight: 600; }
+.s4 { font-style: italic; }
+.s16 { color: var(--typed); }
+.s32 { color: var(--screen-dim); font-style: italic; }
+.cmd {
+  flex: 1 1 8ch; min-width: 8ch;
+  font: inherit; font-size: 1rem;
+  color: var(--typed); text-shadow: var(--glow);
+  background: transparent; border: 0; padding: 0; margin: 0;
+  caret-color: var(--screen-ink);
+}
+.cmd:focus { outline: none; }
+.cmd:focus-visible { outline: none; }
+.screen:focus-within { box-shadow: 0 0 0 2px var(--focus); }
+.cmd::placeholder { color: var(--screen-dim); opacity: 1; }
+
+.controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .75rem; }
+.controls .spacer { flex: 1; }
+.controls a { font-size: .95rem; padding: .5rem .25rem; }
+.note { margin: .5rem 0 0; color: var(--muted); font-size: .95rem; min-height: 1.5em; }
+
+/* ---------- Notes ---------- */
+section.find, section.notes, section.sources { margin-top: 2.5rem; max-width: 70ch; }
+.notes ul, .find ul, .sources ul { padding-left: 1.2rem; }
+.notes li, .find li { margin-bottom: .7rem; }
+.sources li { margin-bottom: .5rem; font-size: .95rem; }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .95rem; max-width: 70ch; }
+
+@media (max-width: 600px) {
+  .lower, .upper { padding-left: .5rem; padding-right: .5rem; }
+  .status-bar { padding: .1rem .5rem; gap: .6rem; font-size: .875rem; }
+  .screen { height: 70dvh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="drop-veil" id="dropVeil" aria-hidden="true">Drop a story file to play it</div>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Z-Machine Interpreter</h1>
+  <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. The page remembers where you were, so you can close it and come back.</p>
+
+  <section class="loader" id="loader" aria-label="Story file">
+    <div class="file-card">
+      <span class="file-name" id="fileName">Loading…</span>
+      <span class="file-meta" id="fileMeta"></span>
+    </div>
+    <div class="loader-actions">
+      <input type="file" id="fileInput" class="visually-hidden file-input" accept=".z1,.z2,.z3,.z4,.z5,.z7,.z8,.dat,.zblorb,.zlb,.blb">
+      <label class="btn" for="fileInput">Open a story file…</label>
+      <a class="find-link" href="#find-h">Where to find story files</a>
+    </div>
+    <div class="shelf" role="group" aria-labelledby="shelfLbl">
+      <span class="shelf-lbl" id="shelfLbl">Built in:</span>
+      <button type="button" class="btn" data-story="after-hours" aria-pressed="false">After Hours</button>
+      <button type="button" class="btn" data-story="zork1" aria-pressed="false">Zork I</button>
+    </div>
+    <p class="load-status" id="loadStatus" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="console" aria-label="The story">
+    <div class="screen" id="screen">
+      <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
+      <div class="upper" id="upper" hidden aria-hidden="true"></div>
+      <div class="lower" id="lower" role="log" aria-live="polite" aria-label="Story text"></div>
+    </div>
+    <input type="text" id="cmd" class="cmd" aria-label="Your command" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send">
+  </section>
+  <div class="controls">
+    <button type="button" class="btn" id="undoBtn" disabled>Undo</button>
+    <button type="button" class="btn" id="restartBtn">Restart</button>
+    <span class="spacer"></span>
+    <a href="../z-machine/" id="insideLink">See inside a story file</a>
+  </div>
+  <p class="note" id="note" role="status" aria-live="polite"></p>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <ul>
+      <li><b>The interpreter doesn't understand a word you type.</b> It turns your line to lower case, splits it at spaces and at the few punctuation marks the game lists as separators, and looks each piece up in the game's dictionary. The game gets back a list: where each word sits in its dictionary, how long it is, and where it was in your line. Working out what <kbd>put the crank in the socket</kbd> means is the game's own code.</li>
+      <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
+      <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
+      <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
+      <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
+    </ul>
+  </section>
+
+  <section class="find" aria-labelledby="find-h">
+    <h2 id="find-h">Where to find story files</h2>
+    <p>People still write games for the Z-machine, and hundreds are free to download. The <a href="https://ifarchive.org/">IF Archive</a> keeps them.</p>
+    <ul>
+      <li><a href="https://ifarchive.org/indexes/if-archive/games/zcode/">The IF Archive's z-code folder</a> lists them by file name, each with a line about the game.</li>
+      <li><a href="https://ifdb.org/">IFDB</a>, the Interactive Fiction Database, finds games by title, author, or subject. A game's page links to its download.</li>
+    </ul>
+    <p>Files ending <code>.z1</code> to <code>.z5</code>, <code>.z7</code> and <code>.z8</code> play here; <code>.z3</code>, <code>.z5</code> and <code>.z8</code> are the usual ones. A <code>.zblorb</code> wraps a story file with its cover art or sounds, and this page takes the story file out. Version 6 games (<code>.z6</code>) draw pictures and lay out their own windows, which this page doesn't do. Files ending <code>.ulx</code> or <code>.gblorb</code> are for Glulx, a different machine.</p>
+    <p>A few to start with, all on the IF Archive:</p>
+    <ul>
+      <li><a href="https://ifarchive.org/if-archive/games/zcode/905.z5"><i>9:05</i></a> by Adam Cadre, a few minutes long.</li>
+      <li><a href="https://ifarchive.org/if-archive/games/zcode/photopia.z5"><i>Photopia</i></a> by Adam Cadre, first entered in the 1998 IF Competition.</li>
+      <li><a href="https://ifarchive.org/if-archive/games/zcode/LostPig.z8"><i>Lost Pig</i></a> by Admiral Jota, winner of the 2007 IF Competition.</li>
+      <li><a href="https://ifarchive.org/if-archive/games/zcode/Tangle.z5"><i>Spider and Web</i></a> by Andrew Plotkin, from 1998. Its file is called <code>Tangle.z5</code>.</li>
+      <li><a href="https://ifarchive.org/if-archive/games/zcode/dreamhold.z8"><i>The Dreamhold</i></a> by Andrew Plotkin, written to teach newcomers how to play.</li>
+      <li><a href="https://ifarchive.org/if-archive/games/zcode/curses.z5"><i>Curses</i></a> by Graham Nelson, release 16 from 1995.</li>
+    </ul>
+    <p>Most of Infocom's games are still under copyright, so this page doesn't link to copies. If you have the files from a copy you own, they play here like any other. Zork I, II, and III are the exception: their source is free under the MIT License, at <a href="https://github.com/historicalsource/zork1">historicalsource/zork1</a>, <a href="https://github.com/historicalsource/zork2">zork2</a>, and <a href="https://github.com/historicalsource/zork3">zork3</a>.</p>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, and §8.2 on the status line), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
+      <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and <i>Zork I</i> for this page. <a href="https://zilf.io/">zilf.io</a>.</li>
+      <li>Tim Anderson, Marc Blank, Bruce Daniels, and Dave Lebling, Zork I source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork1">github.com/historicalsource/zork1</a>.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games stay in this browser's storage.</p>
+    <p><i>After Hours at the Cabinet</i> was written for the cabinet: <a href="after-hours.z3">after-hours.z3</a>. Its source, and a station-by-station look inside it, are on <a href="../z-machine/">The Z-Machine and how it runs stories</a>. ZILF's library asks that games built with it name it in their opening credits, and <i>After Hours</i> does.</p>
+    <p><i>Zork I</i> was built here with ZILF from Infocom's source, unchanged from Microsoft's release: <a href="zork1/zork1.z3">zork1.z3</a>, shared under its <a href="zork1/LICENSE">MIT License</a>. Zork is a trademark, and the name is used here only to say which game this is.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const hex = (n, w = 4) => n.toString(16).toUpperCase().padStart(w, "0");
+const hx = (n, w = 4) => "$" + hex(n, w);
+const commas = (n) => n.toLocaleString("en-US");
+
+// ---------- Story file ----------
+// Reads the header, text, dictionary and object table of a story file. The
+// bytes it reads are the machine's live memory, so text the game writes into
+// its own tables decodes too. A copy of the analyzer's reader, cut down to
+// what playing needs; fix both together.
+
+// ZSCII 155–223 by default (Standard 3.8.5.3)
+const DEFAULT_UNICODE = "äöüÄÖÜß»«ëïÿËÏáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛåÅøØãñõÃÑÕæÆçÇþðÞÐ£œŒ¡¿";
+const A0 = "abcdefghijklmnopqrstuvwxyz";
+const A1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const A2_V1 = " 0123456789.,!?_#'\"/\\<-:()";   // position 0 is the escape
+const A2 = " \n0123456789.,!?_#'\"/\\-:()";    // and position 1 is a new line
+
+// A .zblorb is an IFF file; the story file is its ZCOD chunk.
+function unwrap(buf) {
+  const b = new Uint8Array(buf);
+  const tag = (a) => String.fromCharCode(b[a], b[a + 1], b[a + 2], b[a + 3]);
+  if (b.length >= 4 && tag(0) === "Glul") throw new Error("That's a Glulx game, made for a different virtual machine, so there's no Z-machine story file in it.");
+  if (b.length < 12 || tag(0) !== "FORM" || tag(8) !== "IFRS") return { bytes: b, blorb: false };
+  let a = 12, story = null, about = {};
+  while (a + 8 <= b.length) {
+    const len = ((b[a + 4] << 24) | (b[a + 5] << 16) | (b[a + 6] << 8) | b[a + 7]) >>> 0;
+    if (tag(a) === "ZCOD") story = b.slice(a + 8, a + 8 + len);
+    if (tag(a) === "GLUL") throw new Error("That Blorb holds a Glulx game, made for a different virtual machine.");
+    if (tag(a) === "IFmd") about = blorbAbout(new TextDecoder().decode(b.slice(a + 8, a + 8 + len)));
+    a += 8 + len + (len & 1);
+  }
+  if (!story) throw new Error("That Blorb file doesn't hold a Z-machine story file.");
+  return { bytes: story, blorb: true, ...about };
+}
+function blorbAbout(xml) {
+  const field = (name) => {
+    const m = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(xml);
+    if (!m) return "";
+    return m[1].replace(/&#(x?)([0-9a-f]+);/gi, (_, x, n) => String.fromCodePoint(parseInt(n, x ? 16 : 10)))
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&").trim();
+  };
+  return { title: field("title"), author: field("author") };
+}
+
+function readStory(b) {
+  if (b.length < 64) throw new Error("That file is too short to be a story file. A story file starts with a 64-byte header.");
+  const u8 = (a) => (a >= 0 && a < b.length ? b[a] : 0);
+  const u16 = (a) => (u8(a) << 8) | u8(a + 1);
+  const v = b[0];
+  if (v < 1 || v > 8) throw new Error(`The first byte is ${v}. In a story file the first byte is the version, 1 to 8, so this doesn't look like one.`);
+  if (v === 6) throw new Error("That's a Version 6 story file. Version 6 games draw pictures and lay out their own windows, and this interpreter doesn't run them.");
+
+  const lenScale = v <= 3 ? 2 : v <= 5 ? 4 : 8;
+  const h = {
+    version: v, release: u16(2), highMem: u16(4), initialPC: u16(6),
+    dict: u16(8), objects: u16(0x0A), globals: u16(0x0C), staticMem: u16(0x0E),
+    serial: String.fromCharCode(...b.slice(0x12, 0x18)),
+    abbrevs: u16(0x18), lengthField: u16(0x1A), checksum: u16(0x1C),
+    alphabet: v >= 5 ? u16(0x34) : 0, extension: v >= 5 ? u16(0x36) : 0,
+    routinesOffset: v >= 6 ? u16(0x28) : 0, stringsOffset: v >= 6 ? u16(0x2A) : 0,
+  };
+  // some early files leave the length and checksum at zero
+  h.length = h.lengthField ? Math.min(h.lengthField * lenScale, b.length) : b.length;
+  let sum = 0;
+  for (let i = 0x40; i < h.length; i++) sum = (sum + b[i]) & 0xFFFF;
+  h.computedChecksum = sum;
+  if (h.staticMem < 64 || h.staticMem > b.length) throw new Error("The header's start of static memory is outside the file, so this doesn't look like a story file.");
+
+  const unpack = (p, isString) => {
+    if (v <= 3) return 2 * p;
+    if (v <= 5) return 4 * p;
+    if (v <= 7) return 4 * p + 8 * (isString ? h.stringsOffset : h.routinesOffset);
+    return 8 * p;
+  };
+
+  // ---------- Alphabets ----------
+  let alpha = [A0, A1, v === 1 ? A2_V1 : A2];
+  if (h.alphabet) {
+    const t = [];
+    for (let i = 0; i < 78; i++) t.push(String.fromCharCode(u8(h.alphabet + i)));
+    alpha = [t.slice(0, 26).join(""), t.slice(26, 52).join(""), " \n" + t.slice(54, 78).join("")];
+  }
+  let unicode = DEFAULT_UNICODE;
+  if (h.extension && u16(h.extension) >= 3 && u16(h.extension + 6)) {
+    const ut = u16(h.extension + 6), n = u8(ut);
+    let s = "";
+    for (let i = 0; i < n; i++) s += String.fromCodePoint(u16(ut + 1 + 2 * i) || 63);
+    unicode = s;
+  }
+  const zscii = (c) => {
+    if (c === 13) return "\n";
+    // the Standard only promises a tab in Version 6, but ZILF writes them in
+    // Version 3 too (Zork's gunk tube and dam guide have them)
+    if (c === 9) return "\t";
+    if (c >= 32 && c <= 126) return String.fromCharCode(c);
+    if (c >= 155 && c - 155 < unicode.length) return unicode[c - 155];
+    return c === 0 ? "" : "?";
+  };
+  // and back: a typed character's ZSCII code, or 0 if it has none
+  const toZscii = (ch) => {
+    if (ch === "\n") return 13;
+    const c = ch.codePointAt(0);
+    if (c >= 32 && c <= 126) return c;
+    const i = unicode.indexOf(ch);
+    return i >= 0 ? 155 + i : 0;
+  };
+
+  // ---------- Text ----------
+  function decodeText(addr, max = 3000, inAbbrev = false) {
+    const zs = [];
+    let a = addr;
+    for (let n = 0; a + 1 < b.length && n < max; n++) {
+      const w = u16(a);
+      zs.push((w >> 10) & 31, (w >> 5) & 31, w & 31);
+      a += 2;
+      if (w & 0x8000) break;
+    }
+    let out = "", lock = 0, shift = -1, i = 0;
+    while (i < zs.length) {
+      const z = zs[i++];
+      const cur = shift >= 0 ? shift : lock;
+      shift = -1;
+      if (z === 0) { out += " "; continue; }
+      if (v === 1 && z === 1) { out += "\n"; continue; }
+      if ((v >= 3 && z <= 3) || (v === 2 && z === 1)) {
+        const nx = zs[i++];
+        if (nx === undefined) break;
+        if (!inAbbrev && h.abbrevs) out += decodeText(2 * u16(h.abbrevs + 2 * (32 * (z - 1) + nx)), 200, true).text;
+        continue;
+      }
+      if (v >= 3 && (z === 4 || z === 5)) { shift = z - 3; continue; }
+      if (v <= 2 && (z === 2 || z === 3)) { shift = (lock + z - 1) % 3; continue; }
+      if (v <= 2 && (z === 4 || z === 5)) { lock = (lock + z - 3) % 3; continue; }
+      if (cur === 2 && z === 6) {
+        const hi = zs[i], lo = zs[i + 1];
+        i += 2;
+        if (lo === undefined) break;
+        out += zscii((hi << 5) | lo);
+        continue;
+      }
+      if (cur === 2 && z === 7 && v >= 2) { out += "\n"; continue; }
+      out += alpha[cur][z - 6];
+    }
+    return { text: out, end: a };
+  }
+
+  // A word packed the way the dictionary keeps it: 6 Z-characters in
+  // Versions 1 to 3, 9 after (Standard 13.3, 13.4), padded with 5s.
+  function encodeWord(codes) {
+    const n = v <= 3 ? 6 : 9, z = [];
+    const up = v <= 2 ? 2 : 4, punct = v <= 2 ? 3 : 5;
+    for (const c of codes) {
+      if (z.length >= n) break;
+      const ch = zscii(c);
+      let i = alpha[0].indexOf(ch);
+      if (i >= 0) { z.push(i + 6); continue; }
+      i = alpha[1].indexOf(ch);
+      if (i >= 0) { z.push(up, i + 6); continue; }
+      i = alpha[2].indexOf(ch, v === 1 ? 1 : 2);
+      if (i >= 0) { z.push(punct, i + 6); continue; }
+      z.push(punct, 6, (c >> 5) & 31, c & 31);
+    }
+    while (z.length < n) z.push(5);
+    z.length = n;
+    const out = [];
+    for (let k = 0; k < n; k += 3) {
+      const w = (z[k] << 10) | (z[k + 1] << 5) | z[k + 2] | (k + 3 >= n ? 0x8000 : 0);
+      out.push(w >> 8, w & 255);
+    }
+    return out;
+  }
+
+  // ---------- Dictionary ----------
+  function readDict(addr) {
+    let a = addr;
+    const nSep = u8(a++), seps = [];
+    for (let i = 0; i < nSep; i++) seps.push(u8(a++));
+    const entryLen = u8(a++);
+    let count = s16(u16(a));
+    a += 2;
+    return { addr, seps, entryLen, count: Math.abs(count), first: a };
+  }
+  const dict = readDict(h.dict);
+  // the main dictionary never changes, so look its words up by their bytes
+  dict.index = new Map();
+  const textLen = v <= 3 ? 4 : 6;
+  for (let i = 0; i < dict.count; i++) {
+    const at = dict.first + i * dict.entryLen;
+    dict.index.set(Array.from(b.slice(at, at + textLen)).join(","), at);
+  }
+  function lookup(d, codes) {
+    const key = encodeWord(codes);
+    if (d.index) return d.index.get(key.join(",")) || 0;
+    for (let i = 0; i < d.count; i++) {
+      const at = d.first + i * d.entryLen;
+      if (key.every((x, k) => b[at + k] === x)) return at;
+    }
+    return 0;
+  }
+
+  // ---------- Objects ----------
+  const small = v <= 3;
+  const objs = { entrySize: small ? 9 : 14, first: h.objects + 2 * (small ? 31 : 63) };
+  // No count is stored: the entries run until the first property table begins.
+  let lowest = b.length, count = 0;
+  for (let n = 1; n <= (small ? 255 : 65535); n++) {
+    const e = objs.first + (n - 1) * objs.entrySize;
+    if (e + objs.entrySize > lowest) break;
+    const props = u16(e + (small ? 7 : 12));
+    if (props < e + objs.entrySize || props >= b.length) break;
+    lowest = Math.min(lowest, props);
+    count = n;
+  }
+  objs.count = count;
+
+  return { bytes: b, v, h, u8, u16, unpack, decodeText, encodeWord, zscii, toZscii, alpha, dict, readDict, lookup, objs };
+}
+
+// ---------- Instructions ----------
+// Each opcode's name and whether it stores a result (s), branches (b), or
+// carries its own text (t), from the Standard's §14.
+const OPS_2 = [, "je b", "jl b", "jg b", "dec_chk b", "inc_chk b", "jin b", "test b", "or s", "and s", "test_attr b", "set_attr", "clear_attr", "store", "insert_obj",
+  "loadw s", "loadb s", "get_prop s", "get_prop_addr s", "get_next_prop s", "add s", "sub s", "mul s", "div s", "mod s", "call_2s s", "call_2n", "set_colour", "throw"];
+const OPS_1 = ["jz b", "get_sibling s b", "get_child s b", "get_parent s", "get_prop_len s", "inc", "dec", "print_addr", "call_1s s", "remove_obj", "print_obj", "ret", "jump", "print_paddr", "load s", "not s"];
+const OPS_0 = ["rtrue", "rfalse", "print t", "print_ret t", "nop", "save b", "restore b", "restart", "ret_popped", "pop", "quit", "new_line", "show_status", "verify b", , "piracy b"];
+const OPS_V = ["call_vs s", "storew", "storeb", "put_prop", "sread", "print_char", "print_num", "random s", "push", "pull", "split_window", "set_window", "call_vs2 s", "erase_window",
+  "erase_line", "set_cursor", "get_cursor", "set_text_style", "buffer_mode", "output_stream", "input_stream", "sound_effect", "read_char s", "scan_table s b", "not s", "call_vn",
+  "call_vn2", "tokenise", "encode_text", "copy_table", "print_table", "check_arg_count b"];
+const OPS_E = ["save s", "restore s", "log_shift s", "art_shift s", "set_font s", "draw_picture", "picture_data b", "erase_picture", "set_margins", "save_undo s", "restore_undo s",
+  "print_unicode", "check_unicode s", "set_true_colour", , , "move_window", "window_size", "window_style", "get_wind_prop s", "scroll_window", "pop_stack", "read_mouse",
+  "mouse_window", "push_stack b", "put_wind_prop", "print_form", "make_menu b", "picture_table", "buffer_screen s"];
+function opSpec(v, kind, n) {
+  let spec = { "2op": OPS_2, "1op": OPS_1, "0op": OPS_0, var: OPS_V, ext: OPS_E }[kind][n];
+  if (kind === "1op" && n === 15 && v >= 5) spec = "call_1n";
+  if (kind === "0op" && (n === 5 || n === 6) && v === 4) spec = spec.replace("b", "s");
+  if (kind === "0op" && n === 9 && v >= 5) spec = "catch s";
+  if (kind === "var" && n === 4 && v >= 5) spec = "aread s";
+  if (kind === "var" && n === 0 && v <= 3) spec = "call s";
+  return spec;
+}
+// Decodes the instruction at addr: its name, operands, and where the next one starts.
+// Code never changes, so each address is decoded once.
+function decodeAt(s, addr) {
+  const cached = s.code?.get(addr);
+  if (cached) return cached;
+  const u8 = s.u8, v = s.v, typeByte = (x) => [(x >> 6) & 3, (x >> 4) & 3, (x >> 2) & 3, x & 3];
+  let a = addr, kind, n, types = [];
+  const op = u8(a++);
+  if (op === 0xBE && v >= 5) { kind = "ext"; n = u8(a++); types = typeByte(u8(a++)); }
+  else if (op >= 0xC0) {
+    kind = op & 0x20 ? "var" : "2op"; n = op & 31; types = typeByte(u8(a++));
+    if (op === 0xEC || op === 0xFA) types = types.concat(typeByte(u8(a++)));    // the two calls with eight operands
+  } else if (op >= 0x80) { n = op & 15; const t = (op >> 4) & 3; kind = t === 3 ? "0op" : "1op"; types = t === 3 ? [] : [t]; }
+  else { kind = "2op"; n = op & 31; types = [op & 0x40 ? 2 : 1, op & 0x20 ? 2 : 1]; }
+  const spec = opSpec(v, kind, n);
+  if (!spec || (kind === "2op" && !n)) return { addr, bad: true, next: a };
+  const [name, ...flags] = spec.split(" ");
+  const ops = [];
+  for (const t of types) {
+    if (t === 3) break;
+    if (t === 0) { ops.push({ v: s.u16(a), var: false }); a += 2; }
+    else ops.push({ v: u8(a++), var: t === 2 });
+  }
+  const ins = { addr, kind, n, name, ops };
+  if (flags.includes("t")) { const t = s.decodeText(a); ins.text = t.text; a = t.end; }
+  if (flags.includes("s")) ins.store = u8(a++);
+  if (flags.includes("b")) {
+    const x = u8(a++);
+    let off = x & 63;
+    if (!(x & 0x40)) { off = (off << 8) | u8(a++); if (off & 0x2000) off -= 0x4000; }
+    ins.branch = { on: !!(x & 0x80), to: off === 0 ? "rfalse" : off === 1 ? "rtrue" : a + off - 2 };
+  }
+  if (name === "jump" && ops[0]) ins.jumpTo = a + ((ops[0].v << 16) >> 16) - 2;
+  ins.next = a;
+  // only code in static or high memory is safe to remember
+  if (addr >= s.h.staticMem && s.code) s.code.set(addr, ins);
+  return ins;
+}
+
+// ---------- The machine ----------
+// The Standard's §15 describes every opcode. Started from the analyzer's
+// Station 10 machine, which runs up to the first prompt; this one also reads
+// what you type, saves, restores, and undoes. Fix both copies together.
+const SCREEN = { width: 80, height: 24 };
+const s16 = (x) => (x & 0x8000 ? x - 0x10000 : x);
+class Halt { constructor(why, text = "") { this.why = why; this.text = text; } }
+const STYLE = { reverse: 1, bold: 2, italic: 4, fixed: 8, typed: 16, meta: 32 };
+
+function makeMachine(s, pristine, seed) {
+  s.code = new Map();
+  const m = { s, mem: s.bytes, pristine, v: s.v, clears: 0, count: 0, undo: [], rng: (seed ?? (Math.random() * 0xFFFFFFFF)) >>> 0 || 1 };
+  resetMachine(m, false);
+  return m;
+}
+// Start, or start again: the story file's dynamic memory copied back, an
+// empty stack, the first instruction. On a restart only the transcript and
+// fixed-pitch bits of Flags 2 survive (§15, restart).
+function resetMachine(m, restarting) {
+  const keep = m.mem[0x11] & 3;
+  m.mem.set(m.pristine.subarray(0, m.s.h.staticMem));
+  setUpHeader(m);
+  if (restarting) m.mem[0x11] = (m.mem[0x11] & ~3) | keep;
+  m.stack = [];
+  m.frames = [{ locals: [], ret: null, stackLen: 0, argc: 0 }];
+  m.pc = m.s.h.initialPC;
+  m.halted = null;
+  m.waiting = null;
+  m.streams = [];
+  m.screenOn = true;
+  m.upper = [];
+  m.win = 0; m.row = 1; m.col = 1;
+  m.style = 0;
+  m.status = null;
+  m.undo = [];
+  clearLower(m);
+}
+
+// What the interpreter writes into the header before the game runs (§11.1).
+// This page plays an IBM PC, interpreter 6, with a screen as wide as the
+// one on the page.
+function setUpHeader(m) {
+  const { mem, v } = m;
+  if (v <= 3) mem[1] = (mem[1] & ~0x70) | 0x20;     // a status line, a split screen, fixed-pitch text
+  else mem[1] = (mem[1] & 0x40) | 0x1C;             // bold, italic and fixed-pitch, no colours or timed input
+  // Flags 2: keep the game's request for undo, since this page can; turn
+  // off pictures, mouse, colours and sound
+  mem[0x11] &= v >= 5 ? ~0xE9 : ~0x01;
+  if (v >= 4) {
+    mem[0x1E] = 6; mem[0x1F] = 65;
+    mem[0x20] = SCREEN.height; mem[0x21] = SCREEN.width;
+  }
+  if (v >= 5) {
+    mem[0x22] = 0; mem[0x23] = SCREEN.width; mem[0x24] = 0; mem[0x25] = SCREEN.height;
+    mem[0x26] = 1; mem[0x27] = 1;
+    mem[0x2C] = 2; mem[0x2D] = 9;                    // black and white
+  }
+  mem[0x32] = 1; mem[0x33] = 1;                      // Standard 1.1
+}
+
+const rd = (m, a) => (m.mem[a & 0xFFFF] << 8) | m.mem[(a + 1) & 0xFFFF];
+const wr = (m, a, x) => { m.mem[a & 0xFFFF] = (x >> 8) & 255; m.mem[(a + 1) & 0xFFFF] = x & 255; };
+const frameTop = (m) => m.frames[m.frames.length - 1];
+function getVar(m, n, peek) {
+  if (n === 0) {
+    if (m.stack.length <= frameTop(m).stackLen) throw new Halt("error", "The game read from an empty stack.");
+    return peek ? m.stack[m.stack.length - 1] : m.stack.pop();
+  }
+  if (n < 16) return frameTop(m).locals[n - 1] ?? 0;
+  return rd(m, m.s.h.globals + 2 * (n - 16));
+}
+function setVar(m, n, x, inPlace) {
+  x &= 0xFFFF;
+  if (n === 0) { if (inPlace && m.stack.length > frameTop(m).stackLen) m.stack[m.stack.length - 1] = x; else m.stack.push(x); }
+  else if (n < 16) frameTop(m).locals[n - 1] = x;
+  else wr(m, m.s.h.globals + 2 * (n - 16), x);
+}
+
+// the object tree, read from and written to memory as the game runs
+function objEntry(m, o) { return m.s.objs.first + (o - 1) * m.s.objs.entrySize; }
+function objLink_(m, o, which, set) {
+  const e = objEntry(m, o), small = m.v <= 3, off = small ? { parent: 4, sibling: 5, child: 6 }[which] : { parent: 6, sibling: 8, child: 10 }[which];
+  if (set === undefined) return small ? m.mem[e + off] : rd(m, e + off);
+  if (small) m.mem[e + off] = set; else wr(m, e + off, set);
+}
+const parentOf = (m, o) => (o ? objLink_(m, o, "parent") : 0);
+const siblingOf = (m, o) => (o ? objLink_(m, o, "sibling") : 0);
+const childOf = (m, o) => (o ? objLink_(m, o, "child") : 0);
+function detach(m, o) {
+  const p = parentOf(m, o);
+  if (!p) return;
+  if (childOf(m, p) === o) objLink_(m, p, "child", siblingOf(m, o));
+  else for (let c = childOf(m, p), g = 0; c && g < 65535; c = siblingOf(m, c), g++) if (siblingOf(m, c) === o) { objLink_(m, c, "sibling", siblingOf(m, o)); break; }
+  objLink_(m, o, "parent", 0);
+  objLink_(m, o, "sibling", 0);
+}
+function attrAt(m, o, a, set) {
+  const at = objEntry(m, o) + (a >> 3), bit = 0x80 >> (a & 7);
+  if (set === undefined) return !!(m.mem[at] & bit);
+  m.mem[at] = set ? m.mem[at] | bit : m.mem[at] & ~bit;
+}
+function propHere(m, a) {
+  const b = m.mem[a];
+  if (!b) return null;
+  if (m.v <= 3) return { num: b & 31, len: (b >> 5) + 1, data: a + 1 };
+  if (b & 0x80) return { num: b & 63, len: (m.mem[a + 1] & 63) || 64, data: a + 2 };
+  return { num: b & 63, len: b & 0x40 ? 2 : 1, data: a + 1 };
+}
+function propsOf(m, o) { const t = rd(m, objEntry(m, o) + (m.v <= 3 ? 7 : 12)); return t + 1 + 2 * m.mem[t]; }
+function findProp(m, o, p) {
+  for (let a = propsOf(m, o), g = 0; g < 64; g++) {
+    const q = propHere(m, a);
+    if (!q || q.num < p) return null;
+    if (q.num === p) return q;
+    a = q.data + q.len;
+  }
+  return null;
+}
+function propLenAt(m, a) {
+  if (!a) return 0;
+  const b = m.mem[a - 1];
+  if (m.v <= 3) return (b >> 5) + 1;
+  return b & 0x80 ? (b & 63) || 64 : b & 0x40 ? 2 : 1;
+}
+function objName(m, o) {
+  if (!o || o > m.s.objs.count) return "";
+  const t = rd(m, objEntry(m, o) + (m.v <= 3 ? 7 : 12));
+  return m.mem[t] ? m.s.decodeText(t + 1, m.mem[t]).text : "";
+}
+
+// ---------- Output ----------
+// The lower window is kept as lines of styled runs, which the page draws.
+// The upper window is a grid of cells, as wide as the screen.
+const MAX_LINES = 3000;
+function clearLower(m) { m.lines = [[]]; m.trimmed = 0; m.clears++; }
+function emitLower(m, text, style = m.style) {
+  const parts = text.split("\n");
+  parts.forEach((p, i) => {
+    if (i) m.lines.push([]);
+    if (!p) return;
+    const line = m.lines[m.lines.length - 1], last = line[line.length - 1];
+    if (last && last.s === style) last.t += p; else line.push({ t: p, s: style });
+  });
+  if (m.lines.length > MAX_LINES) { const cut = m.lines.length - MAX_LINES + 500; m.lines.splice(0, cut); m.trimmed += cut; }
+}
+function emit(m, text) {
+  if (!text) return;
+  if (m.streams.length) {
+    const t = m.streams[m.streams.length - 1];
+    for (const ch of text) m.mem[(t.table + 2 + t.len++) & 0xFFFF] = m.s.toZscii(ch) || 63;
+    return;
+  }
+  if (!m.screenOn) return;
+  if (m.win === 1) {
+    for (const ch of text) {
+      if (ch === "\n") { m.row++; m.col = 1; continue; }
+      if (m.row >= 1 && m.row <= m.upper.length && m.col >= 1 && m.col <= SCREEN.width) m.upper[m.row - 1][m.col - 1] = [ch, m.style];
+      m.col++;
+    }
+  } else emitLower(m, text);
+}
+const blankRow = () => Array.from({ length: SCREEN.width }, () => [" ", 0]);
+function splitWindow(m, n) {
+  // Version 3 clears the upper window when it's made (§8.6.1)
+  m.upper = Array.from({ length: n }, (_, i) => (m.v > 3 && m.upper[i] ? m.upper[i] : blankRow()));
+  if (m.row > n) { m.row = 1; m.col = 1; }
+}
+// Versions 1 to 3: the interpreter draws the status line from the first
+// three globals (§8.2)
+function drawStatus(m) {
+  if (m.v > 3) return;
+  const room = getVar(m, 16), a = s16(getVar(m, 17)), b = s16(getVar(m, 18));
+  const right = m.mem[1] & 2 ? `Time: ${((a + 11) % 12) + 1}:${String(b).padStart(2, "0")} ${a < 12 ? "am" : "pm"}` : `Score: ${a}  Moves: ${b}`;
+  m.status = { left: objName(m, room), right };
+}
+// xorshift; the game can seed it with a negative number to make it repeat
+function random(m, n) {
+  if (n < 0) { m.rng = (-n >>> 0) || 1; return 0; }
+  if (n === 0) { m.rng = (Math.random() * 0xFFFFFFFF) >>> 0 || 1; return 0; }
+  m.rng ^= m.rng << 13; m.rng ^= m.rng >>> 17; m.rng ^= m.rng << 5; m.rng >>>= 0;
+  return 1 + (m.rng % n);
+}
+
+// ---------- Calls ----------
+function callRoutine(m, packed, args, store) {
+  if (!packed) { if (store !== undefined) setVar(m, store, 0); return; }
+  const a = m.s.unpack(packed, false), n = m.s.u8(a);
+  if (n > 15) throw new Halt("error", `The game called ${hx(a)}, which isn't a routine.`);
+  const locals = [];
+  for (let i = 0; i < n; i++) locals.push(m.v <= 4 ? m.s.u16(a + 1 + 2 * i) : 0);
+  args.slice(0, n).forEach((x, i) => { locals[i] = x; });
+  m.frames.push({ locals, store, ret: m.pc, stackLen: m.stack.length, argc: args.length });
+  m.pc = a + 1 + (m.v <= 4 ? 2 * n : 0);
+}
+function returnWith(m, x) {
+  const f = m.frames.pop();
+  if (!f || f.ret === null) throw new Halt("error", "The game returned from its first routine, which the machine doesn't allow.");
+  m.stack.length = f.stackLen;
+  m.pc = f.ret;
+  if (f.store !== undefined) setVar(m, f.store, x);
+}
+function branchOn(m, ins, cond) {
+  if (cond !== ins.branch.on) return;
+  if (ins.branch.to === "rfalse") returnWith(m, 0);
+  else if (ins.branch.to === "rtrue") returnWith(m, 1);
+  else m.pc = ins.branch.to;
+}
+// save and restore branch in Versions 1 to 3 and store after
+function answer(m, ins, x) {
+  if (ins.branch) branchOn(m, ins, x !== 0);
+  else if (ins.store !== undefined) setVar(m, ins.store, x);
+}
+
+// ---------- Reading what you type ----------
+// Splitting a line into words and looking them up (§13.6): spaces divide
+// words, and each of the dictionary's separators is a word of its own.
+function tokenise(m, text, parse, dictAddr, skipUnknown) {
+  const s = m.s, mem = m.mem;
+  let start, len;
+  if (m.v <= 4) { start = text + 1; len = 0; while (mem[start + len] && len < 255) len++; }
+  else { start = text + 2; len = mem[text + 1]; }
+  const d = dictAddr ? s.readDict(dictAddr) : s.dict;
+  const words = [];
+  for (let i = 0; i < len;) {
+    const c = mem[start + i];
+    if (c === 32) { i++; continue; }
+    if (d.seps.includes(c)) { words.push([i, 1]); i++; continue; }
+    let j = i;
+    while (j < len && mem[start + j] !== 32 && !d.seps.includes(mem[start + j])) j++;
+    words.push([i, j - i]);
+    i = j;
+  }
+  const n = Math.min(words.length, mem[parse]);
+  mem[parse + 1] = n;
+  for (let k = 0; k < n; k++) {
+    const [at, l] = words[k], e = parse + 2 + 4 * k;
+    const found = s.lookup(d, Array.from(mem.slice(start + at, start + at + l)));
+    if (skipUnknown && !found) continue;
+    wr(m, e, found);
+    mem[e + 2] = l;
+    mem[e + 3] = at + (start - text);
+  }
+}
+// The line goes into the game's text buffer in lower case, then gets split
+// into words (§15, read). Returns false if the game isn't waiting for a line.
+function finishLine(m, line) {
+  const w = m.waiting;
+  if (!w || w.kind !== "line") return false;
+  const [text, parse] = w.vals, mem = m.mem;
+  const codes = [];
+  for (const ch of line.toLowerCase()) {
+    const c = m.s.toZscii(ch);
+    if ((c >= 32 && c <= 126) || (c >= 155 && c <= 251)) codes.push(c);
+  }
+  const max = m.v <= 4 ? mem[text] - 1 : mem[text];
+  codes.length = Math.max(0, Math.min(codes.length, max));
+  if (m.v <= 4) { codes.forEach((c, i) => { mem[text + 1 + i] = c; }); mem[text + 1 + codes.length] = 0; }
+  else { mem[text + 1] = codes.length; codes.forEach((c, i) => { mem[text + 2 + i] = c; }); }
+  if (parse) tokenise(m, text, parse, 0, false);
+  m.waiting = null;
+  m.halted = null;
+  if (w.ins.store !== undefined) setVar(m, w.ins.store, 13);
+  return true;
+}
+function finishChar(m, code) {
+  const w = m.waiting;
+  if (!w || w.kind !== "char") return false;
+  m.waiting = null;
+  m.halted = null;
+  setVar(m, w.ins.store, code);
+  return true;
+}
+
+// ---------- Snapshots ----------
+// A save is dynamic memory, the stack, the call frames, and where the game
+// was. The same snapshot serves Undo, save_undo, and the page's memory of
+// where you left off.
+function snapshot(m) {
+  return {
+    mem: m.mem.slice(0, m.s.h.staticMem), stack: m.stack.slice(),
+    frames: m.frames.map((f) => ({ ...f, locals: f.locals.slice() })), pc: m.pc,
+    waiting: m.waiting ? { kind: m.waiting.kind, addr: m.waiting.ins.addr, vals: m.waiting.vals.slice() } : null,
+    status: m.status, upper: m.upper.map((r) => r.map((c) => c.slice())), win: m.win, row: m.row, col: m.col, style: m.style,
+  };
+}
+function applySnapshot(m, snap) {
+  const keep = m.mem[0x11] & 3;
+  m.mem.set(snap.mem, 0);
+  setUpHeader(m);
+  m.mem[0x11] = (m.mem[0x11] & ~3) | keep;
+  m.stack = snap.stack.slice();
+  m.frames = snap.frames.map((f) => ({ ...f, locals: f.locals.slice(), store: f.store ?? undefined }));
+  m.pc = snap.pc;
+  m.status = snap.status || null;
+  m.upper = (snap.upper || []).map((r) => r.map((c) => c.slice()));
+  m.win = snap.win || 0; m.row = snap.row || 1; m.col = snap.col || 1; m.style = snap.style || 0;
+  m.streams = [];
+  m.screenOn = true;
+  m.waiting = snap.waiting ? { kind: snap.waiting.kind, ins: decodeAt(m.s, snap.waiting.addr), vals: snap.waiting.vals.slice() } : null;
+  m.halted = m.waiting ? new Halt(m.waiting.kind === "char" ? "char" : "input") : null;
+}
+// For storage: only the bytes that differ from the story file, with runs
+// of unchanged bytes written as a zero and a count.
+function packMem(mem, orig) {
+  const out = [];
+  for (let i = 0; i < mem.length;) {
+    const x = mem[i] ^ orig[i];
+    if (x) { out.push(x); i++; continue; }
+    let n = 0;
+    while (i < mem.length && mem[i] === orig[i] && n < 256) { n++; i++; }
+    out.push(0, n - 1);
+  }
+  let s = "";
+  for (let i = 0; i < out.length; i += 4096) s += String.fromCharCode(...out.slice(i, i + 4096));
+  return btoa(s);
+}
+function unpackMem(text, orig, size) {
+  const raw = atob(text), mem = new Uint8Array(size);
+  let i = 0;
+  for (let k = 0; k < raw.length && i < size; k++) {
+    const x = raw.charCodeAt(k);
+    if (x) { mem[i] = orig[i] ^ x; i++; continue; }
+    const n = raw.charCodeAt(++k) + 1;
+    for (let j = 0; j < n && i < size; j++, i++) mem[i] = orig[i];
+  }
+  if (i !== size) throw new Error("That save is the wrong size for this story.");
+  return mem;
+}
+const packSnap = (m, snap) => ({ ...snap, mem: packMem(snap.mem, m.pristine) });
+const unpackSnap = (m, data) => ({ ...data, mem: unpackMem(data.mem, m.pristine, m.s.h.staticMem) });
+
+// ---------- Running ----------
+function stepMachine(m) {
+  const ins = decodeAt(m.s, m.pc);
+  if (ins.bad) throw new Halt("error", `There's no instruction this interpreter knows at ${hx(m.pc)}.`);
+  m.count++;
+  m.pc = ins.next;
+  const name = ins.name, vals = ins.ops.map((op) => (op.var ? getVar(m, op.v) : op.v));
+  const [a, b, c] = vals;
+  const store = (x) => setVar(m, ins.store, x);
+  const branch = (cond) => branchOn(m, ins, cond);
+  switch (name) {
+    case "je": branch(vals.slice(1).some((x) => x === a)); break;
+    case "jl": branch(s16(a) < s16(b)); break;
+    case "jg": branch(s16(a) > s16(b)); break;
+    case "jz": branch(a === 0); break;
+    case "jin": branch(parentOf(m, a) === b); break;
+    case "test": branch((a & b) === b); break;
+    case "test_attr": branch(a ? attrAt(m, a, b) : false); break;
+    case "dec_chk": case "inc_chk": {
+      const x = (s16(getVar(m, a, true)) + (name === "inc_chk" ? 1 : -1)) & 0xFFFF;
+      setVar(m, a, x, true);
+      branch(name === "inc_chk" ? s16(x) > s16(b) : s16(x) < s16(b));
+      break;
+    }
+    case "inc": case "dec": setVar(m, a, s16(getVar(m, a, true)) + (name === "inc" ? 1 : -1), true); break;
+    case "store": setVar(m, a, b, true); break;
+    case "load": store(getVar(m, a, true)); break;
+    case "push": m.stack.push(a); break;
+    case "pull": { const x = getVar(m, 0); setVar(m, a, x, true); break; }
+    case "pop": getVar(m, 0); break;
+    case "or": store(a | b); break;
+    case "and": store(a & b); break;
+    case "not": store(~a); break;
+    case "add": store(s16(a) + s16(b)); break;
+    case "sub": store(s16(a) - s16(b)); break;
+    case "mul": store(Math.imul(s16(a), s16(b))); break;
+    case "div": case "mod":
+      if (!b) throw new Halt("error", "The game divided by zero.");
+      store(name === "div" ? Math.trunc(s16(a) / s16(b)) : s16(a) % s16(b));
+      break;
+    case "log_shift": store(s16(b) >= 0 ? a << s16(b) : a >>> -s16(b)); break;
+    case "art_shift": store(s16(b) >= 0 ? s16(a) << s16(b) : s16(a) >> -s16(b)); break;
+    case "loadw": store(rd(m, a + 2 * s16(b))); break;
+    case "loadb": store(m.mem[(a + s16(b)) & 0xFFFF]); break;
+    case "storew": wr(m, a + 2 * s16(b), c); break;
+    case "storeb": m.mem[(a + s16(b)) & 0xFFFF] = c & 255; break;
+    case "get_parent": store(parentOf(m, a)); break;
+    case "get_child": { const x = childOf(m, a); store(x); branch(x !== 0); break; }
+    case "get_sibling": { const x = siblingOf(m, a); store(x); branch(x !== 0); break; }
+    case "insert_obj":
+      if (a && b) { detach(m, a); objLink_(m, a, "sibling", childOf(m, b)); objLink_(m, b, "child", a); objLink_(m, a, "parent", b); }
+      break;
+    case "remove_obj": if (a) detach(m, a); break;
+    case "set_attr": if (a) attrAt(m, a, b, true); break;
+    case "clear_attr": if (a) attrAt(m, a, b, false); break;
+    case "get_prop": {
+      const q = a ? findProp(m, a, b) : null;
+      store(q ? (q.len === 1 ? m.mem[q.data] : rd(m, q.data)) : rd(m, m.s.h.objects + 2 * (b - 1)));
+      break;
+    }
+    case "put_prop": {
+      const q = findProp(m, a, b);
+      if (!q) throw new Halt("error", `The game set property ${b} on object ${a}, which doesn't have it.`);
+      if (q.len === 1) m.mem[q.data] = c & 255; else wr(m, q.data, c);
+      break;
+    }
+    case "get_prop_addr": { const q = a ? findProp(m, a, b) : null; store(q ? q.data : 0); break; }
+    case "get_prop_len": store(propLenAt(m, a)); break;
+    case "get_next_prop": {
+      if (!a) { store(0); break; }
+      if (!b) { store(propHere(m, propsOf(m, a))?.num || 0); break; }
+      const q = findProp(m, a, b);
+      store(q ? propHere(m, q.data + q.len)?.num || 0 : 0);
+      break;
+    }
+    case "call": case "call_vs": case "call_vs2": case "call_1s": case "call_2s": callRoutine(m, a, vals.slice(1), ins.store); break;
+    case "call_vn": case "call_vn2": case "call_1n": case "call_2n": callRoutine(m, a, vals.slice(1), undefined); break;
+    case "ret": returnWith(m, a); break;
+    case "rtrue": returnWith(m, 1); break;
+    case "rfalse": returnWith(m, 0); break;
+    case "ret_popped": returnWith(m, getVar(m, 0)); break;
+    case "check_arg_count": branch(a <= frameTop(m).argc); break;
+    case "catch": store(m.frames.length); break;
+    case "throw": m.frames.length = b; returnWith(m, a); break;
+    case "jump": m.pc = ins.jumpTo; break;
+    case "nop": break;
+    case "print": emit(m, ins.text); break;
+    case "print_ret": emit(m, ins.text + "\n"); returnWith(m, 1); break;
+    case "print_paddr": emit(m, m.s.decodeText(m.s.unpack(a, true)).text); break;
+    case "print_addr": emit(m, m.s.decodeText(a).text); break;
+    case "print_obj": emit(m, objName(m, a)); break;
+    case "print_num": emit(m, String(s16(a))); break;
+    case "print_char": emit(m, m.s.zscii(a)); break;
+    case "print_unicode": emit(m, String.fromCodePoint(a)); break;
+    case "check_unicode": store(3); break;
+    case "new_line": emit(m, "\n"); break;
+    case "print_table": {
+      // each row starts under the first, in the upper window
+      const row = m.row, col = m.col;
+      for (let r = 0; r < (c || 1); r++) {
+        if (r) { if (m.win === 1) { m.row = row + r; m.col = col; } else emit(m, "\n"); }
+        let line = "";
+        for (let i = 0; i < b; i++) line += m.s.zscii(m.mem[(a + r * (b + (vals[3] || 0)) + i) & 0xFFFF]);
+        emit(m, line);
+      }
+      break;
+    }
+    case "random": store(random(m, s16(a))); break;
+    case "scan_table": {
+      const form = vals[3] ?? 0x82, size = form & 0x7F, words = !!(form & 0x80);
+      let found = 0;
+      for (let i = 0; i < c; i++) { const at = b + i * size; if ((words ? rd(m, at) : m.mem[at]) === a) { found = at; break; } }
+      store(found); branch(found !== 0);
+      break;
+    }
+    case "copy_table": {
+      const n = s16(c);
+      if (!b) { for (let i = 0; i < Math.abs(n); i++) m.mem[(a + i) & 0xFFFF] = 0; break; }
+      const bytes = m.mem.slice(a, a + Math.abs(n));
+      for (let i = 0; i < Math.abs(n); i++) m.mem[(b + i) & 0xFFFF] = n < 0 ? m.mem[(a + i) & 0xFFFF] : bytes[i];
+      break;
+    }
+    case "tokenise": tokenise(m, a, b, c || 0, !!vals[3]); break;
+    case "encode_text": {
+      const codes = Array.from(m.mem.slice(a + c, a + c + b));
+      m.s.encodeWord(codes).forEach((x, i) => { m.mem[(vals[3] + i) & 0xFFFF] = x; });
+      break;
+    }
+    case "verify": branch(m.s.h.computedChecksum === m.s.h.checksum); break;
+    case "piracy": branch(true); break;
+    case "save":
+      // saving to a named table (the extended form's operands) isn't offered
+      if (ins.kind === "ext" && vals.length) { store(0); break; }
+      m.waiting = { kind: "save", ins, vals };
+      throw new Halt("save");
+    case "restore":
+      if (ins.kind === "ext" && vals.length) { store(0); break; }
+      m.waiting = { kind: "restore", ins, vals };
+      throw new Halt("restore");
+    case "save_undo": {
+      const snap = snapshot(m);
+      snap.after = ins.addr;
+      m.undo.push(snap);
+      if (m.undo.length > 20) m.undo.shift();
+      store(1);
+      break;
+    }
+    case "restore_undo": {
+      const snap = m.undo.pop();
+      if (!snap) { store(0); break; }
+      applySnapshot(m, snap);
+      answer(m, decodeAt(m.s, snap.after), 2);
+      break;
+    }
+    case "show_status": drawStatus(m); break;
+    case "split_window": splitWindow(m, a); break;
+    case "set_window": m.win = a; if (a === 1) { m.row = 1; m.col = 1; } break;
+    case "erase_window":
+      if (s16(a) === -1) { clearLower(m); m.upper = []; m.win = 0; }
+      else if (s16(a) === -2) { clearLower(m); m.upper = m.upper.map(blankRow); }
+      else if (a === 0) clearLower(m);
+      else if (a === 1) m.upper = m.upper.map(blankRow);
+      break;
+    case "erase_line":
+      if (a === 1 && m.win === 1 && m.upper[m.row - 1]) for (let i = m.col - 1; i < SCREEN.width; i++) m.upper[m.row - 1][i] = [" ", m.style];
+      break;
+    case "set_cursor": if (m.win === 1) { m.row = s16(a); m.col = b; } break;
+    case "get_cursor": wr(m, a, m.row); wr(m, a + 2, m.col); break;
+    case "set_text_style": m.style = a ? m.style | (a & 15) : 0; break;
+    case "output_stream": {
+      const n = s16(a);
+      if (n === 3) { if (m.streams.length >= 16) throw new Halt("error", "The game nested output stream 3 more than 16 deep."); m.streams.push({ table: b, len: 0 }); }
+      else if (n === -3 && m.streams.length) { const t = m.streams.pop(); wr(m, t.table, t.len); }
+      else if (n === 1 || n === -1) m.screenOn = n === 1;
+      else if (n === 2 || n === -2) m.mem[0x11] = n === 2 ? m.mem[0x11] | 1 : m.mem[0x11] & ~1;
+      break;
+    }
+    case "set_font": store(a === 1 || a === 4 ? 1 : 0); break;
+    case "buffer_mode": case "input_stream": case "sound_effect":
+    case "set_colour": case "set_true_colour": case "set_margins":
+      break;
+    case "sread": case "aread":
+      drawStatus(m);       // Versions 1 to 3 redraw it before reading (§8.2.4)
+      m.waiting = { kind: "line", ins, vals };
+      throw new Halt("input");
+    case "read_char":
+      m.waiting = { kind: "char", ins, vals };
+      throw new Halt("char");
+    case "quit": throw new Halt("quit");
+    case "restart": resetMachine(m, true); break;
+    default: throw new Halt("error", `The game used ${name}, which this interpreter doesn't run.`);
+  }
+}
+// Run up to most instructions, or until the game waits or stops.
+function runSlice(m, most) {
+  for (let k = 0; k < most && !m.halted; k++) {
+    try { stepMachine(m); } catch (e) {
+      if (e instanceof Halt) m.halted = e;
+      else m.halted = new Halt("error", `Something went wrong inside the interpreter: ${e.message}`);
+    }
+  }
+}
+
+// ---------- Page ----------
+const STORIES = {
+  "after-hours": { title: "After Hours at the Cabinet", file: "after-hours.z3" },
+  zork1: { title: "Zork I: The Great Underground Empire", file: "zork1/zork1.z3" },
+};
+const game = {
+  m: null, key: "", name: "", title: "", builtin: "",
+  history: [], hi: 0, draft: "",
+  snaps: [],             // the state at each line you were asked for, for Undo
+  lastCmd: "",
+  timer: 0, clears: -1, base: 0, shown: 0, mark: null,
+};
+const cmd = $("cmd");
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch { /* storage is off */ } },
+};
+// a story is known by its release, serial number and checksum
+const storyId = (s) => `${s.h.release}.${s.h.serial.replace(/[^0-9A-Za-z]/g, "_")}.${hex(s.h.checksum || s.h.computedChecksum)}`;
+const autoKey = () => `zmi:auto:${game.key}`;
+const savesKey = () => `zmi:saves:${game.key}`;
+
+// ---------- Drawing the screen ----------
+function runsInto(el, runs) {
+  for (const r of runs) {
+    if (!r.s) { el.append(r.t); continue; }
+    const span = document.createElement("span");
+    span.className = [1, 2, 4, 16, 32].filter((b) => r.s & b).map((b) => "s" + b).join(" ");
+    span.textContent = r.t;
+    el.append(span);
+  }
+}
+// Draw what's new: lines already drawn don't change, except the last,
+// which may still be growing.
+function flush() {
+  const m = game.m, lower = $("lower");
+  const hadFocus = document.activeElement === cmd;
+  if (game.clears !== m.clears) { lower.textContent = ""; game.clears = m.clears; game.base = m.trimmed; game.shown = m.trimmed; }
+  const kids = lower.children;
+  const total = m.trimmed + m.lines.length;
+  for (let abs = Math.max(game.shown, m.trimmed); abs < total; abs++) {
+    let el = kids[abs - game.base];
+    if (!el) { el = document.createElement("div"); el.className = "ln"; lower.append(el); }
+    else { el.textContent = ""; el.className = "ln"; }
+    const runs = document.createElement("span");
+    runs.className = "runs";
+    runsInto(runs, m.lines[abs - m.trimmed]);
+    el.append(runs);
+  }
+  game.shown = total - 1;
+  // the page keeps the last 1,500 lines
+  const extra = lower.children.length - 1500;
+  if (extra > 0) { for (let i = 0; i < extra; i++) lower.firstChild.remove(); game.base += extra; }
+  // the input sits at the end of the last line, after the prompt
+  const last = lower.lastElementChild;
+  if (m.waiting && last) { last.classList.add("open"); last.append(cmd); cmd.hidden = false; }
+  else { cmd.hidden = true; $("screen").after(cmd); }
+  if (hadFocus && !cmd.hidden) cmd.focus({ preventScroll: true });
+  drawTop();
+  // scroll so a long answer starts at the top of the screen
+  const mark = game.mark;
+  if (mark && mark.isConnected && last && last.offsetTop + last.offsetHeight - mark.offsetTop > lower.clientHeight) lower.scrollTop = mark.offsetTop - 8;
+  else lower.scrollTop = lower.scrollHeight;
+}
+function drawTop() {
+  const m = game.m;
+  const bar = $("statusBar");
+  bar.hidden = !(m.v <= 3 && m.status);
+  if (!bar.hidden) { $("statusLeft").textContent = " " + m.status.left; $("statusRight").textContent = m.status.right + " "; }
+  const up = $("upper");
+  const rows = m.upper.length ? m.upper : [];
+  up.hidden = !rows.length || rows.every((r) => r.every(([ch, st]) => ch === " " && !(st & 1)));
+  if (up.hidden) return;
+  up.textContent = "";
+  for (const row of rows) {
+    const runs = [];
+    for (const [ch, st] of row) {
+      const lastRun = runs[runs.length - 1];
+      if (lastRun && lastRun.s === st) lastRun.t += ch; else runs.push({ t: ch, s: st });
+    }
+    const el = document.createElement("div");
+    el.className = "row";
+    runsInto(el, runs);
+    up.append(el);
+  }
+}
+// a line from the interpreter itself, on its own line, in its own style
+function say(text) {
+  const m = game.m, line = m.lines[m.lines.length - 1];
+  if (line.length) emitLower(m, "\n", 0);
+  emitLower(m, text + "\n", STYLE.meta);
+}
+
+// How many characters fit across the screen, and how many lines down.
+function measureScreen() {
+  const lower = $("lower"), probe = document.createElement("span");
+  probe.textContent = "0".repeat(40);
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  probe.style.whiteSpace = "pre";
+  lower.append(probe);
+  const box = probe.getBoundingClientRect();
+  probe.remove();
+  const ch = box.width / 40, lh = box.height || 24;
+  const cs = getComputedStyle(lower);
+  const inner = lower.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const fit = ch > 0 && inner > 0 ? Math.floor(inner / ch) : 80;
+  // games lay out their status lines for 40 columns or more; on a narrow
+  // screen the upper window shrinks its letters to fit them
+  SCREEN.width = Math.max(40, Math.min(132, fit));
+  $("upper").style.setProperty("--upper-scale", Math.min(1, fit / SCREEN.width).toFixed(3));
+  SCREEN.height = Math.max(16, Math.min(60, Math.floor($("screen").clientHeight / lh)));
+}
+
+// ---------- Running the story ----------
+function go() {
+  const m = game.m;
+  if (!m) return;
+  clearTimeout(game.timer);
+  const t0 = performance.now();
+  while (!m.halted && performance.now() - t0 < 30) runSlice(m, 5000);
+  if (!m.halted) { flush(); game.timer = setTimeout(go, 0); return; }
+  const why = m.halted.why;
+  if (why === "input") {
+    game.snaps.push({ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]) });
+    if (game.snaps.length > 100) game.snaps.shift();
+    autosave();
+    setMode("line");
+  } else if (why === "char") setMode("char");
+  else if (why === "save") {
+    say("Save this game under what name? Press Enter to save, or Esc to cancel.");
+    setMode("save", defaultSaveName());
+  } else if (why === "restore") {
+    const saves = store.get(savesKey()) || [];
+    if (!saves.length) {
+      say("There are no saved games for this story in this browser.");
+      answer(m, m.waiting.ins, 0); m.waiting = null; m.halted = null;
+      return go();
+    }
+    say("Saved games for this story:\n" + saves.map((x, i) => `  ${i + 1}. ${x.name}  (${new Date(x.at).toLocaleString()})`).join("\n") +
+      "\nType a number and press Enter, or press Esc to cancel.");
+    setMode("restore");
+  } else if (why === "quit") {
+    say("The story has ended. Press Restart to play again.");
+    store.del(autoKey());
+    setMode(null);
+  } else {
+    say(`The interpreter stopped. ${m.halted.text}${game.snaps.length ? " Undo goes back to your last move." : ""}`);
+    setMode(null);
+  }
+  flush();
+  updateButtons();
+}
+function setMode(mode, value = "") {
+  game.mode = mode;
+  cmd.value = value;
+  cmd.dataset.mode = mode || "";
+  cmd.placeholder = mode === "char" ? "press a key" : "";
+  cmd.setAttribute("aria-label", { line: "Your command", char: "Press any key", save: "Name for this saved game", restore: "Number of the saved game to restore" }[mode] || "Your command");
+  game.hi = game.history.length;
+  if (mode === "save") requestAnimationFrame(() => cmd.select());
+}
+function updateButtons() {
+  $("undoBtn").disabled = !canUndo();
+}
+const canUndo = () => {
+  const m = game.m;
+  if (!m) return false;
+  const atPrompt = m.waiting?.kind === "line";
+  return game.snaps.length >= (atPrompt ? 2 : 1);
+};
+
+// what you typed goes on the screen, in the typed colour, then a new line
+function echo(text) {
+  const m = game.m;
+  emitLower(m, text, STYLE.typed);
+  emitLower(m, "\n", 0);
+  flush();
+  game.mark = $("lower").children[game.shown - 1 - game.base] || null;
+}
+
+function submit() {
+  const m = game.m, text = cmd.value;
+  if (!m || !m.waiting) return;
+  if (game.mode === "line") {
+    if (text.trim() && game.history[game.history.length - 1] !== text) game.history.push(text);
+    if (game.history.length > 100) game.history.shift();
+    echo(text);
+    // a game with no UNDO of its own gets the interpreter's
+    const word = text.trim().toLowerCase();
+    if ((word === "undo" || word === "oops undo") && !m.s.lookup(m.s.dict, Array.from(word, (ch) => ch.charCodeAt(0)))) { undo(); return; }
+    game.snaps[game.snaps.length - 1].cmd = text;
+    finishLine(m, text);
+    go();
+  } else if (game.mode === "save") finishSave(text.trim());
+  else if (game.mode === "restore") finishRestore(text.trim());
+}
+function defaultSaveName() {
+  const m = game.m;
+  const where = m.v <= 3 && m.status?.left ? m.status.left : "Saved";
+  const when = new Date().toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return `${where}, ${when}`;
+}
+function finishSave(name) {
+  const m = game.m, w = m.waiting;
+  echo(name);
+  let ok = false;
+  if (name) {
+    const snap = snapshot(m);
+    snap.waiting = null;
+    snap.after = w.ins.addr;
+    const data = packSnap(m, snap);
+    const saves = (store.get(savesKey()) || []).filter((x) => x.name !== name);
+    saves.push({ name, at: Date.now(), data });
+    while (saves.length > 30) saves.shift();
+    ok = store.set(savesKey(), saves);
+    say(ok ? `Saved as “${name}” in this browser, ${commas(JSON.stringify(data).length)} bytes.` : "This browser wouldn't store the save. Its storage may be full or turned off.");
+  } else say("Not saved.");
+  m.waiting = null; m.halted = null;
+  answer(m, w.ins, ok ? 1 : 0);
+  go();
+}
+function finishRestore(text) {
+  const m = game.m, w = m.waiting;
+  echo(text);
+  const saves = store.get(savesKey()) || [];
+  const pick = saves[Number(text) - 1] || saves.find((x) => x.name.toLowerCase() === text.toLowerCase());
+  if (pick) {
+    try {
+      applySnapshot(m, unpackSnap(m, pick.data));
+      say(`Restored “${pick.name}”.`);
+      answer(m, decodeAt(m.s, pick.data.after), 2);
+      return go();
+    } catch (err) { say(`That save couldn't be read: ${err.message}`); }
+  } else if (text) say("There's no saved game with that number.");
+  m.waiting = null; m.halted = null;
+  answer(m, w.ins, 0);
+  go();
+}
+function cancel() {
+  if (game.mode === "save") finishSave("");
+  else if (game.mode === "restore") finishRestore("");
+}
+
+// ---------- Undo ----------
+// Back to the last time the game asked for a line, as if the move just
+// made never happened.
+function undo() {
+  const m = game.m;
+  if (!canUndo()) { say("There's nothing to take back."); flush(); return; }
+  // the prompt now showing gives way to the one being returned to
+  if (m.waiting?.kind === "line") { game.snaps.pop(); m.lines[m.lines.length - 1] = []; }
+  const back = game.snaps[game.snaps.length - 1];
+  clearTimeout(game.timer);
+  applySnapshot(m, back.snap);
+  say(back.cmd ? `Took back “${back.cmd}”.` : "Took back the last move.");
+  m.lines[m.lines.length - 1] = structuredClone(back.prompt);
+  autosave();
+  setMode("line");
+  flush();
+  updateButtons();
+}
+
+// ---------- Where you left off ----------
+function autosave() {
+  const m = game.m;
+  if (!m || m.waiting?.kind !== "line") return;
+  store.set(autoKey(), { snap: packSnap(m, snapshot(m)), lines: m.lines.slice(-200), history: game.history.slice(-50) });
+}
+function resume() {
+  const saved = store.get(autoKey());
+  if (!saved) return false;
+  try {
+    const m = game.m;
+    applySnapshot(m, unpackSnap(m, saved.snap));
+    if (m.waiting?.kind !== "line") throw new Error("not at a prompt");
+    clearLower(m);
+    m.lines = saved.lines.length ? saved.lines : [[]];
+    game.history = saved.history || [];
+    game.snaps = [{ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]) }];
+    setMode("line");
+    return true;
+  } catch {
+    store.del(autoKey());
+    return false;
+  }
+}
+
+// ---------- Loading ----------
+let loading = "";
+async function loadStory(key) {
+  const st = STORIES[key];
+  loading = key;
+  try {
+    const res = await fetch(st.file);
+    if (!res.ok) throw new Error(`${st.title} didn't load (${res.status}).`);
+    const buffer = await res.arrayBuffer();
+    if (loading !== key) return;
+    start(buffer, { name: st.file.split("/").pop(), builtin: key, title: st.title });
+  } catch (err) {
+    if (loading !== key) return;
+    $("loadStatus").textContent = `${err.message} Open a story file of your own to play it.`;
+  }
+}
+function start(buffer, meta) {
+  let s, w, pristine;
+  try {
+    w = unwrap(buffer);
+    pristine = w.bytes.slice();
+    s = readStory(new Uint8Array(pristine));
+  } catch (err) {
+    $("loadStatus").textContent = `${meta.name}: ${err.message}`;
+    return;
+  }
+  clearTimeout(game.timer);
+  measureScreen();
+  game.m = makeMachine(s, pristine);
+  game.key = storyId(s);
+  game.name = meta.name;
+  game.builtin = meta.builtin || "";
+  game.title = meta.title || w.title || "";
+  game.snaps = [];
+  game.history = [];
+  game.mark = null;
+  game.clears = -1;
+  document.querySelectorAll(".shelf [data-story]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.story === game.builtin));
+  $("fileName").textContent = game.title || meta.name;
+  const bits = [`Version ${s.v}`, `release ${s.h.release}`, `serial ${s.h.serial}`, `${commas(s.bytes.length)} bytes`];
+  if (w.blorb) bits.push(`taken out of a ${commas(buffer.byteLength)}-byte Blorb`);
+  $("fileMeta").textContent = (game.title ? meta.name + ". " : "") + (w.author ? `By ${w.author}. ` : "") + bits.join(", ") + ".";
+  if (game.builtin) { try { localStorage.setItem("zmi:last", game.builtin); } catch { /* storage is off */ } }
+  const back = resume();
+  $("loadStatus").textContent = back ? "Picked up where you left off. Restart starts the story over." : "";
+  if (back) { flush(); updateButtons(); } else go();
+}
+function openFile(f) {
+  if (!f) return;
+  if (f.size > 16 * 1024 * 1024) { $("loadStatus").textContent = `${f.name} is bigger than any story file could be.`; return; }
+  loading = "";
+  const r = new FileReader();
+  r.onload = () => start(r.result, { name: f.name });
+  r.onerror = () => { $("loadStatus").textContent = `${f.name} couldn't be read.`; };
+  r.readAsArrayBuffer(f);
+}
+$("fileInput").addEventListener("change", (e) => { openFile(e.target.files[0]); e.target.value = ""; });
+document.querySelectorAll(".shelf [data-story]").forEach((b) => b.addEventListener("click", () => loadStory(b.dataset.story)));
+
+// drop anywhere on the page
+let dragDepth = 0;
+const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+window.addEventListener("dragenter", (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $("dropVeil").classList.add("on"); $("loader").classList.add("dropping"); });
+window.addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("dropVeil").classList.remove("on"); $("loader").classList.remove("dropping"); } });
+window.addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dragDepth = 0;
+  $("dropVeil").classList.remove("on");
+  $("loader").classList.remove("dropping");
+  openFile(e.dataTransfer.files[0]);
+});
+
+// ---------- Keys ----------
+// read_char wants ZSCII: arrows are 129 to 132, function keys from 133 (§3.8.6)
+const KEY_CODES = { Enter: 13, Backspace: 8, Delete: 8, Escape: 27, ArrowUp: 129, ArrowDown: 130, ArrowLeft: 131, ArrowRight: 132 };
+function keyCode(e) {
+  if (KEY_CODES[e.key]) return KEY_CODES[e.key];
+  const f = /^F(\d+)$/.exec(e.key);
+  if (f && +f[1] <= 12) return 132 + +f[1];
+  if (e.key.length === 1) return game.m.s.toZscii(e.key) || 0;
+  return 0;
+}
+cmd.addEventListener("keydown", (e) => {
+  if (!game.m) return;
+  if (game.mode === "char") {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const code = keyCode(e);
+    if (!code) return;
+    e.preventDefault();
+    if (finishChar(game.m, code)) go();
+    return;
+  }
+  if (e.key === "Enter") { e.preventDefault(); submit(); return; }
+  if (e.key === "Escape" && (game.mode === "save" || game.mode === "restore")) { e.preventDefault(); cancel(); return; }
+  if (game.mode !== "line" || !(e.key === "ArrowUp" || e.key === "ArrowDown")) return;
+  // walk back and forth through what you typed before
+  e.preventDefault();
+  const h = game.history;
+  if (game.hi === h.length) game.draft = cmd.value;
+  game.hi = Math.max(0, Math.min(h.length, game.hi + (e.key === "ArrowUp" ? -1 : 1)));
+  cmd.value = game.hi === h.length ? game.draft : h[game.hi];
+  requestAnimationFrame(() => cmd.setSelectionRange(cmd.value.length, cmd.value.length));
+});
+// phone keyboards often send no useful keydown, so a typed letter arrives here
+cmd.addEventListener("input", () => {
+  if (game.mode !== "char" || !cmd.value) return;
+  const ch = cmd.value.slice(-1);
+  cmd.value = "";
+  const code = game.m.s.toZscii(ch);
+  if (code && finishChar(game.m, code)) go();
+});
+// a click anywhere on the screen goes to the input, unless you're selecting text
+$("screen").addEventListener("click", () => {
+  if (cmd.hidden || String(getSelection())) return;
+  cmd.focus({ preventScroll: true });
+});
+
+$("undoBtn").addEventListener("click", () => { undo(); if (!cmd.hidden) cmd.focus({ preventScroll: true }); });
+
+// Restart asks twice, so a stray tap doesn't throw a game away
+let armed = 0;
+$("restartBtn").addEventListener("click", () => {
+  const btn = $("restartBtn");
+  if (!game.m) return;
+  if (!armed) {
+    btn.classList.add("armed");
+    btn.textContent = "Press again to restart";
+    $("note").textContent = "Restarting starts the story over. Saved games stay.";
+    armed = setTimeout(disarm, 4000);
+    return;
+  }
+  disarm();
+  clearTimeout(game.timer);
+  resetMachine(game.m, true);
+  game.snaps = [];
+  game.mark = null;
+  store.del(autoKey());
+  $("note").textContent = "Started over.";
+  $("loadStatus").textContent = "";
+  go();
+  if (!cmd.hidden) cmd.focus({ preventScroll: true });
+});
+function disarm() {
+  clearTimeout(armed);
+  armed = 0;
+  const btn = $("restartBtn");
+  btn.classList.remove("armed");
+  btn.textContent = "Restart";
+  if ($("note").textContent.startsWith("Restarting")) $("note").textContent = "";
+}
+
+// keep the input in sight when a phone's keyboard opens
+window.visualViewport?.addEventListener("resize", () => {
+  if (document.activeElement === cmd) cmd.scrollIntoView({ block: "nearest" });
+});
+
+// ---------- Start ----------
+(async () => {
+  try { await document.fonts.ready; } catch { /* fonts are optional */ }
+  const hash = location.hash.slice(1);
+  let first = STORIES[hash] ? hash : "after-hours";
+  if (!STORIES[hash]) { try { const last = localStorage.getItem("zmi:last"); if (STORIES[last]) first = last; } catch { /* storage is off */ } }
+  loadStory(first);
+})();
+</script>
+</body>
+</html>
