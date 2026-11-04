@@ -282,6 +282,9 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .map-svg .room.here rect { fill: var(--map-here); stroke-width: 2.4; }
 .map-svg .room text { font: 400 13px var(--sans); fill: var(--map-ink); }
 .map-svg .room.here text { font-weight: 600; }
+.map-svg .room text.thing { font: italic 400 12px var(--sans); }
+.map-svg .room .rule { stroke: var(--map-grid); stroke-width: 1; }
+.map-svg .room.here .rule { stroke: color-mix(in srgb, var(--map-ink) 30%, transparent); }
 .map-zoom { position: absolute; right: .4rem; bottom: .4rem; display: flex; flex-direction: column; gap: .3rem; }
 .map-zoom button {
   display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
@@ -450,7 +453,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, and <b>Redraw</b> tidies it from every way you've found. In full screen, both are on the right end of the screen's top line. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In full screen, both are on the right end of the screen's top line. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -539,7 +542,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>The interpreter doesn't understand a word you type.</b> It turns your line to lower case, splits it at spaces and at the few punctuation marks the game lists as separators, and looks each piece up in the game's dictionary. The game gets back a list: where each word sits in its dictionary, how long it is, and where it was in your line. Working out what <kbd>put the crank in the socket</kbd> means is the game's own code.</li>
       <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
-      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. A game that writes its room name some other way gets no map.</li>
+      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
@@ -899,6 +902,8 @@ function resetMachine(m, restarting) {
   m.style = 0;
   m.status = null;
   m.upperObj = 0;
+  m.saidObjs = new Set();
+  m.saidStrs = new Set();
   m.undo = [];
   clearLower(m);
 }
@@ -1284,12 +1289,18 @@ function stepMachine(m) {
     case "nop": break;
     case "print": emit(m, ins.text); break;
     case "print_ret": emit(m, ins.text + "\n"); returnWith(m, 1); break;
-    case "print_paddr": emit(m, m.s.decodeText(m.s.unpack(a, true)).text); break;
+    case "print_paddr":
+      if (m.win === 0) m.saidStrs.add(a);
+      emit(m, m.s.decodeText(m.s.unpack(a, true)).text);
+      break;
     case "print_addr": emit(m, m.s.decodeText(a).text); break;
     case "print_obj":
       // the first object named on the upper window is usually the room on
       // the game's own status line, which the page's map follows
       if (m.win === 1 && !m.streams.length && !m.upperObj) m.upperObj = a;
+      // and what the story names in the lower window is what you've seen,
+      // which the map lists in each room
+      if (m.win === 0) m.saidObjs.add(a);
       emit(m, objName(m, a));
       break;
     case "print_num": emit(m, String(s16(a))); break;
@@ -2017,9 +2028,9 @@ const MAP_STEP = { north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0], n
 const MAP_SHORT = { north: "N", south: "S", east: "E", west: "W", northeast: "NE", northwest: "NW", southeast: "SE", southwest: "SW", up: "up", down: "down", in: "in", out: "out" };
 // these change where you are without walking anywhere
 const NOT_A_WAY = /^\s*(undo|restore|restart|load|oops)\b/i;
-const CW = 142, CH = 80, BW = 120, BH = 46;
+const CW = 142, CH = 104, BW = 120, BH = 46;
 const map = { key: "", data: null, pending: null, lastCmd: "", view: { x: 0, y: 0, z: 0.9 }, armed: 0 };
-const blankMap = () => ({ rooms: {}, ways: [], here: 0, last: 0, found: false });
+const blankMap = () => ({ rooms: {}, ways: [], items: {}, player: 0, here: 0, last: 0, found: false });
 
 function dirOf(text) {
   let w = text.toLowerCase().replace(/[^a-z ]/g, " ").trim().split(/\s+/).filter(Boolean);
@@ -2040,8 +2051,10 @@ function whereNow(m) {
 function loadMap() {
   map.key = `zmi:map:${game.builtin || game.key}`;
   const d = store.get(map.key);
-  map.data = d && d.rooms && Array.isArray(d.ways) ? d : blankMap();
+  map.data = d && d.rooms && Array.isArray(d.ways) ? { ...blankMap(), ...d } : blankMap();
   map.pending = null;
+  map.kids = null;
+  map.carried = null;
   $("mapFor").textContent = $("padFor").textContent;
   centerMap();
   drawMap();
@@ -2087,8 +2100,11 @@ function mapTurn() {
   const m = game.m, d = map.data, p = map.pending;
   map.pending = null;
   const room = whereNow(m);
-  if (room < 0) return;
-  if (!room) { d.here = 0; saveMap(); drawMap(); return; }
+  const said = { objs: m.saidObjs, strs: m.saidStrs };
+  m.saidObjs = new Set();
+  m.saidStrs = new Set();
+  if (room < 0) { if (d.here) { noteItems(m, d.here, said); saveMap(); drawMap(); } return; }
+  if (!room) { d.here = 0; map.kids = null; saveMap(); drawMap(); return; }
   d.found = true;
   const name = objName(m, room) || `Room ${room}`;
   const from = p && d.rooms[p.from] ? p.from : 0;
@@ -2104,6 +2120,16 @@ function mapTurn() {
     const how = dir || p.cmd.trim().toLowerCase().slice(0, 24);
     if (!d.ways.some((w) => w[0] === from && w[1] === room && w[2] === how)) d.ways.push([from, room, how]);
   }
+  // You're the one thing that was in the last room and is now in this one,
+  // standing in it rather than carried. Learned on the first walk.
+  const kids = new Set();
+  for (let c = childOf(m, room), g = 0; c && g < 500; c = siblingOf(m, c), g++) kids.add(c);
+  if (from && from !== room && map.kids) {
+    const both = [...kids].filter((c) => map.kids.has(c));
+    if (both.length === 1) d.player = both[0];
+  }
+  map.kids = kids;
+  noteItems(m, room, said);
   const moved = d.here !== room;
   d.here = room;
   d.last = room;
@@ -2111,6 +2137,43 @@ function mapTurn() {
   if (moved) centerMap();
   drawMap();
 }
+
+// What's in a room goes on the map once the game has shown it to you: named
+// it, or printed one of its own strings (the "There is a lantern here" kind
+// of description) while it was in the room. Hidden things stay hidden. Each
+// thing is kept where you last saw it, and what you carry comes off. What
+// you put down counts as seen, since "Dropped." doesn't name it.
+function noteItems(m, room, said) {
+  const d = map.data;
+  const within = (o, into, depth = 0) => {
+    for (let c = childOf(m, o), g = 0; c && g < 500; c = siblingOf(m, c), g++) {
+      if (c === d.player) continue;
+      into.add(c);
+      if (depth < 5) within(c, into, depth + 1);
+    }
+    return into;
+  };
+  const here = within(room, new Set());
+  const carried = d.player ? within(d.player, new Set()) : new Set();
+  for (const o of map.carried || []) if (here.has(o)) said.objs.add(o);
+  map.carried = carried;
+  // the game naming the room means you looked around, so what's gone is gone
+  if (said.objs.has(room)) for (const [o, it] of Object.entries(d.items)) if (it.room === room && !here.has(+o)) delete d.items[o];
+  for (const o of here) if (said.objs.has(o) || saidItsString(m, o, said.strs)) d.items[o] = { name: objName(m, o) || `object ${o}`, room };
+  const inside = (o, anc) => { for (let x = parentOf(m, o), k = 0; x && k < 64; x = parentOf(m, x), k++) if (x === anc) return true; return false; };
+  if (d.player) for (const o of Object.keys(d.items)) if (+o === d.player || inside(+o, d.player)) delete d.items[o];
+}
+function saidItsString(m, o, strs) {
+  if (!strs.size) return false;
+  for (let a = propsOf(m, o), g = 0; g < 64; g++) {
+    const q = propHere(m, a);
+    if (!q) return false;
+    if (q.len === 2 && strs.has(rd(m, q.data))) return true;
+    a = q.data + q.len;
+  }
+  return false;
+}
+const itemsIn = (d, n) => Object.entries(d.items).filter(([o, it]) => it.room === n && +o !== d.player).map(([, it]) => it.name);
 
 // Redraw: lay the whole map out again from the ways you've found, forgetting
 // where each room happened to land when you first walked in. Compass ways
@@ -2185,8 +2248,8 @@ function setView() {
   mapSvg.style.backgroundPosition = `${(-x0 * v.z) % gx}px ${(-y0 * v.z) % gy}px`;
 }
 // where a line from a room's centre towards (dx, dy) leaves its box
-function edgeOfBox(cx, cy, dx, dy) {
-  const sx = dx ? (BW / 2) / Math.abs(dx) : Infinity, sy = dy ? (BH / 2) / Math.abs(dy) : Infinity;
+function edgeOfBox(cx, cy, dx, dy, h = BH) {
+  const sx = dx ? (BW / 2) / Math.abs(dx) : Infinity, sy = dy ? (h / 2) / Math.abs(dy) : Infinity;
   const k = Math.min(sx, sy);
   return [cx + dx * k, cy + dy * k];
 }
@@ -2202,11 +2265,18 @@ function drawMap() {
     if (!pairs.has(k)) pairs.set(k, { a, b, hows: [] });
     pairs.get(k).hows.push({ from: a, how });
   }
+  // each box holds the room's name and, below a rule, up to three things seen there
+  const boxes = new Map();
+  for (const [n, r] of Object.entries(d.rooms)) {
+    const name = wrapName(r.name), things = itemsIn(d, +n);
+    const list = things.length > 3 ? [...things.slice(0, 2), `and ${things.length - 2} more`] : things;
+    boxes.set(+n, { name, list: list.map((t) => (t.length > 18 ? t.slice(0, 17) + "…" : t)), h: Math.max(BH, 16 + name.length * 15 + (list.length ? 6 + list.length * 14 : 0)) });
+  }
   const lines = svgEl("g"), labels = svgEl("g"), rooms = svgEl("g");
   for (const { a, b, hows } of pairs.values()) {
     const [ax, ay] = roomAt(d.rooms[a]), [bx, by] = roomAt(d.rooms[b]);
     const len = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / len, uy = (by - ay) / len;
-    const [x1, y1] = edgeOfBox(ax, ay, ux, uy), [x2, y2] = edgeOfBox(bx, by, -ux, -uy);
+    const [x1, y1] = edgeOfBox(ax, ay, ux, uy, boxes.get(a).h), [x2, y2] = edgeOfBox(bx, by, -ux, -uy, boxes.get(b).h);
     const walked = hows.some((h) => MAP_STEP[h.how]);
     lines.append(svgEl("line", { x1, y1, x2, y2, class: walked ? "way" : "way other" }));
     // a label wherever the line alone doesn't say which way: up, down, in,
@@ -2221,10 +2291,15 @@ function drawMap() {
   }
   for (const [n, r] of Object.entries(d.rooms)) {
     const [cx, cy] = roomAt(r), here = +n === d.here;
-    const g = svgEl("g", { class: here ? "room here" : "room" });
-    g.append(svgEl("rect", { x: cx - BW / 2, y: cy - BH / 2, width: BW, height: BH, rx: 4 }));
-    const ls = wrapName(r.name);
-    ls.forEach((l, i) => g.append(svgEl("text", { x: cx, y: cy + 4.5 + (i - (ls.length - 1) / 2) * 15, "text-anchor": "middle" }, l)));
+    const g = svgEl("g", { class: here ? "room here" : "room" }), box = boxes.get(+n), top = cy - box.h / 2;
+    g.append(svgEl("rect", { x: cx - BW / 2, y: top, width: BW, height: box.h, rx: 4 }));
+    const nameTop = box.list.length ? top + 8 : cy - (box.name.length * 15) / 2;
+    box.name.forEach((l, i) => g.append(svgEl("text", { x: cx, y: nameTop + 11.5 + i * 15, "text-anchor": "middle" }, l)));
+    if (box.list.length) {
+      const ruleY = top + 8 + box.name.length * 15 + 3;
+      g.append(svgEl("line", { x1: cx - BW / 2 + 10, x2: cx + BW / 2 - 10, y1: ruleY, y2: ruleY, class: "rule" }));
+      box.list.forEach((t, i) => g.append(svgEl("text", { x: cx, y: ruleY + 13 + i * 14, "text-anchor": "middle", class: "thing" }, t)));
+    }
     rooms.append(g);
   }
   mapSvg.append(lines, rooms, labels);
@@ -2245,7 +2320,10 @@ function sayWhere() {
   const name = (n) => d.rooms[n]?.name || "somewhere";
   const outs = d.ways.filter((w) => w[0] === d.here).map((w) => `${MAP_DIRS[w[2]] ? w[2] : `“${w[2]}”`} to ${name(w[1])}`);
   const ins = d.ways.filter((w) => w[1] === d.here && !d.ways.some((x) => x[0] === d.here && x[1] === w[0])).map((w) => name(w[0]));
+  const things = itemsIn(d, d.here);
+  const listed = things.length > 1 ? things.slice(0, -1).join(", ") + " and " + things[things.length - 1] : things[0];
   say.textContent = `You're in ${name(d.here)}. ` +
+    (things.length ? `You've seen ${listed} here. ` : "") +
     (outs.length ? `You've gone ${outs.join(", ")}.` : "You haven't left this way yet.") +
     (ins.length ? ` You came here from ${[...new Set(ins)].join(", ")}.` : "");
 }
@@ -2309,7 +2387,7 @@ $("mapClear").addEventListener("click", () => {
   }
   disarmMap();
   const d = map.data, here = d.rooms[d.here];
-  map.data = blankMap();
+  map.data = { ...blankMap(), player: d.player };
   if (here) { map.data.rooms[d.here] = { name: here.name, x: 0, y: 0 }; map.data.here = map.data.last = d.here; map.data.found = true; }
   saveMap();
   centerMap();
