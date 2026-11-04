@@ -27,6 +27,12 @@
   --pad-ink: #23201A;
   --pad-rule: #A9C3DD;
   --pad-margin: #DE9A92;
+  --map-paper: #F8FAF8;
+  --map-grid: #DCE7EC;
+  --map-ink: #27323B;
+  --map-room: #FFFFFF;
+  --map-here: #F4D77A;
+  --map-line: #56656F;
 
   --screen: #FCFBF7;
   --screen-ink: #1A1916;
@@ -54,6 +60,7 @@
     --bg: #141310; --ink: #E9E3D5; --muted: #A69C8A; --case: #24221D; --case-edge: #3B372F; --paper: #1D1B17; --line: #39352D;
     --accent: #F0915F; --link: #85C4DB; --focus: #8AB4F8; --pressed: #6A5414;
     --pad: #24211A; --pad-ink: #E9E3D5; --pad-rule: #39465A; --pad-margin: #6B3A33;
+    --map-paper: #14181B; --map-grid: #222C33; --map-ink: #D6DEE4; --map-room: #1C2328; --map-here: #6A5414; --map-line: #93A2AD;
     --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
     --glow: 0 0 6px rgba(255, 170, 60, .35);
     color-scheme: dark;
@@ -63,6 +70,7 @@
   --bg: #141310; --ink: #E9E3D5; --muted: #A69C8A; --case: #24221D; --case-edge: #3B372F; --paper: #1D1B17; --line: #39352D;
   --accent: #F0915F; --link: #85C4DB; --focus: #8AB4F8; --pressed: #6A5414;
   --pad: #24211A; --pad-ink: #E9E3D5; --pad-rule: #39465A; --pad-margin: #6B3A33;
+  --map-paper: #14181B; --map-grid: #222C33; --map-ink: #D6DEE4; --map-room: #1C2328; --map-here: #6A5414; --map-line: #93A2AD;
   --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
   --glow: 0 0 6px rgba(255, 170, 60, .35);
   color-scheme: dark;
@@ -152,12 +160,12 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
   text-shadow: var(--glow);
   cursor: text;
   position: relative;
-  /* the corner holds the notepad button (and the way out of full screen on a
-     touch screen); the top lines keep clear of it */
+  /* in full screen the corner holds the notepad and map buttons (and the
+     way out, on a touch screen); the top lines keep clear of it */
   --corner-w: 2.25rem;
   --corner-h: calc(var(--screen-lh) * 1em + .2rem);
-  --corner-n: 1;
-  --corner-room: calc(var(--corner-n) * var(--corner-w) + .5rem);
+  --corner-n: 2;
+  --corner-room: 0px;
 }
 .status-bar {
   display: flex; justify-content: space-between; gap: 1rem;
@@ -197,7 +205,8 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .screen:focus-within { box-shadow: 0 0 0 2px var(--focus); }
 .cmd::placeholder { color: var(--screen-dim); opacity: 1; }
 
-.corner { position: absolute; z-index: 1; top: 0; right: 0; display: flex; font: inherit; }
+.corner { position: absolute; z-index: 1; top: 0; right: 0; display: none; font: inherit; }
+.machine.full .corner { display: flex; }
 .corner button {
   display: grid; place-items: center;
   width: var(--corner-w); height: var(--corner-h); padding: 0;
@@ -207,28 +216,28 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .corner > :first-child { border-bottom-left-radius: 10px; }
 .corner svg { width: 1.15em; height: 1.15em; }
 .corner button:focus-visible { outline-offset: -3px; }
-.corner .notes-icon[aria-pressed="true"] svg { fill: color-mix(in srgb, currentColor 22%, transparent); }
+.corner [data-panel][aria-pressed="true"] svg { fill: color-mix(in srgb, currentColor 22%, transparent); }
 /* on a version 3 game's status line the button is part of the bar */
 .screen.has-bar .corner button { color: var(--bar-ink); background: var(--bar); }
 /* with no top lines at all, a blank one keeps the button off the story */
-.screen.bare::before { content: ""; flex: none; height: var(--corner-h); }
+.machine.full .screen.bare::before { content: ""; flex: none; height: var(--corner-h); }
 .corner .leave { display: none; }
 @media (pointer: coarse) {
-  .screen { --corner-w: 44px; --corner-h: 44px; }
+  .screen { --corner-w: 42px; --corner-h: 44px; }
 }
 
-/* ---------- The notepad ----------
-   A legal pad beside the computer. Below the screen when there isn't room
-   beside it. */
+/* ---------- The notepad and the map ----------
+   A legal pad, or a sheet of graph paper, beside the computer. Below the
+   screen when there isn't room beside it. One at a time. */
 .console { container-type: inline-size; }
 .deck { display: flex; flex-direction: column; gap: .75rem; }
-.notepad {
+.pad {
   display: flex; flex-direction: column; min-height: 0; height: 15rem;
   background: var(--pad); color: var(--pad-ink);
   border: 1px solid var(--case-edge); border-radius: 8px; overflow: hidden;
 }
-.notepad[hidden] { display: none; }
-.notepad:focus-within { box-shadow: 0 0 0 2px var(--focus); }
+.pad[hidden] { display: none; }
+.pad:focus-within { box-shadow: 0 0 0 2px var(--focus); }
 .pad-head { display: flex; align-items: center; gap: .5rem; padding: 0 0 0 .75rem; border-bottom: 2px solid var(--pad-margin); }
 .pad-head h2 { font: 600 .95rem var(--sans); margin: 0; }
 .pad-for { flex: 1; min-width: 0; color: var(--muted); font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -252,10 +261,44 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .pad-text::placeholder { color: var(--muted); opacity: 1; }
 .pad-foot { margin: 0; padding: .3rem .75rem; font-size: .8rem; line-height: 1.4; color: var(--muted); border-top: 1px solid var(--pad-rule); }
 .pad-foot.trouble { color: var(--accent); }
+
+/* the map: rooms you've walked through, on graph paper */
+.mappad { height: 21rem; background: var(--map-paper); color: var(--map-ink); }
+.mappad .pad-head { border-bottom-color: var(--map-grid); background: var(--map-room); }
+.mappad .pad-close { color: var(--map-ink); }
+.map-view { position: relative; flex: 1; min-height: 0; }
+.map-svg {
+  display: block; width: 100%; height: 100%;
+  touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+  background-color: var(--map-paper);
+  background-image: linear-gradient(to right, var(--map-grid) 1px, transparent 1px), linear-gradient(to bottom, var(--map-grid) 1px, transparent 1px);
+}
+.map-svg.dragging { cursor: grabbing; }
+.map-svg:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+.map-svg .way { stroke: var(--map-line); stroke-width: 1.6; fill: none; }
+.map-svg .way.other { stroke-dasharray: 4 3; }
+.map-svg .way-lbl { font: 600 11.5px var(--sans); fill: var(--map-line); paint-order: stroke; stroke: var(--map-paper); stroke-width: 3px; stroke-linejoin: round; }
+.map-svg .room rect { fill: var(--map-room); stroke: var(--map-ink); stroke-width: 1.3; }
+.map-svg .room.here rect { fill: var(--map-here); stroke-width: 2.4; }
+.map-svg .room text { font: 400 13px var(--sans); fill: var(--map-ink); }
+.map-svg .room.here text { font-weight: 600; }
+.map-zoom { position: absolute; right: .4rem; bottom: .4rem; display: flex; flex-direction: column; gap: .3rem; }
+.map-zoom button {
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  font: 400 1.3rem/1 var(--sans); color: var(--map-ink); background: var(--map-room);
+  border: 1px solid var(--map-line); border-radius: 6px; cursor: pointer;
+}
+.map-zoom svg { width: 20px; height: 20px; }
+.map-say { margin: 0; padding: .35rem .75rem; font-size: .85rem; line-height: 1.4; border-top: 1px solid var(--map-grid); background: var(--map-room); max-height: 5.6em; overflow-y: auto; }
+.map-say:empty { display: none; }
+.mappad .pad-foot { display: flex; align-items: center; gap: .5rem; background: var(--map-room); border-top-color: var(--map-grid); padding-top: .15rem; padding-bottom: .15rem; }
+.mappad .pad-foot span { flex: 1; }
+.map-clear { flex: none; min-height: 40px; padding: 0 .6rem; font: 600 .8rem var(--sans); color: var(--map-ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.map-clear.armed { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 @container (min-width: 720px) {
   .deck { flex-direction: row; }
   .deck .screen { flex: 1; min-width: 0; }
-  .notepad { flex: 0 0 clamp(15rem, 34%, 22rem); height: auto; }
+  .pad { flex: 0 0 clamp(15rem, 34%, 22rem); height: auto; }
 }
 
 .controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .75rem; }
@@ -280,10 +323,19 @@ html.full-on { overflow: hidden; }
 .machine.full .screen { --corner-room: calc(var(--corner-n) * var(--corner-w) + .5rem + env(safe-area-inset-right, 0px)); }
 .machine.full .corner { top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px); }
 .machine.full .screen.bare::before { height: calc(var(--corner-h) + env(safe-area-inset-top, 0px)); }
-.machine.full .notepad { flex: 0 0 40%; height: auto; border-width: 1px 0 0; border-radius: 0; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
-.machine.full .notepad:focus-within { box-shadow: none; }
+/* on a narrow screen every column counts, so the buttons get a row of their own */
+@container (max-width: 599px) {
+  .machine.full .screen { --corner-room: 0px; }
+  .machine.full .corner { position: static; justify-content: flex-end; flex: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 0; border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
+  .machine.full .screen .corner button { color: var(--screen-ink); background: transparent; border-radius: 0; }
+  .machine.full .screen.bare::before { display: none; }
+  .machine.full .status-bar { padding-top: .1rem; }
+  .machine.full .status-bar[hidden] + .upper { padding-top: 0; }
+}
+.machine.full .pad { flex: 0 0 40%; height: auto; border-width: 1px 0 0; border-radius: 0; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.machine.full .pad:focus-within { box-shadow: none; }
 @container (min-width: 720px) {
-  .machine.full .notepad { flex: 0 0 clamp(16rem, 30%, 26rem); border-width: 0 0 0 1px; padding-left: 0; }
+  .machine.full .pad { flex: 0 0 clamp(16rem, 30%, 26rem); border-width: 0 0 0 1px; padding-left: 0; }
   .machine.full .pad-head { padding-top: env(safe-area-inset-top, 0px); }
 }
 .machine.full .screen:focus-within { box-shadow: none; }
@@ -301,7 +353,7 @@ html.full-on { overflow: hidden; }
 }
 /* a phone has no Esc key, so a touch screen gets a way out */
 @media (pointer: coarse) {
-  .machine.full .screen { --corner-n: 2; }
+  .machine.full .screen { --corner-n: 3; }
   .machine.full .corner .leave { display: grid; font: 400 1.5rem/1 var(--sans); }
 }
 
@@ -398,7 +450,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b>, or the notepad at the right end of the screen's top line, opens a notepad beside the game for clues, combinations, and what's where. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, and <b>Redraw</b> tidies it from every way you've found. In full screen, both are on the right end of the screen's top line. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -425,14 +477,15 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <div class="deck" id="deck">
     <div class="screen bare" id="screen">
       <div class="corner" id="corner">
-        <button type="button" class="notes-icon" data-notes aria-pressed="false" aria-label="Notes" title="Notes"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 2v3M10 2v3M12.5 2v3M7 9h6M7 12h6M7 15h3.5"/></svg></button>
+        <button type="button" data-panel="notes" aria-pressed="false" aria-label="Notes" title="Notes"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 2v3M10 2v3M12.5 2v3M7 9h6M7 12h6M7 15h3.5"/></svg></button>
+        <button type="button" data-panel="map" aria-pressed="false" aria-label="Map" title="Map"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5 7 3l6 2 4.5-2v12L13 17l-6-2-4.5 2z"/><path d="M7 3v12M13 5v12"/></svg></button>
         <button type="button" class="leave" id="leaveFull" aria-label="Leave full screen">×</button>
       </div>
       <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
       <div class="upper" id="upper" hidden aria-hidden="true"></div>
       <div class="lower" id="lower" role="log" aria-live="polite" aria-label="Story text"></div>
     </div>
-    <aside class="notepad" id="notepad" aria-labelledby="notesH" hidden>
+    <aside class="pad notepad" id="notepad" aria-labelledby="notesH" hidden>
       <div class="pad-head">
         <h2 id="notesH">Notes</h2>
         <span class="pad-for" id="padFor"></span>
@@ -441,6 +494,23 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <textarea id="notesText" class="pad-text" aria-labelledby="notesH padFor" aria-describedby="padFoot" placeholder="Clues, combinations, what's where…" spellcheck="true"></textarea>
       <p class="pad-foot" id="padFoot">Kept in this browser for this story. Undo, Restart, and Restore leave it alone. <kbd>Esc</kbd> goes back to the game.</p>
     </aside>
+    <aside class="pad mappad" id="mappad" aria-labelledby="mapH" hidden>
+      <div class="pad-head">
+        <h2 id="mapH">Map</h2>
+        <span class="pad-for" id="mapFor"></span>
+        <button type="button" class="pad-close" id="mapClose" aria-label="Close map">×</button>
+      </div>
+      <div class="map-view">
+        <svg class="map-svg" id="mapSvg" tabindex="0" role="img" aria-label="Map" aria-describedby="mapSay" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight + - H"></svg>
+        <div class="map-zoom">
+          <button type="button" id="mapIn" aria-label="Zoom in" aria-keyshortcuts="+">+</button>
+          <button type="button" id="mapOut" aria-label="Zoom out" aria-keyshortcuts="-">−</button>
+          <button type="button" id="mapHere" aria-label="Back to where you are" aria-keyshortcuts="H" title="Back to where you are"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="5"/><circle cx="10" cy="10" r="1.2" fill="currentColor"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3"/></svg></button>
+        </div>
+      </div>
+      <p class="map-say" id="mapSay"></p>
+      <div class="pad-foot"><span>Drag to look around, or use the arrow keys and <kbd>+</kbd> <kbd>−</kbd>.</span> <button type="button" class="map-clear" id="mapRedraw" title="Lay the map out again from the ways you've found">Redraw</button> <button type="button" class="map-clear" id="mapClear">Clear</button></div>
+    </aside>
     </div>
     <input type="text" id="cmd" class="cmd" aria-label="Your command" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send">
   </section>
@@ -448,7 +518,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" id="undoBtn" disabled>Undo</button>
     <button type="button" class="btn" id="restartBtn">Restart</button>
     <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
-    <button type="button" class="btn" id="notesBtn" data-notes aria-pressed="false">Notes</button>
+    <button type="button" class="btn" id="notesBtn" data-panel="notes" aria-pressed="false">Notes</button>
+    <button type="button" class="btn" id="mapBtn" data-panel="map" aria-pressed="false">Map</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
   </div>
@@ -468,6 +539,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>The interpreter doesn't understand a word you type.</b> It turns your line to lower case, splits it at spaces and at the few punctuation marks the game lists as separators, and looks each piece up in the game's dictionary. The game gets back a list: where each word sits in its dictionary, how long it is, and where it was in your line. Working out what <kbd>put the crank in the socket</kbd> means is the game's own code.</li>
       <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
+      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. A game that writes its room name some other way gets no map.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
@@ -504,7 +576,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   </section>
 
   <footer>
-    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games and notes stay in this browser's storage.</p>
+    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games, notes, and maps stay in this browser's storage.</p>
     <p><i>After Hours at the Cabinet</i> was written for the cabinet: <a href="after-hours.z3">after-hours.z3</a>. Its source, and a station-by-station look inside it, are on <a href="../z-machine/">The Z-Machine and how it runs stories</a>. ZILF's library asks that games built with it name it in their opening credits, and <i>After Hours</i> does.</p>
     <p>The three Zorks were built here with ZILF from the Infocom source Microsoft released, and each is shared under its MIT License: <a href="zork1/zork1.z3">zork1.z3</a> (<a href="zork1/LICENSE">license</a>), <a href="zork2/zork2.z3">zork2.z3</a> (<a href="zork2/LICENSE">license</a>), and <a href="zork3/zork3.z3">zork3.z3</a> (<a href="zork3/LICENSE">license</a>). Zork II needed one bracket moved before ZILF would compile it, and <a href="../z-machine/">the Z-machine exhibit</a> explains why that changes nothing in the game. Zork is a trademark, and the name is used here only to say which game this is.</p>
   </footer>
@@ -826,6 +898,7 @@ function resetMachine(m, restarting) {
   m.win = 0; m.row = 1; m.col = 1;
   m.style = 0;
   m.status = null;
+  m.upperObj = 0;
   m.undo = [];
   clearLower(m);
 }
@@ -1213,7 +1286,12 @@ function stepMachine(m) {
     case "print_ret": emit(m, ins.text + "\n"); returnWith(m, 1); break;
     case "print_paddr": emit(m, m.s.decodeText(m.s.unpack(a, true)).text); break;
     case "print_addr": emit(m, m.s.decodeText(a).text); break;
-    case "print_obj": emit(m, objName(m, a)); break;
+    case "print_obj":
+      // the first object named on the upper window is usually the room on
+      // the game's own status line, which the page's map follows
+      if (m.win === 1 && !m.streams.length && !m.upperObj) m.upperObj = a;
+      emit(m, objName(m, a));
+      break;
     case "print_num": emit(m, String(s16(a))); break;
     case "print_char": emit(m, m.s.zscii(a)); break;
     case "print_unicode": emit(m, String.fromCodePoint(a)); break;
@@ -1437,7 +1515,8 @@ function measureScreen() {
   const ch = box.width / 40, lh = box.height || 24;
   const cs = getComputedStyle(lower);
   // the top lines keep clear of the corner's buttons, so they hold a little less
-  const inner = Math.min(lower.clientWidth - parseFloat(cs.paddingRight), $("screen").clientWidth - $("corner").offsetWidth - 8) - parseFloat(cs.paddingLeft);
+  const corner = $("corner"), over = getComputedStyle(corner).position === "absolute" ? corner.offsetWidth + 8 : 0;
+  const inner = Math.min(lower.clientWidth - parseFloat(cs.paddingRight), $("screen").clientWidth - over) - parseFloat(cs.paddingLeft);
   const fit = ch > 0 && inner > 0 ? Math.floor(inner / ch) : 80;
   // games lay out their status lines for 40 columns or more; on a narrow
   // screen the upper window shrinks its letters to fit them
@@ -1456,7 +1535,8 @@ function go() {
   if (!m.halted) { flush(); game.timer = setTimeout(go, 0); return; }
   const why = m.halted.why;
   if (why === "input") {
-    game.snaps.push({ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]) });
+    mapTurn();
+    game.snaps.push({ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here });
     if (game.snaps.length > 100) game.snaps.shift();
     autosave();
     setMode("line");
@@ -1524,6 +1604,7 @@ function submit() {
     const word = text.trim().toLowerCase();
     if ((word === "undo" || word === "oops undo") && !m.s.lookup(m.s.dict, Array.from(word, (ch) => ch.charCodeAt(0)))) { undo(); return; }
     game.snaps[game.snaps.length - 1].cmd = text;
+    mapCommand(text);
     finishLine(m, text);
     go();
   } else if (game.mode === "save") finishSave(text.trim());
@@ -1587,6 +1668,7 @@ function undo() {
   const back = game.snaps[game.snaps.length - 1];
   clearTimeout(game.timer);
   applySnapshot(m, back.snap);
+  mapJump(back.room);
   say(back.cmd ? `Took back “${back.cmd}”.` : "Took back the last move.");
   m.lines[m.lines.length - 1] = structuredClone(back.prompt);
   autosave();
@@ -1608,10 +1690,11 @@ function resume() {
     const m = game.m;
     applySnapshot(m, unpackSnap(m, saved.snap));
     if (m.waiting?.kind !== "line") throw new Error("not at a prompt");
+    if (m.v <= 3) mapJump(whereNow(m));
     clearLower(m);
     m.lines = saved.lines.length ? saved.lines : [[]];
     game.history = saved.history || [];
-    game.snaps = [{ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]) }];
+    game.snaps = [{ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here }];
     setMode("line");
     return true;
   } catch {
@@ -1664,6 +1747,7 @@ function start(buffer, meta) {
   $("fileMeta").textContent = (game.title ? meta.name + ". " : "") + (w.author ? `By ${w.author}. ` : "") + bits.join(", ") + ".";
   if (game.builtin) { try { localStorage.setItem("zmi:last", game.builtin); } catch { /* storage is off */ } }
   loadNotes();
+  loadMap();
   const back = resume();
   $("loadStatus").textContent = back ? "Picked up where you left off. Restart starts the story over." : "";
   if (back) { flush(); updateButtons(); } else go();
@@ -1751,13 +1835,14 @@ $("restartBtn").addEventListener("click", () => {
   if (!armed) {
     btn.classList.add("armed");
     btn.textContent = "Press again to restart";
-    $("note").textContent = "Restarting starts the story over. Saved games and notes stay.";
+    $("note").textContent = "Restarting starts the story over. Saved games, notes, and the map stay.";
     armed = setTimeout(disarm, 4000);
     return;
   }
   disarm();
   clearTimeout(game.timer);
   resetMachine(game.m, true);
+  mapJump();
   game.snaps = [];
   game.mark = null;
   store.del(autoKey());
@@ -1885,29 +1970,362 @@ notesText.addEventListener("blur", saveNotes);
 window.addEventListener("pagehide", saveNotes);
 document.addEventListener("visibilitychange", () => { if (document.hidden) saveNotes(); });
 
-const notesOpen = () => !$("notepad").hidden;
+// ---------- Panels ----------
+// The notepad and the map share the space beside the screen, one at a time.
 // On a touch screen the notepad opens without the keyboard, so you can read
-// it; tap the page to write.
-function setNotes(on, quiet) {
-  $("notepad").hidden = !on;
-  machine.classList.toggle("notes-on", on);
-  document.querySelectorAll("[data-notes]").forEach((b) => b.setAttribute("aria-pressed", on));
-  try { localStorage.setItem("zmi:notes", on ? "open" : ""); } catch { /* storage is off */ }
-  if (!on) saveNotes();
+// it; tap the page to write. The map leaves the prompt where it was, so you
+// can keep playing and watch it fill in.
+const PANELS = { notes: "notepad", map: "mappad" };
+let panel = "";
+function setPanel(name, quiet) {
+  if (!PANELS[name]) name = "";
+  const was = panel;
+  panel = name;
+  for (const [k, id] of Object.entries(PANELS)) $(id).hidden = k !== name;
+  document.querySelectorAll("[data-panel]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.panel === name));
+  try { localStorage.setItem("zmi:panel", name); } catch { /* storage is off */ }
+  if (was === "notes") saveNotes();
+  if (name === "map") requestAnimationFrame(() => { centerMap(); drawMap(); });
   if (quiet) return;
-  if (on && !touchFirst) notesText.focus({ preventScroll: true });
-  else if (!on && !cmd.hidden) cmd.focus({ preventScroll: true });
+  if (name === "notes" && !touchFirst) notesText.focus({ preventScroll: true });
+  else if (!cmd.hidden && (!name || document.activeElement?.closest("[data-panel]"))) cmd.focus({ preventScroll: true });
 }
-document.querySelectorAll("[data-notes]").forEach((b) => b.addEventListener("click", () => setNotes(!notesOpen())));
-$("padClose").addEventListener("click", () => setNotes(false));
-// Esc in the notepad goes back to the game, and doesn't leave full screen
-notesText.addEventListener("keydown", (e) => {
+document.querySelectorAll("[data-panel]").forEach((b) => b.addEventListener("click", () => setPanel(panel === b.dataset.panel ? "" : b.dataset.panel)));
+$("padClose").addEventListener("click", () => setPanel(""));
+$("mapClose").addEventListener("click", () => setPanel(""));
+// Esc in a panel goes back to the game, and doesn't leave full screen
+for (const el of [notesText, $("mapSvg")]) el.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   e.preventDefault();
   e.stopPropagation();
-  setNotes(false);
+  setPanel("");
 });
-try { if (localStorage.getItem("zmi:notes") === "open") setNotes(true, true); } catch { /* storage is off */ }
+
+// ---------- The map ----------
+// Drawn from play, not read from the story file, so it shows only what
+// you've found. Where you are comes from the same place as the status
+// line: the first global in Versions 1 to 3 (§8.2.2), and in later versions
+// the object the game names first when it draws its own status line in the
+// upper window. When the room changes after a command, the command is the
+// way between them. Like the notes, the map is knowledge: Undo, Restart and
+// Restore leave it alone.
+const MAP_DIRS = { n: "north", s: "south", e: "east", w: "west", ne: "northeast", nw: "northwest", se: "southeast", sw: "southwest", u: "up", d: "down",
+  north: "north", south: "south", east: "east", west: "west", northeast: "northeast", northwest: "northwest", southeast: "southeast", southwest: "southwest",
+  up: "up", down: "down", in: "in", inside: "in", enter: "in", out: "out", outside: "out", exit: "out", leave: "out" };
+const MAP_STEP = { north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0], northeast: [1, -1], northwest: [-1, -1], southeast: [1, 1], southwest: [-1, 1],
+  up: [1, -1], down: [-1, 1], in: [1, 1], out: [-1, -1] };
+const MAP_SHORT = { north: "N", south: "S", east: "E", west: "W", northeast: "NE", northwest: "NW", southeast: "SE", southwest: "SW", up: "up", down: "down", in: "in", out: "out" };
+// these change where you are without walking anywhere
+const NOT_A_WAY = /^\s*(undo|restore|restart|load|oops)\b/i;
+const CW = 142, CH = 80, BW = 120, BH = 46;
+const map = { key: "", data: null, pending: null, lastCmd: "", view: { x: 0, y: 0, z: 0.9 }, armed: 0 };
+const blankMap = () => ({ rooms: {}, ways: [], here: 0, last: 0, found: false });
+
+function dirOf(text) {
+  let w = text.toLowerCase().replace(/[^a-z ]/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (w.length > 1 && /^(go|walk|run|head|move|travel|crawl|climb|swim|wade)$/.test(w[0])) w = w.slice(1);
+  return w.length === 1 ? MAP_DIRS[w[0]] || "" : "";
+}
+// where the game says you are, or 0 when it can't be told
+function whereNow(m) {
+  const count = m.s.objs.count;
+  if (m.v <= 3) { const r = getVar(m, 16); return r > 0 && r <= count ? r : 0; }
+  const o = m.upperObj;
+  m.upperObj = 0;
+  if (!o) return -1;            // no status drawn this turn: no news
+  // Inform names a stand-in "Darkness" object when you can't see, and
+  // you're never inside that one
+  return o <= count && childOf(m, o) ? o : 0;
+}
+function loadMap() {
+  map.key = `zmi:map:${game.builtin || game.key}`;
+  const d = store.get(map.key);
+  map.data = d && d.rooms && Array.isArray(d.ways) ? d : blankMap();
+  map.pending = null;
+  $("mapFor").textContent = $("padFor").textContent;
+  centerMap();
+  drawMap();
+}
+const saveMap = () => store.set(map.key, map.data);
+// the move you just typed, to be matched with where you end up
+function mapCommand(text) {
+  let t = text.trim();
+  if (/^(again|g)$/i.test(t)) t = map.lastCmd; else map.lastCmd = t;
+  map.pending = { from: map.data.here, cmd: t };
+}
+// Undo, restore, restart, or picking up where you left off: you got here
+// without walking
+function mapJump(room) {
+  map.pending = null;
+  if (room !== undefined) { map.data.here = room; if (room) map.data.last = room; saveMap(); centerMap(); drawMap(); }
+}
+const freeNear = (d, x, y, from) => nearestFree(new Set(Object.values(d.rooms).map((r) => `${r.x},${r.y}`)), x, y, from);
+// The free square nearest (x, y). Given the room the new one is reached
+// from, a square whose line back to it would run through another room
+// comes last, so lines don't hide behind boxes.
+function nearestFree(taken, x, y, from) {
+  if (!taken.has(`${x},${y}`)) return [x, y];
+  const hidden = (cx, cy) => {
+    if (!from) return false;
+    const [fx, fy] = from, n = Math.max(Math.abs(cx - fx), Math.abs(cy - fy));
+    for (let i = 1; i < n; i++) if (taken.has(`${Math.round(fx + ((cx - fx) * i) / n)},${Math.round(fy + ((cy - fy) * i) / n)}`)) return true;
+    return false;
+  };
+  for (let r = 1; r < 80; r++) {
+    let best = null, bd = Infinity;
+    for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || taken.has(`${x + dx},${y + dy}`)) continue;
+      const dd = dx * dx + dy * dy + (hidden(x + dx, y + dy) ? 1000 : 0);
+      if (dd < bd) { bd = dd; best = [x + dx, y + dy]; }
+    }
+    if (best) return best;
+  }
+  return [x, y];
+}
+// called each time the game asks for a line
+function mapTurn() {
+  const m = game.m, d = map.data, p = map.pending;
+  map.pending = null;
+  const room = whereNow(m);
+  if (room < 0) return;
+  if (!room) { d.here = 0; saveMap(); drawMap(); return; }
+  d.found = true;
+  const name = objName(m, room) || `Room ${room}`;
+  const from = p && d.rooms[p.from] ? p.from : 0;
+  const dir = p ? dirOf(p.cmd) : "";
+  if (!d.rooms[room]) {
+    // a new room goes one step the way you went, or to the nearest free square
+    const near = d.rooms[from] || d.rooms[d.last];
+    const step = from ? MAP_STEP[dir] || [1, 0] : [1, 0];
+    const [x, y] = near ? freeNear(d, near.x + step[0], near.y + step[1], [near.x, near.y]) : [0, 0];
+    d.rooms[room] = { name, x, y };
+  } else d.rooms[room].name = name;
+  if (from && from !== room && !NOT_A_WAY.test(p.cmd)) {
+    const how = dir || p.cmd.trim().toLowerCase().slice(0, 24);
+    if (!d.ways.some((w) => w[0] === from && w[1] === room && w[2] === how)) d.ways.push([from, room, how]);
+  }
+  const moved = d.here !== room;
+  d.here = room;
+  d.last = room;
+  saveMap();
+  if (moved) centerMap();
+  drawMap();
+}
+
+// Redraw: lay the whole map out again from the ways you've found, forgetting
+// where each room happened to land when you first walked in. Compass ways
+// go first, read from either end, so a way you only walked back still
+// counts; up, down, in, out and commands place only what nothing else does.
+function relayMap(d) {
+  const ids = Object.keys(d.rooms).map(Number);
+  const links = new Map(ids.map((n) => [n, []]));
+  for (const [a, b, how] of d.ways) {
+    if (!links.has(a) || !links.has(b) || a === b) continue;
+    const st = MAP_STEP[how], v = st || [1, 0];
+    const sure = st && !["up", "down", "in", "out"].includes(how) ? 2 : st ? 1 : 0;
+    links.get(a).push({ to: b, v, sure });
+    links.get(b).push({ to: a, v: [-v[0], -v[1]], sure });
+  }
+  const pos = new Map(), taken = new Set();
+  const put = (n, [x, y]) => { pos.set(n, [x, y]); taken.add(`${x},${y}`); };
+  while (pos.size < ids.length) {
+    // the surest step from a room already placed to one that isn't, and
+    // better still if the square it points at is free
+    let best = null;
+    for (const [n, [x, y]] of pos) for (const l of links.get(n)) {
+      if (pos.has(l.to)) continue;
+      const want = [x + l.v[0], y + l.v[1]];
+      const score = l.sure * 2 + (taken.has(`${want[0]},${want[1]}`) ? 0 : 1);
+      if (!best || score > best.score) best = { to: l.to, want, from: [x, y], score };
+    }
+    if (best) { put(best.to, nearestFree(taken, ...best.want, best.from)); continue; }
+    // a piece joined to nothing placed yet starts to the right of the rest,
+    // from its best-connected room
+    const next = ids.filter((n) => !pos.has(n)).sort((a, b) => links.get(b).length - links.get(a).length || (b === d.here) - (a === d.here))[0];
+    const placed = [...pos.values()];
+    put(next, placed.length ? [Math.max(...placed.map((p) => p[0])) + 2, Math.min(...placed.map((p) => p[1]))] : [0, 0]);
+  }
+  for (const [n, [x, y]] of pos) Object.assign(d.rooms[n], { x, y });
+}
+
+// ---------- The map: drawing ----------
+const mapSvg = $("mapSvg");
+function svgEl(tag, attrs, text) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+function wrapName(name, max = 16) {
+  const lines = [""];
+  for (const word of name.split(" ")) {
+    const cur = lines[lines.length - 1];
+    if (!cur) lines[lines.length - 1] = word;
+    else if ((cur + " " + word).length <= max) lines[lines.length - 1] = cur + " " + word;
+    else lines.push(word);
+  }
+  if (lines.length > 2) lines.splice(2, lines.length, lines[1] + "…");
+  return lines.map((l) => (l.length > max ? l.slice(0, max - 1) + "…" : l));
+}
+const roomAt = (r) => [r.x * CW, r.y * CH];
+function centerMap() {
+  const d = map.data, r = d && d.rooms[d.here || d.last];
+  if (r) [map.view.x, map.view.y] = roomAt(r);
+  setView();
+}
+// the paper's view: a centre and a zoom, kept apart from the drawing so
+// dragging only moves the viewBox and the grid
+function setView() {
+  const w = mapSvg.clientWidth || 300, h = mapSvg.clientHeight || 200, v = map.view;
+  v.z = Math.max(0.35, Math.min(2.2, v.z));
+  const x0 = v.x - w / 2 / v.z, y0 = v.y - h / 2 / v.z;
+  mapSvg.setAttribute("viewBox", `${x0} ${y0} ${w / v.z} ${h / v.z}`);
+  const gx = (CW / 4) * v.z, gy = (CH / 4) * v.z;
+  mapSvg.style.backgroundSize = `${gx}px ${gy}px`;
+  mapSvg.style.backgroundPosition = `${(-x0 * v.z) % gx}px ${(-y0 * v.z) % gy}px`;
+}
+// where a line from a room's centre towards (dx, dy) leaves its box
+function edgeOfBox(cx, cy, dx, dy) {
+  const sx = dx ? (BW / 2) / Math.abs(dx) : Infinity, sy = dy ? (BH / 2) / Math.abs(dy) : Infinity;
+  const k = Math.min(sx, sy);
+  return [cx + dx * k, cy + dy * k];
+}
+function drawMap() {
+  if (panel !== "map" || !map.data) return;
+  const d = map.data;
+  mapSvg.replaceChildren();
+  // one line per pair of rooms, however many ways join them
+  const pairs = new Map();
+  for (const [a, b, how] of d.ways) {
+    if (!d.rooms[a] || !d.rooms[b]) continue;
+    const k = a < b ? `${a},${b}` : `${b},${a}`;
+    if (!pairs.has(k)) pairs.set(k, { a, b, hows: [] });
+    pairs.get(k).hows.push({ from: a, how });
+  }
+  const lines = svgEl("g"), labels = svgEl("g"), rooms = svgEl("g");
+  for (const { a, b, hows } of pairs.values()) {
+    const [ax, ay] = roomAt(d.rooms[a]), [bx, by] = roomAt(d.rooms[b]);
+    const len = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / len, uy = (by - ay) / len;
+    const [x1, y1] = edgeOfBox(ax, ay, ux, uy), [x2, y2] = edgeOfBox(bx, by, -ux, -uy);
+    const walked = hows.some((h) => MAP_STEP[h.how]);
+    lines.append(svgEl("line", { x1, y1, x2, y2, class: walked ? "way" : "way other" }));
+    // a label wherever the line alone doesn't say which way: up, down, in,
+    // out, a command, or a compass way the drawing couldn't follow
+    for (const h of hows) {
+      const st = MAP_STEP[h.how], [fx, fy] = h.from === a ? [x1, y1] : [x2, y2], dir = h.from === a ? 1 : -1;
+      const fits = st && st[0] === Math.sign(Math.round((dir * ux) * 10) / 10 * 2) && st[1] === Math.sign(Math.round((dir * uy) * 10) / 10 * 2) && !["up", "down", "in", "out"].includes(h.how);
+      if (fits) continue;
+      const t = MAP_SHORT[h.how] || h.how;
+      labels.append(svgEl("text", { x: fx + dir * ux * 14, y: fy + dir * uy * 14 + 3.5, "text-anchor": "middle", class: "way-lbl" }, t.length > 14 ? t.slice(0, 13) + "…" : t));
+    }
+  }
+  for (const [n, r] of Object.entries(d.rooms)) {
+    const [cx, cy] = roomAt(r), here = +n === d.here;
+    const g = svgEl("g", { class: here ? "room here" : "room" });
+    g.append(svgEl("rect", { x: cx - BW / 2, y: cy - BH / 2, width: BW, height: BH, rx: 4 }));
+    const ls = wrapName(r.name);
+    ls.forEach((l, i) => g.append(svgEl("text", { x: cx, y: cy + 4.5 + (i - (ls.length - 1) / 2) * 15, "text-anchor": "middle" }, l)));
+    rooms.append(g);
+  }
+  mapSvg.append(lines, rooms, labels);
+  setView();
+  sayWhere();
+}
+// in words, for anyone who can't see the drawing
+function sayWhere() {
+  const d = map.data, say = $("mapSay"), count = Object.keys(d.rooms).length;
+  mapSvg.setAttribute("aria-label", count ? `Map of the ${count === 1 ? "room" : `${count} rooms`} you've walked through` : "Map, empty so far");
+  if (!d.found) {
+    say.textContent = game.m && game.snaps.length > 1
+      ? "This game doesn't name its room anywhere the map can read, so the map can't follow you."
+      : "The map starts when the game asks for your first command.";
+    return;
+  }
+  if (!d.here) { say.textContent = "The map can't tell where you are just now. In the dark, perhaps."; return; }
+  const name = (n) => d.rooms[n]?.name || "somewhere";
+  const outs = d.ways.filter((w) => w[0] === d.here).map((w) => `${MAP_DIRS[w[2]] ? w[2] : `“${w[2]}”`} to ${name(w[1])}`);
+  const ins = d.ways.filter((w) => w[1] === d.here && !d.ways.some((x) => x[0] === d.here && x[1] === w[0])).map((w) => name(w[0]));
+  say.textContent = `You're in ${name(d.here)}. ` +
+    (outs.length ? `You've gone ${outs.join(", ")}.` : "You haven't left this way yet.") +
+    (ins.length ? ` You came here from ${[...new Set(ins)].join(", ")}.` : "");
+}
+
+// ---------- The map: moving the paper ----------
+let drag = null;
+mapSvg.addEventListener("pointerdown", (e) => {
+  if (e.button) return;
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  mapSvg.setPointerCapture(e.pointerId);
+  mapSvg.classList.add("dragging");
+});
+mapSvg.addEventListener("pointermove", (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  map.view.x -= (e.clientX - drag.x) / map.view.z;
+  map.view.y -= (e.clientY - drag.y) / map.view.z;
+  drag.x = e.clientX; drag.y = e.clientY;
+  setView();
+});
+const endDrag = () => { drag = null; mapSvg.classList.remove("dragging"); };
+mapSvg.addEventListener("pointerup", endDrag);
+mapSvg.addEventListener("pointercancel", endDrag);
+// a trackpad scrolls the paper, and pinches (ctrl + wheel) to zoom
+mapSvg.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  if (e.ctrlKey) map.view.z *= Math.exp(-e.deltaY * 0.01);
+  else { map.view.x += e.deltaX / map.view.z; map.view.y += e.deltaY / map.view.z; }
+  setView();
+}, { passive: false });
+const zoom = (k) => { map.view.z *= k; setView(); };
+$("mapIn").addEventListener("click", () => zoom(1.25));
+$("mapOut").addEventListener("click", () => zoom(0.8));
+$("mapHere").addEventListener("click", centerMap);
+mapSvg.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const step = (e.shiftKey ? 160 : 40) / map.view.z;
+  const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  if (moves[e.key]) { map.view.x += moves[e.key][0]; map.view.y += moves[e.key][1]; setView(); }
+  else if (e.key === "+" || e.key === "=") zoom(1.25);
+  else if (e.key === "-" || e.key === "_") zoom(0.8);
+  else if (e.key === "h" || e.key === "H") centerMap();
+  else return;
+  e.preventDefault();
+});
+new ResizeObserver(() => { if (panel === "map") setView(); }).observe(mapSvg);
+
+$("mapRedraw").addEventListener("click", () => {
+  relayMap(map.data);
+  saveMap();
+  centerMap();
+  drawMap();
+});
+// Clear asks twice, like Restart
+$("mapClear").addEventListener("click", () => {
+  const btn = $("mapClear");
+  if (!map.armed) {
+    btn.classList.add("armed");
+    btn.textContent = "Clear the map?";
+    map.armed = setTimeout(disarmMap, 4000);
+    return;
+  }
+  disarmMap();
+  const d = map.data, here = d.rooms[d.here];
+  map.data = blankMap();
+  if (here) { map.data.rooms[d.here] = { name: here.name, x: 0, y: 0 }; map.data.here = map.data.last = d.here; map.data.found = true; }
+  saveMap();
+  centerMap();
+  drawMap();
+});
+function disarmMap() {
+  clearTimeout(map.armed);
+  map.armed = 0;
+  $("mapClear").classList.remove("armed");
+  $("mapClear").textContent = "Clear";
+}
+
+try {
+  const open = localStorage.getItem("zmi:panel") ?? (localStorage.getItem("zmi:notes") === "open" ? "notes" : "");
+  setPanel(open, true);
+} catch { /* storage is off */ }
 
 // ---------- Start ----------
 (async () => {
