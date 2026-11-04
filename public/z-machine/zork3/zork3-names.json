@@ -1,0 +1,4539 @@
+{
+ "about": "Names from ZILF's assembly listing of Zork III: The Dungeon Master. The story file itself keeps only numbers.",
+ "attributes": {
+  "1": "STAGGERED",
+  "2": "FIGHTBIT",
+  "3": "SEARCHBIT",
+  "4": "TOUCHBIT",
+  "5": "SACREDBIT",
+  "6": "SURFACEBIT",
+  "7": "TRANSBIT",
+  "8": "NONLANDBIT",
+  "9": "WEARBIT",
+  "10": "TRYTAKEBIT",
+  "11": "OPENBIT",
+  "12": "RLANDBIT",
+  "13": "INVISIBLE",
+  "14": "NDESCBIT",
+  "15": "TURNBIT",
+  "16": "READBIT",
+  "17": "TAKEBIT",
+  "18": "CONTBIT",
+  "19": "ONBIT",
+  "20": "FOODBIT",
+  "21": "DRINKBIT",
+  "22": "DOORBIT",
+  "23": "CLIMBBIT",
+  "24": "RMUNGBIT",
+  "25": "FLAMEBIT",
+  "26": "BURNBIT",
+  "27": "VEHBIT",
+  "28": "TOOLBIT",
+  "29": "WEAPONBIT",
+  "30": "ACTORBIT",
+  "31": "LIGHTBIT"
+ },
+ "properties": {
+  "1": "VTYPE",
+  "2": "CONTFCN",
+  "3": "ADVFCN",
+  "4": "STRENGTH",
+  "5": "ENTER",
+  "6": "DESCFCN",
+  "7": "TEXT",
+  "8": "LDESC",
+  "9": "PSEUDO",
+  "10": "GLOBAL",
+  "11": "FDESC",
+  "12": "ACTION",
+  "13": "ADJECTIVE",
+  "14": "SYNONYM",
+  "15": "VALUE",
+  "16": "CAPACITY",
+  "17": "SIZE",
+  "18": "CROSS",
+  "19": "LAND",
+  "20": "OUT",
+  "21": "IN",
+  "22": "DOWN",
+  "23": "UP",
+  "24": "SW",
+  "25": "SE",
+  "26": "NW",
+  "27": "NE",
+  "28": "SOUTH",
+  "29": "WEST",
+  "30": "EAST",
+  "31": "NORTH"
+ },
+ "objects": {
+  "1": "OCEAN",
+  "2": "POTION",
+  "3": "VIAL",
+  "4": "VIKING-SHIP",
+  "5": "VIEW-INDICATOR",
+  "6": "KEY",
+  "7": "COVER",
+  "8": "AQ-3",
+  "9": "AQ-2",
+  "10": "AQ-1",
+  "11": "KEY-ROOM",
+  "12": "DARK-2",
+  "13": "DARK-1",
+  "14": "SOUTH-SHORE",
+  "15": "ZORK-IV",
+  "16": "REPELLENT",
+  "17": "ROOM-8",
+  "18": "MACHINE-ROOM",
+  "19": "LOWER-SHAFT",
+  "20": "DEAD-END-5",
+  "21": "LADDER-BOTTOM",
+  "22": "LADDER",
+  "23": "LADDER-TOP",
+  "24": "TIMBER-ROOM",
+  "25": "TIMBERS",
+  "26": "MAN",
+  "27": "VALUABLES",
+  "28": "CHEST",
+  "29": "BROKEN-STAFF",
+  "30": "STAFF",
+  "31": "TREE",
+  "32": "ROPE",
+  "33": "WAYBREAD",
+  "34": "SHINY-OBJECT",
+  "35": "ALGAE",
+  "36": "FRIED-LAMP",
+  "37": "SAND",
+  "38": "AMULET",
+  "39": "FRIED-TORCH",
+  "40": "TORCH",
+  "41": "VIEWING-TABLE",
+  "42": "VIEW-ROOM",
+  "43": "REEDS",
+  "44": "FAR-SHORE",
+  "45": "IN-LAKE",
+  "46": "FISH",
+  "47": "ON-LAKE",
+  "48": "AQUEDUCT",
+  "49": "AQ-VIEW",
+  "50": "LAKE",
+  "51": "LAKE-SHORE",
+  "52": "FOGGY-ROOM",
+  "53": "GLOBAL-ROPE",
+  "54": "CLIFF-LEDGE",
+  "55": "CLIFF-OBJECT",
+  "56": "GLOBAL-MAN",
+  "57": "CLIFF",
+  "58": "LEDGE",
+  "59": "CLIFF-BASE",
+  "60": "SLOPE",
+  "61": "CLEARING",
+  "62": "JUNCTION",
+  "63": "ZORK2-STAIR",
+  "64": "CLOAK",
+  "65": "HOOD",
+  "66": "SHADOW",
+  "67": "FLATHEAD-OCEAN",
+  "68": "SHADOW-8",
+  "69": "SHADOW-7",
+  "70": "SHADOW-6",
+  "71": "SHADOW-5",
+  "72": "SHADOW-4",
+  "73": "SHADOW-3",
+  "74": "STONE-WALL",
+  "75": "SHADOW-2",
+  "76": "SHADOW-1",
+  "77": "CREEPY-CRAWL",
+  "78": "PLAQUE",
+  "79": "TECH-PLAQUE",
+  "80": "CAGE",
+  "81": "RING",
+  "82": "JEWELLED-KNIFE",
+  "83": "PEDESTAL",
+  "84": "SCEPTRE",
+  "85": "TM-DIAL",
+  "86": "TM-SEAT",
+  "87": "TM-HOLLOW",
+  "88": "TM-BUTTON",
+  "89": "SPINNER",
+  "90": "PRESSURIZER",
+  "91": "TIME-MACHINE",
+  "92": "OLD-MUSEUM-ENTRANCE",
+  "93": "OLD-JEWEL-ROOM",
+  "94": "ROBOT",
+  "95": "OLD-TECH-MUSEUM",
+  "96": "MID-TECH-MUSEUM",
+  "97": "MID-JEWEL-ROOM",
+  "98": "MID-MUSEUM-ENTRANCE",
+  "99": "MID-CP-OUT",
+  "100": "MID-CP-ANTE",
+  "101": "TECH-MUSEUM",
+  "102": "JEWEL-ROOM",
+  "103": "WOODEN-DOOR",
+  "104": "JEWEL-DOOR",
+  "105": "MUSEUM-ENTRANCE",
+  "106": "CLEFT",
+  "107": "IRON-DOOR",
+  "108": "MUSEUM-ANTE",
+  "109": "ROYAL-SEAL",
+  "110": "WIDE-HALL",
+  "111": "CRYSTALS",
+  "112": "ROCKY-ROOM",
+  "113": "TIGHT-SQUEEZE",
+  "114": "VOICES",
+  "115": "HANDS",
+  "116": "ZORKMID",
+  "117": "PATHOBJ",
+  "118": "ADVENTURER",
+  "119": "ME",
+  "120": "LUNGS",
+  "121": "GRUE",
+  "122": "GROUND",
+  "123": "SAILOR",
+  "124": "BLESSINGS",
+  "125": "NOT-HERE-OBJECT",
+  "126": "IT",
+  "127": "PSEUDO-OBJECT",
+  "128": "INTNUM",
+  "129": "CP-HOLE",
+  "130": "OLD-MAN",
+  "131": "WOODEN-BAR",
+  "132": "WHITE-PANEL",
+  "133": "YELLOW-PANEL",
+  "134": "SUNDIAL",
+  "135": "SHORT-POLE",
+  "136": "RED-PANEL",
+  "137": "RED-BUTTON",
+  "138": "BEAM",
+  "139": "PINE-PANEL",
+  "140": "MAHOGANY-PANEL",
+  "141": "LONG-POLE",
+  "142": "DIAL-BUTTON",
+  "143": "COMPASS-ARROW",
+  "144": "BLACK-PANEL",
+  "145": "T-BAR",
+  "146": "RUNES",
+  "147": "NIRVANA",
+  "148": "GOOD-LOCKED-DOOR",
+  "149": "GOOD-CELL",
+  "150": "LOCKED-DOOR",
+  "151": "PRISON-CELL",
+  "152": "CELL",
+  "153": "PARAPET",
+  "154": "FLAMING-PIT",
+  "155": "PARAPET-OBJ",
+  "156": "CELL-DOOR",
+  "157": "NORTH-CORRIDOR",
+  "158": "FRONT-DOOR",
+  "159": "DUNGEON-PANEL",
+  "160": "DUNGEON-DOOR",
+  "161": "BRONZE-DOOR",
+  "162": "SOUTH-CORRIDOR",
+  "163": "WEST-CORRIDOR",
+  "164": "EAST-CORRIDOR",
+  "165": "WATER-CHANNEL",
+  "166": "MOSS",
+  "167": "DAMP-PASSAGE",
+  "168": "DEAD-END",
+  "169": "MSTAIRS",
+  "170": "MREYE",
+  "171": "SECRET-DOOR",
+  "172": "MR-ANTE",
+  "173": "IN-MIRROR",
+  "174": "MRAW",
+  "175": "MRAE",
+  "176": "MRBW",
+  "177": "MRBE",
+  "178": "MRCW",
+  "179": "MRCE",
+  "180": "MRGW",
+  "181": "MRGE",
+  "182": "MRDW",
+  "183": "MRDE",
+  "184": "MRA",
+  "185": "MRB",
+  "186": "MRC",
+  "187": "MRG",
+  "188": "WOODEN-WALL",
+  "189": "MRD",
+  "190": "CHANNEL",
+  "191": "PANEL",
+  "192": "MIRROR",
+  "193": "BEHIND-DOOR",
+  "194": "DUNGEON-MASTER",
+  "195": "MASTER",
+  "196": "ROSE",
+  "197": "GUARDIAN",
+  "198": "INTDIR",
+  "199": "LORE-BOOK",
+  "200": "CP-SLOT",
+  "201": "WARNING-NOTE",
+  "202": "CPSWL",
+  "203": "CPNWL",
+  "204": "CPWWL",
+  "205": "CPEWL",
+  "206": "CPLADDER",
+  "207": "CP",
+  "208": "CPDOOR",
+  "209": "CP-OUT",
+  "210": "STAIRS",
+  "211": "ROOMS",
+  "212": "STONE",
+  "213": "SWORD",
+  "214": "CP-ANTE",
+  "215": "LAMP",
+  "216": "BROKEN-LAMP",
+  "217": "WATER",
+  "218": "GLOBAL-WATER",
+  "219": "NORTH-WALL",
+  "220": "WEST-WALL",
+  "221": "SOUTH-WALL",
+  "222": "EAST-WALL",
+  "223": "TUNNEL",
+  "224": "CHASM",
+  "225": "GLOBAL-OBJECTS",
+  "226": "DEBRIS",
+  "227": "LOCAL-GLOBALS",
+  "228": "RUBBLE"
+ },
+ "globals": [
+  "HERE",
+  "SCORE",
+  "MOVES",
+  "C-TABLE",
+  "C-DEMONS",
+  "C-INTS",
+  "CLOCK-WAIT",
+  "PLAYER",
+  "P-WON",
+  "P-MULT",
+  "P-NOT-HERE",
+  "PRSA",
+  "PRSI",
+  "PRSO",
+  "P-TABLE",
+  "P-ONEOBJ",
+  "P-SYNTAX",
+  "P-CCTBL",
+  "P-LEN",
+  "P-DIR",
+  "WINNER",
+  "P-LEXV",
+  "AGAIN-LEXV",
+  "RESERVE-LEXV",
+  "RESERVE-PTR",
+  "P-INBUF",
+  "OOPS-INBUF",
+  "OOPS-TABLE",
+  "P-CONT",
+  "P-IT-OBJECT",
+  "P-OFLAG",
+  "P-MERGED",
+  "P-ACLAUSE",
+  "P-ANAM",
+  "P-AADJ",
+  "P-ITBL",
+  "P-OTBL",
+  "P-VTBL",
+  "P-OVTBL",
+  "P-NCN",
+  "QUOTE-FLAG",
+  "P-END-ON-PREP",
+  "P-ACT",
+  "P-WALK-DIR",
+  "AGAIN-DIR",
+  "P-NUMBER",
+  "P-DIRECTION",
+  "P-SLOCBITS",
+  "P-GWIMBIT",
+  "P-NAM",
+  "P-ADJ",
+  "P-ADVERB",
+  "P-ADJN",
+  "P-PRSO",
+  "P-PRSI",
+  "P-BUTS",
+  "P-MERGE",
+  "P-OCLAUSE",
+  "P-MATCHLEN",
+  "P-GETFLAGS",
+  "P-AND",
+  "P-XNAM",
+  "P-XADJ",
+  "P-XADJN",
+  "ALWAYS-LIT",
+  "CP-FLAG",
+  "CLEFT-QUEUED?",
+  "LOAD-MAX",
+  "LOAD-ALLOWED",
+  "VERBOSE",
+  "SUPER-BRIEF",
+  "HS",
+  "JUMPLOSS",
+  "WHEEEEE",
+  "LIT",
+  "SPRAYED?",
+  "DESC-OBJECT",
+  "BASE-SCORE",
+  "WON-FLAG",
+  "DEAD",
+  "DEATHS",
+  "LUCKY",
+  "FUMBLE-NUMBER",
+  "FUMBLE-PROB",
+  "INDENTS",
+  "HO-HUM",
+  "HELLOS",
+  "DUMMY",
+  "SWORD-STATE",
+  "YUKS",
+  "LAMP-TABLE",
+  "CPHERE",
+  "CPOBJS",
+  "CPTABLE",
+  "CPWALLS",
+  "CPEXITS",
+  "CP-MOVED",
+  "MINUS-SEVEN",
+  "MINUS-FIVE",
+  "MINUS-FOUR",
+  "MINUS-ONE",
+  "CPPUSH-FLAG",
+  "CPSOLVE-FLAG",
+  "CPBLOCK-FLAG",
+  "MLOC",
+  "MR1-FLAG",
+  "MR2-FLAG",
+  "MIRROR-OPEN-FLAG",
+  "WOOD-OPEN-FLAG",
+  "MRSWPUSH-FLAG",
+  "R-SOUTHS",
+  "R-NORTHS",
+  "R-EASTS",
+  "R-WESTS",
+  "GUARDIANS-SEEN",
+  "GUARDSTR",
+  "MIRROR-FIRST",
+  "DIRVEC",
+  "BEAM-BREAKER",
+  "MIRROR-OPENED",
+  "MDIR",
+  "POLEUP-FLAG",
+  "LONGDIRS",
+  "DM-SEEN",
+  "IN-DUNGEON",
+  "DM-REASONS",
+  "FOLFLAG",
+  "LCELL",
+  "PNUMB",
+  "CELLOBJS",
+  "BRONZE-DOOR-LOCKED",
+  "OLD-MAN-GONE",
+  "OLD-MAN-FED",
+  "SECRET-DOOR-DESC",
+  "OLD-MAN-AWAKE",
+  "DIAG",
+  "DEAD-OBJ-LOCS",
+  "SCORE-MAX",
+  "MACHINE-DAMAGED",
+  "YEAR",
+  "YEAR-CLOSED",
+  "CLEFT-FLAG",
+  "TM-YEAR",
+  "RING-CONCEALED",
+  "TM-POINT",
+  "SURROUNDINGS-CHANGED",
+  "SNAP-LOC",
+  "GUARD-KILLERS",
+  "FLATHEAD-HEARD",
+  "RING-STOLEN",
+  "CLUMSY-ROBBERY",
+  "MYSTERY",
+  "GUARDS-PRESENT",
+  "HEAR-VOICES",
+  "BLATHER",
+  "DIRS",
+  "DIR-TBL",
+  "SHADOW-DIAG",
+  "P-STRENGTH",
+  "S-STRENGTH",
+  "ATTACK-MODE",
+  "SHADOW-GONE",
+  "P-HITS",
+  "P-MISSES",
+  "S-HITS",
+  "S-MISSES",
+  "BLOCKED-DIR",
+  "SHADOW-POINT-1",
+  "SHADOW-POINT-2",
+  "CHEST-LIFTED",
+  "MAN-SEEN",
+  "MAN-WAITS",
+  "MAN-WAITING",
+  "MAN-FLAG",
+  "MAN-POINT",
+  "MAN-GONE",
+  "CHEST-TIED",
+  "HOLDING-ROPE",
+  "LIFT-WAIT",
+  "CHEST-OPENED",
+  "ROPE-FLAG",
+  "LAST-MOVES",
+  "LAKE-POINT",
+  "CURRENT-LAMP",
+  "LAKE-TIME",
+  "VIEW-POINT",
+  "VIEW-ROMANS",
+  "ACTIVE-VIEW",
+  "VIEW-ROOMS",
+  "VIEWS",
+  "EMPTY-HANDED",
+  "SPRAY-USED?",
+  "AQ-FLAG",
+  "COVER-MOVED",
+  "KEY-DESCS",
+  "BOAT-SEEN",
+  "SHIP-GONE",
+  "INVIS",
+  "SWORD-IN-STONE?",
+  "PREPOSITIONS",
+  "ACTIONS",
+  "PREACTIONS",
+  "VERBS"
+ ],
+ "abbreviations": [
+  {
+   "uses": 906,
+   "saved": 2713
+  },
+  {
+   "uses": 385,
+   "saved": 1150
+  },
+  {
+   "uses": 309,
+   "saved": 922
+  },
+  {
+   "uses": 283,
+   "saved": 844
+  },
+  {
+   "uses": 416,
+   "saved": 828
+  },
+  {
+   "uses": 403,
+   "saved": 802
+  },
+  {
+   "uses": 339,
+   "saved": 674
+  },
+  {
+   "uses": 163,
+   "saved": 484
+  },
+  {
+   "uses": 236,
+   "saved": 468
+  },
+  {
+   "uses": 458,
+   "saved": 455
+  },
+  {
+   "uses": 211,
+   "saved": 418
+  },
+  {
+   "uses": 398,
+   "saved": 395
+  },
+  {
+   "uses": 189,
+   "saved": 374
+  },
+  {
+   "uses": 147,
+   "saved": 290
+  },
+  {
+   "uses": 293,
+   "saved": 290
+  },
+  {
+   "uses": 27,
+   "saved": 284
+  },
+  {
+   "uses": 96,
+   "saved": 283
+  },
+  {
+   "uses": 257,
+   "saved": 254
+  },
+  {
+   "uses": 10,
+   "saved": 223
+  },
+  {
+   "uses": 73,
+   "saved": 214
+  },
+  {
+   "uses": 69,
+   "saved": 202
+  },
+  {
+   "uses": 200,
+   "saved": 197
+  },
+  {
+   "uses": 196,
+   "saved": 193
+  },
+  {
+   "uses": 66,
+   "saved": 193
+  },
+  {
+   "uses": 95,
+   "saved": 186
+  },
+  {
+   "uses": 63,
+   "saved": 184
+  },
+  {
+   "uses": 16,
+   "saved": 178
+  },
+  {
+   "uses": 61,
+   "saved": 178
+  },
+  {
+   "uses": 61,
+   "saved": 178
+  },
+  {
+   "uses": 90,
+   "saved": 176
+  },
+  {
+   "uses": 176,
+   "saved": 173
+  },
+  {
+   "uses": 53,
+   "saved": 154
+  },
+  {
+   "uses": 78,
+   "saved": 152
+  },
+  {
+   "uses": 155,
+   "saved": 152
+  },
+  {
+   "uses": 154,
+   "saved": 151
+  },
+  {
+   "uses": 77,
+   "saved": 150
+  },
+  {
+   "uses": 151,
+   "saved": 148
+  },
+  {
+   "uses": 30,
+   "saved": 143
+  },
+  {
+   "uses": 30,
+   "saved": 143
+  },
+  {
+   "uses": 72,
+   "saved": 140
+  },
+  {
+   "uses": 138,
+   "saved": 135
+  },
+  {
+   "uses": 35,
+   "saved": 134
+  },
+  {
+   "uses": 28,
+   "saved": 133
+  },
+  {
+   "uses": 133,
+   "saved": 130
+  },
+  {
+   "uses": 129,
+   "saved": 126
+  },
+  {
+   "uses": 26,
+   "saved": 123
+  },
+  {
+   "uses": 62,
+   "saved": 120
+  },
+  {
+   "uses": 121,
+   "saved": 118
+  },
+  {
+   "uses": 24,
+   "saved": 113
+  },
+  {
+   "uses": 116,
+   "saved": 113
+  },
+  {
+   "uses": 58,
+   "saved": 112
+  },
+  {
+   "uses": 29,
+   "saved": 110
+  },
+  {
+   "uses": 113,
+   "saved": 110
+  },
+  {
+   "uses": 29,
+   "saved": 110
+  },
+  {
+   "uses": 16,
+   "saved": 103
+  },
+  {
+   "uses": 53,
+   "saved": 102
+  },
+  {
+   "uses": 104,
+   "saved": 101
+  },
+  {
+   "uses": 103,
+   "saved": 100
+  },
+  {
+   "uses": 26,
+   "saved": 98
+  },
+  {
+   "uses": 101,
+   "saved": 98
+  },
+  {
+   "uses": 51,
+   "saved": 98
+  },
+  {
+   "uses": 100,
+   "saved": 97
+  },
+  {
+   "uses": 50,
+   "saved": 96
+  },
+  {
+   "uses": 48,
+   "saved": 92
+  },
+  {
+   "uses": 92,
+   "saved": 89
+  },
+  {
+   "uses": 19,
+   "saved": 88
+  },
+  {
+   "uses": 46,
+   "saved": 88
+  },
+  {
+   "uses": 31,
+   "saved": 88
+  },
+  {
+   "uses": 90,
+   "saved": 87
+  },
+  {
+   "uses": 23,
+   "saved": 86
+  },
+  {
+   "uses": 44,
+   "saved": 84
+  },
+  {
+   "uses": 29,
+   "saved": 82
+  },
+  {
+   "uses": 85,
+   "saved": 82
+  },
+  {
+   "uses": 22,
+   "saved": 82
+  },
+  {
+   "uses": 43,
+   "saved": 82
+  },
+  {
+   "uses": 83,
+   "saved": 80
+  },
+  {
+   "uses": 83,
+   "saved": 80
+  },
+  {
+   "uses": 83,
+   "saved": 80
+  },
+  {
+   "uses": 82,
+   "saved": 79
+  },
+  {
+   "uses": 81,
+   "saved": 78
+  },
+  {
+   "uses": 41,
+   "saved": 78
+  },
+  {
+   "uses": 81,
+   "saved": 78
+  },
+  {
+   "uses": 80,
+   "saved": 77
+  },
+  {
+   "uses": 79,
+   "saved": 76
+  },
+  {
+   "uses": 27,
+   "saved": 76
+  },
+  {
+   "uses": 79,
+   "saved": 76
+  },
+  {
+   "uses": 27,
+   "saved": 76
+  },
+  {
+   "uses": 78,
+   "saved": 75
+  },
+  {
+   "uses": 39,
+   "saved": 74
+  },
+  {
+   "uses": 76,
+   "saved": 73
+  },
+  {
+   "uses": 16,
+   "saved": 73
+  },
+  {
+   "uses": 37,
+   "saved": 70
+  },
+  {
+   "uses": 9,
+   "saved": 70
+  },
+  {
+   "uses": 69,
+   "saved": 66
+  },
+  {
+   "uses": 35,
+   "saved": 66
+  },
+  {
+   "uses": 35,
+   "saved": 66
+  }
+ ],
+ "words": [
+  "\"\"",
+  "#command",
+  "#random",
+  "#record",
+  "#unrecord",
+  "$verify",
+  "'",
+  ",",
+  ".",
+  "a",
+  "about",
+  "abyss",
+  "across",
+  "activate",
+  "adventurer",
+  "again",
+  "air",
+  "algae",
+  "all",
+  "amulet",
+  "an",
+  "and",
+  "answer",
+  "antique",
+  "apply",
+  "aqueduct",
+  "arch",
+  "area",
+  "armed",
+  "around",
+  "arrow",
+  "ask",
+  "assorted",
+  "at",
+  "attach",
+  "attack",
+  "aviator",
+  "awake",
+  "away",
+  "back",
+  "banish",
+  "bar",
+  "bare",
+  "barf",
+  "bathe",
+  "beach",
+  "beam",
+  "begone",
+  "behind",
+  "below",
+  "beneath",
+  "bite",
+  "black",
+  "blade",
+  "blast",
+  "blessings",
+  "block",
+  "blow",
+  "board",
+  "boat",
+  "book",
+  "bottom",
+  "boulder",
+  "brandish",
+  "brass",
+  "bread",
+  "break",
+  "breath",
+  "brief",
+  "broken",
+  "bronze",
+  "brush",
+  "bug",
+  "burn",
+  "burned",
+  "but",
+  "button",
+  "cage",
+  "can",
+  "carry",
+  "carved",
+  "carvin",
+  "cast",
+  "catch",
+  "cell",
+  "center",
+  "chair",
+  "channel",
+  "chant",
+  "chase",
+  "chasm",
+  "chest",
+  "chomp",
+  "chuck",
+  "clean",
+  "cleft",
+  "cliff",
+  "climb",
+  "cloak",
+  "cloaked",
+  "close",
+  "come",
+  "command",
+  "compass",
+  "console",
+  "consume",
+  "contents",
+  "count",
+  "cover",
+  "cpslt",
+  "craft",
+  "crawlway",
+  "cretin",
+  "cross",
+  "crown",
+  "crystal",
+  "curse",
+  "cut",
+  "d",
+  "damage",
+  "damn",
+  "dangling",
+  "dark",
+  "dead",
+  "debris",
+  "deep",
+  "deflate",
+  "describe",
+  "destroy",
+  "device",
+  "diagnose",
+  "dial",
+  "dig",
+  "dirt",
+  "disembark",
+  "disenchant",
+  "dispatch",
+  "display",
+  "dive",
+  "donate",
+  "door",
+  "douse",
+  "down",
+  "drink",
+  "drive",
+  "drop",
+  "dryer",
+  "duct",
+  "dungeon",
+  "dust",
+  "e",
+  "east",
+  "eastern",
+  "eat",
+  "echo",
+  "elvish",
+  "enchant",
+  "engrav",
+  "enter",
+  "examine",
+  "except",
+  "exit",
+  "exorcise",
+  "extinguish",
+  "fasten",
+  "feed",
+  "feel",
+  "fiery",
+  "fight",
+  "figure",
+  "fill",
+  "find",
+  "fish",
+  "fix",
+  "flaming",
+  "flathead",
+  "flip",
+  "floor",
+  "fluid",
+  "follow",
+  "foobar",
+  "footpad",
+  "for",
+  "forbidding",
+  "ford",
+  "forest",
+  "free",
+  "fresh",
+  "friend",
+  "frobozz",
+  "from",
+  "frotz",
+  "fuck",
+  "g",
+  "gaze",
+  "get",
+  "gift",
+  "give",
+  "glamdring",
+  "glue",
+  "go",
+  "gold",
+  "golden",
+  "gorge",
+  "grab",
+  "graces",
+  "gray",
+  "grease",
+  "great",
+  "grey",
+  "grip",
+  "ground",
+  "grue",
+  "guard",
+  "guardian",
+  "guards",
+  "h2o",
+  "hand",
+  "handgrip",
+  "hands",
+  "hatch",
+  "heavy",
+  "hello",
+  "her",
+  "here",
+  "hi",
+  "hide",
+  "him",
+  "hit",
+  "hold",
+  "hole",
+  "hollow",
+  "hood",
+  "hooded",
+  "hop",
+  "hungry",
+  "hurl",
+  "hurt",
+  "i",
+  "ignite",
+  "imbibe",
+  "in",
+  "incant",
+  "incinerate",
+  "indicator",
+  "inflat",
+  "injure",
+  "insert",
+  "inside",
+  "intdir",
+  "intnum",
+  "into",
+  "inventory",
+  "invisible",
+  "iron",
+  "is",
+  "it",
+  "jewelled",
+  "jewels",
+  "jump",
+  "key",
+  "kick",
+  "kill",
+  "kiss",
+  "knife",
+  "knock",
+  "l",
+  "ladder",
+  "lake",
+  "lamp",
+  "land",
+  "lantern",
+  "large",
+  "launch",
+  "lean",
+  "leap",
+  "leave",
+  "ledge",
+  "lichen",
+  "lift",
+  "light",
+  "liquid",
+  "liquify",
+  "listen",
+  "lock",
+  "locked",
+  "long",
+  "look",
+  "lore",
+  "lose",
+  "lower",
+  "lubricate",
+  "lungs",
+  "lurking",
+  "machine",
+  "magic",
+  "mahogany",
+  "make",
+  "man",
+  "manhole",
+  "marble",
+  "massive",
+  "master",
+  "me",
+  "melt",
+  "metal",
+  "mirror",
+  "mist",
+  "molest",
+  "moss",
+  "motors",
+  "mouth",
+  "move",
+  "mumble",
+  "murder",
+  "myself",
+  "n",
+  "narrow",
+  "ne",
+  "no",
+  "north",
+  "northe",
+  "northwest",
+  "note",
+  "nw",
+  "object",
+  "ocean",
+  "odor",
+  "odysseus",
+  "of",
+  "off",
+  "offer",
+  "offici",
+  "oil",
+  "old",
+  "on",
+  "one",
+  "onto",
+  "oops",
+  "open",
+  "orcrist",
+  "out",
+  "over",
+  "ozmoo",
+  "pair",
+  "panel",
+  "parapet",
+  "passage",
+  "pat",
+  "patch",
+  "path",
+  "peal",
+  "pedestal",
+  "pet",
+  "pick",
+  "piece",
+  "pierce",
+  "pile",
+  "pine",
+  "pipes",
+  "pit",
+  "place",
+  "plant",
+  "plants",
+  "plaque",
+  "play",
+  "plug",
+  "plugh",
+  "pointed",
+  "poke",
+  "pole",
+  "post",
+  "potion",
+  "pour",
+  "pray",
+  "press",
+  "pressurizer",
+  "proceed",
+  "pull",
+  "pump",
+  "puncture",
+  "pursue",
+  "push",
+  "put",
+  "q",
+  "quantity",
+  "quicks",
+  "quit",
+  "raise",
+  "rap",
+  "rape",
+  "ravine",
+  "read",
+  "red",
+  "reeds",
+  "release",
+  "remove",
+  "render",
+  "repair",
+  "repellent",
+  "repent",
+  "reply",
+  "restart",
+  "restore",
+  "rickety",
+  "ring",
+  "robot",
+  "rock",
+  "rocks",
+  "rocky",
+  "roll",
+  "rope",
+  "rose",
+  "round",
+  "royal",
+  "rub",
+  "rubble",
+  "run",
+  "runes",
+  "rusty",
+  "s",
+  "sailor",
+  "sand",
+  "save",
+  "say",
+  "sceptre",
+  "score",
+  "scream",
+  "script",
+  "se",
+  "seal",
+  "search",
+  "seat",
+  "secret",
+  "secure",
+  "see",
+  "seek",
+  "self",
+  "send",
+  "set",
+  "shadow",
+  "shake",
+  "sharp",
+  "shiny",
+  "ship",
+  "shit",
+  "shore",
+  "short",
+  "shout",
+  "shut",
+  "sickly",
+  "sigh",
+  "silent",
+  "sinister",
+  "sit",
+  "skim",
+  "skip",
+  "slay",
+  "slice",
+  "slide",
+  "slit",
+  "slot",
+  "small",
+  "smash",
+  "smell",
+  "smelling",
+  "smoky",
+  "sniff",
+  "south",
+  "southe",
+  "southwest",
+  "spill",
+  "spin",
+  "spray",
+  "squeeze",
+  "stab",
+  "staff",
+  "staircase",
+  "stairs",
+  "stairway",
+  "stalag",
+  "stand",
+  "stare",
+  "startle",
+  "statue",
+  "stay",
+  "steel",
+  "steep",
+  "step",
+  "steps",
+  "stone",
+  "strange",
+  "strike",
+  "structure",
+  "stuff",
+  "sun",
+  "sundial",
+  "super",
+  "superbrief",
+  "surface",
+  "surprise",
+  "sw",
+  "swallow",
+  "swamp",
+  "sweet",
+  "swim",
+  "swing",
+  "sword",
+  "t-bar",
+  "table",
+  "take",
+  "talk",
+  "tall",
+  "taste",
+  "taunt",
+  "tell",
+  "temple",
+  "temporizer",
+  "text",
+  "the",
+  "them",
+  "then",
+  "thin",
+  "through",
+  "throw",
+  "thru",
+  "thrust",
+  "tie",
+  "timbers",
+  "time",
+  "to",
+  "torch",
+  "torche",
+  "toss",
+  "touch",
+  "trail",
+  "treasure",
+  "tree",
+  "trees",
+  "tug",
+  "turn",
+  "u",
+  "ulysses",
+  "unattach",
+  "under",
+  "underneath",
+  "unfasten",
+  "unhook",
+  "unlock",
+  "unscript",
+  "untie",
+  "up",
+  "using",
+  "valuables",
+  "verbose",
+  "version",
+  "vial",
+  "viewing",
+  "viking",
+  "voice",
+  "voices",
+  "w",
+  "wade",
+  "wait",
+  "wake",
+  "walk",
+  "wall",
+  "warning",
+  "washing",
+  "water",
+  "waterf",
+  "wave",
+  "way",
+  "waybread",
+  "wear",
+  "west",
+  "western",
+  "what",
+  "whats",
+  "where",
+  "white",
+  "wide",
+  "win",
+  "wind",
+  "winding",
+  "winnage",
+  "wires",
+  "wish",
+  "with",
+  "woman",
+  "wood",
+  "wooden",
+  "xyzzy",
+  "y",
+  "yank",
+  "yell",
+  "yellow",
+  "yes",
+  "z",
+  "zork",
+  "zorkmid",
+  "zzmgck"
+ ],
+ "routines": [
+  {
+   "name": "RANDOM-ELEMENT",
+   "locals": [
+    "FROB"
+   ],
+   "addr": 19986
+  },
+  {
+   "name": "PICK-ONE",
+   "locals": [
+    "FROB",
+    "L",
+    "CNT",
+    "RND",
+    "MSG",
+    "RFROB"
+   ],
+   "addr": 20002
+  },
+  {
+   "name": "QUEUE",
+   "locals": [
+    "RTN",
+    "TICK",
+    "CINT"
+   ],
+   "addr": 20080
+  },
+  {
+   "name": "INT",
+   "locals": [
+    "RTN",
+    "DEMON",
+    "E",
+    "C",
+    "INT?1"
+   ],
+   "addr": 20100
+  },
+  {
+   "name": "CLOCKER",
+   "locals": [
+    "C",
+    "E",
+    "TICK",
+    "FLG"
+   ],
+   "addr": 20162
+  },
+  {
+   "name": "MAIN-LOOP",
+   "locals": [
+    "TRASH"
+   ],
+   "addr": 20254
+  },
+  {
+   "name": "MAIN-LOOP-1",
+   "locals": [
+    "ICNT",
+    "OCNT",
+    "NUM",
+    "CNT",
+    "OBJ",
+    "TBL",
+    "V",
+    "PTBL",
+    "OBJ1",
+    "TMP",
+    "O",
+    "I"
+   ],
+   "addr": 20266
+  },
+  {
+   "name": "PERFORM",
+   "locals": [
+    "A",
+    "O",
+    "I",
+    "V",
+    "OA",
+    "OO",
+    "OI"
+   ],
+   "addr": 20922
+  },
+  {
+   "name": "PARSER",
+   "locals": [
+    "PTR",
+    "WRD",
+    "VAL",
+    "VERB",
+    "OF-FLAG",
+    "OWINNER",
+    "OMERGED",
+    "LEN",
+    "DIR",
+    "NW",
+    "LW",
+    "CNT"
+   ],
+   "addr": 21166
+  },
+  {
+   "name": "STUFF",
+   "locals": [
+    "SRC",
+    "DEST",
+    "MAX",
+    "PTR",
+    "CTR",
+    "BPTR"
+   ],
+   "addr": 22686
+  },
+  {
+   "name": "INBUF-STUFF",
+   "locals": [
+    "SRC",
+    "DEST",
+    "CNT"
+   ],
+   "addr": 22770
+  },
+  {
+   "name": "INBUF-ADD",
+   "locals": [
+    "LEN",
+    "BEG",
+    "SLOT",
+    "DBEG",
+    "CTR",
+    "TMP",
+    "?TMP"
+   ],
+   "addr": 22800
+  },
+  {
+   "name": "WT?",
+   "locals": [
+    "PTR",
+    "BIT",
+    "B1",
+    "OFFS",
+    "TYP"
+   ],
+   "addr": 22896
+  },
+  {
+   "name": "CLAUSE",
+   "locals": [
+    "PTR",
+    "VAL",
+    "WRD",
+    "OFF",
+    "NUM",
+    "ANDFLG",
+    "FIRST??",
+    "NW",
+    "LW"
+   ],
+   "addr": 22934
+  },
+  {
+   "name": "NUMBER?",
+   "locals": [
+    "PTR",
+    "CNT",
+    "BPTR",
+    "CHR",
+    "SUM",
+    "TIM"
+   ],
+   "addr": 23410
+  },
+  {
+   "name": "ORPHAN-MERGE",
+   "locals": [
+    "CNT",
+    "TEMP",
+    "VERB",
+    "BEG",
+    "END",
+    "ADJ",
+    "WRD",
+    "?TMP"
+   ],
+   "addr": 23544
+  },
+  {
+   "name": "ACLAUSE-WIN",
+   "locals": [
+    "ADJ"
+   ],
+   "addr": 24044
+  },
+  {
+   "name": "NCLAUSE-WIN",
+   "locals": [],
+   "addr": 24106
+  },
+  {
+   "name": "WORD-PRINT",
+   "locals": [
+    "CNT",
+    "BUF"
+   ],
+   "addr": 24152
+  },
+  {
+   "name": "UNKNOWN-WORD",
+   "locals": [
+    "PTR",
+    "BUF",
+    "?TMP"
+   ],
+   "addr": 24174
+  },
+  {
+   "name": "CANT-USE",
+   "locals": [
+    "PTR",
+    "BUF",
+    "?TMP"
+   ],
+   "addr": 24260
+  },
+  {
+   "name": "SYNTAX-CHECK",
+   "locals": [
+    "SYN",
+    "LEN",
+    "NUM",
+    "OBJ",
+    "DRIVE1",
+    "DRIVE2",
+    "PREP",
+    "VERB",
+    "TMP"
+   ],
+   "addr": 24352
+  },
+  {
+   "name": "CANT-ORPHAN",
+   "locals": [],
+   "addr": 24780
+  },
+  {
+   "name": "ORPHAN",
+   "locals": [
+    "D1",
+    "D2",
+    "CNT"
+   ],
+   "addr": 24816
+  },
+  {
+   "name": "THING-PRINT",
+   "locals": [
+    "PRSO?",
+    "THE?",
+    "BEG",
+    "END"
+   ],
+   "addr": 24972
+  },
+  {
+   "name": "BUFFER-PRINT",
+   "locals": [
+    "BEG",
+    "END",
+    "CP?1",
+    "NOSP",
+    "WRD",
+    "FIRST??",
+    "PN",
+    "Q?"
+   ],
+   "addr": 25012
+  },
+  {
+   "name": "PREP-PRINT",
+   "locals": [
+    "PREP",
+    "WRD"
+   ],
+   "addr": 25172
+  },
+  {
+   "name": "CLAUSE-COPY",
+   "locals": [
+    "SRC",
+    "DEST",
+    "INSRT",
+    "BEG",
+    "END"
+   ],
+   "addr": 25192
+  },
+  {
+   "name": "CLAUSE-ADD",
+   "locals": [
+    "WRD",
+    "PTR"
+   ],
+   "addr": 25308
+  },
+  {
+   "name": "PREP-FIND",
+   "locals": [
+    "PREP",
+    "CNT",
+    "SIZE"
+   ],
+   "addr": 25342
+  },
+  {
+   "name": "SYNTAX-FOUND",
+   "locals": [
+    "SYN"
+   ],
+   "addr": 25380
+  },
+  {
+   "name": "GWIM",
+   "locals": [
+    "GBIT",
+    "LBIT",
+    "PREP",
+    "OBJ"
+   ],
+   "addr": 25392
+  },
+  {
+   "name": "SNARF-OBJECTS",
+   "locals": [
+    "OPTR",
+    "IPTR",
+    "L"
+   ],
+   "addr": 25510
+  },
+  {
+   "name": "BUT-MERGE",
+   "locals": [
+    "TBL",
+    "LEN",
+    "BUTLEN",
+    "CNT",
+    "MATCHES",
+    "OBJ",
+    "NTBL"
+   ],
+   "addr": 25616
+  },
+  {
+   "name": "SNARFEM",
+   "locals": [
+    "PTR",
+    "EPTR",
+    "TBL",
+    "BUT",
+    "LEN",
+    "WV",
+    "WRD",
+    "NW",
+    "WAS-ALL"
+   ],
+   "addr": 25688
+  },
+  {
+   "name": "GET-OBJECT",
+   "locals": [
+    "TBL",
+    "VRB",
+    "BITS",
+    "LEN",
+    "XBITS",
+    "TLEN",
+    "GCHECK",
+    "OLEN",
+    "OBJ"
+   ],
+   "addr": 26030
+  },
+  {
+   "name": "WHICH-PRINT",
+   "locals": [
+    "TLEN",
+    "LEN",
+    "TBL",
+    "OBJ",
+    "RLEN"
+   ],
+   "addr": 26510
+  },
+  {
+   "name": "GLOBAL-CHECK",
+   "locals": [
+    "TBL",
+    "LEN",
+    "RMG",
+    "RMGL",
+    "CNT",
+    "OBJ",
+    "OBITS",
+    "FOO"
+   ],
+   "addr": 26640
+  },
+  {
+   "name": "DO-SL",
+   "locals": [
+    "OBJ",
+    "BIT1",
+    "BIT2",
+    "BTS"
+   ],
+   "addr": 26844
+  },
+  {
+   "name": "SEARCH-LIST",
+   "locals": [
+    "OBJ",
+    "TBL",
+    "LVL",
+    "FLS",
+    "NOBJ"
+   ],
+   "addr": 26896
+  },
+  {
+   "name": "OBJ-FOUND",
+   "locals": [
+    "OBJ",
+    "TBL",
+    "PTR"
+   ],
+   "addr": 27000
+  },
+  {
+   "name": "TAKE-CHECK",
+   "locals": [],
+   "addr": 27030
+  },
+  {
+   "name": "ITAKE-CHECK",
+   "locals": [
+    "TBL",
+    "IBITS",
+    "PTR",
+    "OBJ",
+    "TAKEN"
+   ],
+   "addr": 27058
+  },
+  {
+   "name": "MANY-CHECK",
+   "locals": [
+    "LOSS",
+    "TMP"
+   ],
+   "addr": 27264
+  },
+  {
+   "name": "ZMEMQ",
+   "locals": [
+    "ITM",
+    "TBL",
+    "SIZE",
+    "CNT"
+   ],
+   "addr": 27402
+  },
+  {
+   "name": "ZMEMQB",
+   "locals": [
+    "ITM",
+    "TBL",
+    "SIZE",
+    "CNT"
+   ],
+   "addr": 27452
+  },
+  {
+   "name": "LIT?",
+   "locals": [
+    "RM",
+    "RMBIT",
+    "OHERE",
+    "LIT?1"
+   ],
+   "addr": 27476
+  },
+  {
+   "name": "THIS-IT?",
+   "locals": [
+    "OBJ",
+    "TBL",
+    "SYNS"
+   ],
+   "addr": 27582
+  },
+  {
+   "name": "ACCESSIBLE?",
+   "locals": [
+    "OBJ",
+    "L",
+    "?TMP"
+   ],
+   "addr": 27654
+  },
+  {
+   "name": "META-LOC",
+   "locals": [
+    "OBJ"
+   ],
+   "addr": 27728
+  },
+  {
+   "name": "GO",
+   "locals": [],
+   "addr": 27752
+  },
+  {
+   "name": "NOT-HERE-OBJECT-F",
+   "locals": [
+    "TBL",
+    "PRSO?",
+    "OBJ"
+   ],
+   "addr": 28198
+  },
+  {
+   "name": "NOT-HERE-PRINT",
+   "locals": [
+    "PRSO?"
+   ],
+   "addr": 28316
+  },
+  {
+   "name": "NULL-F",
+   "locals": [
+    "A1",
+    "A2"
+   ],
+   "addr": 28370
+  },
+  {
+   "name": "STAIRS-F",
+   "locals": [],
+   "addr": 28376
+  },
+  {
+   "name": "SAILOR-FCN",
+   "locals": [],
+   "addr": 28410
+  },
+  {
+   "name": "GROUND-FUNCTION",
+   "locals": [],
+   "addr": 28752
+  },
+  {
+   "name": "GRUE-FUNCTION",
+   "locals": [],
+   "addr": 28804
+  },
+  {
+   "name": "CRETIN-FCN",
+   "locals": [],
+   "addr": 29080
+  },
+  {
+   "name": "PATH-OBJECT",
+   "locals": [],
+   "addr": 29376
+  },
+  {
+   "name": "ZORKMID-FUNCTION",
+   "locals": [],
+   "addr": 29442
+  },
+  {
+   "name": "V-VERBOSE",
+   "locals": [],
+   "addr": 29510
+  },
+  {
+   "name": "V-BRIEF",
+   "locals": [],
+   "addr": 29532
+  },
+  {
+   "name": "V-SUPER-BRIEF",
+   "locals": [],
+   "addr": 29552
+  },
+  {
+   "name": "V-INVENTORY",
+   "locals": [],
+   "addr": 29574
+  },
+  {
+   "name": "FINISH",
+   "locals": [
+    "WRD"
+   ],
+   "addr": 29600
+  },
+  {
+   "name": "V-QUIT",
+   "locals": [
+    "SCOR"
+   ],
+   "addr": 29768
+  },
+  {
+   "name": "V-RESTART",
+   "locals": [],
+   "addr": 29824
+  },
+  {
+   "name": "V-RESTORE",
+   "locals": [],
+   "addr": 29882
+  },
+  {
+   "name": "V-SAVE",
+   "locals": [],
+   "addr": 29904
+  },
+  {
+   "name": "V-SCRIPT",
+   "locals": [],
+   "addr": 29920
+  },
+  {
+   "name": "V-UNSCRIPT",
+   "locals": [],
+   "addr": 29966
+  },
+  {
+   "name": "V-VERSION",
+   "locals": [
+    "CNT"
+   ],
+   "addr": 30012
+  },
+  {
+   "name": "V-VERIFY",
+   "locals": [],
+   "addr": 30214
+  },
+  {
+   "name": "V-COMMAND-FILE",
+   "locals": [],
+   "addr": 30270
+  },
+  {
+   "name": "V-RANDOM",
+   "locals": [],
+   "addr": 30276
+  },
+  {
+   "name": "V-RECORD",
+   "locals": [],
+   "addr": 30308
+  },
+  {
+   "name": "V-UNRECORD",
+   "locals": [],
+   "addr": 30314
+  },
+  {
+   "name": "V-ADVENT",
+   "locals": [],
+   "addr": 30320
+  },
+  {
+   "name": "V-ALARM",
+   "locals": [],
+   "addr": 30344
+  },
+  {
+   "name": "V-ANSWER",
+   "locals": [],
+   "addr": 30400
+  },
+  {
+   "name": "V-ATTACK",
+   "locals": [],
+   "addr": 30434
+  },
+  {
+   "name": "V-BACK",
+   "locals": [],
+   "addr": 30580
+  },
+  {
+   "name": "V-BLAST",
+   "locals": [],
+   "addr": 30614
+  },
+  {
+   "name": "PRE-BOARD",
+   "locals": [
+    "AV"
+   ],
+   "addr": 30638
+  },
+  {
+   "name": "V-BOARD",
+   "locals": [
+    "AV"
+   ],
+   "addr": 30754
+  },
+  {
+   "name": "V-BREATHE",
+   "locals": [],
+   "addr": 30786
+  },
+  {
+   "name": "V-BRUSH",
+   "locals": [],
+   "addr": 30796
+  },
+  {
+   "name": "V-BUG",
+   "locals": [],
+   "addr": 30824
+  },
+  {
+   "name": "TELL-NO-PRSI",
+   "locals": [],
+   "addr": 30866
+  },
+  {
+   "name": "PRE-BURN",
+   "locals": [],
+   "addr": 30882
+  },
+  {
+   "name": "V-BURN",
+   "locals": [],
+   "addr": 30916
+  },
+  {
+   "name": "V-CHOMP",
+   "locals": [],
+   "addr": 31042
+  },
+  {
+   "name": "V-CLIMB-DOWN",
+   "locals": [],
+   "addr": 31054
+  },
+  {
+   "name": "V-CLIMB-FOO",
+   "locals": [],
+   "addr": 31064
+  },
+  {
+   "name": "V-CLIMB-ON",
+   "locals": [],
+   "addr": 31088
+  },
+  {
+   "name": "V-CLIMB-UP",
+   "locals": [
+    "DIR",
+    "OBJ",
+    "X",
+    "TX"
+   ],
+   "addr": 31120
+  },
+  {
+   "name": "V-CLOSE",
+   "locals": [],
+   "addr": 31324
+  },
+  {
+   "name": "V-COMMAND",
+   "locals": [],
+   "addr": 31466
+  },
+  {
+   "name": "V-COUNT",
+   "locals": [],
+   "addr": 31502
+  },
+  {
+   "name": "V-CROSS",
+   "locals": [],
+   "addr": 31548
+  },
+  {
+   "name": "V-CURSES",
+   "locals": [],
+   "addr": 31560
+  },
+  {
+   "name": "V-CUT",
+   "locals": [],
+   "addr": 31640
+  },
+  {
+   "name": "V-DEFLATE",
+   "locals": [],
+   "addr": 31820
+  },
+  {
+   "name": "V-DIG",
+   "locals": [],
+   "addr": 31832
+  },
+  {
+   "name": "V-DISEMBARK",
+   "locals": [],
+   "addr": 31886
+  },
+  {
+   "name": "V-DISENCHANT",
+   "locals": [],
+   "addr": 31986
+  },
+  {
+   "name": "V-DRINK",
+   "locals": [],
+   "addr": 31998
+  },
+  {
+   "name": "V-DRINK-FROM",
+   "locals": [],
+   "addr": 32006
+  },
+  {
+   "name": "PRE-DROP",
+   "locals": [],
+   "addr": 32018
+  },
+  {
+   "name": "V-DROP",
+   "locals": [],
+   "addr": 32034
+  },
+  {
+   "name": "V-EAT",
+   "locals": [
+    "EAT?",
+    "DRINK?",
+    "NOBJ"
+   ],
+   "addr": 32050
+  },
+  {
+   "name": "HIT-SPOT",
+   "locals": [],
+   "addr": 32312
+  },
+  {
+   "name": "V-ECHO",
+   "locals": [
+    "LST",
+    "MAX",
+    "ECH",
+    "CNT"
+   ],
+   "addr": 32382
+  },
+  {
+   "name": "V-ENCHANT",
+   "locals": [],
+   "addr": 32404
+  },
+  {
+   "name": "REMOVE-CAREFULLY",
+   "locals": [
+    "OBJ",
+    "OLIT"
+   ],
+   "addr": 32416
+  },
+  {
+   "name": "V-ENTER",
+   "locals": [],
+   "addr": 32462
+  },
+  {
+   "name": "V-EXAMINE",
+   "locals": [],
+   "addr": 32470
+  },
+  {
+   "name": "V-EXIT",
+   "locals": [],
+   "addr": 32524
+  },
+  {
+   "name": "V-EXORCISE",
+   "locals": [],
+   "addr": 32572
+  },
+  {
+   "name": "PRE-FILL",
+   "locals": [
+    "TX"
+   ],
+   "addr": 32590
+  },
+  {
+   "name": "V-FILL",
+   "locals": [],
+   "addr": 32678
+  },
+  {
+   "name": "V-FIND",
+   "locals": [
+    "L"
+   ],
+   "addr": 32762
+  },
+  {
+   "name": "V-FOLLOW",
+   "locals": [],
+   "addr": 32944
+  },
+  {
+   "name": "V-FROBOZZ",
+   "locals": [],
+   "addr": 32956
+  },
+  {
+   "name": "PRE-GIVE",
+   "locals": [],
+   "addr": 33002
+  },
+  {
+   "name": "V-GIVE",
+   "locals": [],
+   "addr": 33048
+  },
+  {
+   "name": "V-HATCH",
+   "locals": [],
+   "addr": 33094
+  },
+  {
+   "name": "V-HELLO",
+   "locals": [],
+   "addr": 33104
+  },
+  {
+   "name": "V-INCANT",
+   "locals": [],
+   "addr": 33196
+  },
+  {
+   "name": "V-INFLATE",
+   "locals": [],
+   "addr": 33242
+  },
+  {
+   "name": "V-KICK",
+   "locals": [],
+   "addr": 33258
+  },
+  {
+   "name": "V-KISS",
+   "locals": [],
+   "addr": 33268
+  },
+  {
+   "name": "V-KNOCK",
+   "locals": [],
+   "addr": 33286
+  },
+  {
+   "name": "V-LAMP-OFF",
+   "locals": [],
+   "addr": 33318
+  },
+  {
+   "name": "V-LAMP-ON",
+   "locals": [],
+   "addr": 33394
+  },
+  {
+   "name": "V-LAUNCH",
+   "locals": [],
+   "addr": 33492
+  },
+  {
+   "name": "V-LEAN-ON",
+   "locals": [],
+   "addr": 33538
+  },
+  {
+   "name": "V-LEAP",
+   "locals": [
+    "TX",
+    "S"
+   ],
+   "addr": 33550
+  },
+  {
+   "name": "V-LEAVE",
+   "locals": [],
+   "addr": 33702
+  },
+  {
+   "name": "V-LISTEN",
+   "locals": [],
+   "addr": 33710
+  },
+  {
+   "name": "V-LOCK",
+   "locals": [],
+   "addr": 33728
+  },
+  {
+   "name": "V-LOOK",
+   "locals": [],
+   "addr": 33744
+  },
+  {
+   "name": "V-LOOK-BEHIND",
+   "locals": [],
+   "addr": 33762
+  },
+  {
+   "name": "V-LOOK-INSIDE",
+   "locals": [],
+   "addr": 33784
+  },
+  {
+   "name": "V-LOOK-ON",
+   "locals": [],
+   "addr": 33946
+  },
+  {
+   "name": "V-LOOK-UNDER",
+   "locals": [],
+   "addr": 33974
+  },
+  {
+   "name": "V-LOWER",
+   "locals": [],
+   "addr": 33994
+  },
+  {
+   "name": "V-MAKE",
+   "locals": [],
+   "addr": 34004
+  },
+  {
+   "name": "V-MELT",
+   "locals": [],
+   "addr": 34014
+  },
+  {
+   "name": "PRE-MOVE",
+   "locals": [],
+   "addr": 34040
+  },
+  {
+   "name": "V-MOVE",
+   "locals": [],
+   "addr": 34076
+  },
+  {
+   "name": "V-MUMBLE",
+   "locals": [],
+   "addr": 34118
+  },
+  {
+   "name": "PRE-MUNG",
+   "locals": [],
+   "addr": 34150
+  },
+  {
+   "name": "V-MUNG",
+   "locals": [],
+   "addr": 34208
+  },
+  {
+   "name": "V-ODYSSEUS",
+   "locals": [],
+   "addr": 34230
+  },
+  {
+   "name": "V-OIL",
+   "locals": [],
+   "addr": 34252
+  },
+  {
+   "name": "V-OPEN",
+   "locals": [
+    "F",
+    "STR"
+   ],
+   "addr": 34282
+  },
+  {
+   "name": "V-OVERBOARD",
+   "locals": [
+    "LOCN"
+   ],
+   "addr": 34452
+  },
+  {
+   "name": "V-PICK",
+   "locals": [],
+   "addr": 34484
+  },
+  {
+   "name": "V-PLAY",
+   "locals": [],
+   "addr": 34496
+  },
+  {
+   "name": "V-PLUG",
+   "locals": [],
+   "addr": 34576
+  },
+  {
+   "name": "V-POUR-ON",
+   "locals": [],
+   "addr": 34592
+  },
+  {
+   "name": "V-PRAY",
+   "locals": [],
+   "addr": 34696
+  },
+  {
+   "name": "V-PUMP",
+   "locals": [],
+   "addr": 34736
+  },
+  {
+   "name": "V-PUSH",
+   "locals": [],
+   "addr": 34770
+  },
+  {
+   "name": "V-PUSH-TO",
+   "locals": [],
+   "addr": 34780
+  },
+  {
+   "name": "PRE-PUT",
+   "locals": [],
+   "addr": 34798
+  },
+  {
+   "name": "V-PUT",
+   "locals": [
+    "?TMP"
+   ],
+   "addr": 34810
+  },
+  {
+   "name": "V-PUT-BEHIND",
+   "locals": [],
+   "addr": 35004
+  },
+  {
+   "name": "V-PUT-ON",
+   "locals": [],
+   "addr": 35026
+  },
+  {
+   "name": "V-PUT-UNDER",
+   "locals": [],
+   "addr": 35074
+  },
+  {
+   "name": "V-RAISE",
+   "locals": [],
+   "addr": 35084
+  },
+  {
+   "name": "V-RAPE",
+   "locals": [],
+   "addr": 35092
+  },
+  {
+   "name": "PRE-READ",
+   "locals": [],
+   "addr": 35116
+  },
+  {
+   "name": "V-READ",
+   "locals": [],
+   "addr": 35170
+  },
+  {
+   "name": "V-READ-PAGE",
+   "locals": [],
+   "addr": 35202
+  },
+  {
+   "name": "V-REPENT",
+   "locals": [],
+   "addr": 35212
+  },
+  {
+   "name": "V-REPLY",
+   "locals": [],
+   "addr": 35234
+  },
+  {
+   "name": "V-RING",
+   "locals": [],
+   "addr": 35270
+  },
+  {
+   "name": "V-RUB",
+   "locals": [],
+   "addr": 35292
+  },
+  {
+   "name": "V-SAY",
+   "locals": [
+    "V"
+   ],
+   "addr": 35302
+  },
+  {
+   "name": "V-SEARCH",
+   "locals": [],
+   "addr": 35448
+  },
+  {
+   "name": "V-SEND",
+   "locals": [],
+   "addr": 35464
+  },
+  {
+   "name": "PRE-SGIVE",
+   "locals": [],
+   "addr": 35504
+  },
+  {
+   "name": "V-SGIVE",
+   "locals": [],
+   "addr": 35514
+  },
+  {
+   "name": "V-SHAKE",
+   "locals": [],
+   "addr": 35520
+  },
+  {
+   "name": "SHAKE-LOOP",
+   "locals": [
+    "X"
+   ],
+   "addr": 35700
+  },
+  {
+   "name": "V-SKIP",
+   "locals": [],
+   "addr": 35730
+  },
+  {
+   "name": "V-SMELL",
+   "locals": [],
+   "addr": 35742
+  },
+  {
+   "name": "V-SPIN",
+   "locals": [],
+   "addr": 35762
+  },
+  {
+   "name": "V-SPRAY",
+   "locals": [],
+   "addr": 35774
+  },
+  {
+   "name": "V-SQUEEZE",
+   "locals": [],
+   "addr": 35782
+  },
+  {
+   "name": "V-SSPRAY",
+   "locals": [],
+   "addr": 35826
+  },
+  {
+   "name": "V-STAB",
+   "locals": [
+    "W"
+   ],
+   "addr": 35836
+  },
+  {
+   "name": "V-STAND",
+   "locals": [],
+   "addr": 35890
+  },
+  {
+   "name": "V-STAY",
+   "locals": [],
+   "addr": 35926
+  },
+  {
+   "name": "V-STRIKE",
+   "locals": [],
+   "addr": 35944
+  },
+  {
+   "name": "V-SWIM",
+   "locals": [],
+   "addr": 36012
+  },
+  {
+   "name": "V-SWING",
+   "locals": [],
+   "addr": 36088
+  },
+  {
+   "name": "PRE-TAKE",
+   "locals": [],
+   "addr": 36108
+  },
+  {
+   "name": "V-TAKE",
+   "locals": [],
+   "addr": 36246
+  },
+  {
+   "name": "V-TELL",
+   "locals": [],
+   "addr": 36284
+  },
+  {
+   "name": "V-THROUGH",
+   "locals": [
+    "OBJ",
+    "M"
+   ],
+   "addr": 36372
+  },
+  {
+   "name": "V-THROW",
+   "locals": [],
+   "addr": 36498
+  },
+  {
+   "name": "V-THROW-OFF",
+   "locals": [],
+   "addr": 36594
+  },
+  {
+   "name": "V-TIE",
+   "locals": [],
+   "addr": 36616
+  },
+  {
+   "name": "V-TIE-UP",
+   "locals": [],
+   "addr": 36658
+  },
+  {
+   "name": "V-TREASURE",
+   "locals": [],
+   "addr": 36682
+  },
+  {
+   "name": "PRE-TURN",
+   "locals": [],
+   "addr": 36710
+  },
+  {
+   "name": "V-TURN",
+   "locals": [],
+   "addr": 36790
+  },
+  {
+   "name": "V-UNLOCK",
+   "locals": [],
+   "addr": 36806
+  },
+  {
+   "name": "V-UNTIE",
+   "locals": [],
+   "addr": 36814
+  },
+  {
+   "name": "V-WAIT",
+   "locals": [
+    "NUM"
+   ],
+   "addr": 36842
+  },
+  {
+   "name": "V-WALK",
+   "locals": [
+    "PT",
+    "PTS",
+    "STR",
+    "OBJ",
+    "RM"
+   ],
+   "addr": 36878
+  },
+  {
+   "name": "V-WALK-AROUND",
+   "locals": [],
+   "addr": 37182
+  },
+  {
+   "name": "V-WALK-TO",
+   "locals": [],
+   "addr": 37206
+  },
+  {
+   "name": "V-WAVE",
+   "locals": [],
+   "addr": 37250
+  },
+  {
+   "name": "V-WEAR",
+   "locals": [],
+   "addr": 37260
+  },
+  {
+   "name": "V-WIN",
+   "locals": [],
+   "addr": 37288
+  },
+  {
+   "name": "V-WIND",
+   "locals": [],
+   "addr": 37298
+  },
+  {
+   "name": "V-WISH",
+   "locals": [],
+   "addr": 37318
+  },
+  {
+   "name": "V-YELL",
+   "locals": [],
+   "addr": 37344
+  },
+  {
+   "name": "V-ZORK",
+   "locals": [],
+   "addr": 37360
+  },
+  {
+   "name": "V-FIRST-LOOK",
+   "locals": [],
+   "addr": 37374
+  },
+  {
+   "name": "DESCRIBE-ROOM",
+   "locals": [
+    "LOOK?",
+    "V?",
+    "STR",
+    "AV"
+   ],
+   "addr": 37392
+  },
+  {
+   "name": "DESCRIBE-OBJECTS",
+   "locals": [
+    "V?"
+   ],
+   "addr": 37616
+  },
+  {
+   "name": "DESCRIBE-OBJECT",
+   "locals": [
+    "OBJ",
+    "V?",
+    "LEVEL",
+    "STR",
+    "AV"
+   ],
+   "addr": 37672
+  },
+  {
+   "name": "PRINT-CONTENTS",
+   "locals": [
+    "OBJ",
+    "F",
+    "N",
+    "1ST?",
+    "IT?",
+    "TWO?"
+   ],
+   "addr": 37870
+  },
+  {
+   "name": "PRINT-CONT",
+   "locals": [
+    "OBJ",
+    "V?",
+    "LEVEL",
+    "Y",
+    "1ST?",
+    "SHIT",
+    "AV",
+    "STR",
+    "PV?",
+    "INV?"
+   ],
+   "addr": 37952
+  },
+  {
+   "name": "FIRSTER",
+   "locals": [
+    "OBJ",
+    "LEVEL"
+   ],
+   "addr": 38242
+  },
+  {
+   "name": "SEE-INSIDE?",
+   "locals": [
+    "OBJ"
+   ],
+   "addr": 38336
+  },
+  {
+   "name": "SCORE-UPD",
+   "locals": [
+    "NUM"
+   ],
+   "addr": 38352
+  },
+  {
+   "name": "SCORE-OBJ",
+   "locals": [
+    "OBJ",
+    "TEMP"
+   ],
+   "addr": 38370
+  },
+  {
+   "name": "YES?",
+   "locals": [],
+   "addr": 38396
+  },
+  {
+   "name": "ITAKE",
+   "locals": [
+    "VB",
+    "CNT",
+    "OBJ",
+    "?TMP"
+   ],
+   "addr": 38420
+  },
+  {
+   "name": "IDROP",
+   "locals": [],
+   "addr": 38630
+  },
+  {
+   "name": "CCOUNT",
+   "locals": [
+    "OBJ",
+    "CNT",
+    "X"
+   ],
+   "addr": 38694
+  },
+  {
+   "name": "WEIGHT",
+   "locals": [
+    "OBJ",
+    "CONT",
+    "WT"
+   ],
+   "addr": 38718
+  },
+  {
+   "name": "HACK-HACK",
+   "locals": [
+    "STR"
+   ],
+   "addr": 38766
+  },
+  {
+   "name": "NO-GO-TELL",
+   "locals": [
+    "AV",
+    "WLOC"
+   ],
+   "addr": 38806
+  },
+  {
+   "name": "GOTO",
+   "locals": [
+    "RM",
+    "V?",
+    "LB",
+    "WLOC",
+    "AV",
+    "OLIT",
+    "OHERE"
+   ],
+   "addr": 38852
+  },
+  {
+   "name": "LKP",
+   "locals": [
+    "ITM",
+    "TBL",
+    "CNT",
+    "LEN"
+   ],
+   "addr": 39244
+  },
+  {
+   "name": "DO-WALK",
+   "locals": [
+    "DIR"
+   ],
+   "addr": 39284
+  },
+  {
+   "name": "GLOBAL-IN?",
+   "locals": [
+    "OBJ1",
+    "OBJ2",
+    "TX"
+   ],
+   "addr": 39298
+  },
+  {
+   "name": "FIND-IN",
+   "locals": [
+    "WHERE",
+    "WHAT",
+    "W"
+   ],
+   "addr": 39326
+  },
+  {
+   "name": "HELD?",
+   "locals": [
+    "CAN"
+   ],
+   "addr": 39354
+  },
+  {
+   "name": "OTHER-SIDE",
+   "locals": [
+    "DOBJ",
+    "P",
+    "TX"
+   ],
+   "addr": 39370
+  },
+  {
+   "name": "THIS-IS-IT",
+   "locals": [
+    "OBJ"
+   ],
+   "addr": 39408
+  },
+  {
+   "name": "I-SWORD",
+   "locals": [
+    "DEM",
+    "NG",
+    "P",
+    "T",
+    "L"
+   ],
+   "addr": 39416
+  },
+  {
+   "name": "INFESTED?",
+   "locals": [
+    "R",
+    "F"
+   ],
+   "addr": 39658
+  },
+  {
+   "name": "FIND-WEAPON",
+   "locals": [
+    "O",
+    "W"
+   ],
+   "addr": 39684
+  },
+  {
+   "name": "SWORD-FCN",
+   "locals": [],
+   "addr": 39706
+  },
+  {
+   "name": "LANTERN",
+   "locals": [],
+   "addr": 39804
+  },
+  {
+   "name": "LIGHT-INT",
+   "locals": [
+    "OBJ",
+    "TBL",
+    "TICK"
+   ],
+   "addr": 39986
+  },
+  {
+   "name": "I-LANTERN",
+   "locals": [
+    "TICK",
+    "TBL"
+   ],
+   "addr": 40054
+  },
+  {
+   "name": "CHASM-FCN",
+   "locals": [],
+   "addr": 40096
+  },
+  {
+   "name": "TUNNEL-OBJECT",
+   "locals": [],
+   "addr": 40198
+  },
+  {
+   "name": "CPEXIT",
+   "locals": [
+    "FX",
+    "NFX"
+   ],
+   "addr": 40224
+  },
+  {
+   "name": "ILLCP",
+   "locals": [
+    "ONE",
+    "TWO"
+   ],
+   "addr": 40542
+  },
+  {
+   "name": "CPMOVE",
+   "locals": [
+    "FX"
+   ],
+   "addr": 40594
+  },
+  {
+   "name": "CPENTER",
+   "locals": [],
+   "addr": 40628
+  },
+  {
+   "name": "CPANT-ROOM",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 40662
+  },
+  {
+   "name": "CPLADDER-OBJECT",
+   "locals": [],
+   "addr": 40868
+  },
+  {
+   "name": "CPLADDER-JUNK",
+   "locals": [
+    "FLG"
+   ],
+   "addr": 40930
+  },
+  {
+   "name": "CPWALL-OBJECT",
+   "locals": [
+    "WL",
+    "NWL",
+    "NXT",
+    "NNXT",
+    "CNT",
+    "TOP",
+    "SNAP"
+   ],
+   "addr": 40996
+  },
+  {
+   "name": "FIXED-FONT-ON",
+   "locals": [],
+   "addr": 41538
+  },
+  {
+   "name": "FIXED-FONT-OFF",
+   "locals": [],
+   "addr": 41554
+  },
+  {
+   "name": "CPGOTO",
+   "locals": [
+    "FX",
+    "F",
+    "X",
+    "CNT",
+    "TOP"
+   ],
+   "addr": 41572
+  },
+  {
+   "name": "CPNEXT",
+   "locals": [
+    "RM",
+    "OBJ",
+    "FX"
+   ],
+   "addr": 41684
+  },
+  {
+   "name": "CPDOOR-F",
+   "locals": [],
+   "addr": 41714
+  },
+  {
+   "name": "CP-ROOM",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 41900
+  },
+  {
+   "name": "CPNS",
+   "locals": [
+    "NUM"
+   ],
+   "addr": 41988
+  },
+  {
+   "name": "CPEW",
+   "locals": [
+    "NUM",
+    "FOO"
+   ],
+   "addr": 42004
+  },
+  {
+   "name": "CPWHERE",
+   "locals": [
+    "N",
+    "S",
+    "E",
+    "W"
+   ],
+   "addr": 42022
+  },
+  {
+   "name": "CP-ORTHO",
+   "locals": [
+    "CONTENTS"
+   ],
+   "addr": 42420
+  },
+  {
+   "name": "CP-CORNER",
+   "locals": [
+    "DIR",
+    "COL",
+    "ROW",
+    "LOCN"
+   ],
+   "addr": 42446
+  },
+  {
+   "name": "CP-SLOT-FCN",
+   "locals": [],
+   "addr": 42528
+  },
+  {
+   "name": "CPOUT-ROOM",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 42782
+  },
+  {
+   "name": "MRGO",
+   "locals": [
+    "TORM"
+   ],
+   "addr": 42858
+  },
+  {
+   "name": "MIRBLOCK",
+   "locals": [
+    "MD"
+   ],
+   "addr": 42970
+  },
+  {
+   "name": "GO-E-W",
+   "locals": [
+    "RM"
+   ],
+   "addr": 43050
+  },
+  {
+   "name": "EWTELL",
+   "locals": [
+    "RM",
+    "EAST?",
+    "M1?",
+    "MWIN"
+   ],
+   "addr": 43076
+  },
+  {
+   "name": "MRDEW",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 43236
+  },
+  {
+   "name": "MRCEW",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 43268
+  },
+  {
+   "name": "MRBEW",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 43300
+  },
+  {
+   "name": "MRAEW",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 43330
+  },
+  {
+   "name": "LOOK-TO",
+   "locals": [
+    "RMN",
+    "RMS",
+    "NORTH?",
+    "NTELL",
+    "STELL",
+    "MIR?",
+    "M1?",
+    "DIR"
+   ],
+   "addr": 43358
+  },
+  {
+   "name": "MRDF",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 43968
+  },
+  {
+   "name": "MRCF",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 43984
+  },
+  {
+   "name": "MRBF",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 44000
+  },
+  {
+   "name": "MRAF",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 44016
+  },
+  {
+   "name": "GUARDIANS",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 44032
+  },
+  {
+   "name": "MIRROR-DIR?",
+   "locals": [
+    "DIR",
+    "RM",
+    "TBL",
+    "?TMP"
+   ],
+   "addr": 44394
+  },
+  {
+   "name": "WOODEN-WALL-F",
+   "locals": [],
+   "addr": 44466
+  },
+  {
+   "name": "MIRROR-HERE?",
+   "locals": [
+    "RM",
+    "TMP"
+   ],
+   "addr": 44528
+  },
+  {
+   "name": "MIRROR-FUNCTION",
+   "locals": [
+    "MIRROR?1"
+   ],
+   "addr": 44622
+  },
+  {
+   "name": "PANEL-FUNCTION",
+   "locals": [
+    "MIRROR?1"
+   ],
+   "addr": 44998
+  },
+  {
+   "name": "MIROUT",
+   "locals": [
+    "DIR",
+    "RM"
+   ],
+   "addr": 45134
+  },
+  {
+   "name": "MIRNS",
+   "locals": [
+    "NORTH?",
+    "EXIT?",
+    "S",
+    "T"
+   ],
+   "addr": 45348
+  },
+  {
+   "name": "MIREW",
+   "locals": [],
+   "addr": 45424
+  },
+  {
+   "name": "MIRIN",
+   "locals": [
+    "VRB"
+   ],
+   "addr": 45444
+  },
+  {
+   "name": "MREYE-ROOM",
+   "locals": [
+    "RARG",
+    "O"
+   ],
+   "addr": 45524
+  },
+  {
+   "name": "BEAM-STOPPED?",
+   "locals": [
+    "N"
+   ],
+   "addr": 45722
+  },
+  {
+   "name": "BEAM-FUNCTION",
+   "locals": [
+    "PRO",
+    "PRI"
+   ],
+   "addr": 45746
+  },
+  {
+   "name": "MRSWITCH",
+   "locals": [],
+   "addr": 46104
+  },
+  {
+   "name": "I-MRINT",
+   "locals": [],
+   "addr": 46172
+  },
+  {
+   "name": "MAGIC-MIRROR",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 46244
+  },
+  {
+   "name": "MPANELS",
+   "locals": [
+    "MD"
+   ],
+   "addr": 47338
+  },
+  {
+   "name": "MENDS",
+   "locals": [
+    "RM"
+   ],
+   "addr": 47560
+  },
+  {
+   "name": "I-PININ",
+   "locals": [],
+   "addr": 47876
+  },
+  {
+   "name": "MIRMOVE",
+   "locals": [
+    "NORTH?",
+    "RM",
+    "PU?",
+    "LOSE"
+   ],
+   "addr": 47900
+  },
+  {
+   "name": "SHORT-POLE-F",
+   "locals": [],
+   "addr": 48034
+  },
+  {
+   "name": "DUNGEON-MASTER-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 48240
+  },
+  {
+   "name": "MASTER-F",
+   "locals": [],
+   "addr": 48918
+  },
+  {
+   "name": "BEHIND-DOOR-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 49056
+  },
+  {
+   "name": "FRONT-DOOR-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 49148
+  },
+  {
+   "name": "LOOK-LIKE-DM?",
+   "locals": [],
+   "addr": 49224
+  },
+  {
+   "name": "DUNGEON-PANEL-F",
+   "locals": [],
+   "addr": 49254
+  },
+  {
+   "name": "DUNGEON-DOOR-F",
+   "locals": [
+    "?TMP"
+   ],
+   "addr": 49304
+  },
+  {
+   "name": "DMISH",
+   "locals": [
+    "CNT"
+   ],
+   "addr": 50158
+  },
+  {
+   "name": "I-FOLIN",
+   "locals": [],
+   "addr": 50206
+  },
+  {
+   "name": "MOVE-CELL-OBJECTS",
+   "locals": [
+    "TOP",
+    "CNT",
+    "F",
+    "X"
+   ],
+   "addr": 50298
+  },
+  {
+   "name": "CELL-MOVE",
+   "locals": [
+    "F",
+    "X"
+   ],
+   "addr": 50388
+  },
+  {
+   "name": "PARAPET-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 50484
+  },
+  {
+   "name": "DIAL",
+   "locals": [
+    "N"
+   ],
+   "addr": 50822
+  },
+  {
+   "name": "DIALBUTTON",
+   "locals": [
+    "C"
+   ],
+   "addr": 51004
+  },
+  {
+   "name": "CELL-ROOM",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 51092
+  },
+  {
+   "name": "NCELL-ROOM",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 51360
+  },
+  {
+   "name": "DPR",
+   "locals": [
+    "OBJ"
+   ],
+   "addr": 51460
+  },
+  {
+   "name": "NORTH-CORRIDOR-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 51478
+  },
+  {
+   "name": "SOUTH-CORRIDOR-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 51632
+  },
+  {
+   "name": "BRONZE-DOOR-F",
+   "locals": [],
+   "addr": 51766
+  },
+  {
+   "name": "LOCKED-DOOR-F",
+   "locals": [],
+   "addr": 51850
+  },
+  {
+   "name": "NIRVANA-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 51874
+  },
+  {
+   "name": "BRONZE-DOOR-EXIT",
+   "locals": [],
+   "addr": 52330
+  },
+  {
+   "name": "SECRET-DOOR-F",
+   "locals": [],
+   "addr": 52370
+  },
+  {
+   "name": "MSTAIRS-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 52410
+  },
+  {
+   "name": "HELLO?",
+   "locals": [
+    "WHO"
+   ],
+   "addr": 52560
+  },
+  {
+   "name": "OLD-MAN-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 52602
+  },
+  {
+   "name": "I-OLD-MAN-SLEEPS",
+   "locals": [],
+   "addr": 53490
+  },
+  {
+   "name": "RUNES-F",
+   "locals": [],
+   "addr": 53524
+  },
+  {
+   "name": "T-BAR-F",
+   "locals": [],
+   "addr": 53596
+  },
+  {
+   "name": "FLAMING-PIT-F",
+   "locals": [],
+   "addr": 53652
+  },
+  {
+   "name": "PARAPET-OBJ-F",
+   "locals": [],
+   "addr": 53800
+  },
+  {
+   "name": "ROSE-F",
+   "locals": [],
+   "addr": 53872
+  },
+  {
+   "name": "CELL-DOOR-F",
+   "locals": [],
+   "addr": 53936
+  },
+  {
+   "name": "LORE-BOOK-F",
+   "locals": [],
+   "addr": 53990
+  },
+  {
+   "name": "CP-HOLE-F",
+   "locals": [],
+   "addr": 54242
+  },
+  {
+   "name": "TORCH-PSEUDO",
+   "locals": [],
+   "addr": 54254
+  },
+  {
+   "name": "WATER-FCN",
+   "locals": [
+    "AV",
+    "PI?"
+   ],
+   "addr": 54270
+  },
+  {
+   "name": "RANDOM-WALL",
+   "locals": [],
+   "addr": 54398
+  },
+  {
+   "name": "V-DIAGNOSE",
+   "locals": [],
+   "addr": 54456
+  },
+  {
+   "name": "JIGS-UP",
+   "locals": [
+    "DESC",
+    "PLAYER?"
+   ],
+   "addr": 54466
+  },
+  {
+   "name": "RANDOMIZE-OBJECTS",
+   "locals": [
+    "R",
+    "F",
+    "N",
+    "L"
+   ],
+   "addr": 55222
+  },
+  {
+   "name": "KILL-INTERRUPTS",
+   "locals": [],
+   "addr": 55258
+  },
+  {
+   "name": "V-SCORE",
+   "locals": [
+    "ASK?"
+   ],
+   "addr": 55308
+  },
+  {
+   "name": "TM-HOLLOW-F",
+   "locals": [],
+   "addr": 55370
+  },
+  {
+   "name": "IRON-DOOR-F",
+   "locals": [],
+   "addr": 55426
+  },
+  {
+   "name": "I-CLEFT",
+   "locals": [],
+   "addr": 55484
+  },
+  {
+   "name": "CLEFT-F",
+   "locals": [],
+   "addr": 55804
+  },
+  {
+   "name": "MUSEUM-ANTE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 55826
+  },
+  {
+   "name": "DDESC",
+   "locals": [
+    "STR1",
+    "DOOR",
+    "STR2"
+   ],
+   "addr": 56012
+  },
+  {
+   "name": "MUSEUM-ENTRANCE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 56040
+  },
+  {
+   "name": "TIME-MACHINE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 56472
+  },
+  {
+   "name": "TM-SEAT-F",
+   "locals": [],
+   "addr": 57140
+  },
+  {
+   "name": "TM-DIAL-F",
+   "locals": [],
+   "addr": 57328
+  },
+  {
+   "name": "TM-BUTTON-F",
+   "locals": [],
+   "addr": 57434
+  },
+  {
+   "name": "HAPPY-NEW-YEAR",
+   "locals": [],
+   "addr": 57924
+  },
+  {
+   "name": "I-SNAP",
+   "locals": [],
+   "addr": 58066
+  },
+  {
+   "name": "MOVE-JEWELS",
+   "locals": [],
+   "addr": 58166
+  },
+  {
+   "name": "TGOTO",
+   "locals": [
+    "RM",
+    "SNAP"
+   ],
+   "addr": 58220
+  },
+  {
+   "name": "MOVE-TM-OBJECTS",
+   "locals": [
+    "F",
+    "MFLG",
+    "WFLG",
+    "N"
+   ],
+   "addr": 58506
+  },
+  {
+   "name": "GUARDS-KILL",
+   "locals": [],
+   "addr": 58684
+  },
+  {
+   "name": "FLATHEAD-SENTENCE",
+   "locals": [],
+   "addr": 58702
+  },
+  {
+   "name": "REALLY-DEAD",
+   "locals": [
+    "STR"
+   ],
+   "addr": 58712
+  },
+  {
+   "name": "HEAR-FLATHEAD",
+   "locals": [],
+   "addr": 58760
+  },
+  {
+   "name": "OLD-TECH-MUSEUM-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 59128
+  },
+  {
+   "name": "I-GUARDS-LEAVE",
+   "locals": [],
+   "addr": 59662
+  },
+  {
+   "name": "GUARD-CAUGHT",
+   "locals": [],
+   "addr": 59768
+  },
+  {
+   "name": "ROBOT-F",
+   "locals": [],
+   "addr": 59778
+  },
+  {
+   "name": "JEWEL-ROOM-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 59822
+  },
+  {
+   "name": "CROWN-JEWELS-F",
+   "locals": [],
+   "addr": 60318
+  },
+  {
+   "name": "TECH-MUSEUM-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 60434
+  },
+  {
+   "name": "PLAQUE-F",
+   "locals": [],
+   "addr": 60468
+  },
+  {
+   "name": "WOODEN-DOOR-F",
+   "locals": [],
+   "addr": 61230
+  },
+  {
+   "name": "JEWEL-DOOR-F",
+   "locals": [],
+   "addr": 61284
+  },
+  {
+   "name": "CAGE-F",
+   "locals": [],
+   "addr": 61380
+  },
+  {
+   "name": "VOICES-F",
+   "locals": [],
+   "addr": 61412
+  },
+  {
+   "name": "MUSEUM-PIECES",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 61520
+  },
+  {
+   "name": "TECH-PLAQUE-F",
+   "locals": [],
+   "addr": 62008
+  },
+  {
+   "name": "PEDESTAL-F",
+   "locals": [],
+   "addr": 62130
+  },
+  {
+   "name": "PICK-DIRECTION",
+   "locals": [
+    "RM",
+    "NXT",
+    "CNT",
+    "OFFS"
+   ],
+   "addr": 62188
+  },
+  {
+   "name": "SHADOW-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 62238
+  },
+  {
+   "name": "I-CURE",
+   "locals": [],
+   "addr": 62494
+  },
+  {
+   "name": "SHADOW-ATTACK",
+   "locals": [
+    "?TMP"
+   ],
+   "addr": 62524
+  },
+  {
+   "name": "I-SHADOW-REPLY",
+   "locals": [
+    "?TMP"
+   ],
+   "addr": 62728
+  },
+  {
+   "name": "SHADOW-DIES",
+   "locals": [],
+   "addr": 63062
+  },
+  {
+   "name": "HOOD-F",
+   "locals": [],
+   "addr": 63186
+  },
+  {
+   "name": "CLOAK-F",
+   "locals": [],
+   "addr": 63538
+  },
+  {
+   "name": "SHADOW-ROOMS",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 63630
+  },
+  {
+   "name": "SHADOW-ARRIVAL",
+   "locals": [],
+   "addr": 63858
+  },
+  {
+   "name": "CREEPY-CRAWL-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 63958
+  },
+  {
+   "name": "LEDGE-F",
+   "locals": [],
+   "addr": 63970
+  },
+  {
+   "name": "WAYBREAD-F",
+   "locals": [],
+   "addr": 64030
+  },
+  {
+   "name": "STAFF-F",
+   "locals": [],
+   "addr": 64090
+  },
+  {
+   "name": "I-MAN-APPEARS",
+   "locals": [],
+   "addr": 64110
+  },
+  {
+   "name": "I-MAN-PRESENT",
+   "locals": [],
+   "addr": 64538
+  },
+  {
+   "name": "CLIFF-BASE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 64670
+  },
+  {
+   "name": "CLIFF-LEDGE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 64696
+  },
+  {
+   "name": "CLIFF-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 64968
+  },
+  {
+   "name": "GLOBAL-ROPE-F",
+   "locals": [],
+   "addr": 65490
+  },
+  {
+   "name": "I-MAN-RETURNS",
+   "locals": [],
+   "addr": 66130
+  },
+  {
+   "name": "I-MAN-LIFT",
+   "locals": [],
+   "addr": 66270
+  },
+  {
+   "name": "CHEST-F",
+   "locals": [],
+   "addr": 66694
+  },
+  {
+   "name": "I-MAN-LEAVES",
+   "locals": [],
+   "addr": 66900
+  },
+  {
+   "name": "MAN-F",
+   "locals": [],
+   "addr": 67032
+  },
+  {
+   "name": "VALUABLES-F",
+   "locals": [],
+   "addr": 67454
+  },
+  {
+   "name": "ROPE-F",
+   "locals": [],
+   "addr": 67586
+  },
+  {
+   "name": "GLOBAL-MAN-F",
+   "locals": [],
+   "addr": 67714
+  },
+  {
+   "name": "LAKE-F",
+   "locals": [],
+   "addr": 68098
+  },
+  {
+   "name": "IN-LAKE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 68216
+  },
+  {
+   "name": "I-IN-LAKE",
+   "locals": [],
+   "addr": 68586
+  },
+  {
+   "name": "ON-LAKE-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 68622
+  },
+  {
+   "name": "GO-ON-LAKE",
+   "locals": [
+    "F",
+    "N",
+    "TOLD"
+   ],
+   "addr": 68666
+  },
+  {
+   "name": "I-ON-LAKE",
+   "locals": [],
+   "addr": 68860
+  },
+  {
+   "name": "I-ROC",
+   "locals": [],
+   "addr": 69114
+  },
+  {
+   "name": "SHINY-OBJECT-F",
+   "locals": [],
+   "addr": 69146
+  },
+  {
+   "name": "SAND-F",
+   "locals": [],
+   "addr": 69270
+  },
+  {
+   "name": "ALGAE-F",
+   "locals": [],
+   "addr": 69366
+  },
+  {
+   "name": "FRIED-LAMP-F",
+   "locals": [],
+   "addr": 69380
+  },
+  {
+   "name": "I-VIEW-SNAP",
+   "locals": [],
+   "addr": 69420
+  },
+  {
+   "name": "VIEWING-TABLE-F",
+   "locals": [
+    "L"
+   ],
+   "addr": 69460
+  },
+  {
+   "name": "I-VIEW-CHANGE",
+   "locals": [],
+   "addr": 69610
+  },
+  {
+   "name": "VIEW-ROOM-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 69680
+  },
+  {
+   "name": "CLIFF-OBJECT-F",
+   "locals": [],
+   "addr": 69960
+  },
+  {
+   "name": "TREE-F",
+   "locals": [],
+   "addr": 70156
+  },
+  {
+   "name": "FRIED-TORCH-F",
+   "locals": [],
+   "addr": 70240
+  },
+  {
+   "name": "TORCH-F",
+   "locals": [],
+   "addr": 70266
+  },
+  {
+   "name": "NO-OBJS",
+   "locals": [
+    "RARG",
+    "F"
+   ],
+   "addr": 70350
+  },
+  {
+   "name": "REPELLENT-FCN",
+   "locals": [],
+   "addr": 70390
+  },
+  {
+   "name": "I-SPRAY",
+   "locals": [],
+   "addr": 70602
+  },
+  {
+   "name": "ZORK-IV-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 70638
+  },
+  {
+   "name": "AQUEDUCT-F",
+   "locals": [],
+   "addr": 70654
+  },
+  {
+   "name": "WATER-CHANNEL-F",
+   "locals": [],
+   "addr": 70730
+  },
+  {
+   "name": "MOSS-F",
+   "locals": [],
+   "addr": 70856
+  },
+  {
+   "name": "AQ-2-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 70874
+  },
+  {
+   "name": "AQ-3-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 71160
+  },
+  {
+   "name": "COVER-F",
+   "locals": [],
+   "addr": 71392
+  },
+  {
+   "name": "KEY-ROOM-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 71476
+  },
+  {
+   "name": "KEY-F",
+   "locals": [],
+   "addr": 71622
+  },
+  {
+   "name": "VIEW-INDICATOR-F",
+   "locals": [],
+   "addr": 71874
+  },
+  {
+   "name": "FLATHEAD-OCEAN-F",
+   "locals": [
+    "RARG"
+   ],
+   "addr": 71908
+  },
+  {
+   "name": "I-BOAT-DISAPPEAR",
+   "locals": [],
+   "addr": 72326
+  },
+  {
+   "name": "I-VISIBLE",
+   "locals": [],
+   "addr": 72364
+  },
+  {
+   "name": "POTION-F",
+   "locals": [],
+   "addr": 72384
+  },
+  {
+   "name": "VIAL-F",
+   "locals": [],
+   "addr": 72666
+  },
+  {
+   "name": "OCEAN-F",
+   "locals": [],
+   "addr": 72916
+  },
+  {
+   "name": "STONE-DESC",
+   "locals": [
+    "FOO"
+   ],
+   "addr": 73004
+  },
+  {
+   "name": "STONE-F",
+   "locals": [],
+   "addr": 73058
+  },
+  {
+   "name": "FISH-F",
+   "locals": [],
+   "addr": 73176
+  },
+  {
+   "name": "QUICKSAND-PSEUDO",
+   "locals": [],
+   "addr": 73196
+  },
+  {
+   "name": "SWAMP-PSEUDO",
+   "locals": [],
+   "addr": 73256
+  },
+  {
+   "name": "MIST-PSEUDO",
+   "locals": [],
+   "addr": 73268
+  },
+  {
+   "name": "SHORE-PSEUDO",
+   "locals": [],
+   "addr": 73318
+  },
+  {
+   "name": "WATERFALL-PSEUDO",
+   "locals": [],
+   "addr": 73336
+  },
+  {
+   "name": "ARCH-PSEUDO",
+   "locals": [],
+   "addr": 73358
+  }
+ ]
+}

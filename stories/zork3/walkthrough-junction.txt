@@ -1,0 +1,6 @@
+take lamp
+turn on lamp
+south
+look
+quit
+y

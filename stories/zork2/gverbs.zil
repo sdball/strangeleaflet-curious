@@ -1,0 +1,1 @@
+../../public/z-machine/zork2/gverbs.zil

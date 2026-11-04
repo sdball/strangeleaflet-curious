@@ -1,0 +1,41 @@
+#!/bin/sh
+# Rebuild Zork II from Infocom's source and walk into the Narrow Tunnel
+# to show it plays. The source lives in public/z-machine/zork2/
+# (most .zil files here are links), from github.com/historicalsource/zork2,
+# unchanged. Builds happen here so the .zap listings stay out of public/,
+# then the story file and its names go to every curio that carries a copy.
+cd "$(dirname "$0")" || exit 1
+
+# One fix, made to a copy: in DREARY-ROOM-FCN a bracket closes the COND a
+# line early, leaving (T <PCHECK> <RFALSE>) outside it. ZILF won't compile
+# that. Infocom's ZILCH compiled the stray clause as plain statements, call
+# PCHECK then return false (see 2actions.zap in the historical repo), which
+# is what the routine does with the bracket where it belongs.
+python3 - <<'PY' || exit 1
+src = open("../../public/z-machine/zork2/2actions.zil", encoding="utf-8").read()
+old = "\t   <RTRUE>)>\n          (T <PCHECK> <RFALSE>)>\n"
+new = "\t   <RTRUE>)\n          (T <PCHECK> <RFALSE>)>>\n"
+if src.count(old) != 1:
+    raise SystemExit("2actions.zil has changed; the DREARY-ROOM-FCN fix no longer fits")
+open("2actions.zil", "w", encoding="utf-8").write(src.replace(old, new))
+PY
+
+zilf -q -S zork2.zil >build.log 2>&1 || { cat build.log; exit 1; }
+# zapf -A finds the abbreviations worth having; assemble again with them
+zapf -q -A zork2.zap 2>/dev/null | sed '/^Finding up to/d' > zork2_freq.zap.new || exit 1
+mv zork2_freq.zap.new zork2_freq.zap
+# -L lists each label's address, which names uses to find the routines
+zapf -q -L zork2.zap >zork2_labels.txt 2>build.log || { cat build.log; exit 1; }
+rm -f build.log
+if dfrotz -m -p -q zork2.z3 < walkthrough-tunnel.txt 2>/dev/null | grep -q 'Narrow Tunnel'; then
+  echo "plays walkthrough-tunnel.txt"
+else
+  echo "STUCK walkthrough-tunnel.txt"; exit 1
+fi
+for dir in ../../public/z-machine/zork2; do
+  cp zork2.z3 "$dir/"
+  ../after-hours/names . "$dir/zork2-names.json" zork2 "Zork II: The Wizard of Frobozz"
+done
+# the interpreter plays the story file and needs no names
+cp zork2.z3 ../../public/z-machine-interpreter/zork2/
+echo "copied zork2.z3 ($(wc -c < zork2.z3 | tr -d ' ') bytes) and zork2-names.json"

@@ -3,3 +3,5 @@
 *.z3
 *_labels.txt
 build.log
+# Zork II's build makes its own fixed copy of this one (see zork2/check)
+zork2/2actions.zil

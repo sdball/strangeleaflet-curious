@@ -1,0 +1,1 @@
+../../public/z-machine/zork2/zork2.zil

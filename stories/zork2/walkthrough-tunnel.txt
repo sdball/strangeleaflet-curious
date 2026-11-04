@@ -1,0 +1,6 @@
+take lamp
+take sword
+turn on lamp
+south
+quit
+y

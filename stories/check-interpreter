@@ -1,15 +1,17 @@
 #!/bin/sh
 # Play every walkthrough through the Z-Machine Interpreter page's engine and
 # through dfrotz, and compare them word by word. Run after changing the
-# interpreter. Build the games first (after-hours/check, zork1/check).
+# interpreter. Build the games first (after-hours/check, zork1/check, and so on).
 cd "$(dirname "$0")" || exit 1
 status=0
 for w in after-hours/walkthrough-*.txt after-hours/dark-moves.txt after-hours/wrong-moves.txt; do
   ./compare after-hours/after-hours.z3 "$w" >/dev/null || { echo "DIFFERS  $w"; status=1; continue; }
   echo "same     $w"
 done
-for w in zork1/walkthrough-*.txt; do
-  ./compare zork1/zork1.z3 "$w" >/dev/null || { echo "DIFFERS  $w"; status=1; continue; }
-  echo "same     $w"
+for game in zork1 zork2 zork3; do
+  for w in $game/walkthrough-*.txt; do
+    ./compare $game/$game.z3 "$w" >/dev/null || { echo "DIFFERS  $w"; status=1; continue; }
+    echo "same     $w"
+  done
 done
 exit $status
