@@ -1,0 +1,14 @@
+open mailbox
+read leaflet
+north
+east
+open window
+enter
+west
+take lamp
+move rug
+open trap door
+turn on lamp
+down
+quit
+y

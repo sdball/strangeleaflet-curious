@@ -1,0 +1,26 @@
+#!/bin/sh
+# Rebuild Zork I from Infocom's source and walk into the cellar to show it plays.
+# The source lives in public/z-machine/zork1/ (the .zil files here are links),
+# from github.com/historicalsource/zork1, unchanged. Builds happen here so the
+# .zap listings stay out of public/, then the story file and its names go to
+# every curio that carries a copy.
+cd "$(dirname "$0")" || exit 1
+zilf -q -S zork1.zil >build.log 2>&1 || { cat build.log; exit 1; }
+# zapf -A finds the abbreviations worth having; assemble again with them
+zapf -q -A zork1.zap 2>/dev/null | sed '/^Finding up to/d' > zork1_freq.zap.new || exit 1
+mv zork1_freq.zap.new zork1_freq.zap
+# -L lists each label's address, which names uses to find the routines
+zapf -q -L zork1.zap >zork1_labels.txt 2>build.log || { cat build.log; exit 1; }
+rm -f build.log
+if dfrotz -m -p -q zork1.z3 < walkthrough-cellar.txt 2>/dev/null | grep -q 'Cellar'; then
+  echo "plays walkthrough-cellar.txt"
+else
+  echo "STUCK walkthrough-cellar.txt"; exit 1
+fi
+for dir in ../../public/z-machine/zork1; do
+  cp zork1.z3 "$dir/"
+  ../after-hours/names . "$dir/zork1-names.json" zork1 "Zork I: The Great Underground Empire"
+done
+# the interpreter plays the story file and needs no names
+cp zork1.z3 ../../public/z-machine-interpreter/zork1/
+echo "copied zork1.z3 ($(wc -c < zork1.z3 | tr -d ' ') bytes) and zork1-names.json"

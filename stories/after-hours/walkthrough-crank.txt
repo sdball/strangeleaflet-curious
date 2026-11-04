@@ -1,0 +1,23 @@
+look under mat
+take key
+open door
+north
+north
+take all
+south
+insert crank into socket
+wind odometer
+take crank
+take matches
+west
+send ---.--..-. .-.--------
+east
+east
+light lantern
+up
+drop all
+up
+take box
+down
+west
+hang box on hook

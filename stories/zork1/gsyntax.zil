@@ -1,0 +1,1 @@
+../../public/z-machine/zork1/gsyntax.zil

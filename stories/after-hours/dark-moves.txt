@@ -1,0 +1,35 @@
+look under mat
+take key
+open door
+north
+west
+tap key
+send open room
+send
+send ... --- ...
+send --- .--. . -. / .-. --- --- --
+east
+north
+take crank
+take lantern
+south
+east
+up
+climb ladder
+drop crank
+west
+fit crank in socket
+turn crank
+take matches
+east
+light lantern
+up
+drop all except lantern
+up
+extinguish lantern
+take box
+down
+up
+west
+hang box on hook
+

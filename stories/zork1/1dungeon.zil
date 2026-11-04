@@ -1,0 +1,1 @@
+../../public/z-machine/zork1/1dungeon.zil

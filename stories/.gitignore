@@ -1,0 +1,5 @@
+# what a build writes; check makes them again, and copies what the site needs into public/
+*.zap
+*.z3
+*_labels.txt
+build.log

@@ -1,0 +1,26 @@
+read leaflet
+look under mat
+take key
+unlock door with key
+open door
+north
+north
+take crank
+take lantern
+south
+put crank in socket
+turn crank
+take matches
+light lantern
+west
+read card
+read chart
+send --- .--. . -. / .-. --- --- --
+east
+east
+drop all but lantern
+up
+take box
+down
+west
+hang box on hook

@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Pull the compiler's names out of ZILF's assembly listing.
+
+A story file keeps numbers, not names: object 26, attribute 14, property 17.
+The .zap files ZILF writes on the way still have the names, so this turns
+them into a small JSON file the analyzer can use to label the demo game.
+
+usage: names <dir with the .zap files> <out.json> [game] [title]
+game is the listing's base name (after-hours), title the game's full name.
+"""
+import json, re, sys, os
+
+src, out = sys.argv[1], sys.argv[2]
+game = sys.argv[3] if len(sys.argv) > 3 else "after-hours"
+title = sys.argv[4] if len(sys.argv) > 4 else "After Hours at the Cabinet"
+read = lambda name: open(os.path.join(src, name), encoding="utf-8").read()
+data, freq, code = read(f"{game}_data.zap"), read(f"{game}_freq.zap"), read(f"{game}.zap")
+
+consts = dict(re.findall(r"^\t([A-Z0-9?-]+)=(\d+)$", data, re.M))
+
+# attributes: TAKEBIT=29 next to FX?TAKEBIT=…
+attributes = {}
+for name, n in consts.items():
+    if "FX?" + name in consts:
+        attributes[int(n)] = name
+
+properties = {int(n): name[2:] for name, n in consts.items() if name.startswith("P?")}
+
+block = data[data.index("OBJECT:: .TABLE"):]
+block = block[:block.index(".ENDT")]
+objects = {i + 1: m for i, m in enumerate(re.findall(r"^\t\.OBJECT ([A-Z0-9?-]+),", block, re.M))}
+
+gblock = data[data.index("GLOBAL:: .TABLE"):]
+gblock = gblock[:gblock.index(".ENDT")]
+globals_ = [m for m in re.findall(r"^\t\.GVAR ([A-Z0-9?-]+)=", gblock, re.M)]
+
+# abbreviations, in table order, with ZILF's own count of how often each is used
+abbrevs = [{"uses": int(u), "saved": int(s)}
+           for u, s in re.findall(r'^\s+\.FSTR FSTR\?\d+,".*?"\t\t; (\d+)x, saved (\d+)$', freq, re.M)]
+
+# every dictionary word in full, in dictionary order; the file keeps only six letters
+vblock = data[data.index("VOCAB:: .TABLE"):]
+words = re.findall(r'^W\?[^:]+:: \.ZWORD "(.*)"$', vblock, re.M)
+
+# every routine with its locals, in the order the assembler lays them down,
+# which is the order they sit in the story file
+# zapf -L lists each label's address, so a routine can be found by where it
+# sits rather than by counting, which goes wrong when a page finds one extra
+labels = {}
+try:
+    for m in re.finditer(r"^(\S+)\s+\$([0-9a-fA-F]+)\s+\d+$", read(f"{game}_labels.txt"), re.M):
+        labels[m.group(1)] = int(m.group(2), 16)
+except FileNotFoundError:
+    pass
+routines = []
+for m in re.finditer(r"^\t\.FUNCT ([^,\n]+)((?:,[^\n]*)?)$", code, re.M):
+    locals_ = [l.split("=")[0] for l in m.group(2).split(",") if l]
+    r = {"name": m.group(1), "locals": locals_}
+    if m.group(1) in labels:
+        r["addr"] = labels[m.group(1)]
+    routines.append(r)
+
+json.dump({
+    "about": f"Names from ZILF's assembly listing of {title}. The story file itself keeps only numbers.",
+    "attributes": attributes,
+    "properties": properties,
+    "objects": objects,
+    "globals": globals_,
+    "abbreviations": abbrevs,
+    "words": words,
+    "routines": routines,
+}, open(out, "w", encoding="utf-8"), indent=1, sort_keys=False)
+print(f"{len(attributes)} attributes, {len(properties)} properties, {len(objects)} objects, "
+      f"{len(globals_)} globals, {len(abbrevs)} abbreviations, {len(words)} words, {len(routines)} routines -> {out}")

@@ -11,6 +11,7 @@ scripts/serve              serves public/ locally (python3 http.server)
 .githooks/pre-commit       refuses staged pages without the GoatCounter snippet, or with tic-check findings
 .github/workflows/static.yml  checks GoatCounter again, then deploys public/ to GitHub Pages
 api/                       a Cloudflare Worker that proxies outside data for curios (not published with the site)
+stories/                   builds the Z-machine curios' story files from their ZIL source (not published)
 ```
 
 Pushing to `main` deploys. Only `public/` is published.
@@ -36,6 +37,17 @@ node --test api/worker.test.mjs     # tests, with the outside sources stubbed
 cd api && npx wrangler dev          # serves it at http://localhost:8787/
 cd api && npx wrangler deploy       # publishes it to https://curious-api.sdball.workers.dev
 ```
+
+## The story files
+
+The Z-machine curios (`z-machine`, `z-machine-interpreter`) carry two games built with ZILF: *After Hours at the Cabinet*, written for the cabinet, and Zork I from Infocom's released source. The ZIL source lives in `public/z-machine/` so visitors can read it; `stories/<game>/` links to it and holds the build. Building needs ZILF (`zilf`, `zapf`) and Frotz's `dfrotz` on PATH.
+
+```sh
+stories/after-hours/check   # build, replay every walkthrough (each must win), copy into both curios
+stories/zork1/check         # build, walk to the cellar, copy into both curios
+```
+
+`check` copies the `.z3` into each curio that carries one and writes the analyzer's names JSON with `names`. Commit the copies in `public/` with the source change that made them. After changing After Hours, add a walkthrough step for anything new.
 
 ## Rules for every page
 

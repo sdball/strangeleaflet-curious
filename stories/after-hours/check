@@ -1,0 +1,29 @@
+#!/bin/sh
+# Rebuild After Hours and replay every walkthrough; each must reach the win.
+# The source lives in public/z-machine/ (after-hours.zil here is a symlink).
+# Builds happen here so the .zap listings stay out of public/, then the story
+# file and its names go to every curio that carries a copy.
+cd "$(dirname "$0")" || exit 1
+zilf -q -S after-hours.zil >build.log 2>&1 || { cat build.log; exit 1; }
+# zapf -A finds the abbreviations worth having; assemble again with them
+zapf -q -A after-hours.zap 2>/dev/null | sed '/^Finding up to/d' > after-hours_freq.zap.new || exit 1
+mv after-hours_freq.zap.new after-hours_freq.zap
+# -L lists each label's address, which names uses to find the routines
+zapf -q -L after-hours.zap >after-hours_labels.txt 2>build.log || { cat build.log; exit 1; }
+rm -f build.log
+status=0
+for w in walkthrough-*.txt dark-moves.txt; do
+  if dfrotz -m -p -q after-hours.z3 < "$w" 2>/dev/null | grep -q 'You have won'; then
+    echo "won   $w"
+  else
+    echo "LOST  $w"; status=1
+  fi
+done
+[ $status -eq 0 ] || exit $status
+for dir in ../../public/z-machine; do
+  cp after-hours.z3 "$dir/"
+  ./names . "$dir/after-hours-names.json" >/dev/null
+done
+# the interpreter plays the story file and needs no names
+cp after-hours.z3 ../../public/z-machine-interpreter/
+echo "copied after-hours.z3 ($(wc -c < after-hours.z3 | tr -d ' ') bytes) and after-hours-names.json"

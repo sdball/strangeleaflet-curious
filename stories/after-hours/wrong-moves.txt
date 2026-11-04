@@ -1,0 +1,60 @@
+south
+send hello
+xyzzy
+open door
+look under mat
+take key
+unlock door with leaflet
+open door
+north
+east
+open back door
+unlock back door with key
+wind odometer
+north
+take lantern
+take crank
+south
+turn crank
+wind odometer with crank
+put lantern in socket
+put crank in socket
+put crank in socket
+examine odometer
+turn odometer
+turn crank
+examine odometer
+take crank
+examine odometer
+take matches
+put crank in socket
+turn crank
+examine odometer
+take crank
+take matches
+west
+examine key
+push key
+send open room
+send
+send .- -... -.-. -------- ...
+read chart
+send --- .--. . -. / .-. --- --- --
+send --- .--. . -. / .-. --- --- --
+east
+east
+up
+light lantern
+up
+drop crank
+up
+drop all but lantern
+up
+down
+up
+take box
+down
+up
+west
+put crank on hook
+hang tag on hook
