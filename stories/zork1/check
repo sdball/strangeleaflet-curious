@@ -17,10 +17,8 @@ if dfrotz -m -p -q zork1.z3 < walkthrough-cellar.txt 2>/dev/null | grep -q 'Cell
 else
   echo "STUCK walkthrough-cellar.txt"; exit 1
 fi
-for dir in ../../public/z-machine/zork1; do
+for dir in ../../public/z-machine/zork1 ../../public/z-machine-interpreter/zork1; do
   cp zork1.z3 "$dir/"
   ../after-hours/names . "$dir/zork1-names.json" zork1 "Zork I: The Great Underground Empire"
 done
-# the interpreter plays the story file and needs no names
-cp zork1.z3 ../../public/z-machine-interpreter/zork1/
 echo "copied zork1.z3 ($(wc -c < zork1.z3 | tr -d ' ') bytes) and zork1-names.json"

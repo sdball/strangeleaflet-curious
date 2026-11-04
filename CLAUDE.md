@@ -47,7 +47,7 @@ stories/after-hours/check   # build, replay every walkthrough (each must win), c
 stories/zork1/check         # build, walk to the cellar, copy into both curios
 ```
 
-`check` copies the `.z3` into each curio that carries one and writes the analyzer's names JSON with `names`. Commit the copies in `public/` with the source change that made them. After changing After Hours, add a walkthrough step for anything new.
+`check` copies the `.z3` into each curio that carries one and writes the names JSON with `names`. The analyzer reads it, and so does the interpreter's Lamp Counter for the Zorks (it finds the clock table, the lamp's timer, and the lamp object by name). Commit the copies in `public/` with the source change that made them. After changing After Hours, add a walkthrough step for anything new.
 
 The interpreter is checked against `dfrotz` with the same walkthroughs. `stories/play.mjs` runs the page's own engine in Node (the script between its `Story file` and `Page` sections), and `stories/compare` diffs its transcript against dfrotz's word by word.
 
