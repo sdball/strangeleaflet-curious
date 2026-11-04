@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Z-Machine Interpreter — The Cabinet of Curios</title>
-<meta name="description" content="Play Infocom-style story files in your browser: a small game written for the cabinet, Zork I built from its released source, or a story file of your own. Saves stay in your browser.">
+<meta name="description" content="Play Infocom-style story files in your browser: a small game written for the cabinet, Zork I, II, or III built from their released source, or a story file of your own. Saves stay in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💾</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -335,6 +335,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <span class="shelf-lbl" id="shelfLbl">Built in:</span>
       <button type="button" class="btn" data-story="after-hours" aria-pressed="false">After Hours</button>
       <button type="button" class="btn" data-story="zork1" aria-pressed="false">Zork I</button>
+      <button type="button" class="btn" data-story="zork2" aria-pressed="false">Zork II</button>
+      <button type="button" class="btn" data-story="zork3" aria-pressed="false">Zork III</button>
     </div>
     <p class="load-status" id="loadStatus" role="status" aria-live="polite"></p>
   </section>
@@ -401,15 +403,16 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <h2 id="sources-h">Sources</h2>
     <ul>
       <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, and §8.2 on the status line), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
-      <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and <i>Zork I</i> for this page. <a href="https://zilf.io/">zilf.io</a>.</li>
+      <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and the three Zorks for this page. <a href="https://zilf.io/">zilf.io</a>.</li>
       <li>Tim Anderson, Marc Blank, Bruce Daniels, and Dave Lebling, Zork I source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork1">github.com/historicalsource/zork1</a>.</li>
+      <li>Marc Blank, Dave Lebling, Bruce Daniels, and Tim Anderson, Zork II and Zork III source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork2">github.com/historicalsource/zork2</a> and <a href="https://github.com/historicalsource/zork3">zork3</a>.</li>
     </ul>
   </section>
 
   <footer>
     <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games stay in this browser's storage.</p>
     <p><i>After Hours at the Cabinet</i> was written for the cabinet: <a href="after-hours.z3">after-hours.z3</a>. Its source, and a station-by-station look inside it, are on <a href="../z-machine/">The Z-Machine and how it runs stories</a>. ZILF's library asks that games built with it name it in their opening credits, and <i>After Hours</i> does.</p>
-    <p><i>Zork I</i> was built here with ZILF from Infocom's source, unchanged from Microsoft's release: <a href="zork1/zork1.z3">zork1.z3</a>, shared under its <a href="zork1/LICENSE">MIT License</a>. Zork is a trademark, and the name is used here only to say which game this is.</p>
+    <p>The three Zorks were built here with ZILF from the Infocom source Microsoft released, and each is shared under its MIT License: <a href="zork1/zork1.z3">zork1.z3</a> (<a href="zork1/LICENSE">license</a>), <a href="zork2/zork2.z3">zork2.z3</a> (<a href="zork2/LICENSE">license</a>), and <a href="zork3/zork3.z3">zork3.z3</a> (<a href="zork3/LICENSE">license</a>). Zork II needed one bracket moved before ZILF would compile it, and <a href="../z-machine/">the Z-machine exhibit</a> explains why that changes nothing in the game. Zork is a trademark, and the name is used here only to say which game this is.</p>
   </footer>
 </div>
 
@@ -1233,6 +1236,8 @@ function runSlice(m, most) {
 const STORIES = {
   "after-hours": { title: "After Hours at the Cabinet", file: "after-hours.z3" },
   zork1: { title: "Zork I: The Great Underground Empire", file: "zork1/zork1.z3" },
+  zork2: { title: "Zork II: The Wizard of Frobozz", file: "zork2/zork2.z3" },
+  zork3: { title: "Zork III: The Dungeon Master", file: "zork3/zork3.z3" },
 };
 const game = {
   m: null, key: "", name: "", title: "", builtin: "",
