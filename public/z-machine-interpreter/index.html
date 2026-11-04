@@ -177,18 +177,18 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .status-bar[hidden], .upper[hidden] { display: none; }
 .upper { padding: 0 max(.75rem, var(--corner-room)) 0 .75rem; white-space: pre; overflow: hidden; font-size: calc(1em * var(--upper-scale, 1)); line-height: var(--screen-lh); border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent); }
 .upper .row { min-height: calc(var(--screen-lh) * 1em); }
-/* the light gauge: a quieter line under the status line */
-.light-bar {
+/* Enhanced: a quieter line under the status line */
+.enhanced-bar {
   display: flex; flex-wrap: wrap; column-gap: 1.6em;
   padding: .05rem .75rem;
   color: var(--screen-dim); white-space: nowrap;
   border-bottom: 1px solid color-mix(in srgb, var(--screen-ink) 18%, transparent);
 }
-.light-bar[hidden] { display: none; }
+.enhanced-bar[hidden] { display: none; }
 /* smaller letters on the spans, so the bar's padding still lines up with the full-screen column */
-.light-bar span { font-size: .85em; }
-.light-bar b { font-weight: inherit; color: var(--screen-ink); }
-.light-bar .low b { font-weight: 700; }
+.enhanced-bar span { font-size: .85em; }
+.enhanced-bar b { font-weight: inherit; color: var(--screen-ink); }
+.enhanced-bar .low b { font-weight: 700; }
 .lower {
   position: relative;
   flex: 1; min-height: 0;
@@ -360,7 +360,7 @@ html.full-on { overflow: hidden; }
 .machine.full .status-bar[hidden] + .upper { padding-top: env(safe-area-inset-top, 0px); }
 .machine.full .lower { padding-bottom: calc(1.5em + env(safe-area-inset-bottom, 0px)); }
 /* on a wide screen the text keeps to a column you can read */
-.machine.full .lower, .machine.full .upper, .machine.full .status-bar, .machine.full .light-bar {
+.machine.full .lower, .machine.full .upper, .machine.full .status-bar, .machine.full .enhanced-bar {
   padding-left: max(.75rem, env(safe-area-inset-left, 0px), calc((100% - var(--column)) / 2));
   padding-right: max(.75rem, env(safe-area-inset-right, 0px), calc((100% - var(--column)) / 2));
 }
@@ -421,19 +421,19 @@ html.full-on { overflow: hidden; }
 }
 .machine[data-screen="printout"] .lower,
 .machine[data-screen="printout"] .upper,
-.machine[data-screen="printout"] .light-bar,
+.machine[data-screen="printout"] .enhanced-bar,
 .machine[data-screen="printout"] .status-bar { padding-left: calc(var(--strip) + .9rem); padding-right: calc(var(--strip) + .9rem); }
 .machine[data-screen="printout"] .upper,
 .machine[data-screen="printout"] .status-bar { padding-right: max(calc(var(--strip) + .9rem), var(--corner-room)); }
 @media (max-width: 600px) {
   .machine[data-screen="printout"] { --strip: 18px; }
   /* the status line sits above the holes, so on a phone it keeps the room */
-  .machine[data-screen="printout"] .status-bar, .machine[data-screen="printout"] .upper, .machine[data-screen="printout"] .light-bar { padding-left: .5rem; padding-right: max(.5rem, var(--corner-room)); }
+  .machine[data-screen="printout"] .status-bar, .machine[data-screen="printout"] .upper, .machine[data-screen="printout"] .enhanced-bar { padding-left: .5rem; padding-right: max(.5rem, var(--corner-room)); }
 }
 /* full screen: a sheet of paper down the middle, with the dark of the machine either side */
 .machine.full[data-screen="printout"] { --hole-bg: #39342C; background: var(--hole-bg); }
 .machine.full[data-screen="printout"] .screen { width: min(100%, calc(var(--column) + 2 * var(--strip) + 2.5rem)); margin: 0 auto; }
-.machine[data-screen="printout"] .status-bar, .machine[data-screen="printout"] .light-bar { border-bottom: 1px dashed var(--screen-dim); }
+.machine[data-screen="printout"] .status-bar, .machine[data-screen="printout"] .enhanced-bar { border-bottom: 1px dashed var(--screen-dim); }
 .machine[data-screen="printout"] .s16 { font-weight: 700; }
 
 /* ---------- Notes ---------- */
@@ -467,7 +467,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In full screen, both are on the right end of the screen's top line. In the three Zorks, <b>Lamp Counter</b> adds a line under the status line saying how many turns your lamp, candles, and matches have left while you're carrying them. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In full screen, both are on the right end of the screen's top line. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -500,7 +500,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       </div>
       <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
       <div class="upper" id="upper" hidden aria-hidden="true"></div>
-      <div class="light-bar" id="lightBar" role="group" aria-label="Lamp counter" hidden></div>
+      <div class="enhanced-bar" id="enhancedBar" role="group" aria-label="Enhanced: what the game keeps to itself" hidden></div>
       <div class="lower" id="lower" role="log" aria-live="polite" aria-label="Story text"></div>
     </div>
     <aside class="pad notepad" id="notepad" aria-labelledby="notesH" hidden>
@@ -538,7 +538,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
     <button type="button" class="btn" id="notesBtn" data-panel="notes" aria-pressed="false">Notes</button>
     <button type="button" class="btn" id="mapBtn" data-panel="map" aria-pressed="false">Map</button>
-    <button type="button" class="btn" id="lightBtn" aria-pressed="false" hidden>Lamp Counter</button>
+    <button type="button" class="btn" id="enhancedBtn" aria-pressed="false" hidden>Enhanced</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
   </div>
@@ -559,7 +559,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
       <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
-      <li><b>The lamp counter reads the game's own clock.</b> The Zorks keep every timer in one table: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), printing “The lamp appears a bit dimmer.” and the rest, so the turns left are the turns to the next stage plus every stage after it. Turning the lamp off stops its timer. The page finds those tables by the names ZILF lists when it builds each game, so the counter comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
+      <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
+      <li><b><kbd>x</kbd> means examine, even where the game never heard of it.</b> The Zorks want <kbd>examine lamp</kbd> or <kbd>look at lamp</kbd>, and many players now type <kbd>x lamp</kbd> without thinking. When a game's dictionary has no <kbd>x</kbd>, the interpreter passes <kbd>examine</kbd> in its place at the start of each command. The game itself is unchanged.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
@@ -1508,7 +1509,7 @@ function drawTop() {
   const rows = m.upper.length ? m.upper : [];
   up.hidden = !rows.length || rows.every((r) => r.every(([ch, st]) => ch === " " && !(st & 1)));
   $("screen").classList.toggle("has-bar", !bar.hidden);
-  drawLight();
+  drawEnhanced();
   $("screen").classList.toggle("bare", bar.hidden && up.hidden);
   if (up.hidden) return;
   up.textContent = "";
@@ -1634,10 +1635,17 @@ function submit() {
     if ((word === "undo" || word === "oops undo") && !m.s.lookup(m.s.dict, Array.from(word, (ch) => ch.charCodeAt(0)))) { undo(); return; }
     game.snaps[game.snaps.length - 1].cmd = text;
     mapCommand(text);
-    finishLine(m, text);
+    finishLine(m, withExamine(m, text));
     go();
   } else if (game.mode === "save") finishSave(text.trim());
   else if (game.mode === "restore") finishRestore(text.trim());
+}
+// X for EXAMINE came after Infocom, and players now type it without
+// thinking. A game that doesn't know the word gets EXAMINE in its place, at
+// the start of each command in the line. The game's text never changes.
+function withExamine(m, text) {
+  if (m.s.lookup(m.s.dict, [120])) return text;
+  return text.replace(/(^|\.|\bthen\b)(\s*)x(?=\s|$)/gi, "$1$2examine");
 }
 function defaultSaveName() {
   const m = game.m;
@@ -1777,7 +1785,7 @@ function start(buffer, meta) {
   if (game.builtin) { try { localStorage.setItem("zmi:last", game.builtin); } catch { /* storage is off */ } }
   loadNotes();
   loadMap();
-  loadLight();
+  loadEnhanced();
   const back = resume();
   $("loadStatus").textContent = back ? "Picked up where you left off. Restart starts the story over." : "";
   if (back) { flush(); updateButtons(); } else go();
@@ -2520,59 +2528,89 @@ try {
   setPanel(open, true);
 } catch { /* storage is off */ }
 
-// ---------- Lamp Counter ----------
-// The Zorks' lamp, candles and matches run out, and the Lamp Counter shows how much
-// each has left. Nothing here counts turns: it reads the game's own clock.
-// Infocom's clock (gclock.zil) keeps each timer as six bytes in the table
-// C-TABLE, from offset C-INTS to the table's end at byte 180: whether it's
-// running, the turns until it next fires, and the routine it calls. The
-// lamp's routine fires at each stage of LAMP-TABLE (turns, a message, turns,
-// a message, …, 0), so the light left is the turns to the next stage plus
-// every stage after it. The names say where all that sits; they come from
-// ZILF's listing of each build, so only the built-in Zorks get a gauge.
-const LIGHTS = {
-  zork1: [
-    { name: "Lamp", obj: "LAMP", timer: "I-LANTERN", table: "LAMP-TABLE", on: "on", off: "off" },
-    { name: "Candles", obj: "CANDLES", timer: "I-CANDLES", table: "CANDLE-TABLE", on: "lit", off: "unlit" },
-    // MATCH-FUNCTION lights one only while MATCH-COUNT stays above 0 after taking one away
-    { name: "Matches", obj: "MATCH", count: "MATCH-COUNT" },
-  ],
-  zork2: [
-    { name: "Lamp", obj: "LAMP", timer: "I-LANTERN", table: "LAMP-TABLE", on: "on", off: "off" },
-    { name: "Matches", obj: "MATCH", count: "MATCH-COUNT" },
-  ],
-  zork3: [
-    { name: "Lamp", obj: "LAMP", timer: "I-LANTERN", table: "LAMP-TABLE", on: "on", off: "off" },
-  ],
+// ---------- Enhanced ----------
+// For the built-in Zorks, a line under the status line with what the games
+// keep to themselves: how long each light has left, how much more you can
+// carry, how long your wounds take to heal, and (in Zork I) how many
+// treasures are in the case. Nothing here counts anything itself. Each turn
+// it reads the game's own memory, finding things by the names ZILF lists
+// when it builds each game, so only the built-in Zorks get the line.
+//
+// Lights: Infocom's clock (gclock.zil) keeps each timer as six bytes in the
+// table C-TABLE, from offset C-INTS to the table's end at byte 180: whether
+// it's running, the turns until it next fires, and the routine it calls.
+// The lamp's routine fires at each stage of LAMP-TABLE (turns, a message,
+// turns, a message, …, 0), so the light left is the turns to the next stage
+// plus every stage after it.
+const LAMP = { name: "Lamp", obj: "LAMP", timer: "I-LANTERN", table: "LAMP-TABLE", on: "on", off: "off" };
+// MATCH-FUNCTION lights one only while MATCH-COUNT stays above 0 after taking one away
+const MATCHES = { name: "Matches", obj: "MATCH", count: "MATCH-COUNT" };
+const ENHANCED = {
+  zork1: {
+    lights: [LAMP, { name: "Candles", obj: "CANDLES", timer: "I-CANDLES", table: "CANDLE-TABLE", on: "lit", off: "unlit" }, MATCHES],
+    // V-DIAGNOSE: your STRENGTH property goes below 0 when hurt, and I-CURE
+    // gives back a point every CURE-WAIT (30) turns
+    wounds: { prop: "STRENGTH", cure: "I-CURE", wait: 30, words: ["", "a light wound", "a serious wound", "several wounds", "serious wounds"] },
+    // twenty-one things have a TVALUE, but the broken egg and broken canary
+    // stand in for the egg and canary, so there are nineteen treasures
+    trophies: { holder: "TROPHY-CASE", total: 19 },
+  },
+  zork2: { lights: [LAMP, MATCHES] },
+  zork3: {
+    lights: [LAMP],
+    // the DIAG table: P-STRENGTH runs from 5 (perfect health) down to 0
+    // (dead), and I-CURE gives back a point every 10 turns; the words go by
+    // points lost, so they run the other way from DIAG
+    wounds: { global: "P-STRENGTH", full: 5, cure: "I-CURE", wait: 10, words: ["", "wounded lightly", "a few wounds", "hurt quite badly", "very seriously wounded"] },
+  },
 };
-const light = { on: false, story: "", gauge: null };
-try { light.on = localStorage.getItem("zmi:light") === "on"; } catch { /* storage is off */ }
+const enhanced = { on: false, story: "", gauge: null };
+try { enhanced.on = localStorage.getItem("zmi:enhanced") === "on"; } catch { /* storage is off */ }
 
 // names to numbers, once per story; anything the names don't have is left out
-function lightGauge(names, list) {
+function enhancedGauge(names, spec) {
   const glob = (g) => { const i = names.globals.indexOf(g); return i < 0 ? 0 : 16 + i; };
-  const objs = Object.fromEntries(Object.entries(names.objects).map(([n, o]) => [o, +n]));
-  const attrs = Object.fromEntries(Object.entries(names.attributes).map(([n, a]) => [a, +n]));
-  const rtns = Object.fromEntries(names.routines.map((r) => [r.name, r.addr]));
-  const g = { clock: glob("C-TABLE"), ints: glob("C-INTS"), winner: glob("WINNER"), onbit: attrs.ONBIT, outbit: attrs.RMUNGBIT, items: [] };
-  for (const it of list) {
+  const flip = (o) => Object.fromEntries(Object.entries(o).map(([n, x]) => [x, +n]));
+  const objs = flip(names.objects), attrs = flip(names.attributes), props = flip(names.properties);
+  // a version 3 routine's packed address is its byte address halved
+  const rtn = (name) => { const r = names.routines.find((x) => x.name === name); return r ? r.addr / 2 : 0; };
+  const g = {
+    clock: glob("C-TABLE"), ints: glob("C-INTS"), winner: glob("WINNER"), player: glob("PLAYER"),
+    onbit: attrs.ONBIT, outbit: attrs.RMUNGBIT, wearbit: attrs.WEARBIT, openbit: attrs.OPENBIT, transbit: attrs.TRANSBIT, touchbit: attrs.TOUCHBIT, size: props.SIZE,
+    allowed: glob("LOAD-ALLOWED"), most: glob("LOAD-MAX"), fumble: glob("FUMBLE-NUMBER"), lights: [],
+  };
+  if (!g.clock || !g.ints || !g.winner || g.onbit === undefined || g.outbit === undefined) return null;
+  for (const it of spec.lights || []) {
     const o = objs[it.obj];
     if (!o) continue;
-    // a version 3 routine's packed address is its byte address halved
-    if (it.count) { if (glob(it.count)) g.items.push({ ...it, o, n: glob(it.count) }); }
-    else if (rtns[it.timer] && glob(it.table)) g.items.push({ ...it, o, rtn: rtns[it.timer] / 2, tbl: glob(it.table) });
+    if (it.count) { if (glob(it.count)) g.lights.push({ ...it, o, n: glob(it.count) }); }
+    else if (rtn(it.timer) && glob(it.table)) g.lights.push({ ...it, o, rtn: rtn(it.timer), tbl: glob(it.table) });
   }
-  return g.clock && g.ints && g.winner && g.onbit !== undefined && g.outbit !== undefined ? g : null;
+  if (!g.allowed || !g.player || !g.size) g.allowed = 0;
+  const w = spec.wounds;
+  if (w && rtn(w.cure) && (w.prop ? props[w.prop] : glob(w.global))) g.wounds = { ...w, rtn: rtn(w.cure), p: props[w.prop], n: glob(w.global) };
+  const t = spec.trophies;
+  if (t && objs[t.holder] && props.TVALUE) g.trophies = { ...t, o: objs[t.holder], tvalue: props.TVALUE };
+  return g;
+}
+// the clock entry for a routine: { on, tick }, or null if it has none
+function timerOf(m, g, rtn) {
+  const base = getVar(m, g.clock);
+  for (let e = base + getVar(m, g.ints); e + 6 <= base + 180; e += 6) if (rd(m, e + 4) === rtn) return { on: !!rd(m, e), tick: rd(m, e + 2) };
+  return null;
+}
+// a property's value, or the game's default for it, as get_prop reads it
+function propOf(m, o, p) {
+  const q = findProp(m, o, p);
+  return q ? (q.len === 1 ? m.mem[q.data] : rd(m, q.data)) : rd(m, m.s.h.objects + 2 * (p - 1));
 }
 // how one light stands now: { left, lit, out }
 function lightLeft(m, g, it) {
   if (it.count) return { left: Math.max(0, s16(getVar(m, it.n)) - 1) };
   if (attrAt(m, it.o, g.outbit)) return { out: true };
-  const base = getVar(m, g.clock);
-  let tick = -1;
-  for (let e = base + getVar(m, g.ints); e + 6 <= base + 180; e += 6) if (rd(m, e + 4) === it.rtn) { tick = rd(m, e + 2); break; }
-  if (tick < 0) return null;
-  let left = tick;
+  const t = timerOf(m, g, it.rtn);
+  if (!t) return null;
+  let left = t.tick;
   for (let a = getVar(m, it.tbl), k = 0; k < 16; a += 4, k++) { const x = rd(m, a); if (!x) break; left += x; }
   return { left, lit: attrAt(m, it.o, g.onbit) };
 }
@@ -2580,40 +2618,88 @@ function carried(m, o, who) {
   for (let p = parentOf(m, o), k = 0; p && k < 64; p = parentOf(m, p), k++) if (p === who) return true;
   return false;
 }
+// The WEIGHT routine: an object's SIZE plus the weight of everything in it,
+// except that what you wear weighs 1. Taking something fails when its
+// weight and yours come to more than LOAD-ALLOWED, which wounds lower. Your
+// own SIZE is on both sides, so it's left out of what the line shows.
+function weightOf(m, g, o, depth = 0) {
+  let w = s16(propOf(m, o, g.size));
+  const me = getVar(m, g.player);
+  for (let c = childOf(m, o), k = 0; c && k < 200 && depth < 8; c = siblingOf(m, c), k++) w += o === me && attrAt(m, c, g.wearbit) ? 1 : weightOf(m, g, c, depth + 1);
+  return w;
+}
+function loadNow(m, g) {
+  const who = getVar(m, g.winner), own = s16(propOf(m, who, g.size));
+  let things = 0;
+  for (let c = childOf(m, who), k = 0; c && k < 200; c = siblingOf(m, c), k++) if (!attrAt(m, c, g.wearbit)) things++;
+  return { carry: weightOf(m, g, who) - own, most: s16(getVar(m, g.allowed)) - own, hurt: g.most && getVar(m, g.allowed) < getVar(m, g.most), things, fumble: g.fumble ? getVar(m, g.fumble) : 0 };
+}
+// how badly hurt you are (0 for not at all), and the turns until you're healed
+function woundsNow(m, g) {
+  const w = g.wounds, t = timerOf(m, g, w.rtn);
+  if (!t || !t.on) return null;
+  const hurt = w.p ? -s16(propOf(m, getVar(m, g.winner), w.p)) : w.full - s16(getVar(m, w.n));
+  if (hurt <= 0) return null;
+  return { words: w.words[Math.min(hurt, w.words.length - 1)] || w.words[w.words.length - 1], turns: t.tick + w.wait * (hurt - 1) };
+}
+// Treasures you can see in the case: inside an open or see-through thing
+// counts, inside a closed one doesn't (the egg keeps its secret).
+function trophiesNow(m, g) {
+  let n = 0;
+  const walk = (o, depth) => {
+    for (let c = childOf(m, o), k = 0; c && k < 200; c = siblingOf(m, c), k++) {
+      if (findProp(m, c, g.trophies.tvalue) && propOf(m, c, g.trophies.tvalue) > 0) n++;
+      if (depth < 6 && (attrAt(m, c, g.openbit) || attrAt(m, c, g.transbit))) walk(c, depth + 1);
+    }
+  };
+  walk(g.trophies.o, 0);
+  return n;
+}
 
-async function loadLight() {
-  const key = game.builtin, list = LIGHTS[key];
-  $("lightBtn").hidden = !list;
-  light.story = key;
-  light.gauge = null;
-  drawLight();
-  if (!list || !light.on) return;
+async function loadEnhanced() {
+  const key = game.builtin, spec = ENHANCED[key];
+  $("enhancedBtn").hidden = !spec;
+  enhanced.story = key;
+  enhanced.gauge = null;
+  drawEnhanced();
+  if (!spec || !enhanced.on) return;
   try {
     const res = await fetch(`${key}/${key}-names.json`);
     if (!res.ok) throw new Error(res.status);
     const names = await res.json();
-    if (light.story !== key) return;
-    light.gauge = lightGauge(names, list);
-  } catch { /* no names, no gauge */ }
-  drawLight();
+    if (enhanced.story !== key) return;
+    enhanced.gauge = enhancedGauge(names, spec);
+  } catch { /* no names, no line */ }
+  drawEnhanced();
 }
-// A light shows only while you're carrying it, and says how many turns it
-// has left. Put it down and the line goes, the way a status line shows
-// only what's on you.
-function drawLight() {
-  const bar = $("lightBar"), m = game.m, g = light.gauge;
-  if (!light.on || !g || !m || m.v > 3) { bar.hidden = true; return; }
+// Lights show only while you carry them, wounds only while you have some,
+// and the trophy case once you've opened it. Load is always there.
+function drawEnhanced() {
+  const bar = $("enhancedBar"), m = game.m, g = enhanced.gauge;
+  if (!enhanced.on || !g || !m || m.v > 3) { bar.hidden = true; return; }
   const who = getVar(m, g.winner), parts = [];
-  for (const it of g.items) {
+  const turns = (n) => `${n} ${n === 1 ? "turn" : "turns"}`;
+  for (const it of g.lights) {
     if (!carried(m, it.o, who)) continue;
     const st = lightLeft(m, g, it);
     if (!st) continue;
-    let text, low = false;
-    if (st.out) text = "burned out";
-    else if (it.count) { text = st.left ? `${st.left} left` : "none left"; low = st.left <= 1; }
-    else { text = `${st.lit ? it.on : it.off}, ${st.left} ${st.left === 1 ? "turn" : "turns"} left`; low = st.left <= 20; }
-    parts.push({ name: it.name, text, low });
+    if (st.out) parts.push({ name: it.name, text: "burned out" });
+    else if (it.count) parts.push({ name: it.name, text: st.left ? `${st.left} left` : "none left", low: st.left <= 1 });
+    else parts.push({ name: it.name, text: `${st.lit ? it.on : it.off}, ${turns(st.left)} left`, low: st.left <= 20 });
   }
+  if (g.allowed) {
+    const l = loadNow(m, g);
+    // past FUMBLE-NUMBER things in hand, each take may fail
+    const many = l.fumble && l.things > l.fumble ? `, ${l.things} things in hand` : "";
+    parts.push({ name: "Load", text: `${l.carry} of ${l.most}${l.hurt ? " while hurt" : ""}${many}`, low: l.most - l.carry < 10 || !!many });
+  }
+  if (g.wounds) {
+    const w = woundsNow(m, g);
+    if (w) parts.push({ name: "Wounds", text: `${w.words}, healed in ${turns(w.turns)}`, low: true });
+  }
+  // V-OPEN sets TOUCHBIT along with OPENBIT, and closing leaves it, so the
+  // count starts the first time you open the case
+  if (g.trophies && attrAt(m, g.trophies.o, g.touchbit)) parts.push({ name: "Trophy case", text: `${trophiesNow(m, g)} of ${g.trophies.total}` });
   bar.hidden = !parts.length;
   bar.replaceChildren(...parts.map((p) => {
     const span = document.createElement("span");
@@ -2625,15 +2711,15 @@ function drawLight() {
     return span;
   }));
 }
-function setLight(on) {
-  light.on = on;
-  $("lightBtn").setAttribute("aria-pressed", on);
-  try { localStorage.setItem("zmi:light", on ? "on" : "off"); } catch { /* storage is off */ }
-  if (on && !light.gauge) loadLight(); else drawLight();
+function setEnhanced(on) {
+  enhanced.on = on;
+  $("enhancedBtn").setAttribute("aria-pressed", on);
+  try { localStorage.setItem("zmi:enhanced", on ? "on" : "off"); } catch { /* storage is off */ }
+  if (on && !enhanced.gauge) loadEnhanced(); else drawEnhanced();
   requestAnimationFrame(resizeScreen);
 }
-$("lightBtn").setAttribute("aria-pressed", light.on);
-$("lightBtn").addEventListener("click", () => setLight(!light.on));
+$("enhancedBtn").setAttribute("aria-pressed", enhanced.on);
+$("enhancedBtn").addEventListener("click", () => setEnhanced(!enhanced.on));
 
 // ---------- Start ----------
 (async () => {
