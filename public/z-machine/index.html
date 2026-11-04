@@ -2872,22 +2872,35 @@ function sweepText() {
   // read as code. Working back from the end, a routine whose own bytes read as
   // prose and run on as text to the strings, and that no real routine calls,
   // was text. (Text read as code "calls" all sorts, so only real code counts.)
-  const readsAsProse = (r) => {
+  // An action routine like Zork II's BUCKET-CONT is reached only through its
+  // object's property, and its bytes can read as words too, so a property
+  // pointing at it also counts. But in Version 3 a property pointing at a
+  // string holds the same number, so the text there has to stop inside the
+  // routine: code is full of bytes that end a string, while a real string
+  // runs on past the few bytes a misread routine covers.
+  // The strings' start is itself a guess from property values, and a value
+  // that's really a number can point into the middle of a string (Zork II has
+  // one inside the robot's sales pitch). Prose that runs on over the guess
+  // counts too, and then the strings start where that prose ends.
+  const proseEnd = (r) => {
     let a = r.addr, text = "";
     while (a < stringsAt) {
       const t = s.decodeText(a, { max: 3000 });
-      if (t.bad) return false;
+      if (t.bad) return 0;
       if (a < r.end) text += t.text + " ";
       a = t.end;
       if (a % align) a += align - (a % align);
     }
     const letters = (text.match(/[A-Za-z\s]/g) || []).length;
-    return a === stringsAt && /[A-Za-z]{2}/.test(text) && letters / text.length >= 0.8 && wordy(text);
+    return /[A-Za-z]{2}/.test(text) && letters / text.length >= 0.8 && wordy(text) ? a : 0;
   };
-  let prose = routines.length;
-  while (prose > 1 && readsAsProse(routines[prose - 1])) prose--;
+  let prose = routines.length, textAt = stringsAt;
+  for (let end; prose > 1 && (end = proseEnd(routines[prose - 1])); prose--) textAt = end;
   const called = new Set(routines.slice(0, prose).flatMap((r) => r.calls));
-  while (routines.length > prose && !called.has(routines[routines.length - 1].addr)) routines.pop();
+  const inProps = new Set();
+  for (const [, p] of allProps()) if (p.len === 2) inProps.add(s.unpack(word16(p.bytes, 0), false));
+  const isCode = (r) => called.has(r.addr) || (inProps.has(r.addr) && s.decodeText(r.addr, { max: 3000 }).end <= r.end);
+  while (routines.length > prose && !isCode(routines[routines.length - 1])) routines.pop();
   const codeEnd = routines.length ? routines[routines.length - 1].end : s.h.highMem;
 
   const chain = (from, to) => {
@@ -2905,9 +2918,9 @@ function sweepText() {
   };
   // the gap between the last routine and the first string we know of is text
   // too, if reading strings from the gap lands exactly on that string
-  let from = stringsAt;
-  for (let g = codeEnd; g < stringsAt && g < codeEnd + 64; g += align - (g % align || 0) || align) {
-    if (chain(g, stringsAt) === stringsAt) { from = g; break; }
+  let from = textAt;
+  for (let g = codeEnd; g < textAt && g < codeEnd + 64; g += align - (g % align || 0) || align) {
+    if (chain(g, textAt) === textAt) { from = g; break; }
   }
   const packed = [];
   for (let a = from, misses = 0; a < len && misses < 64;) {
