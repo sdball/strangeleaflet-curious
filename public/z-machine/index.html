@@ -398,6 +398,11 @@ select {
 .rt-side h3 { font-size: 1rem; margin: 0 0 .3rem; }
 .rt-side ul { margin: 0 0 1rem; padding-left: 1.1rem; }
 .rt-side .hint { margin: 0 0 1rem; }
+/* source below a station's two columns, at full width, since ZIL lines run long */
+.src-below:empty { display: none; }
+.src-below { margin-top: 1.25rem; }
+.src-below h3 { font-size: 1rem; margin: 0 0 .3rem; }
+.src-below .zil-src { max-height: 32rem; }
 
 /* ---------- Station 10: the first run ---------- */
 .run-caption { max-width: 70ch; min-height: 7rem; }
@@ -662,6 +667,7 @@ footer p { margin: 0 0 .5rem; }
       <div class="tree-box"><ul class="tree" id="tree" aria-label="Object tree"></ul></div>
       <div class="card" id="card" aria-live="polite"></div>
     </div>
+    <div class="src-below" id="objSrc"></div>
   </section>
 
   <section class="panel" aria-labelledby="s7-h">
@@ -734,6 +740,7 @@ footer p { margin: 0 0 .5rem; }
       <div class="rt-code-box" id="rtCodeBox"><ol class="rt-code" id="rtCode" aria-label="The routine's instructions"></ol></div>
       <div class="rt-side" id="rtSide"></div>
     </div>
+    <div class="src-below" id="rtSrc"></div>
   </section>
 
   <section class="panel" id="s10" aria-labelledby="s10-h">
@@ -2142,7 +2149,7 @@ function expandTo(n) {
   for (let p = story.obj(n)?.parent, g = 0; p && g < 70000; p = story.obj(p)?.parent, g++) ui.expanded.add(p);
 }
 function renderObjects() {
-  if (!story.objs.count) { $("tree").innerHTML = ""; $("card").innerHTML = `<p>No objects could be read from this file.</p>`; return; }
+  if (!story.objs.count) { $("tree").innerHTML = ""; $("objSrc").innerHTML = ""; $("card").innerHTML = `<p>No objects could be read from this file.</p>`; return; }
   if (!story.obj(ui.obj)) {
     ui.obj = defaultObject();
     // small worlds open fully; big ones open just to the first room
@@ -2198,8 +2205,9 @@ function renderCard() {
     <p class="hint">The property table at ${hx(o.props)} starts with the name, ${s.u8(o.props) === 1 ? "one pair" : `${s.u8(o.props)} pairs`} of bytes, then lists ${o.propList.length ? `${o.propList.length} properties, highest number first` : "no properties"}. Each starts with a size byte.</p>
     ${o.propList.length ? table(o.propList) : ""}
     ${indiv}
-    ${fromTable}
-    ${sourceHtml(zil)}`;
+    ${fromTable}`;
+  // the source gets the panel's full width, below, since ZIL lines run long
+  $("objSrc").innerHTML = sourceHtml(zil);
 }
 $("tree").addEventListener("click", (e) => {
   const t = e.target.closest(".tog");
@@ -3342,8 +3350,9 @@ function renderRoutine() {
   $("rtSide").innerHTML = `
     <h3>Calls</h3>${calls.length ? list(calls.map((a) => routineLink(a))) : `<p class="hint">No routine by its address.</p>`}${viaVar ? `<p class="hint">It also calls routines whose addresses it reads from a variable, which only playing the game can follow.</p>` : ""}
     <h3>Called by</h3>${info.callers.length ? list(info.callers.map((a) => routineLink(a))) : `<p class="hint">${isStart ? "Nothing: the interpreter starts here." : "No routine calls it by its address, so it's reached through a property, a table, or a variable."}</p>`}
-    ${info.props.length ? `<h3>Kept in a property</h3>${list(info.props.slice(0, 12).map((p) => `${esc(nameOfProp(p.prop) || `property ${p.prop}`)} of ${objLink(p.obj)}`))}` : ""}
-    ${sourceHtml(name)}`;
+    ${info.props.length ? `<h3>Kept in a property</h3>${list(info.props.slice(0, 12).map((p) => `${esc(nameOfProp(p.prop) || `property ${p.prop}`)} of ${objLink(p.obj)}`))}` : ""}`;
+  // the source gets the panel's full width, below, since ZIL lines run long
+  $("rtSrc").innerHTML = sourceHtml(name);
   $("rtBack").disabled = !rtUi.history.length;
   $("rtPrev").disabled = !d.known || d.known.i === 0;
   $("rtNext").disabled = !d.known || d.known.i === idx.list.length - 1;
