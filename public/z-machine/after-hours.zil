@@ -16,11 +16,7 @@ A small curio from the Cabinet of Curios, curious.strangeleaflet.com">
 
 <ROUTINE GO ()
     <CRLF> <CRLF>
-    <TELL "The last bus drops you at the corner just as the lights go out in
-the Cabinet of Curios. Every curio on its long shelf wears a numbered paper
-tag, starting at No. 1. The curator once told you there's a No. 0 somewhere
-inside, the one that inspired the entire collection. Tonight you mean to
-find it." CR CR>
+    <TELL "Finally the last bus drops you off at the corner near the Cabinet of Curios. The little museum is closed for the day and it's time for you to work on the exhibits. This morning the curator left you a note: \"Somewhere in the building is the Z-Machine, the curio that inspired the entire collection. Please find it and hang it at the end of the shelf.\" What's a Z-Machine? I guess you'll have to find out." CR CR>
     <INIT-STATUS-LINE>
     <V-VERSION> <CRLF>
     <SETG HERE ,FRONT-STEPS>
@@ -42,7 +38,7 @@ find it." CR CR>
     (GETTING-IN "for letting yourself in")
     (WINDING "for winding the odometer")
     (SIGNALLING "for calling the back room")
-    (SHELVING "for putting No. 0 on the shelf")>
+    (SHELVING "for putting No. 21 on the shelf")>
 
 <REPLACE-DEFINITION PRINT-GAME-OVER
     <ROUTINE PRINT-GAME-OVER ()
@@ -423,7 +419,7 @@ curios.\"" CR>)>>
     (DESC "Gallery")
     (IN ROOMS)
     (LDESC "A long gallery runs the length of the building. Curios sit along
-a deep shelf, each with a paper tag on a little hook. The workshop is north,
+a deep shelf, each with a paper tag on a hook. The workshop is north,
 the telegraph office is west, and east is a narrow door to the back room with
 no handle or keyhole. The front door is south.")
     (NORTH TO WORKSHOP)
@@ -470,7 +466,7 @@ and pushing does nothing. It must be opened from somewhere else." CR>)>)
 <ROUTINE OPEN-BACK-DOOR ()
     <SETG BACK-DOOR-OPEN T>
     <PUTP ,GALLERY ,P?LDESC "A long gallery runs the length of the building.
-Curios sit along a deep shelf, each with a paper tag on a little hook. The
+Curios sit along a deep shelf, each with a paper tag on a hook. The
 workshop is north, the telegraph office is west, and the narrow door to the
 back room stands open to the east. The front door is south.">>
 
@@ -512,30 +508,30 @@ winding socket." CR>)>)>>
 
 <ROUTINE SHELF-R ()
     <COND (<VERB? EXAMINE READ>
-           <TELL "Paper tags hang in a long row down the shelf: No. 1,
-Odometers. No. 2, Morse Code. No. 3, Lehmer Codes. And on down the gallery
-into the dark. ">
+           <TELL "Paper tags hang in a long row down the shelf, from No. 1 on
+down the gallery: No. 5, Lehmer Codes. No. 6, Odometers. No. 7, Morse Code.
+And so on, to No. 20. ">
            <COND (<IN? ,BRASS-BOX ,HOOK>
-                  <TELL "At the head of the row, No. 0 hangs where it belongs." CR>)
+                  <TELL "At the end of the row, No. 21 hangs where it belongs." CR>)
                  (ELSE
-                  <TELL "At the head of the row, before No. 1, one hook is
+                  <TELL "At the end of the row, after No. 20, one hook is
 empty." CR>)>)>>
 
 <OBJECT HOOK
     (DESC "empty hook")
     (IN GALLERY)
     (SYNONYM HOOK PEG)
-    (ADJECTIVE EMPTY LITTLE FIRST)
+    (ADJECTIVE EMPTY LITTLE LAST)
     ;"listed like any object, so even the short description on a return visit
       points at it"
-    (LDESC "At the head of the shelf, before No. 1, one little hook hangs
+    (LDESC "At the end of the shelf, after No. 20, one hook hangs
 empty.")
     (FLAGS CONTBIT SURFACEBIT OPENBIT VOWELBIT)
     (ACTION HOOK-R)>
 
 <ROUTINE HOOK-R ()
     <COND (<VERB? EXAMINE>
-           <TELL "A little brass hook at the head of the shelf, before No. 1.
+           <TELL "A little brass hook at the end of the shelf, after No. 20.
 Every other hook has a tag on it. This one is waiting." CR>)
           (<AND <VERB? PUT-ON PUT-IN> <PRSI? ,HOOK>>
            <COND (<PRSO? ,BRASS-BOX> <WIN-GAME>)
@@ -806,7 +802,7 @@ much. To send a whole message, type SEND and then the dots and dashes." CR>)>>
 
 <ROUTINE MORSE-CHART-R ()
     <COND (<VERB? READ EXAMINE>
-           <TELL "A printed chart, headed \"No. 2, Morse Code\":" CR CR>
+           <TELL "A printed chart, headed \"No. 7, Morse Code\":" CR CR>
            <PRINT-MORSE-CHART>
            <TELL CR "Leave a space between letters, and a / between words." CR>)
           (<VERB? TAKE>
@@ -954,9 +950,9 @@ with a paper tag tied to it.")
 <ROUTINE BRASS-BOX-R ()
     <COND (<VERB? EXAMINE>
            <TELL "A small brass box with a Z stamped into its lid. A paper tag
-hangs from it on a loop of string. It reads: \"No. 0.\"" CR>)
+hangs from it on a loop of string. It reads: \"No. 21.\"" CR>)
           (<VERB? READ>
-           <TELL "The tag reads: \"No. 0.\" Turn it over, and in smaller
+           <TELL "The tag reads: \"No. 21.\" Turn it over, and in smaller
 letters: \"How every other story here gets told.\"" CR>)
           (<VERB? OPEN>
            <TELL "The lid is sealed. This curio explains itself without being
@@ -967,10 +963,10 @@ opened." CR>)>>
 <ROUTINE WIN-GAME ()
     <MOVE ,BRASS-BOX ,HOOK>
     <AWARD-POINTS 2 ,ACH?SHELVING>
-    <JIGS-UP "You hang the box from the empty hook at the head of the shelf.
-The paper tag turns once and settles, facing out:|
+    <JIGS-UP "You hang the box from the empty hook at the end of the shelf,
+after No. 20. The paper tag turns once and settles, facing out:|
 |
-    No. 0. The Z-Machine.|
+    No. 21. The Z-Machine.|
 |
 An imaginary computer. Write a story once for it, teach any other computer
 how to be a Z-Machine, and that same story can play anywhere.">>
