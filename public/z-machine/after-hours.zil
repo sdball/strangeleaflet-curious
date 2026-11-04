@@ -19,7 +19,7 @@ A small curio from the Cabinet of Curios, curious.strangeleaflet.com">
     <TELL "The last bus drops you at the corner just as the lights go out in
 the Cabinet of Curios. Every curio on its long shelf wears a numbered paper
 tag, starting at No. 1. The curator once told you there's a No. 0 somewhere
-inside, the one that explains how all the others work. Tonight you mean to
+inside, the one that inspired the entire collection. Tonight you mean to
 find it." CR CR>
     <INIT-STATUS-LINE>
     <V-VERSION> <CRLF>
