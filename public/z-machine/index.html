@@ -251,6 +251,8 @@ select {
 .word .grp.now { background: var(--hl); outline: 1px solid var(--accent); }
 .word .grp.now .b, .word .grp.now .zv { color: var(--hl-ink); }
 .word .addr { display: block; font: 400 .66rem var(--mono); color: var(--muted); margin-top: .2rem; text-align: center; }
+.sub-box { flex-basis: 100%; margin: .1rem 0 .3rem 1rem; padding-left: .75rem; border-left: 3px solid var(--accent); }
+.sub-lbl { margin: 0 0 .3rem; font: 600 .8rem var(--mono); color: var(--accent); }
 .steps { display: flex; flex-wrap: wrap; gap: .45rem; margin: .9rem 0 0; }
 .out {
   margin: .9rem 0 0; padding: .6rem .8rem; border-left: 3px solid var(--accent);
@@ -263,6 +265,24 @@ select {
 .alpha td { text-align: center; min-width: 1.45rem; padding: .25rem 0; border-radius: 3px; background: var(--bar); }
 .alpha td.hot { background: var(--hl); color: var(--hl-ink); font-weight: 600; outline: 1px solid var(--accent); }
 .alpha td.sp { color: var(--muted); font-size: .66rem; }
+.abbr-scroll { max-height: 24rem; overflow: auto; border: 1px solid var(--line); border-radius: 4px; margin-top: .3rem; }
+.abbr { font: 400 .8rem var(--mono); border-collapse: separate; border-spacing: 2px; }
+.abbr thead th { position: sticky; top: 0; z-index: 1; background: var(--paper); }
+.abbr th { font-weight: 400; color: var(--muted); font-size: .68rem; padding: .15rem .3rem; }
+.abbr th[scope=row] { text-align: right; }
+.abbr td { padding: 0; border-radius: 3px; background: var(--bar); }
+.abbr td button {
+  display: block; width: 100%; min-width: 9rem; min-height: 40px; padding: .25rem .45rem; text-align: left; white-space: pre;
+  background: none; border: 0; border-radius: 3px; color: inherit; font: inherit; cursor: pointer;
+}
+.abbr td button:hover { outline: 1px solid var(--edge); }
+.abbr td .n { color: var(--muted); font-size: .68rem; margin-right: .4rem; }
+.abbr td .sp { color: var(--muted); }
+.abbr td .uses { color: var(--muted); font-size: .68rem; margin-left: .4rem; }
+.abbr td.used { opacity: .6; }
+.abbr td.self { outline: 1px dashed var(--accent); }
+.abbr td.hot { background: var(--hl); color: var(--hl-ink); font-weight: 600; outline: 1px solid var(--accent); opacity: 1; }
+.abbr td.hot .n, .abbr td.hot .sp, .abbr td.hot .uses { color: inherit; }
 .stats { margin: .8rem 0 0; font-size: 1rem; color: var(--muted); max-width: 70ch; }
 
 /* ---------- Station 5: dictionary ---------- */
@@ -626,6 +646,10 @@ footer p { margin: 0 0 .5rem; }
       <select id="textPick"></select>
     </div>
     <div class="words" id="words" tabindex="0" role="group" aria-label="The string's bytes, two at a time. Left and right arrow keys step." aria-keyshortcuts="ArrowLeft ArrowRight Home End"></div>
+    <div class="sub-box" id="subBox" hidden>
+      <p class="sub-lbl" id="subLbl"></p>
+      <div class="words" id="subWords" role="group" aria-labelledby="subLbl"></div>
+    </div>
     <div class="steps">
       <button type="button" class="btn" id="stepStart" aria-keyshortcuts="S">Start over<kbd>S</kbd></button>
       <button type="button" class="btn" id="stepBack" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
@@ -636,6 +660,11 @@ footer p { margin: 0 0 .5rem; }
     <div class="out" id="textOut" aria-label="Text so far"></div>
     <h3>The three alphabets</h3>
     <div class="table-wrap"><table class="alpha" id="alpha"></table></div>
+    <div id="abbrBox">
+      <h3>The abbreviations</h3>
+      <p class="hint" id="abbrNote"></p>
+      <div class="abbr-scroll" id="abbrScroll"><table class="abbr" id="abbr"></table></div>
+    </div>
     <p class="stats" id="textStats"></p>
   </section>
 
@@ -1742,7 +1771,6 @@ $("mapbar").addEventListener("click", (e) => { const r = e.target.closest("[data
 function textChoices() {
   const list = ui.extraText ? [ui.extraText] : [];
   for (const o of story.objs.list.slice(1)) if (o.name) list.push({ key: `o${o.n}`, group: "Object names", label: `${o.n}: ${o.name}`, addr: o.nameAddr });
-  story.abbrevs.forEach((a, i) => { if (a && a.text) list.push({ key: `a${i}`, group: "Abbreviations", label: `${i}: "${a.text}"`, addr: a.addr, inAbbrev: true }); });
   for (const p of propertyStrings().slice(0, 60)) {
     const o = story.obj(p.obj);
     const short = p.text.length > 48 ? p.text.slice(0, 46).trimEnd() + "…" : p.text;
@@ -1766,6 +1794,7 @@ function renderTextPick() {
   for (const c of choices) (groups[c.group] ||= []).push(c);
   $("textPick").innerHTML = Object.entries(groups).map(([g, cs]) => `<optgroup label="${esc(g)}">${cs.map((c) =>
     `<option value="${c.key}"${c.key === ui.textKey ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</optgroup>`).join("");
+  renderAbbrTable();
   loadText();
   renderTextStats();
 }
@@ -1773,21 +1802,43 @@ function loadText() {
   const c = choices.find((x) => x.key === ui.textKey);
   if (!c) { cur = null; $("words").innerHTML = ""; $("stepCaption").textContent = "This file has no strings to step through."; return; }
   cur = story.decodeText(c.addr, { trace: true, inAbbrev: c.inAbbrev, max: 400 });
-  // each step lights the Z-characters it used
-  cur.trace.forEach((t) => { t.zpos = t.kind === "abbrev" ? [t.at, t.at + 1] : t.kind === "escape" ? [t.at, t.at + 1, t.at + 2] : [t.at]; });
-  // trailing shifts are padding
-  for (let i = cur.trace.length - 1; i >= 0 && cur.trace[i].kind === "shift"; i--) cur.trace[i].pad = true;
+  cur.self = c.inAbbrev ? c.n : -1;
+  prepTrace(cur.trace);
+  // an abbreviation is read like any string, then reading picks up where it left off,
+  // so its own steps go in between, with a step to say it's done
+  const flat = [];
+  for (const t of cur.trace) {
+    flat.push(t);
+    const a = t.kind === "abbrev" && story.abbrevs[t.n];
+    if (!a || !a.text) continue;
+    t.out = "";
+    t.text = a.text;
+    t.abbrN = t.n;
+    const sub = story.decodeText(a.addr, { trace: true, inAbbrev: true, max: 200 });
+    sub.n = t.n;
+    prepTrace(sub.trace);
+    for (const x of sub.trace) { x.sub = sub; x.abbrN = t.n; x.hold = t.zpos; flat.push(x); }
+    flat.push({ kind: "return", sub, abbrN: t.n, hold: t.zpos, zpos: [], out: "", text: a.text });
+  }
+  cur.trace = flat;
   ui.step = 0;
-  renderWords();
+  $("words").after($("subBox"));   // out of the way before the words are redrawn
+  renderWords($("words"), cur);
   renderStep();
+}
+function prepTrace(trace) {
+  // each step lights the Z-characters it used
+  trace.forEach((t) => { t.zpos = t.kind === "abbrev" ? [t.at, t.at + 1] : t.kind === "escape" ? [t.at, t.at + 1, t.at + 2] : [t.at]; });
+  // trailing shifts are padding
+  for (let i = trace.length - 1; i >= 0 && trace[i].kind === "shift"; i--) trace[i].pad = true;
 }
 $("textPick").addEventListener("change", (e) => { ui.textKey = e.target.value; loadText(); });
 
-function renderWords() {
-  $("words").innerHTML = cur.words.map((w, k) => {
+function renderWords(box, str) {
+  box.innerHTML = str.words.map((w, k) => {
     const end = (w.w >> 15) & 1;
     const g = (i) => {
-      const z = cur.zs[k * 3 + i];
+      const z = str.zs[k * 3 + i];
       return `<span class="grp g${i + 1}" data-z="${k * 3 + i}"><span class="b">${z.toString(2).padStart(5, "0")}</span><span class="zv">${z}</span></span>`;
     };
     return `<div class="word"><div class="bits"><span class="grp g0"><span class="b">${end}</span><span class="zv">${end ? "end" : ""}</span></span>${g(0)}${g(1)}${g(2)}</div><span class="addr">${hx(w.addr)}: ${hex(w.w)}</span></div>`;
@@ -1798,6 +1849,10 @@ const ALPHA_NAME = ["A0, lower case", "A1, capitals", "A2, punctuation"];
 function stepText(t) {
   const a = ALPHA_NAME[t.alpha];
   const shown = (ch) => (ch === " " ? "a space" : ch === "\n" ? "a new line" : `“${esc(ch)}”`);
+  const inside = t.sub && t.kind !== "return" ? `Inside abbreviation ${t.abbrN}: ` : "";
+  return inside + plainStep(t, a, shown);
+}
+function plainStep(t, a, shown) {
   switch (t.kind) {
     case "char": return `Z-character ${t.z} in ${a}, is ${shown(t.out)}.${t.alpha && cur.trace[cur.trace.indexOf(t) - 1]?.kind === "shift" ? " The shift only lasts for this one character." : ""}`;
     case "space": return `Z-character 0 is always a space, whatever the alphabet.`;
@@ -1805,7 +1860,15 @@ function stepText(t) {
       ? `Z-character ${t.z} at the very end is padding. The last pair of bytes always holds three Z-characters, so empty places are filled with ${t.z}s.`
       : story.v >= 3 ? `Z-character ${t.z} shifts to ${ALPHA_NAME[t.to]} for the next character only.` : `Z-character ${t.z} shifts to ${ALPHA_NAME[t.to]} for the next character only.`;
     case "lock": return `Z-character ${t.z} locks the shift: everything after it comes from ${ALPHA_NAME[t.to]} until the next lock.`;
-    case "abbrev": return `Z-characters ${t.z} and ${t.next} point to an abbreviation: 32 × (${t.z} − 1) + ${t.next} = ${t.n}. Abbreviation ${t.n} is ${shown(t.out)}, ${t.out.length} characters for the price of two Z-characters.`;
+    case "abbrev": {
+      const a = story.abbrevs[t.n], at = story.h.abbrevs + 2 * t.n;
+      if (!t.text) return `Z-characters ${t.z} and ${t.next} point to abbreviation ${t.n}, but there's nothing there to read.`;
+      return `Z-characters ${t.z} and ${t.next} point to an abbreviation: 32 × (${t.z} − 1) + ${t.next} = ${t.n}. Entry ${t.n} in the abbreviations table, at ${hx(at)}, holds ${hx(a.addr / 2)}. It counts in pairs of bytes, so the string is at ${hx(a.addr)}. The interpreter reads that string now, then comes back here.`;
+    }
+    case "return": {
+      const last = t.sub.words[t.sub.words.length - 1];
+      return `The top bit of the pair at ${hx(last.addr)} is 1, so abbreviation ${t.abbrN} ends here. It added ${shown(t.text)}, ${t.text.length} characters for the price of two Z-characters. Reading carries on in the outer string, right after the two that pointed here.`;
+    }
     case "escape": return `Z-character 6 in A2 is an escape for a character no alphabet has. The next two Z-characters, ${t.hi} and ${t.lo}, make one 10-bit code: ${t.hi} × 32 + ${t.lo} = ${t.code}, which is ${shown(t.out)}.`;
     case "newline": return `Z-character ${t.z} in A2 is a new line.`;
     case "cut": return `The string ends partway through a multi-character code, so it's cut short here.`;
@@ -1817,23 +1880,48 @@ function renderStep() {
   if (!cur) return;
   const n = cur.trace.length, k = ui.step;
   const t = k > 0 ? cur.trace[k - 1] : null;
-  const done = new Set(), now = new Set(t ? t.zpos : []);
-  for (let i = 0; i < k - 1; i++) cur.trace[i].zpos.forEach((z) => done.add(z));
-  $("words").querySelectorAll(".grp[data-z]").forEach((el) => {
-    const z = +el.dataset.z;
-    el.classList.toggle("now", now.has(z));
-    el.classList.toggle("done", done.has(z) && !now.has(z));
-  });
+  // the outer string's Z-characters, and the abbreviation's while inside one
+  const sub = t?.sub || null;
+  const done = new Set(), now = new Set(t ? (sub ? t.hold : t.zpos) : []);
+  const subDone = new Set(), subNow = new Set(sub ? t.zpos : []);
+  for (let i = 0; i < k - 1; i++) {
+    const x = cur.trace[i];
+    if (!x.sub) x.zpos.forEach((z) => done.add(z));
+    else if (x.sub === sub) x.zpos.forEach((z) => subDone.add(z));
+  }
+  light($("words"), done, now);
+  $("subBox").hidden = !sub;
+  if (sub) {
+    // open the abbreviation right under the pair that points to it
+    const pairEnd = $("words").querySelector(`:scope > .word .grp[data-z="${t.hold[1]}"]`)?.closest(".word");
+    if (pairEnd && pairEnd.nextSibling !== $("subBox")) pairEnd.after($("subBox"));
+    if (shownSub !== sub) {
+      shownSub = sub;
+      renderWords($("subWords"), sub);
+      $("subLbl").textContent = `Abbreviation ${sub.n}, at ${hx(sub.start)}`;
+    }
+    if (t.kind === "return") sub.trace.forEach((x) => x.zpos.forEach((z) => subDone.add(z)));
+    light($("subWords"), subDone, subNow);
+  }
   const before = cur.trace.slice(0, Math.max(0, k - 1)).map((x) => x.out).join("");
   const last = t ? t.out : "";
   $("textOut").innerHTML = esc(before) + (last ? `<mark>${esc(last)}</mark>` : "") + (k === 0 ? `<span style="opacity:.55">(nothing yet)</span>` : "");
   const lastWord = cur.words[cur.words.length - 1];
   $("stepCaption").innerHTML = k === 0
-    ? `${cur.words.length} pairs of bytes, ${cur.zs.length} Z-characters. The top bit of the pair at ${hx(lastWord.addr)} is 1, so that's the last. Press Step or <kbd>N</kbd> to read the first Z-character, and Back or <kbd>B</kbd> to undo one.`
+    ? `${cur.self >= 0 ? `This is abbreviation ${cur.self} on its own. A game never prints one by itself: the interpreter only reaches it from inside another string. ` : ""}${cur.words.length} pairs of bytes, ${cur.zs.length} Z-characters. The top bit of the pair at ${hx(lastWord.addr)} is 1, so that's the last. Press Step or <kbd>N</kbd> to read the first Z-character, and Back or <kbd>B</kbd> to undo one.`
     : `Step ${k} of ${n}. ${stepText(t)}${k === n ? ` That's the whole string: ${cur.text.length} characters from ${cur.words.length * 2} bytes.` : ""}`;
   $("stepStart").disabled = $("stepBack").disabled = k === 0;
   $("stepNext").disabled = $("stepEnd").disabled = k === n;
   renderAlpha(t);
+  renderAbbr(t, k);
+}
+let shownSub = null;
+function light(box, done, now) {
+  box.querySelectorAll(":scope > .word .grp[data-z]").forEach((el) => {
+    const z = +el.dataset.z;
+    el.classList.toggle("now", now.has(z));
+    el.classList.toggle("done", done.has(z) && !now.has(z));
+  });
 }
 function goStep(k) { if (!cur) return; ui.step = Math.max(0, Math.min(cur.trace.length, k)); renderStep(); }
 $("stepStart").addEventListener("click", () => goStep(0));
@@ -1865,6 +1953,83 @@ function renderAlpha(t) {
   }
   $("alpha").innerHTML = html + `</tbody>`;
 }
+
+// the first Z-character picks a column and the second a row, the way the formula reads
+function renderAbbrTable() {
+  const list = story.abbrevs, cols = list.length / 32;
+  $("abbrBox").hidden = !cols;
+  if (!cols) return;
+  const uses = usingNames() ? names.abbreviations : null;
+  $("abbrNote").innerHTML = `Z-character ${cols > 1 ? "1, 2, or 3" : "1"} picks the column and the Z-character after it picks the row, so abbreviation <span class="v">n</span> = 32 × (column − 1) + row. Each one is an ordinary packed string somewhere else in the file. A dot marks a space.${uses ? " The small number is how often the compiler used it in this game's text." : ""} Pick one to step through its own Z-characters. Arrow keys move around the table.`;
+  let html = `<thead><tr><th scope="col">Z</th>`;
+  for (let c = 1; c <= cols; c++) html += `<th scope="col">${c}</th>`;
+  html += `</tr></thead><tbody>`;
+  for (let r = 0; r < 32; r++) {
+    html += `<tr><th scope="row">${r}</th>`;
+    for (let c = 1; c <= cols; c++) {
+      const n = 32 * (c - 1) + r, a = list[n];
+      const text = a ? esc(a.text).replace(/ /g, `<span class="sp">·</span>`).replace(/\n/g, `<span class="sp">↵</span>`) : "";
+      const u = uses?.[n]?.uses;
+      const say = a ? `Abbreviation ${n}: “${esc(a.text)}”${u ? `, used ${u} times` : ""}. Step through it.` : `Abbreviation ${n}, empty`;
+      html += `<td data-n="${n}"><button type="button" data-n="${n}" tabindex="-1" aria-label="${say}"${a?.text ? "" : " disabled"}><span class="n">${n}</span>${text}${u ? `<span class="uses">×${u}</span>` : ""}</button></td>`;
+    }
+    html += `</tr>`;
+  }
+  $("abbr").innerHTML = html + `</tbody>`;
+}
+function renderAbbr(t, k) {
+  if ($("abbrBox").hidden || !cur) return;
+  const used = new Set(cur.trace.slice(0, Math.max(0, k - 1)).filter((x) => x.kind === "abbrev").map((x) => x.n));
+  const self = cur.self;
+  let hot = null;
+  $("abbr").querySelectorAll("td[data-n]").forEach((el) => {
+    const n = +el.dataset.n, isHot = t?.abbrN === n || (t?.kind === "abbrev" && t.n === n);
+    el.classList.toggle("hot", isHot);
+    el.classList.toggle("used", used.has(n) && !isHot);
+    el.classList.toggle("self", n === self);
+    const btn = el.firstElementChild;
+    if (n === self) btn.setAttribute("aria-current", "true"); else btn.removeAttribute("aria-current");
+    if (isHot || (!t && n === self)) hot = el;
+  });
+  // one tab stop for the whole table; arrows move it
+  if (!$("abbr").querySelector('button[tabindex="0"]')) {
+    const first = $("abbr").querySelector(`button[data-n="${self >= 0 ? self : 0}"]`);
+    if (first) first.tabIndex = 0;
+  }
+  // keep the lit cell in view inside the box, without moving the page
+  if (hot) {
+    const box = $("abbrScroll"), r = hot.getBoundingClientRect(), br = box.getBoundingClientRect();
+    const head = $("abbr").tHead.offsetHeight;
+    if (r.top < br.top + head) box.scrollTop -= br.top + head - r.top + 4;
+    else if (r.bottom > br.bottom) box.scrollTop += r.bottom - br.bottom + 4;
+  }
+}
+
+function pickAbbrev(n) {
+  const a = story.abbrevs[n];
+  if (!a || !a.text) return;
+  ui.extraText = { key: `a${n}`, group: "Picked from the abbreviations", label: `${n}: “${a.text}”`, addr: a.addr, inAbbrev: true, n };
+  ui.textKey = ui.extraText.key;
+  renderTextPick();
+  const b = $("abbr").querySelector(`button[data-n="${n}"]`);
+  if (b) { roveTo(b); b.focus({ preventScroll: true }); }
+  $("textPick").scrollIntoView({ block: "nearest", behavior: reduceMotion() ? "auto" : "smooth" });
+}
+function roveTo(b) {
+  $("abbr").querySelectorAll('button[tabindex="0"]').forEach((x) => (x.tabIndex = -1));
+  b.tabIndex = 0;
+}
+$("abbr").addEventListener("click", (e) => { const b = e.target.closest("button[data-n]"); if (b) pickAbbrev(+b.dataset.n); });
+$("abbr").addEventListener("keydown", (e) => {
+  const b = e.target.closest("button[data-n]");
+  if (!b || e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = +b.dataset.n, max = story.abbrevs.length - 1;
+  const to = { ArrowDown: n + 1, ArrowUp: n - 1, ArrowRight: n + 32, ArrowLeft: n - 32, Home: 0, End: max }[e.key];
+  if (to === undefined) return;
+  e.preventDefault();
+  const next = $("abbr").querySelector(`button[data-n="${Math.max(0, Math.min(max, to))}"]`);
+  if (next) { roveTo(next); next.focus(); }
+});
 
 function renderTextStats() {
   // over every string this page found: names, abbreviations, descriptions
