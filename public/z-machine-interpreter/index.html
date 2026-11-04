@@ -1679,8 +1679,11 @@ function disarm() {
 
 // ---------- Full screen ----------
 // The browser's own full screen where it has one; where it doesn't (an
-// iPhone), the computer still fills the browser window.
+// iPhone), the computer still fills the browser window. A touch screen
+// fills the window too: iPad Safari leaves its full screen as soon as the
+// on-screen keyboard comes up, which closed the computer the moment it opened.
 const machine = $("machine");
+const touchFirst = matchMedia("(pointer: coarse)").matches;
 const isFull = () => machine.classList.contains("full");
 function setFull(on) {
   if (on === isFull()) return;
@@ -1688,7 +1691,7 @@ function setFull(on) {
   document.documentElement.classList.toggle("full-on", on);
   $("fullBtn").setAttribute("aria-pressed", on);
   const root = document.documentElement;
-  if (on && root.requestFullscreen && !document.fullscreenElement) root.requestFullscreen().catch(() => { /* the window will do */ });
+  if (on && root.requestFullscreen && !touchFirst && !document.fullscreenElement) root.requestFullscreen().catch(() => { /* the window will do */ });
   if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
   fitViewport();
   requestAnimationFrame(resizeScreen);
