@@ -587,6 +587,10 @@ function flicker(el) {
 
 function frotz(targets) {
   if (!targets.length) return say("What do you want to frotz?");
+  // zork's lantern is the thing most in need of the spell
+  if (["lamp", "lantern"].some((w) => targets.includes(w))) {
+    return say("There's no lamp here. The brass lantern in Zork could use the help, though: it runs down as you play. Get zork to light your way.");
+  }
   if (targets.length > 1) return say("You can only frotz one thing at a time.");
 
   const fade = "flickers with a brief, warm light, then fades. The magic here seems thin.";
@@ -610,6 +614,11 @@ function frotz(targets) {
   }
 
   const c = findCurio(targets);
+  // frotz is also the name of a well-known z-machine interpreter
+  if (c && c.id === "z-machine-interpreter") {
+    flicker(terminal);
+    return say("The Z-Machine Interpreter begins to glow, and the glow holds steady. It seems pleased to be asked: Frotz is the name of another Z-machine interpreter, one of the best known. Get interpreter and play by its light.");
+  }
   if (c) {
     flicker(terminal);
     return say(`The ${c.name} ` + fade);
