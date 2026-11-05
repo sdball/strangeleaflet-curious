@@ -685,7 +685,7 @@ footer p { margin: 0 0 .5rem; }
   </section>
 
   <!-- 6. Objects -->
-  <section class="panel" aria-labelledby="s6-h">
+  <section class="panel" id="s6" aria-labelledby="s6-h">
     <div class="panel-head">
       <p class="station">Station 6</p>
       <h2 id="s6-h">Rooms and things: the object tree</h2>
@@ -4412,7 +4412,16 @@ function renderAll() {
   renderRunStart();
 }
 
-loadStory(STORIES[location.hash.slice(1)] ? location.hash.slice(1) : "after-hours");
+// The address can name a built-in story, and an object in it for Station 6:
+// #zork1&object=45. The interpreter's Inside panel links here that way.
+(async () => {
+  const p = new URLSearchParams(location.hash.slice(1));
+  await loadStory([...p.keys()].find((k) => STORIES[k]) || "after-hours");
+  const n = Number(p.get("object"));
+  if (!n || !story?.obj(n)) return;
+  pickObject(n, true);
+  $("s6").scrollIntoView();
+})();
 </script>
 </body>
 </html>

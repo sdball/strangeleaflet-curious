@@ -20,10 +20,9 @@ for w in walkthrough-*.txt dark-moves.txt; do
   fi
 done
 [ $status -eq 0 ] || exit $status
-for dir in ../../public/z-machine; do
+# the interpreter's Inside panel reads the names too
+for dir in ../../public/z-machine ../../public/z-machine-interpreter; do
   cp after-hours.z3 "$dir/"
   ./names . "$dir/after-hours-names.json" >/dev/null
 done
-# the interpreter plays the story file and needs no names
-cp after-hours.z3 ../../public/z-machine-interpreter/
 echo "copied after-hours.z3 ($(wc -c < after-hours.z3 | tr -d ' ') bytes) and after-hours-names.json"
