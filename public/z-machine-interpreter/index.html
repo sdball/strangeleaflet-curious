@@ -666,6 +666,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
       <li><b>One command is thousands of instructions.</b> Typing <kbd>take leaflet</kbd> at the start of Zork I runs about 1,650 of them, through 37 routines: the parser matching your words, the checks on whether you can reach the leaflet, the take itself, and then each timer and creature on the game's clock, the thief among them. In the <b>Inspector</b>, <b>This turn</b> lists the routines in the order they were first called, and what the command moved, switched, and changed.</li>
       <li><b><kbd>x</kbd> means examine, even where the game never heard of it.</b> The Zorks want <kbd>examine lamp</kbd> or <kbd>look at lamp</kbd>, and many players now type <kbd>x lamp</kbd> without thinking. When a game's dictionary has no <kbd>x</kbd>, the interpreter passes <kbd>examine</kbd> in its place at the start of each command. The game itself is unchanged.</li>
+      <li><b>A game can keep time while you type.</b> From Version 4, a game asking for a line or a key can also name a routine and a time, in tenths of a second. Each time that runs out, the interpreter calls the routine while your half-typed line waits. The routine may print something, and you carry on typing below it, or it may end your line where it stands. A Version 5 game can then hand back what you'd typed, and this page puts it back in the input for you to finish.</li>
+      <li><b>Each screen shows colours its own way.</b> From Version 5 a game can ask for eight named colours, or any of 32,768 more. The desk shows them as the Standard lists them, and the Atari 800 uses its own palette, with its own blue. The green screen shows the same colours with a touch of its green mixed in. The printout prints letters in coloured inks and leaves backgrounds as paper, since a ribbon can't print white. A game that clears the screen in its colours gets the whole screen in them, the way <i>Photopia</i> changes colour from scene to scene.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
@@ -694,7 +696,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <section class="sources" aria-labelledby="sources-h">
     <h2 id="sources-h">Sources</h2>
     <ul>
-      <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, and §8.2 on the status line), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
+      <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, §8.2 on the status line, and §8.3 on colours), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code> and its timed interrupts, <code>set_colour</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
       <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and the three Zorks for this page. <a href="https://zilf.io/">zilf.io</a>.</li>
       <li>Tim Anderson, Marc Blank, Bruce Daniels, and Dave Lebling, Zork I source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork1">github.com/historicalsource/zork1</a>.</li>
       <li>Marc Blank, Dave Lebling, Bruce Daniels, and Tim Anderson, Zork II and Zork III source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork2">github.com/historicalsource/zork2</a> and <a href="https://github.com/historicalsource/zork3">zork3</a>.</li>
@@ -995,7 +997,7 @@ function decodeAt(s, addr) {
 // The Standard's §15 describes every opcode. Started from the analyzer's
 // Station 10 machine, which runs up to the first prompt; this one also reads
 // what you type, saves, restores, and undoes. Fix both copies together.
-const SCREEN = { width: 80, height: 24 };
+const SCREEN = { width: 80, height: 24, paper: 2, ink: 9 };
 const s16 = (x) => (x & 0x8000 ? x - 0x10000 : x);
 class Halt { constructor(why, text = "") { this.why = why; this.text = text; } }
 const STYLE = { reverse: 1, bold: 2, italic: 4, fixed: 8, typed: 16, meta: 32 };
@@ -1024,6 +1026,9 @@ function resetMachine(m, restarting) {
   m.upper = [];
   m.win = 0; m.row = 1; m.col = 1;
   m.style = 0;
+  m.fg = 0; m.bg = 0;    // the current colours, 0 for the screen's own
+  m.paper = 0;           // the colours the lower window was last cleared to
+  m.paused = null;       // the input a timed interrupt broke into
   m.status = null;
   m.upperObj = 0;
   m.saidObjs = new Set();
@@ -1038,10 +1043,10 @@ function resetMachine(m, restarting) {
 function setUpHeader(m) {
   const { mem, v } = m;
   if (v <= 3) mem[1] = (mem[1] & ~0x70) | 0x20;     // a status line, a split screen, fixed-pitch text
-  else mem[1] = (mem[1] & 0x40) | 0x1C;             // bold, italic and fixed-pitch, no colours or timed input
-  // Flags 2: keep the game's request for undo, since this page can; turn
-  // off pictures, mouse, colours and sound
-  mem[0x11] &= v >= 5 ? ~0xE9 : ~0x01;
+  else mem[1] = (mem[1] & 0x40) | 0x9C | (v >= 5 ? 1 : 0); // bold, italic, fixed-pitch, timed input, and from Version 5 colours
+  // Flags 2: keep the game's requests for undo and colours, since this page
+  // can do both; turn off pictures, mouse and sound
+  mem[0x11] &= v >= 5 ? ~0xA9 : ~0x01;
   if (v >= 4) {
     mem[0x1E] = 6; mem[0x1F] = 65;
     mem[0x20] = SCREEN.height; mem[0x21] = SCREEN.width;
@@ -1049,7 +1054,7 @@ function setUpHeader(m) {
   if (v >= 5) {
     mem[0x22] = 0; mem[0x23] = SCREEN.width; mem[0x24] = 0; mem[0x25] = SCREEN.height;
     mem[0x26] = 1; mem[0x27] = 1;
-    mem[0x2C] = 2; mem[0x2D] = 9;                    // black and white
+    mem[0x2C] = SCREEN.paper; mem[0x2D] = SCREEN.ink;  // the screen's own colours, as near as the game's numbers come
   }
   mem[0x32] = 1; mem[0x33] = 1;                      // Standard 1.1
 }
@@ -1129,13 +1134,20 @@ function objName(m, o) {
 // The upper window is a grid of cells, as wide as the screen.
 const MAX_LINES = 3000;
 function clearLower(m) { m.lines = [[]]; m.trimmed = 0; m.clears++; }
-function emitLower(m, text, style = m.style) {
+// Colours ride along with each run and cell as one number: the
+// foreground, plus the background times 0x20000. Each is 0 for the
+// screen's own colour, 2 to 12 for the Standard's named colours (§8.3.1),
+// or 0x10000 plus a 15-bit true colour (§8.3.7).
+const tint = (m) => m.fg + m.bg * 0x20000;
+const fgOf = (c) => c % 0x20000, bgOf = (c) => Math.floor(c / 0x20000);
+function emitLower(m, text, style = m.style, c = tint(m)) {
   const parts = text.split("\n");
   parts.forEach((p, i) => {
     if (i) m.lines.push([]);
     if (!p) return;
     const line = m.lines[m.lines.length - 1], last = line[line.length - 1];
-    if (last && last.s === style) last.t += p; else line.push({ t: p, s: style });
+    if (last && last.s === style && (last.c || 0) === c) last.t += p;
+    else line.push(c ? { t: p, s: style, c } : { t: p, s: style });
   });
   if (m.lines.length > MAX_LINES) { const cut = m.lines.length - MAX_LINES + 500; m.lines.splice(0, cut); m.trimmed += cut; }
 }
@@ -1150,12 +1162,26 @@ function emit(m, text) {
   if (m.win === 1) {
     for (const ch of text) {
       if (ch === "\n") { m.row++; m.col = 1; continue; }
-      if (m.row >= 1 && m.row <= m.upper.length && m.col >= 1 && m.col <= SCREEN.width) m.upper[m.row - 1][m.col - 1] = [ch, m.style];
+      if (m.row >= 1 && m.row <= m.upper.length && m.col >= 1 && m.col <= SCREEN.width) m.upper[m.row - 1][m.col - 1] = [ch, m.style, tint(m)];
       m.col++;
     }
   } else emitLower(m, text);
 }
-const blankRow = () => Array.from({ length: SCREEN.width }, () => [" ", 0]);
+const blankRow = (c = 0) => Array.from({ length: SCREEN.width }, () => [" ", 0, c]);
+// Clearing paints the background colour, never reversed (§8.7.3.2), and
+// the lower window's colours become the screen's (§8.7.3.3).
+function eraseWindow(m, w) {
+  const paper = m.bg * 0x20000;
+  if (w === -1 || w === -2 || w === 0) { clearLower(m); m.paper = tint(m); }
+  if (w === -1) { m.upper = []; m.win = 0; }
+  if (w === -2 || w === 1) m.upper = m.upper.map(() => blankRow(paper));
+}
+// set_colour (§15) takes 0 for the current colour and 1 for the default;
+// set_true_colour takes -2 and -1 for those, and 15-bit colours.
+function pickColour(n, cur, isTrue) {
+  if (isTrue) { n = s16(n); return n === -1 ? 0 : n === -2 ? cur : n >= 0 ? 0x10000 | (n & 0x7FFF) : cur; }
+  return n === 1 ? 0 : n >= 2 && n <= 12 ? n : cur;
+}
 function splitWindow(m, n) {
   // Version 3 clears the upper window when it's made (§8.6.1)
   m.upper = Array.from({ length: n }, (_, i) => (m.v > 3 && m.upper[i] ? m.upper[i] : blankRow()));
@@ -1195,6 +1221,9 @@ function returnWith(m, x) {
   if (!f || f.ret === null) throw new Halt("error", "The game returned from its first routine, which the machine doesn't allow.");
   m.stack.length = f.stackLen;
   m.pc = f.ret;
+  // a timed interrupt's routine hands its answer to the page, and the game
+  // goes back to waiting for the same input
+  if (f.interrupt) { m.waiting = m.paused; m.paused = null; m.timerSaid = x; throw new Halt("timer"); }
   if (f.store !== undefined) setVar(m, f.store, x);
 }
 function branchOn(m, ins, cond) {
@@ -1239,9 +1268,42 @@ function tokenise(m, text, parse, dictAddr, skipUnknown) {
     mem[e + 3] = at + (start - text);
   }
 }
+// From Version 4, read and read_char may ask for a routine to be called
+// every so many tenths of a second while you type (§15, read). If the
+// routine returns true, the input ends there.
+function inputTimer(m) {
+  const w = m.waiting;
+  if (!w || m.v < 4 || (w.kind !== "line" && w.kind !== "char")) return null;
+  const [tenths, routine] = w.kind === "line" ? w.vals.slice(2, 4) : w.vals.slice(1, 3);
+  return tenths && routine ? { tenths, routine } : null;
+}
+// The page calls this when the time is up. The routine runs on top of
+// whatever the game was doing, and returnWith hands its answer back.
+function startInterrupt(m) {
+  const t = inputTimer(m);
+  if (!t || m.paused) return false;
+  m.paused = m.waiting;
+  m.waiting = null;
+  m.halted = null;
+  callRoutine(m, t.routine, [], undefined);
+  frameTop(m).interrupt = true;
+  return true;
+}
+// Version 5 games may leave characters in the text buffer from an
+// interrupted line, to be carried on with (§15, read). The game has
+// already put them on the screen, if it wants them there.
+function leftOver(m) {
+  const w = m.waiting;
+  if (!w || w.kind !== "line" || m.v < 5) return "";
+  const text = w.vals[0], n = Math.min(m.mem[text + 1], m.mem[text]);
+  let out = "";
+  for (let i = 0; i < n; i++) out += m.s.zscii(m.mem[text + 2 + i]);
+  return out;
+}
 // The line goes into the game's text buffer in lower case, then gets split
-// into words (§15, read). Returns false if the game isn't waiting for a line.
-function finishLine(m, line) {
+// into words (§15, read). Returns false if the game isn't waiting for a
+// line. A line cut short by a timed interrupt ends with 0, not Enter.
+function finishLine(m, line, term = 13) {
   const w = m.waiting;
   if (!w || w.kind !== "line") return false;
   const [text, parse] = w.vals, mem = m.mem;
@@ -1257,7 +1319,7 @@ function finishLine(m, line) {
   if (parse) tokenise(m, text, parse, 0, false);
   m.waiting = null;
   m.halted = null;
-  if (w.ins.store !== undefined) setVar(m, w.ins.store, 13);
+  if (w.ins.store !== undefined) setVar(m, w.ins.store, term);
   return true;
 }
 function finishChar(m, code) {
@@ -1279,6 +1341,7 @@ function snapshot(m) {
     frames: m.frames.map((f) => ({ ...f, locals: f.locals.slice() })), pc: m.pc,
     waiting: m.waiting ? { kind: m.waiting.kind, addr: m.waiting.ins.addr, vals: m.waiting.vals.slice() } : null,
     status: m.status, upper: m.upper.map((r) => r.map((c) => c.slice())), win: m.win, row: m.row, col: m.col, style: m.style,
+    fg: m.fg, bg: m.bg, paper: m.paper,
   };
 }
 function applySnapshot(m, snap) {
@@ -1292,6 +1355,8 @@ function applySnapshot(m, snap) {
   m.status = snap.status || null;
   m.upper = (snap.upper || []).map((r) => r.map((c) => c.slice()));
   m.win = snap.win || 0; m.row = snap.row || 1; m.col = snap.col || 1; m.style = snap.style || 0;
+  m.fg = snap.fg || 0; m.bg = snap.bg || 0; m.paper = snap.paper || 0;
+  m.paused = null;
   m.streams = [];
   m.screenOn = true;
   m.waiting = snap.waiting ? { kind: snap.waiting.kind, ins: decodeAt(m.s, snap.waiting.addr), vals: snap.waiting.vals.slice() } : null;
@@ -1495,14 +1560,9 @@ function stepMachine(m) {
     case "show_status": drawStatus(m); break;
     case "split_window": splitWindow(m, a); break;
     case "set_window": m.win = a; if (a === 1) { m.row = 1; m.col = 1; } break;
-    case "erase_window":
-      if (s16(a) === -1) { clearLower(m); m.upper = []; m.win = 0; }
-      else if (s16(a) === -2) { clearLower(m); m.upper = m.upper.map(blankRow); }
-      else if (a === 0) clearLower(m);
-      else if (a === 1) m.upper = m.upper.map(blankRow);
-      break;
+    case "erase_window": eraseWindow(m, s16(a)); break;
     case "erase_line":
-      if (a === 1 && m.win === 1 && m.upper[m.row - 1]) for (let i = m.col - 1; i < SCREEN.width; i++) m.upper[m.row - 1][i] = [" ", m.style];
+      if (a === 1 && m.win === 1 && m.upper[m.row - 1]) for (let i = m.col - 1; i < SCREEN.width; i++) m.upper[m.row - 1][i] = [" ", 0, m.bg * 0x20000];
       break;
     case "set_cursor": if (m.win === 1) { m.row = s16(a); m.col = b; } break;
     case "get_cursor": wr(m, a, m.row); wr(m, a + 2, m.col); break;
@@ -1516,14 +1576,21 @@ function stepMachine(m) {
       break;
     }
     case "set_font": store(a === 1 || a === 4 ? 1 : 0); break;
-    case "buffer_mode": case "input_stream": case "sound_effect":
-    case "set_colour": case "set_true_colour": case "set_margins":
+    case "set_colour": case "set_true_colour": {
+      const isTrue = name === "set_true_colour";
+      m.fg = pickColour(a, m.fg, isTrue);
+      m.bg = pickColour(b, m.bg, isTrue);
+      break;
+    }
+    case "buffer_mode": case "input_stream": case "sound_effect": case "set_margins":
       break;
     case "sread": case "aread":
+      if (m.paused) throw new Halt("error", "The game asked for a line inside its own timed interrupt.");
       drawStatus(m);       // Versions 1 to 3 redraw it before reading (§8.2.4)
       m.waiting = { kind: "line", ins, vals };
       throw new Halt("input");
     case "read_char":
+      if (m.paused) throw new Halt("error", "The game asked for a key inside its own timed interrupt.");
       m.waiting = { kind: "char", ins, vals };
       throw new Halt("char");
     case "quit": throw new Halt("quit");
@@ -1562,6 +1629,9 @@ const game = {
   snaps: [],             // the state at each line you were asked for, for Undo
   lastCmd: "",
   timer: 0, clears: -1, base: 0, shown: 0, mark: null,
+  tick: 0,               // the next timed interrupt, when the game asked for one
+  cutShort: false,       // the last line was ended by the game's timer, not by you
+  paper: "",             // the colours the screen was last painted
 };
 const cmd = $("cmd");
 const store = {
@@ -1574,12 +1644,78 @@ const storyId = (s) => `${s.h.release}.${s.h.serial.replace(/[^0-9A-Za-z]/g, "_"
 const autoKey = () => `zmi:auto:${game.key}`;
 const savesKey = () => `zmi:saves:${game.key}`;
 
+// ---------- Colours ----------
+// Each screen shows a game's colours its own way. The desk shows the
+// Standard's own values (§8.3.1), and the Atari its own palette, with its
+// own blue. The green screen shows the desk's colours with a little of its
+// phosphor green mixed in. The printout has a colour ribbon on plain
+// paper: letters print in deep inks, and backgrounds stay paper.
+const STANDARD_COLOURS = { 2: 0x0000, 3: 0x001D, 4: 0x0340, 5: 0x03BD, 6: 0x59A0, 7: 0x7C1F, 8: 0x77A0, 9: 0x7FFF, 10: 0x5AD6, 11: 0x4631, 12: 0x2D6B };
+const ATARI_COLOURS = { 2: "#000000", 3: "#C04434", 4: "#4CA43C", 5: "#E0D058", 6: "#1A4FA3", 7: "#B04CB4", 8: "#48B4C8", 9: "#F2F6FF", 10: "#B0B0B0", 11: "#808080", 12: "#505050" };
+const PHOSPHOR = "#3CFF6E";
+const RIBBON = "#26221C";
+const trueOf = (v) => (v < 0x10000 ? STANDARD_COLOURS[v] : v & 0x7FFF);
+const rgbOf = (t) => [t & 31, (t >> 5) & 31, (t >> 10) & 31].map((x) => Math.round((x * 255) / 31));
+const rgbCss = (v) => `rgb(${rgbOf(trueOf(v)).join(" ")})`;
+// how much light a colour gives off, from 0 for black to 1 for white
+function lightOf(v) {
+  const [r, g, b] = rgbOf(trueOf(v)).map((x) => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const greenish = (css) => (css ? `color-mix(in oklab, ${css} 82%, ${PHOSPHOR})` : "");
+// A foreground and background, 0 for the screen's own, as CSS colours for
+// the screen showing now; "" leaves the screen's own colour.
+function colourPair(fv, bv) {
+  if (!fv && !bv) return ["", ""];
+  const screen = $("machine").dataset.screen;
+  if (screen === "atari") return [fv < 0x10000 ? ATARI_COLOURS[fv] || "" : rgbCss(fv), bv < 0x10000 ? ATARI_COLOURS[bv] || "" : rgbCss(bv)];
+  if (screen === "green") return [greenish(fv ? rgbCss(fv) : ""), greenish(bv ? rgbCss(bv) : "")];
+  if (screen === "printout") {
+    // a ribbon can't print white: pale letters come out in its black
+    if (!fv || lightOf(fv) > 0.9) return ["", ""];
+    return [`color-mix(in oklab, ${rgbCss(fv)} 70%, ${RIBBON})`, ""];
+  }
+  return [fv ? rgbCss(fv) : "", bv ? rgbCss(bv) : ""];
+}
+function paintRun(span, c, reverse) {
+  let [f, b] = colourPair(fgOf(c), bgOf(c));
+  if (!f && !b) return;
+  if (reverse) [f, b] = [b || "var(--screen)", f || "var(--screen-ink)"];
+  if (f) span.style.color = f;
+  if (b) span.style.background = b;
+}
+// A game that clears the screen in its own colours gets the whole screen
+// in them, the way an interpreter fills the window (§8.7.3.3).
+function paintPaper() {
+  const m = game.m, scr = $("screen");
+  const [f, b] = colourPair(fgOf(m.paper), bgOf(m.paper));
+  const key = `${f}|${b}`;
+  if (key === game.paper) return;
+  game.paper = key;
+  for (const v of ["--screen", "--screen-ink", "--typed", "--screen-dim", "--glow"]) scr.style.removeProperty(v);
+  if (b) scr.style.setProperty("--screen", b);
+  if (f) { scr.style.setProperty("--screen-ink", f); scr.style.setProperty("--typed", f); }
+  if (f || b) scr.style.setProperty("--screen-dim", "color-mix(in srgb, var(--screen-ink) 65%, var(--screen))");
+  if (b) scr.style.setProperty("--glow", "none");
+}
+// The colours the game is told the screen has, in the Standard's numbers:
+// background, then foreground (§8.3.3).
+function screenColours(name) {
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const [paper, ink] = { desk: dark ? [2, 5] : [9, 2], green: [2, 4], atari: [6, 9], printout: [9, 2] }[name] || [9, 2];
+  SCREEN.paper = paper; SCREEN.ink = ink;
+  const m = game.m;
+  if (m && m.v >= 5) { m.mem[0x2C] = paper; m.mem[0x2D] = ink; }
+}
+
 // ---------- Drawing the screen ----------
 function runsInto(el, runs) {
   for (const r of runs) {
-    if (!r.s) { el.append(r.t); continue; }
+    const c = r.c || 0;
+    if (!r.s && !c) { el.append(r.t); continue; }
     const span = document.createElement("span");
-    span.className = [1, 2, 4, 16, 32].filter((b) => r.s & b).map((b) => "s" + b).join(" ");
+    if (r.s) span.className = [1, 2, 4, 16, 32].filter((b) => r.s & b).map((b) => "s" + b).join(" ");
+    if (c) paintRun(span, c, r.s & STYLE.reverse);
     span.textContent = r.t;
     el.append(span);
   }
@@ -1611,6 +1747,7 @@ function flush() {
   else { cmd.hidden = true; $("deck").after(cmd); }
   if (hadFocus && !cmd.hidden) cmd.focus({ preventScroll: true });
   drawTop();
+  paintPaper();
   // scroll so a long answer starts at the top of the screen
   const mark = game.mark;
   if (mark && mark.isConnected && last && last.offsetTop + last.offsetHeight - mark.offsetTop > lower.clientHeight) lower.scrollTop = mark.offsetTop - 8;
@@ -1623,7 +1760,7 @@ function drawTop() {
   if (!bar.hidden) { $("statusLeft").textContent = " " + m.status.left; $("statusRight").textContent = m.status.right + " "; }
   const up = $("upper");
   const rows = m.upper.length ? m.upper : [];
-  up.hidden = !rows.length || rows.every((r) => r.every(([ch, st]) => ch === " " && !(st & 1)));
+  up.hidden = !rows.length || rows.every((r) => r.every(([ch, st, c = 0]) => ch === " " && !(st & 1) && !bgOf(c)));
   $("screen").classList.toggle("has-bar", !bar.hidden);
   drawEnhanced();
   $("screen").classList.toggle("bare", bar.hidden && up.hidden);
@@ -1631,9 +1768,9 @@ function drawTop() {
   up.textContent = "";
   for (const row of rows) {
     const runs = [];
-    for (const [ch, st] of row) {
+    for (const [ch, st, c = 0] of row) {
       const lastRun = runs[runs.length - 1];
-      if (lastRun && lastRun.s === st) lastRun.t += ch; else runs.push({ t: ch, s: st });
+      if (lastRun && lastRun.s === st && lastRun.c === c) lastRun.t += ch; else runs.push({ t: ch, s: st, c });
     }
     const el = document.createElement("div");
     el.className = "row";
@@ -1644,8 +1781,8 @@ function drawTop() {
 // a line from the interpreter itself, on its own line, in its own style
 function say(text) {
   const m = game.m, line = m.lines[m.lines.length - 1];
-  if (line.length) emitLower(m, "\n", 0);
-  emitLower(m, text + "\n", STYLE.meta);
+  if (line.length) emitLower(m, "\n", 0, 0);
+  emitLower(m, text + "\n", STYLE.meta, 0);
 }
 
 // How many characters fit across the screen, and how many lines down.
@@ -1680,11 +1817,17 @@ function go() {
   while (!m.halted && performance.now() - t0 < 30) runSlice(m, 5000);
   if (!m.halted) { flush(); game.timer = setTimeout(go, 0); return; }
   const why = m.halted.why;
+  if (why === "timer") return afterTimer();
   if (why === "input") {
-    mapTurn();
-    inspectorTurn();
-    game.snaps.push({ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here });
-    if (game.snaps.length > 100) game.snaps.shift();
+    // a line the game's timer cut short isn't a move of yours: Undo, the
+    // map, and the Inspector wait for the next one you finish
+    if (!game.cutShort) {
+      mapTurn();
+      inspectorTurn();
+      game.snaps.push({ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here });
+      if (game.snaps.length > 100) game.snaps.shift();
+    }
+    game.cutShort = false;
     autosave();
     setMode("line");
   } else if (why === "char") setMode("char");
@@ -1715,11 +1858,63 @@ function go() {
 function setMode(mode, value = "") {
   game.mode = mode;
   cmd.value = value;
+  if (mode === "line") takeBackLeftOver();
+  armTimer();
   cmd.dataset.mode = mode || "";
   cmd.placeholder = mode === "char" ? "press a key" : "";
   cmd.setAttribute("aria-label", { line: "Your command", char: "Press any key", save: "Name for this saved game", restore: "Number of the saved game to restore" }[mode] || "Your command");
   game.hi = game.history.length;
   if (mode === "save") requestAnimationFrame(() => cmd.select());
+}
+// ---------- Timed input ----------
+// The page keeps the game's timer: when it's up, the game's routine runs,
+// then either the wait goes on or the input ends where it is.
+function armTimer() {
+  clearTimeout(game.tick);
+  const m = game.m, t = m && inputTimer(m);
+  if (!t) return;
+  const w = m.waiting;
+  game.tick = setTimeout(() => {
+    if (game.m !== m || m.waiting !== w || !m.halted) return;
+    if (startInterrupt(m)) go();
+  }, Math.max(100, t.tenths * 100));
+}
+function afterTimer() {
+  const m = game.m, w = m.waiting;
+  if (!m.timerSaid) {
+    // carry on; anything the routine printed comes before the input, which
+    // flush moves to the new end of the screen with what you'd typed
+    m.halted = new Halt(w.kind === "char" ? "char" : "input");
+    flush();
+    armTimer();
+    return;
+  }
+  // stop: what you'd typed stays on the screen and in the game's buffer,
+  // with no new line after it, and the input ends with 0 (§15, read)
+  if (w.kind === "char") finishChar(m, 0);
+  else {
+    const text = cmd.value;
+    cmd.value = "";
+    if (text) emitLower(m, text, STYLE.typed);
+    finishLine(m, text, 0);
+    game.cutShort = true;
+  }
+  go();
+}
+// A Version 5 game that carries on a line cut short has already printed
+// what was typed; it moves from the screen into the input, so you can keep
+// typing or rub it out.
+function takeBackLeftOver() {
+  const m = game.m, left = leftOver(m);
+  if (!left) return;
+  const line = m.lines[m.lines.length - 1];
+  if (line.map((r) => r.t).join("").toLowerCase().endsWith(left.toLowerCase())) {
+    for (let n = left.length; n > 0 && line.length;) {
+      const r = line[line.length - 1];
+      if (r.t.length <= n) { n -= r.t.length; line.pop(); } else { r.t = r.t.slice(0, -n); n = 0; }
+    }
+  }
+  cmd.value = left;
 }
 function updateButtons() {
   $("undoBtn").disabled = !canUndo();
@@ -1885,8 +2080,11 @@ function start(buffer, meta) {
     return;
   }
   clearTimeout(game.timer);
+  clearTimeout(game.tick);
   measureScreen();
+  screenColours($("machine").dataset.screen);
   game.m = makeMachine(s, pristine);
+  game.cutShort = false;
   game.key = storyId(s);
   game.name = meta.name;
   game.builtin = meta.builtin || "";
@@ -2005,6 +2203,8 @@ $("restartBtn").addEventListener("click", () => {
   }
   disarm();
   clearTimeout(game.timer);
+  clearTimeout(game.tick);
+  game.cutShort = false;
   resetMachine(game.m, true);
   mapJump();
   inspectorJump();
@@ -2070,11 +2270,16 @@ function setScreen(name, quiet) {
   machine.dataset.screen = name;
   document.querySelectorAll("[data-theme-pick]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.themePick === name));
   try { localStorage.setItem("zmi:screen", name); } catch { /* storage is off */ }
+  // the game's colours are drawn again for the new screen
+  screenColours(name);
+  if (game.m) { game.clears = -1; game.paper = null; flush(); }
   const settle = () => requestAnimationFrame(resizeScreen);
   document.fonts?.load(`1em "${SCREENS[name]}"`).then(settle, settle);
   if (!quiet && !cmd.hidden) cmd.focus({ preventScroll: true });
 }
 document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener("click", () => setScreen(b.dataset.themePick, true)));
+// the desk's monitor turns amber after dark, and the game is told so
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => screenColours(machine.dataset.screen));
 try { setScreen(localStorage.getItem("zmi:screen") || "desk", true); } catch { setScreen("desk", true); }
 
 // When the screen changes size, tell the game, the way an interpreter does
