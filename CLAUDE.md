@@ -59,6 +59,13 @@ node stories/play.mjs game.z5 commands.txt       # just the page's transcript
 
 Run `check-interpreter` after changing the interpreter's engine; each line should say `same`.
 
+Saves are Quetzal files, the format dfrotz and most interpreters share, so the interpreter's are checked against dfrotz's too. `check-saves` plays each walkthrough half way, saves with both, then restores each save with both and plays on; all four endings must match. With `--files`, `play.mjs` reads a file name after `save` and `restore`, as dfrotz does.
+
+```sh
+stories/check-saves                       # every walkthrough
+stories/check-saves game.z5 commands.txt  # any story file and commands of your own
+```
+
 ## Rules for every page
 
 - **GoatCounter goes just before `</head>`**, exactly this. The hook and the deploy both grep for the `data-goatcounter` URL, and the deploy fails without it.

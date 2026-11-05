@@ -1,0 +1,59 @@
+#!/bin/sh
+# Check that the Z-Machine Interpreter's save files are Quetzal that dfrotz
+# reads, and that the page reads dfrotz's. Each walkthrough is played half
+# way and saved, once by dfrotz and once by the page's engine. Then each
+# save is restored by both, the rest of the walkthrough played, and all
+# four endings compared word by word, the way compare does.
+# From Version 4 a game draws its own status line, and some keep what the
+# interpreter told them at the start (its number, its colours) in their own
+# memory, which a save carries; so a later game's status lines can differ
+# between interpreters even when the rest of the story text matches.
+#   stories/check-saves                      every walkthrough
+#   stories/check-saves story.z5 cmds.txt    a story and commands of your own
+abs() { (cd "$(dirname "$1")" && echo "$(pwd)/$(basename "$1")"); }
+if [ $# -eq 2 ]; then one_story=$(abs "$1"); one_cmds=$(abs "$2"); fi
+cd "$(dirname "$0")" || exit 1
+here=$(pwd)
+t=$(mktemp -d "${TMPDIR:-/tmp}/zmi-saves.XXXXXX") || exit 1
+trap 'rm -rf "$t"' EXIT
+words() { tr -s ' \n\t' '\n' | sed 's/^>*//' | grep -v '^$'; }
+# dfrotz asks for a file name on the same line as the game's answer, and
+# reads only a short one, so the files are named relative to $t
+frotz() {
+  (cd "$t" && dfrotz -m -p -q -w 999 "$1" < "$2" 2>/dev/null) \
+    | sed -E 's/Please enter a filename \[[^]]*\]: ?//' \
+    | grep -vE '^ .*(Score:|Time:)' | sed -E 's/^(> *)+ .*(Score:|Time:).*$/>/' | words
+}
+page() {
+  (cd "$t" && node "$here/play.mjs" "$1" "$2" --width 999 --no-echo --files 2>/dev/null) | words
+}
+status=0
+check() {
+  story=$(abs "$1"); w="$2"
+  n=$(wc -l < "$w"); half=$((n / 2))
+  rm -f "$t"/*.qzl
+  { head -n "$half" "$w"; echo save; echo frotz.qzl; } > "$t/save-frotz.txt"
+  { head -n "$half" "$w"; echo save; echo page.qzl; } > "$t/save-page.txt"
+  frotz "$story" "$t/save-frotz.txt" > /dev/null
+  page "$story" "$t/save-page.txt" > /dev/null
+  if [ ! -s "$t/frotz.qzl" ] || [ ! -s "$t/page.qzl" ]; then echo "NO SAVE  $w"; status=1; return; fi
+  for f in frotz page; do
+    { echo restore; echo $f.qzl; tail -n +"$((half + 1))" "$w"; } > "$t/restore-$f.txt"
+    frotz "$story" "$t/restore-$f.txt" > "$t/out-frotz-$f.txt"
+    page "$story" "$t/restore-$f.txt" > "$t/out-page-$f.txt"
+  done
+  for o in page-frotz frotz-page page-page; do
+    if ! diff -q "$t/out-frotz-frotz.txt" "$t/out-$o.txt" > /dev/null; then
+      echo "DIFFERS  $w ($o: ${o%-*} restoring ${o#*-}'s save)"
+      diff "$t/out-frotz-frotz.txt" "$t/out-$o.txt" | head -20
+      status=1; return
+    fi
+  done
+  echo "same     $w"
+}
+if [ -n "$one_story" ]; then check "$one_story" "$one_cmds"; exit $status; fi
+for w in after-hours/walkthrough-*.txt; do check after-hours/after-hours.z3 "$w"; done
+for game in zork1 zork2 zork3; do
+  for w in $game/walkthrough-*.txt; do check $game/$game.z3 "$w"; done
+done
+exit $status

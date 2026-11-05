@@ -1,12 +1,14 @@
 // Runs the Z-Machine Interpreter page's engine in Node, for checking it
 // against dfrotz. Not published; nothing on the site uses this.
 //
-//   node stories/play.mjs story.z3 [commands.txt] [--seed N] [--width 80] [--no-echo]
+//   node stories/play.mjs story.z3 [commands.txt] [--seed N] [--width 80] [--no-echo] [--files]
 //
 // Prints the transcript: what the game printed, with each command after
 // its prompt. With --no-echo the commands are left out, and so is the line
 // break after them, which is how dfrotz prints a game played from a file.
-// With no commands file, it reads commands from stdin.
+// With no commands file, it reads commands from stdin. With --files, save
+// and restore take the next command as a file name and write or read a
+// Quetzal file there, as dfrotz does; without it they keep one save in memory.
 import fs from "node:fs";
 import vm from "node:vm";
 import path from "node:path";
@@ -21,13 +23,15 @@ const seed = Number(opt("--seed", "12345"));
 const width = Number(opt("--width", "80"));
 const noEcho = args.includes("--no-echo");
 if (noEcho) args.splice(args.indexOf("--no-echo"), 1);
+const files = args.includes("--files");
+if (files) args.splice(args.indexOf("--files"), 1);
 const [storyPath, cmdPath] = args;
 const commands = fs.readFileSync(cmdPath || 0, "utf8").split("\n");
 if (commands[commands.length - 1] === "") commands.pop();
 
-const ctx = vm.createContext({ TextDecoder, btoa, atob, Math, performance, console });
+const ctx = vm.createContext({ TextDecoder, TextEncoder, btoa, atob, Math, performance, console });
 vm.runInContext(script + `
-;globalThis.api = { unwrap, readStory, makeMachine, runSlice, finishLine, finishChar, answer, SCREEN, snapshot, applySnapshot, packSnap, unpackSnap, decodeAt };`, ctx);
+;globalThis.api = { unwrap, readStory, makeMachine, runSlice, finishLine, finishChar, answer, SCREEN, snapshot, applySnapshot, packSnap, unpackSnap, decodeAt, toQuetzal, fromQuetzal };`, ctx);
 const api = ctx.api;
 api.SCREEN.width = width;
 
@@ -68,10 +72,15 @@ while (guard++ < 100000) {
     saved = api.packSnap(m, Object.assign(api.snapshot(m), { waiting: null, after: m.waiting.ins.addr }));
     const ins = m.waiting.ins;
     m.waiting = null; m.halted = null;
+    if (files) fs.writeFileSync(commands[k++], api.toQuetzal(m, saved));
     api.answer(m, ins, 1);
   } else if (why === "restore") {
     const ins = m.waiting.ins;
     m.waiting = null; m.halted = null;
+    if (files) {
+      try { saved = api.fromQuetzal(m, fs.readFileSync(commands[k++])).data; }
+      catch (err) { saved = null; out += `\n[restore failed: ${err.message}]\n`; }
+    }
     if (saved) { api.applySnapshot(m, api.unpackSnap(m, saved)); api.answer(m, api.decodeAt(s, saved.after), 2); }
     else api.answer(m, ins, 0);
   } else if (why === "quit") break;

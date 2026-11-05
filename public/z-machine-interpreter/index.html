@@ -40,6 +40,12 @@
   --ins-rule: #C6D1DA;
   --ins-lit: #FFE38A;
   --ins-here: #2F6E4F;
+  --saves-paper: #EDE4CF;
+  --saves-card: #FFFDF7;
+  --saves-ink: #2A2418;
+  --saves-dim: #6B604C;
+  --saves-rule: #D3C6A8;
+  --saves-tab: #3E6E8E;
 
   --screen: #FCFBF7;
   --screen-ink: #1A1916;
@@ -69,6 +75,7 @@
     --pad: #24211A; --pad-ink: #E9E3D5; --pad-rule: #39465A; --pad-margin: #6B3A33;
     --map-paper: #14181B; --map-grid: #222C33; --map-ink: #D6DEE4; --map-room: #1C2328; --map-here: #6A5414; --map-line: #93A2AD;
     --ins-paper: #12171C; --ins-head: #1B232A; --ins-ink: #D5DEE6; --ins-dim: #93A2AD; --ins-rule: #2A353E; --ins-lit: #5E4A12; --ins-here: #7FC7A0;
+    --saves-paper: #1A1711; --saves-card: #24201A; --saves-ink: #ECE4D2; --saves-dim: #A99D86; --saves-rule: #3D3627; --saves-tab: #7FB3D3;
     --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
     --glow: 0 0 6px rgba(255, 170, 60, .35);
     color-scheme: dark;
@@ -80,6 +87,7 @@
   --pad: #24211A; --pad-ink: #E9E3D5; --pad-rule: #39465A; --pad-margin: #6B3A33;
   --map-paper: #14181B; --map-grid: #222C33; --map-ink: #D6DEE4; --map-room: #1C2328; --map-here: #6A5414; --map-line: #93A2AD;
   --ins-paper: #12171C; --ins-head: #1B232A; --ins-ink: #D5DEE6; --ins-dim: #93A2AD; --ins-rule: #2A353E; --ins-lit: #5E4A12; --ins-here: #7FC7A0;
+  --saves-paper: #1A1711; --saves-card: #24201A; --saves-ink: #ECE4D2; --saves-dim: #A99D86; --saves-rule: #3D3627; --saves-tab: #7FB3D3;
   --screen: #0D0A05; --screen-ink: #FFB547; --screen-dim: #B27C2C; --typed: #FFE0A3; --bar: #FFB547; --bar-ink: #0D0A05;
   --glow: 0 0 6px rgba(255, 170, 60, .35);
   color-scheme: dark;
@@ -174,7 +182,7 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
      way out, on a touch screen); the top lines keep clear of it */
   --corner-w: 2.25rem;
   --corner-h: calc(var(--screen-lh) * 1em + .2rem);
-  --corner-n: 3;
+  --corner-n: 4;
   --corner-room: 0px;
 }
 .status-bar {
@@ -322,6 +330,38 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .map-clear { flex: none; min-height: 40px; padding: 0 .6rem; font: 600 .8rem var(--sans); color: var(--map-ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
 .map-clear.armed { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 /* Inspector: the machine's own state, on an engineer's index card */
+/* the saves: a card file, one label for each disk */
+.savespad { height: min(26rem, 75svh); background: var(--saves-paper); color: var(--saves-ink); font-size: .9rem; line-height: 1.4; }
+.savespad .pad-head { border-bottom: 1px solid var(--saves-rule); background: var(--saves-card); }
+.savespad .pad-close { color: var(--saves-ink); }
+.saves-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: .5rem; }
+.save-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.save-row { background: var(--saves-card); border: 1px solid var(--saves-rule); border-top: 3px solid var(--saves-tab); border-radius: 4px; padding: .4rem .55rem .5rem; }
+.save-name { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.save-meta { display: block; color: var(--saves-dim); font-size: .8rem; }
+.save-rename {
+  display: block; width: 100%; min-height: 40px; padding: .25rem .4rem;
+  font: 400 16px var(--sans); color: var(--saves-ink); background: var(--saves-paper);
+  border: 1px solid var(--saves-tab); border-radius: 4px;
+}
+.save-acts { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .4rem; }
+.save-act {
+  min-height: 40px; padding: 0 .5rem;
+  font: 600 .8rem var(--sans); color: var(--saves-ink); background: transparent;
+  border: 1px solid var(--saves-rule); border-radius: 6px; cursor: pointer;
+}
+.save-act:hover:not(:disabled) { border-color: var(--saves-ink); }
+.save-act:disabled { opacity: .45; cursor: default; }
+.save-act.armed { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+/* the one you can't take back sits apart from the rest */
+.save-acts [data-act=delete] { margin-left: auto; }
+.save-empty { margin: .25rem; color: var(--saves-dim); }
+.saves-say { margin: 0; padding: .3rem .75rem; font-size: .85rem; border-top: 1px solid var(--saves-rule); background: var(--saves-card); }
+.saves-say:empty { display: none; }
+.saves-say.trouble { color: var(--accent); }
+.savespad .pad-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .6rem; color: var(--saves-dim); border-top-color: var(--saves-rule); background: var(--saves-card); padding-top: .25rem; padding-bottom: .25rem; }
+.savespad .pad-foot span { flex: 1 1 9rem; }
+
 .inspectorpad { height: min(34rem, 85svh); background: var(--ins-paper); color: var(--ins-ink); font-size: .9rem; line-height: 1.4; }
 .inspectorpad .pad-head { border-bottom: 1px solid var(--ins-rule); background: var(--ins-head); }
 .inspectorpad .pad-close { color: var(--ins-ink); }
@@ -446,7 +486,7 @@ html.full-on { overflow: hidden; }
 }
 /* a phone has no Esc key, so a touch screen gets a way out */
 @media (pointer: coarse) {
-  .machine.full .screen { --corner-n: 4; }
+  .machine.full .screen { --corner-n: 5; }
   .machine.full .corner .leave { display: grid; font: 400 1.5rem/1 var(--sans); }
 }
 
@@ -544,7 +584,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes inside. Open a save file there, or drop one on the page, to add it. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -571,6 +611,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <div class="deck" id="deck">
     <div class="screen bare" id="screen">
       <div class="corner" id="corner">
+        <button type="button" data-panel="saves" aria-pressed="false" aria-label="Saves" title="Saves"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 3.5h10l3 3v10h-13z"/><path d="M6.5 3.5v4h6v-4M6 16.5v-5h8v5"/></svg></button>
         <button type="button" data-panel="notes" aria-pressed="false" aria-label="Notes" title="Notes"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 2v3M10 2v3M12.5 2v3M7 9h6M7 12h6M7 15h3.5"/></svg></button>
         <button type="button" data-panel="map" aria-pressed="false" aria-label="Map" title="Map"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5 7 3l6 2 4.5-2v12L13 17l-6-2-4.5 2z"/><path d="M7 3v12M13 5v12"/></svg></button>
         <button type="button" data-panel="inspector" aria-pressed="false" aria-label="Inspector" title="Inspector"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="10" height="10" rx="1"/><path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3"/></svg></button>
@@ -588,7 +629,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
         <button type="button" class="pad-close" id="padClose" aria-label="Close notes">×</button>
       </div>
       <textarea id="notesText" class="pad-text" aria-labelledby="notesH padFor" aria-describedby="padFoot" placeholder="Clues, combinations, what's where…" spellcheck="true"></textarea>
-      <p class="pad-foot" id="padFoot">Kept in this browser for this story. Undo, Restart, and Restore leave it alone. <kbd>Esc</kbd> goes back to the game.</p>
+      <p class="pad-foot" id="padFoot">Kept in this browser for this story, with a copy in each save. If this page is ever empty, restoring a save brings its copy back. <kbd>Esc</kbd> goes back to the game.</p>
     </aside>
     <aside class="pad mappad" id="mappad" aria-labelledby="mapH" hidden>
       <div class="pad-head">
@@ -606,6 +647,23 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       </div>
       <p class="map-say" id="mapSay"></p>
       <div class="pad-foot"><span>Drag to look around, or use the arrow keys and <kbd>+</kbd> <kbd>−</kbd>.</span> <button type="button" class="map-clear" id="mapRedraw" title="Lay the map out again from the ways you've found">Redraw</button> <button type="button" class="map-clear" id="mapClear">Clear</button></div>
+    </aside>
+    <aside class="pad savespad" id="savespad" aria-labelledby="savesH" hidden>
+      <div class="pad-head">
+        <h2 id="savesH">Saves</h2>
+        <span class="pad-for" id="savesFor"></span>
+        <button type="button" class="pad-close" id="savesClose" aria-label="Close saves">×</button>
+      </div>
+      <div class="saves-scroll">
+        <ul class="save-list" id="saveList" aria-labelledby="savesH"></ul>
+        <p class="save-empty" id="saveEmpty">No saved games for this story in this browser yet. Type <kbd>save</kbd> in the game to make one, or open a save file.</p>
+      </div>
+      <p class="saves-say" id="savesSay" role="status" aria-live="polite"></p>
+      <div class="pad-foot">
+        <button type="button" class="save-act" id="saveOpen">Open a save file…</button>
+        <input type="file" id="saveFile" class="visually-hidden" tabindex="-1" aria-hidden="true">
+        <span>A download carries your notes.<span class="ins-esc"> <kbd>Esc</kbd> goes back to the game.</span></span>
+      </div>
     </aside>
     <aside class="pad inspectorpad" id="inspectorpad" aria-labelledby="inspectorH" hidden>
       <div class="pad-head">
@@ -639,6 +697,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" id="undoBtn" disabled>Undo</button>
     <button type="button" class="btn" id="restartBtn">Restart</button>
     <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
+    <button type="button" class="btn" id="savesBtn" data-panel="saves" aria-pressed="false">Saves</button>
     <button type="button" class="btn" id="notesBtn" data-panel="notes" aria-pressed="false">Notes</button>
     <button type="button" class="btn" id="mapBtn" data-panel="map" aria-pressed="false">Map</button>
     <button type="button" class="btn" id="enhancedBtn" aria-pressed="false" hidden>Enhanced</button>
@@ -669,6 +728,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>A game can keep time while you type.</b> From Version 4, a game asking for a line or a key can also name a routine and a time, in tenths of a second. Each time that runs out, the interpreter calls the routine while your half-typed line waits. The routine may print something, and you carry on typing below it, or it may end your line where it stands. A Version 5 game can then hand back what you'd typed, and this page puts it back in the input for you to finish.</li>
       <li><b>Each screen shows colours its own way.</b> From Version 5 a game can ask for eight named colours, or any of 32,768 more. The desk shows them as the Standard lists them, and the Atari 800 uses its own palette, with its own blue. The green screen shows the same colours with a touch of its green mixed in. The printout prints letters in coloured inks and leaves backgrounds as paper, since a ribbon can't print white. A game that clears the screen in its colours gets the whole screen in them, the way <i>Photopia</i> changes colour from scene to scene.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
+      <li><b>A save file works in other interpreters.</b> <b>Download</b> in <b>Saves</b> writes a Quetzal file, the save format Frotz and many other interpreters read and write. It says which story it's for by release, serial number, and checksum, then holds dynamic memory packed the same way this page keeps it, and the call stack, oldest call first. The page adds the save's name and your notes for the story in a chunk of its own, and other interpreters skip chunks they don't know. Open the file on another computer, phone, or tablet, and the save joins the list there and the notes join yours. A save for one of the built-in stories opens that story first.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
   </section>
@@ -697,6 +757,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <h2 id="sources-h">Sources</h2>
     <ul>
       <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, §8.2 on the status line, and §8.3 on colours), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code> and its timed interrupts, <code>set_colour</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
+      <li>Martin Frost, <i>Quetzal: Z-machine Common Save-File Format Standard</i>, version 1.4 (1997): §3 (memory), §4 (the stack), §5 (the story a save belongs to and where it stopped), §7 (annotations and interpreter chunks), §8 (IFF). <a href="https://inform-fiction.org/zmachine/standards/quetzal/">inform-fiction.org</a>.</li>
       <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and the three Zorks for this page. <a href="https://zilf.io/">zilf.io</a>.</li>
       <li>Tim Anderson, Marc Blank, Bruce Daniels, and Dave Lebling, Zork I source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork1">github.com/historicalsource/zork1</a>.</li>
       <li>Marc Blank, Dave Lebling, Bruce Daniels, and Tim Anderson, Zork II and Zork III source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork2">github.com/historicalsource/zork2</a> and <a href="https://github.com/historicalsource/zork3">zork3</a>.</li>
@@ -704,7 +765,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   </section>
 
   <footer>
-    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games, notes, and maps stay in this browser's storage.</p>
+    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games, notes, and maps stay in this browser's storage. A save leaves it only when you download one.</p>
     <p><i>After Hours at the Cabinet</i> was written for the cabinet: <a href="after-hours.z3">after-hours.z3</a>. Its source, and a station-by-station look inside it, are on <a href="../z-machine/">The Z-Machine and how it runs stories</a>. ZILF's library asks that games built with it name it in their opening credits, and <i>After Hours</i> does.</p>
     <p>The three Zorks were built here with ZILF from the Infocom source Microsoft released, and each is shared under its MIT License: <a href="zork1/zork1.z3">zork1.z3</a> (<a href="zork1/LICENSE">license</a>), <a href="zork2/zork2.z3">zork2.z3</a> (<a href="zork2/LICENSE">license</a>), and <a href="zork3/zork3.z3">zork3.z3</a> (<a href="zork3/LICENSE">license</a>). Zork II needed one bracket moved before ZILF would compile it, and <a href="../z-machine/">the Z-machine exhibit</a> explains why that changes nothing in the game. Zork is a trademark, and the name is used here only to say which game this is.</p>
   </footer>
@@ -985,6 +1046,7 @@ function decodeAt(s, addr) {
     let off = x & 63;
     if (!(x & 0x40)) { off = (off << 8) | u8(a++); if (off & 0x2000) off -= 0x4000; }
     ins.branch = { on: !!(x & 0x80), to: off === 0 ? "rfalse" : off === 1 ? "rtrue" : a + off - 2 };
+    ins.branchLen = x & 0x40 ? 1 : 2;
   }
   if (name === "jump" && ops[0]) ins.jumpTo = a + ((ops[0].v << 16) >> 16) - 2;
   ins.next = a;
@@ -1391,6 +1453,149 @@ function unpackMem(text, orig, size) {
 }
 const packSnap = (m, snap) => ({ ...snap, mem: packMem(snap.mem, m.pristine) });
 const unpackSnap = (m, data) => ({ ...data, mem: unpackMem(data.mem, m.pristine, m.s.h.staticMem) });
+
+// ---------- Quetzal ----------
+// The save file other interpreters read and write (Quetzal 1.4): an IFF
+// FORM of type IFZS, holding which story it's for (IFhd), dynamic memory
+// packed against the story file (CMem, the same packing this page keeps),
+// and the call frames, oldest first (Stks). The page adds the save's name
+// and the story's notes in an IntD chunk, which other interpreters skip.
+const QZ_ME = "CURI";                    // this page, as an IntD interpreter ID
+const QZ_NOTES = 1, QZ_NAME = 2;         // what an IntD chunk of ours holds
+const byteStr = (bytes) => { let s = ""; for (let i = 0; i < bytes.length; i += 4096) s += String.fromCharCode(...bytes.subarray(i, i + 4096)); return s; };
+const strBytes = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
+// where a save's answer goes: its branch bytes up to Version 3 and its
+// store byte after (Quetzal §5.8)
+const answerAt = (ins) => (ins.store !== undefined ? ins.next - 1 : ins.next - (ins.branchLen || 1));
+function storySum(s) { return s.h.checksum || s.h.computedChecksum; }
+function toQuetzal(m, data, extra = {}) {
+  const p = m.pristine, ins = decodeAt(m.s, data.after), out = [];
+  const u16 = (x) => [(x >> 8) & 255, x & 255], u24 = (x) => [(x >> 16) & 255, (x >> 8) & 255, x & 255];
+  const chunk = (id, bytes) => {
+    const n = bytes.length;
+    out.push(strBytes(id), Uint8Array.of(n >>> 24, (n >> 16) & 255, (n >> 8) & 255, n & 255), Uint8Array.from(bytes));
+    if (n & 1) out.push(Uint8Array.of(0));
+  };
+  chunk("IFhd", [p[2], p[3], ...p.subarray(0x12, 0x18), ...u16(storySum(m.s)), ...u24(answerAt(ins))]);
+  chunk("CMem", strBytes(atob(data.mem)));
+  const stks = [];
+  data.frames.forEach((f, i) => {
+    if (f.interrupt) throw new Error("A save made inside a timed interrupt can't be written as a file.");
+    const end = i + 1 < data.frames.length ? data.frames[i + 1].stackLen : data.stack.length;
+    // the first frame is the dummy one, all zeros but its stack (§4.11)
+    const flags = i ? f.locals.length | (f.store === undefined || f.store === null ? 0x10 : 0) : 0;
+    stks.push(...u24(i ? f.ret : 0), flags, i ? f.store ?? 0 : 0, i ? (1 << Math.min(f.argc, 7)) - 1 : 0, ...u16(end - f.stackLen));
+    for (const x of f.locals) stks.push(...u16(x));
+    for (const x of data.stack.slice(f.stackLen, end)) stks.push(...u16(x));
+  });
+  chunk("Stks", stks);
+  // ANNO is plain ASCII (§7.2); the name keeps its own letters in IntD
+  if (extra.name) chunk("ANNO", strBytes(extra.name.replace(/[^\x20-\x7E]/g, "?")));
+  const intd = (id, text) => chunk("IntD", [...strBytes("    "), 0, id, 0, 0, ...strBytes(QZ_ME), ...new TextEncoder().encode(text)]);
+  if (extra.name) intd(QZ_NAME, extra.name);
+  if (extra.notes) intd(QZ_NOTES, extra.notes);
+  const size = out.reduce((n, b) => n + b.length, 4);
+  const file = new Uint8Array(8 + size);
+  file.set(strBytes("FORM"));
+  file.set([size >>> 24, (size >> 16) & 255, (size >> 8) & 255, size & 255], 4);
+  file.set(strBytes("IFZS"), 8);
+  let at = 12;
+  for (const b of out) { file.set(b, at); at += b.length; }
+  return file;
+}
+const isQuetzal = (b) => b.length >= 12 && byteStr(b.subarray(0, 4)) === "FORM" && byteStr(b.subarray(8, 12)) === "IFZS";
+// The header bytes a Quetzal file names its story by, for saying which
+// story a save belongs to.
+function quetzalStory(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (!isQuetzal(b)) return null;
+  for (let at = 12; at + 8 <= b.length;) {
+    const id = byteStr(b.subarray(at, at + 4)), n = ((b[at + 4] << 24) | (b[at + 5] << 16) | (b[at + 6] << 8) | b[at + 7]) >>> 0;
+    if (id === "IFhd" && n >= 13) {
+      const d = b.subarray(at + 8, at + 8 + 13);
+      return { release: (d[0] << 8) | d[1], serial: byteStr(d.subarray(2, 8)), checksum: (d[8] << 8) | d[9], pc: (d[10] << 16) | (d[11] << 8) | d[12] };
+    }
+    at += 8 + n + (n & 1);
+  }
+  return null;
+}
+const sameStory = (s, q) => !!q && q.release === s.h.release && q.serial === s.h.serial && q.checksum === storySum(s);
+// Reads a Quetzal file into the page's own save, plus the name and notes
+// if this page wrote it. Throws with a sentence to show if it can't.
+function fromQuetzal(m, bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (!isQuetzal(b)) throw new Error("That isn't a Quetzal save file.");
+  const chunks = [];
+  const end = Math.min(b.length, 8 + (((b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7]) >>> 0));
+  for (let at = 12; at + 8 <= end;) {
+    const n = ((b[at + 4] << 24) | (b[at + 5] << 16) | (b[at + 6] << 8) | b[at + 7]) >>> 0;
+    if (at + 8 + n > end) throw new Error("That save file is cut short.");
+    chunks.push({ id: byteStr(b.subarray(at, at + 4)), d: b.subarray(at + 8, at + 8 + n) });
+    at += 8 + n + (n & 1);
+  }
+  // only the first of each is read (§8.8)
+  const one = (id) => chunks.find((c) => c.id === id)?.d;
+  const q = quetzalStory(b), s = m.s;
+  if (!q) throw new Error("That save file doesn't say which story it's for.");
+  if (!sameStory(s, q)) throw Object.assign(new Error(`That save is for release ${q.release}, serial ${q.serial.replace(/[^\x20-\x7E]/g, "?")}, and the story open now is release ${s.h.release}, serial ${s.h.serial}.`), { story: q });
+  // dynamic memory: CMem is the file XORed and run-length packed, and
+  // missing bytes at its end are unchanged (§3.4); UMem is a plain copy
+  const size = s.h.staticMem, orig = m.pristine, mem = new Uint8Array(size);
+  const cmem = one("CMem"), umem = one("UMem");
+  if (cmem) {
+    let i = 0;
+    for (let k = 0; k < cmem.length; k++) {
+      const x = cmem[k];
+      if (x) { if (i >= size) throw new Error("That save holds more memory than this story has."); mem[i] = orig[i] ^ x; i++; continue; }
+      if (k + 1 >= cmem.length) throw new Error("That save file's memory ends in the middle of a run.");
+      const n = cmem[++k] + 1;
+      if (i + n > size) throw new Error("That save holds more memory than this story has.");
+      for (let j = 0; j < n; j++, i++) mem[i] = orig[i];
+    }
+    for (; i < size; i++) mem[i] = orig[i];
+  } else if (umem) {
+    if (umem.length !== size) throw new Error("That save's memory is the wrong size for this story.");
+    mem.set(umem);
+  } else throw new Error("That save file has no memory in it.");
+  // the frames, oldest first, each with its own part of the stack
+  const stks = one("Stks");
+  if (!stks) throw new Error("That save file has no stack in it.");
+  const frames = [], stack = [];
+  const w = (k) => (stks[k] << 8) | stks[k + 1];
+  for (let k = 0; k < stks.length;) {
+    if (k + 8 > stks.length) throw new Error("That save file's stack is cut short.");
+    const ret = (stks[k] << 16) | (stks[k + 1] << 8) | stks[k + 2], flags = stks[k + 3], store = stks[k + 4], args = stks[k + 5], n = w(k + 6);
+    const nl = flags & 15;
+    k += 8;
+    if (k + 2 * (nl + n) > stks.length) throw new Error("That save file's stack is cut short.");
+    const locals = [];
+    for (let j = 0; j < nl; j++, k += 2) locals.push(w(k));
+    let argc = 0;
+    while (argc < 7 && args & (1 << argc)) argc++;
+    frames.push(frames.length ? { locals, store: flags & 0x10 ? undefined : store, ret, stackLen: stack.length, argc } : { locals: [], ret: null, stackLen: 0, argc: 0 });
+    for (let j = 0; j < n; j++, k += 2) stack.push(w(k));
+  }
+  if (!frames.length) throw new Error("That save file has no stack in it.");
+  // the save instruction is the one whose answer sits at the saved PC
+  let ins = null;
+  for (let k = 1; k <= 12 && !ins; k++) {
+    const at = q.pc - k;
+    if (at < 0) break;
+    const x = decodeAt(s, at);
+    if (!x.bad && x.name === "save" && answerAt(x) === q.pc) ins = x;
+  }
+  if (!ins) throw new Error("That save doesn't stop at a save instruction in this story.");
+  const text = (id) => {
+    const c = chunks.find((x) => x.id === "IntD" && x.d.length >= 12 && byteStr(x.d.subarray(8, 12)) === QZ_ME && x.d[5] === id);
+    return c ? new TextDecoder().decode(c.d.subarray(12)) : "";
+  };
+  const anno = one("ANNO");
+  return {
+    data: { mem: packMem(mem, orig), stack, frames, pc: ins.next, after: ins.addr, waiting: null },
+    name: text(QZ_NAME) || (anno ? byteStr(anno).trim() : ""),
+    notes: text(QZ_NOTES),
+  };
+}
 
 // ---------- Running ----------
 function stepMachine(m) {
@@ -1865,6 +2070,7 @@ function setMode(mode, value = "") {
   cmd.setAttribute("aria-label", { line: "Your command", char: "Press any key", save: "Name for this saved game", restore: "Number of the saved game to restore" }[mode] || "Your command");
   game.hi = game.history.length;
   if (mode === "save") requestAnimationFrame(() => cmd.select());
+  savesReady();
 }
 // ---------- Timed input ----------
 // The page keeps the game's timer: when it's up, the game's routine runs,
@@ -1975,10 +2181,12 @@ function finishSave(name) {
     snap.after = w.ins.addr;
     const data = packSnap(m, snap);
     const saves = (store.get(savesKey()) || []).filter((x) => x.name !== name);
-    saves.push({ name, at: Date.now(), data });
+    saveNotes();
+    saves.push({ name, at: Date.now(), data, ...(notesText.value.trim() ? { notes: notesText.value } : {}) });
     while (saves.length > 30) saves.shift();
     ok = store.set(savesKey(), saves);
     say(ok ? `Saved as “${name}” in this browser, ${commas(JSON.stringify(data).length)} bytes.` : "This browser wouldn't store the save. Its storage may be full or turned off.");
+    drawSaves();
   } else say("Not saved.");
   m.waiting = null; m.halted = null;
   answer(m, w.ins, ok ? 1 : 0);
@@ -1993,6 +2201,7 @@ function finishRestore(text) {
     try {
       applySnapshot(m, unpackSnap(m, pick.data));
       say(`Restored “${pick.name}”.`);
+      notesBack(pick);
       answer(m, decodeAt(m.s, pick.data.after), 2);
       return go();
     } catch (err) { say(`That save couldn't be read: ${err.message}`); }
@@ -2106,6 +2315,8 @@ function start(buffer, meta) {
   $("insideLink").href = "../z-machine/" + tag;
   $("insideLink").textContent = game.builtin ? "See inside this story file" : "See inside a story file";
   loadNotes();
+  sayInSaves("");
+  drawSaves();
   loadMap();
   loadEnhanced();
   loadInspector();
@@ -2119,7 +2330,8 @@ function openFile(f) {
   if (f.size > 16 * 1024 * 1024) { $("loadStatus").textContent = `${f.name} is bigger than any story file could be.`; return; }
   loading = "";
   const r = new FileReader();
-  r.onload = () => start(r.result, { name: f.name });
+  // a save file joins the saves; anything else should be a story
+  r.onload = () => (isQuetzal(new Uint8Array(r.result, 0, Math.min(12, r.result.byteLength))) ? importSave(r.result, f) : start(r.result, { name: f.name }));
   r.onerror = () => { $("loadStatus").textContent = `${f.name} couldn't be read.`; };
   r.readAsArrayBuffer(f);
 }
@@ -2308,8 +2520,10 @@ window.visualViewport?.addEventListener("scroll", fitViewport);
 
 // ---------- Notes ----------
 // One notepad for each story, kept in this browser. Undo, Restart, and
-// Restore leave it alone: what you found out stays found out. A built-in
-// story's notes go by its name, so a rebuilt story file keeps them.
+// Restore leave it alone: what you found out stays found out. Each save
+// keeps a copy, though, and restoring one fills an empty notepad from it,
+// so notes cleared by accident come back. A built-in story's notes go by
+// its name, so a rebuilt story file keeps them.
 const notesText = $("notesText");
 const notes = { key: "", dirty: false, timer: 0 };
 const KEPT = $("padFoot").innerHTML;
@@ -2341,11 +2555,11 @@ window.addEventListener("pagehide", saveNotes);
 document.addEventListener("visibilitychange", () => { if (document.hidden) saveNotes(); });
 
 // ---------- Panels ----------
-// The notepad, the map and the Inspector share the space beside the screen, one at a time.
+// The saves, the notepad, the map and the Inspector share the space beside the screen, one at a time.
 // On a touch screen the notepad opens without the keyboard, so you can read
 // it; tap the page to write. The map leaves the prompt where it was, so you
 // can keep playing and watch it fill in.
-const PANELS = { notes: "notepad", map: "mappad", inspector: "inspectorpad" };
+const PANELS = { saves: "savespad", notes: "notepad", map: "mappad", inspector: "inspectorpad" };
 let panel = "";
 function setPanel(name, quiet) {
   if (!PANELS[name]) name = "";
@@ -2357,6 +2571,8 @@ function setPanel(name, quiet) {
   if (was === "notes") saveNotes();
   if (name === "map") requestAnimationFrame(() => { centerMap(); drawMap(); });
   if (name === "inspector") drawInspector();
+  if (name === "saves") drawSaves();
+  else if (was === "saves") endRename(false);
   if (quiet) return;
   if (name === "notes" && !touchFirst) notesText.focus({ preventScroll: true });
   else if (!cmd.hidden && (!name || document.activeElement?.closest("[data-panel]"))) cmd.focus({ preventScroll: true });
@@ -2365,13 +2581,273 @@ document.querySelectorAll("[data-panel]").forEach((b) => b.addEventListener("cli
 $("padClose").addEventListener("click", () => setPanel(""));
 $("mapClose").addEventListener("click", () => setPanel(""));
 $("inspectorClose").addEventListener("click", () => setPanel(""));
+$("savesClose").addEventListener("click", () => setPanel(""));
 // Esc in a panel goes back to the game, and doesn't leave full screen
-for (const el of [notesText, $("mapSvg"), $("inspectorpad")]) el.addEventListener("keydown", (e) => {
+for (const el of [notesText, $("mapSvg"), $("inspectorpad"), $("savespad")]) el.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   e.preventDefault();
   e.stopPropagation();
   setPanel("");
 });
+
+// ---------- Saves ----------
+// Every game saved for this story in this browser, newest first: restore
+// one, rename it, delete it, or download it as a Quetzal file that other
+// interpreters open. Each save keeps a copy of the notes as they were, and
+// a download carries the notes as they are now, so a game
+// carried to another computer, phone, or tablet brings them along. A save
+// file opened or dropped here joins the list, and its notes join yours.
+const savesNow = () => (game.m ? store.get(savesKey()) || [] : []);
+const saves = { renaming: "", armed: "", disarm: 0 };
+function sayInSaves(text, trouble) {
+  const el = $("savesSay");
+  el.textContent = text;
+  el.classList.toggle("trouble", !!trouble);
+}
+const shortTitle = () => (game.builtin ? game.title.split(":")[0] : game.title || game.name);
+// the game's own RESTORE prompt takes a pick too
+const canRestoreNow = () => game.mode === "line" || game.mode === "restore";
+function savesReady() {
+  document.querySelectorAll("#saveList [data-act=restore]").forEach((b) => { b.disabled = !canRestoreNow(); });
+}
+function drawSaves() {
+  if (panel !== "saves") return;
+  // a redraw keeps your place: the same button on the same save
+  const was = document.activeElement?.closest("#saveList [data-act]");
+  const keep = was && { name: was.closest("li").dataset.name, act: was.dataset.act };
+  const list = $("saveList"), all = savesNow();
+  $("savesFor").textContent = game.m ? `for ${shortTitle()}` : "";
+  $("saveEmpty").hidden = all.length > 0;
+  list.replaceChildren();
+  all.forEach((x, i) => {
+    const li = document.createElement("li"), id = `save-${i}`;
+    li.className = "save-row";
+    li.dataset.name = x.name;
+    if (saves.renaming === x.name) {
+      const input = document.createElement("input");
+      Object.assign(input, { type: "text", className: "save-rename", value: x.name, id, autocomplete: "off", spellcheck: false, maxLength: 120 });
+      input.setAttribute("aria-label", `New name for “${x.name}”`);
+      input.setAttribute("enterkeyhint", "done");
+      li.append(input);
+    } else {
+      const name = document.createElement("span");
+      name.className = "save-name";
+      name.id = id;
+      name.textContent = x.name;
+      li.append(name);
+    }
+    const meta = document.createElement("span");
+    meta.className = "save-meta";
+    meta.textContent = `${new Date(x.at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })} · ${commas(JSON.stringify(x.data).length)} bytes`;
+    li.append(meta);
+    const acts = document.createElement("div");
+    acts.className = "save-acts";
+    for (const [act, label] of [["restore", "Restore"], ["rename", "Rename"], ["download", "Download"], ["delete", "Delete"]]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "save-act";
+      b.dataset.act = act;
+      b.textContent = label;
+      b.setAttribute("aria-describedby", id);
+      if (act === "restore") { b.disabled = !canRestoreNow(); b.title = "Restores while the game waits for a command"; }
+      if (act === "delete" && saves.armed === x.name) { b.classList.add("armed"); b.textContent = "Press again to delete"; }
+      acts.append(b);
+    }
+    li.append(acts);
+    list.prepend(li);
+  });
+  const input = list.querySelector(".save-rename");
+  if (input) { input.focus(); input.select(); return; }
+  if (keep) {
+    const li = [...list.children].find((r) => r.dataset.name === keep.name);
+    (li?.querySelector(`[data-act=${keep.act}]`) || list.querySelector("[data-act]") || $("saveOpen")).focus({ preventScroll: true });
+  }
+}
+$("saveList").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-act]");
+  if (!b || b.disabled) return;
+  const name = b.closest("li").dataset.name;
+  ({ restore: restoreSave, rename: startRename, download: downloadSave, delete: deleteSave })[b.dataset.act](name);
+});
+
+// Restore here does what the game's RESTORE does: the save's own save
+// instruction answers 2, and the game carries on from there.
+function restoreSave(name) {
+  const m = game.m, all = savesNow(), i = all.findIndex((x) => x.name === name);
+  if (i < 0 || !canRestoreNow()) return;
+  if (game.mode === "restore") { finishRestore(String(i + 1)); afterRestore(); return; }
+  let snap;
+  try { snap = unpackSnap(m, all[i].data); } catch (err) { sayInSaves(`That save couldn't be read: ${err.message}`, true); return; }
+  clearTimeout(game.tick);
+  game.cutShort = false;
+  const top = game.snaps[game.snaps.length - 1];
+  if (top) top.cmd = "restore";
+  mapJump();
+  say(`Restored “${name}”.`);
+  notesBack(all[i]);
+  applySnapshot(m, snap);
+  answer(m, decodeAt(m.s, snap.after), 2);
+  setMode(null);
+  go();
+  afterRestore();
+}
+// an empty notepad takes the save's copy; one you've written in is yours
+function notesBack(x) {
+  if (!x.notes || notesText.value.trim()) return;
+  notesText.value = x.notes;
+  notes.dirty = true;
+  saveNotes();
+  say("Your notes were empty, so this save's copy of them is back in Notes.");
+}
+function afterRestore() {
+  sayInSaves("");
+  if (!touchFirst && !cmd.hidden) cmd.focus({ preventScroll: true });
+}
+
+// Rename in place: Enter or leaving the box keeps the name, Esc doesn't.
+function startRename(name) {
+  saves.renaming = name;
+  sayInSaves("");
+  drawSaves();
+}
+function endRename(keep) {
+  const old = saves.renaming;
+  if (!old) return;
+  const input = $("saveList").querySelector(".save-rename");
+  const name = (input?.value || "").replace(/\s+/g, " ").trim();
+  if (keep && name && name !== old) {
+    const all = savesNow();
+    if (all.some((x) => x.name === name)) { sayInSaves(`Another save is already called “${name}”.`, true); input?.focus(); return; }
+    const x = all.find((y) => y.name === old);
+    if (x) {
+      x.name = name;
+      if (!store.set(savesKey(), all)) { sayInSaves("This browser wouldn't store the new name. Its storage may be full or turned off.", true); return; }
+      sayInSaves(`Renamed to “${name}”.`);
+    }
+  } else sayInSaves("");
+  saves.renaming = "";
+  const at = keep && name ? name : old;
+  drawSaves();
+  [...$("saveList").children].find((r) => r.dataset.name === at)?.querySelector("[data-act=rename]")?.focus({ preventScroll: true });
+}
+$("saveList").addEventListener("keydown", (e) => {
+  if (!e.target.matches(".save-rename")) return;
+  if (e.key === "Enter") { e.preventDefault(); endRename(true); }
+  else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); endRename(false); }
+});
+$("saveList").addEventListener("focusout", (e) => {
+  if (e.target.matches(".save-rename") && saves.renaming) setTimeout(() => { if (saves.renaming && !$("saveList").contains(document.activeElement?.closest(".save-rename"))) endRename(true); });
+});
+
+// Delete asks twice, like Restart.
+function deleteSave(name) {
+  clearTimeout(saves.disarm);
+  if (saves.armed !== name) {
+    saves.armed = name;
+    sayInSaves(`Press again to delete “${name}”. This can't be undone.`);
+    drawSaves();
+    saves.disarm = setTimeout(() => { saves.armed = ""; sayInSaves(""); drawSaves(); }, 4000);
+    return;
+  }
+  saves.armed = "";
+  const all = savesNow(), i = all.findIndex((x) => x.name === name);
+  if (i < 0) return;
+  all.splice(i, 1);
+  const ok = all.length ? store.set(savesKey(), all) : (store.del(savesKey()), true);
+  sayInSaves(ok ? `Deleted “${name}”.` : "This browser wouldn't store the change.", !ok);
+  // focus moves to the save that took its place, or the one before
+  const rows = [...$("saveList").children], at = rows.findIndex((r) => r.dataset.name === name);
+  const next = rows[at + 1] || rows[at - 1];
+  drawSaves();
+  const li = next && [...$("saveList").children].find((r) => r.dataset.name === next.dataset.name);
+  (li?.querySelector("[data-act=delete]") || $("saveOpen")).focus({ preventScroll: true });
+}
+
+const slug = (t) => t.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+function downloadSave(name) {
+  const x = savesNow().find((y) => y.name === name);
+  if (!x) return;
+  saveNotes();
+  const notesNow = notesText.value.trim() ? notesText.value : x.notes || "";
+  let file;
+  try { file = toQuetzal(game.m, x.data, { name: x.name, notes: notesNow }); }
+  catch (err) { sayInSaves(err.message, true); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([file], { type: "application/octet-stream" }));
+  a.download = `${slug(game.builtin || game.name.replace(/\.[^.]*$/, "")) || "story"}-${slug(x.name) || "save"}.qzl`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  sayInSaves(`Downloaded ${a.download}, ${commas(file.length)} bytes${notesNow ? ", with your notes" : ""}.`);
+}
+
+$("saveOpen").addEventListener("click", () => $("saveFile").click());
+$("saveFile").addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (f.size > 1024 * 1024) { sayInSaves(`${f.name} is bigger than any save could be.`, true); return; }
+  f.arrayBuffer().then((b) => importSave(b, f), () => sayInSaves(`${f.name} couldn't be read.`, true));
+});
+// Which built-in story a save is for, if any, from the story files' headers.
+async function builtinFor(q) {
+  for (const [key, st] of Object.entries(STORIES)) {
+    try {
+      const res = await fetch(st.file);
+      if (!res.ok) continue;
+      const b = new Uint8Array(await res.arrayBuffer());
+      if (((b[2] << 8) | b[3]) === q.release && byteStr(b.subarray(0x12, 0x18)) === q.serial && ((b[0x1C] << 8) | b[0x1D]) === q.checksum) return key;
+    } catch { /* that one didn't load; try the next */ }
+  }
+  return "";
+}
+async function importSave(buffer, f) {
+  setPanel("saves", true);
+  const bytes = new Uint8Array(buffer), q = quetzalStory(bytes);
+  if (!q) { sayInSaves(`${f.name} isn't a save file this page can read.`, true); return; }
+  if (!game.m || !sameStory(game.m.s, q)) {
+    const key = await builtinFor(q);
+    const which = `release ${q.release}, serial ${q.serial.replace(/[^\x20-\x7E]/g, "?")}`;
+    if (!key) { sayInSaves(`${f.name} is a save for another story (${which}). Open that story, then the save.`, true); return; }
+    await loadStory(key);
+    if (!game.m || !sameStory(game.m.s, q)) return;
+    setPanel("saves", true);
+  }
+  let got;
+  try { got = fromQuetzal(game.m, bytes); } catch (err) { sayInSaves(`${f.name}: ${err.message}`, true); return; }
+  const said = [];
+  const all = savesNow(), sameAs = (d) => JSON.stringify([d.mem, d.pc, d.after, d.stack, d.frames.map((x) => [x.locals, x.store ?? -1, x.ret, x.stackLen, x.argc])]);
+  const twin = all.find((x) => sameAs(x.data) === sameAs(got.data));
+  if (twin) {
+    said.push(`That game is already here as “${twin.name}”.`);
+    if (got.notes && !twin.notes) { twin.notes = got.notes; store.set(savesKey(), all); }
+  }
+  else {
+    const base = got.name || f.name.replace(/\.[^.]*$/, "") || "Opened save";
+    let name = base;
+    for (let n = 2; all.some((x) => x.name === name); n++) name = `${base} (${n})`;
+    all.push({ name, at: f.lastModified || Date.now(), data: got.data, ...(got.notes ? { notes: got.notes } : {}) });
+    while (all.length > 30) all.shift();
+    if (!store.set(savesKey(), all)) { sayInSaves("This browser wouldn't store the save. Its storage may be full or turned off.", true); return; }
+    said.push(`Added “${name}”.`);
+  }
+  if (got.notes) said.push(takeNotes(got.notes, got.name || f.name));
+  sayInSaves(said.join(" "));
+  drawSaves();
+}
+// Notes from a save file: kept whole when yours are empty or are the start
+// of them, left out when yours already hold them, and otherwise added below
+// yours, so nothing you wrote here is lost.
+function takeNotes(incoming, from) {
+  const text = incoming.replace(/\s+$/, ""), cur = notesText.value.replace(/\s+$/, "");
+  if (!text.trim() || cur.includes(text)) return "Your notes already hold its notes.";
+  const whole = !cur.trim() || text.startsWith(cur);
+  notesText.value = whole ? text : `${cur}\n\nFrom “${from}”:\n${text}`;
+  notes.dirty = true;
+  saveNotes();
+  return whole ? "Its notes are in Notes." : "Its notes are at the end of yours in Notes.";
+}
 
 // ---------- The map ----------
 // Drawn from play, not read from the story file, so it shows only what
