@@ -321,11 +321,11 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .mappad .pad-foot span { flex: 1; }
 .map-clear { flex: none; min-height: 40px; padding: 0 .6rem; font: 600 .8rem var(--sans); color: var(--map-ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
 .map-clear.armed { background: var(--accent); border-color: var(--accent); color: var(--paper); }
-/* Inside: the machine's own state, on an engineer's index card */
-.insidepad { height: min(34rem, 85svh); background: var(--ins-paper); color: var(--ins-ink); font-size: .9rem; line-height: 1.4; }
-.insidepad .pad-head { border-bottom: 1px solid var(--ins-rule); background: var(--ins-head); }
-.insidepad .pad-close { color: var(--ins-ink); }
-.insidepad .pad-foot { color: var(--ins-dim); border-top-color: var(--ins-rule); background: var(--ins-head); }
+/* Inspector: the machine's own state, on an engineer's index card */
+.inspectorpad { height: min(34rem, 85svh); background: var(--ins-paper); color: var(--ins-ink); font-size: .9rem; line-height: 1.4; }
+.inspectorpad .pad-head { border-bottom: 1px solid var(--ins-rule); background: var(--ins-head); }
+.inspectorpad .pad-close { color: var(--ins-ink); }
+.inspectorpad .pad-foot { color: var(--ins-dim); border-top-color: var(--ins-rule); background: var(--ins-head); }
 .ins-views { display: flex; gap: .3rem; padding: .35rem .5rem; border-bottom: 1px solid var(--ins-rule); }
 .ins-views button, .ins-switch {
   flex: 1; min-height: 40px; padding: 0 .4rem;
@@ -544,7 +544,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. <b>Inside</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, all three are on the right end of the screen's top line. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -573,7 +573,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <div class="corner" id="corner">
         <button type="button" data-panel="notes" aria-pressed="false" aria-label="Notes" title="Notes"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 2v3M10 2v3M12.5 2v3M7 9h6M7 12h6M7 15h3.5"/></svg></button>
         <button type="button" data-panel="map" aria-pressed="false" aria-label="Map" title="Map"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5 7 3l6 2 4.5-2v12L13 17l-6-2-4.5 2z"/><path d="M7 3v12M13 5v12"/></svg></button>
-        <button type="button" data-panel="inside" aria-pressed="false" aria-label="Inside" title="Inside"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="10" height="10" rx="1"/><path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3"/></svg></button>
+        <button type="button" data-panel="inspector" aria-pressed="false" aria-label="Inspector" title="Inspector"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="10" height="10" rx="1"/><path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3"/></svg></button>
         <button type="button" class="leave" id="leaveFull" aria-label="Leave full screen">×</button>
       </div>
       <div class="status-bar" id="statusBar" hidden><span id="statusLeft"></span><span id="statusRight"></span></div>
@@ -607,11 +607,11 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <p class="map-say" id="mapSay"></p>
       <div class="pad-foot"><span>Drag to look around, or use the arrow keys and <kbd>+</kbd> <kbd>−</kbd>.</span> <button type="button" class="map-clear" id="mapRedraw" title="Lay the map out again from the ways you've found">Redraw</button> <button type="button" class="map-clear" id="mapClear">Clear</button></div>
     </aside>
-    <aside class="pad insidepad" id="insidepad" aria-labelledby="insideH" hidden>
+    <aside class="pad inspectorpad" id="inspectorpad" aria-labelledby="inspectorH" hidden>
       <div class="pad-head">
-        <h2 id="insideH">Inside</h2>
-        <span class="pad-for" id="insideFor"></span>
-        <button type="button" class="pad-close" id="insideClose" aria-label="Close Inside">×</button>
+        <h2 id="inspectorH">Inspector</h2>
+        <span class="pad-for" id="inspectorFor"></span>
+        <button type="button" class="pad-close" id="inspectorClose" aria-label="Close Inspector">×</button>
       </div>
       <div class="ins-views" role="group" aria-label="What to look at">
         <button type="button" data-view="objects" aria-pressed="true">Objects</button>
@@ -641,8 +641,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" id="fullBtn" aria-pressed="false">Full screen</button>
     <button type="button" class="btn" id="notesBtn" data-panel="notes" aria-pressed="false">Notes</button>
     <button type="button" class="btn" id="mapBtn" data-panel="map" aria-pressed="false">Map</button>
-    <button type="button" class="btn" id="insideBtn" data-panel="inside" aria-pressed="false">Inside</button>
     <button type="button" class="btn" id="enhancedBtn" aria-pressed="false" hidden>Enhanced</button>
+    <button type="button" class="btn" id="inspectorBtn" data-panel="inspector" aria-pressed="false">Inspector</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
   </div>
@@ -664,7 +664,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
       <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
       <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
-      <li><b>One command is thousands of instructions.</b> Typing <kbd>take leaflet</kbd> at the start of Zork I runs about 1,650 of them, through 37 routines: the parser matching your words, the checks on whether you can reach the leaflet, the take itself, and then each timer and creature on the game's clock, the thief among them. Under <b>Inside</b>, <b>This turn</b> lists the routines in the order they were first called, and what the command moved, switched, and changed.</li>
+      <li><b>One command is thousands of instructions.</b> Typing <kbd>take leaflet</kbd> at the start of Zork I runs about 1,650 of them, through 37 routines: the parser matching your words, the checks on whether you can reach the leaflet, the take itself, and then each timer and creature on the game's clock, the thief among them. In the <b>Inspector</b>, <b>This turn</b> lists the routines in the order they were first called, and what the command moved, switched, and changed.</li>
       <li><b><kbd>x</kbd> means examine, even where the game never heard of it.</b> The Zorks want <kbd>examine lamp</kbd> or <kbd>look at lamp</kbd>, and many players now type <kbd>x lamp</kbd> without thinking. When a game's dictionary has no <kbd>x</kbd>, the interpreter passes <kbd>examine</kbd> in its place at the start of each command. The game itself is unchanged.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
@@ -1185,7 +1185,7 @@ function callRoutine(m, packed, args, store) {
   const locals = [];
   for (let i = 0; i < n; i++) locals.push(m.v <= 4 ? m.s.u16(a + 1 + 2 * i) : 0);
   args.slice(0, n).forEach((x, i) => { locals[i] = x; });
-  // the page's Inside panel lists the routines each turn called
+  // the page's Inspector panel lists the routines each turn called
   if (m.calls) m.calls.set(a, (m.calls.get(a) || 0) + 1);
   m.frames.push({ locals, store, ret: m.pc, stackLen: m.stack.length, argc: args.length });
   m.pc = a + 1 + (m.v <= 4 ? 2 * n : 0);
@@ -1682,7 +1682,7 @@ function go() {
   const why = m.halted.why;
   if (why === "input") {
     mapTurn();
-    insideTurn();
+    inspectorTurn();
     game.snaps.push({ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here });
     if (game.snaps.length > 100) game.snaps.shift();
     autosave();
@@ -1823,7 +1823,7 @@ function undo() {
   clearTimeout(game.timer);
   applySnapshot(m, back.snap);
   mapJump(back.room);
-  insideJump("undo");
+  inspectorJump("undo");
   say(back.cmd ? `Took back “${back.cmd}”.` : "Took back the last move.");
   m.lines[m.lines.length - 1] = structuredClone(back.prompt);
   autosave();
@@ -1910,9 +1910,9 @@ function start(buffer, meta) {
   loadNotes();
   loadMap();
   loadEnhanced();
-  loadInside();
+  loadInspector();
   const back = resume();
-  if (back) insideJump("resume");
+  if (back) inspectorJump("resume");
   $("loadStatus").textContent = back ? "Picked up where you left off. Restart starts the story over." : "";
   if (back) { flush(); updateButtons(); } else go();
 }
@@ -2007,7 +2007,7 @@ $("restartBtn").addEventListener("click", () => {
   clearTimeout(game.timer);
   resetMachine(game.m, true);
   mapJump();
-  insideJump();
+  inspectorJump();
   game.snaps = [];
   game.mark = null;
   store.del(autoKey());
@@ -2136,11 +2136,11 @@ window.addEventListener("pagehide", saveNotes);
 document.addEventListener("visibilitychange", () => { if (document.hidden) saveNotes(); });
 
 // ---------- Panels ----------
-// The notepad, the map and Inside share the space beside the screen, one at a time.
+// The notepad, the map and the Inspector share the space beside the screen, one at a time.
 // On a touch screen the notepad opens without the keyboard, so you can read
 // it; tap the page to write. The map leaves the prompt where it was, so you
 // can keep playing and watch it fill in.
-const PANELS = { notes: "notepad", map: "mappad", inside: "insidepad" };
+const PANELS = { notes: "notepad", map: "mappad", inspector: "inspectorpad" };
 let panel = "";
 function setPanel(name, quiet) {
   if (!PANELS[name]) name = "";
@@ -2151,7 +2151,7 @@ function setPanel(name, quiet) {
   try { localStorage.setItem("zmi:panel", name); } catch { /* storage is off */ }
   if (was === "notes") saveNotes();
   if (name === "map") requestAnimationFrame(() => { centerMap(); drawMap(); });
-  if (name === "inside") drawInside();
+  if (name === "inspector") drawInspector();
   if (quiet) return;
   if (name === "notes" && !touchFirst) notesText.focus({ preventScroll: true });
   else if (!cmd.hidden && (!name || document.activeElement?.closest("[data-panel]"))) cmd.focus({ preventScroll: true });
@@ -2159,9 +2159,9 @@ function setPanel(name, quiet) {
 document.querySelectorAll("[data-panel]").forEach((b) => b.addEventListener("click", () => setPanel(panel === b.dataset.panel ? "" : b.dataset.panel)));
 $("padClose").addEventListener("click", () => setPanel(""));
 $("mapClose").addEventListener("click", () => setPanel(""));
-$("insideClose").addEventListener("click", () => setPanel(""));
+$("inspectorClose").addEventListener("click", () => setPanel(""));
 // Esc in a panel goes back to the game, and doesn't leave full screen
-for (const el of [notesText, $("mapSvg"), $("insidepad")]) el.addEventListener("keydown", (e) => {
+for (const el of [notesText, $("mapSvg"), $("inspectorpad")]) el.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   e.preventDefault();
   e.stopPropagation();
@@ -2657,7 +2657,7 @@ try {
   setPanel(open, true);
 } catch { /* storage is off */ }
 
-// ---------- Inside ----------
+// ---------- Inspector ----------
 // The machine's own state, read from memory each time the game asks for a
 // line: the object tree, every global, and what this turn changed. A copy
 // of dynamic memory is kept at each prompt, and the next prompt is set
@@ -2669,19 +2669,19 @@ const ins = {
   names: null, story: "", prev: null, cur: null, count: 0, turn: null, diff: null,
 };
 try {
-  ins.whole = localStorage.getItem("zmi:inside-whole") === "on";
-  const v = localStorage.getItem("zmi:inside-view");
+  ins.whole = localStorage.getItem("zmi:inspector-whole") === "on";
+  const v = localStorage.getItem("zmi:inspector-view");
   if (["objects", "globals", "turn"].includes(v)) ins.view = v;
 } catch { /* storage is off */ }
-const insideOpen = () => panel === "inside";
+const inspectorOpen = () => panel === "inspector";
 
-async function loadInside() {
+async function loadInspector() {
   const key = game.builtin;
   ins.story = key;
   ins.names = null;
   ins.pick = 0;
   ins.open = new Set();
-  $("insideFor").textContent = $("padFor").textContent;
+  $("inspectorFor").textContent = $("padFor").textContent;
   if (!key) return;
   const n = await namesFor(key);
   if (ins.story !== key || !n) return;
@@ -2689,35 +2689,35 @@ async function loadInside() {
     objects: n.objects || {}, attributes: n.attributes || {}, properties: n.properties || {}, globals: n.globals || [],
     routines: new Map((n.routines || []).map((r) => [r.addr, r.name])),
   };
-  if (insideOpen()) drawInside();
+  if (inspectorOpen()) drawInspector();
 }
 // a fresh copy of dynamic memory, and the counters started again
-function insideMark() {
+function inspectorMark() {
   const m = game.m;
   ins.cur = m.mem.slice(0, m.s.h.staticMem);
   ins.count = m.count;
   m.calls = new Map();
 }
 // called each time the game asks for a line
-function insideTurn() {
+function inspectorTurn() {
   const m = game.m;
   const calls = m.calls || new Map();
   ins.prev = ins.cur || m.pristine.slice(0, m.s.h.staticMem);
   const ran = Math.max(0, m.count - ins.count);
   ins.turn = { cmd: game.snaps.length ? game.snaps[game.snaps.length - 1].cmd || "" : null, ran, calls };
   ins.diff = null;
-  insideMark();
-  if (insideOpen()) drawInside();
+  inspectorMark();
+  if (inspectorOpen()) drawInspector();
 }
 // Undo, resume and restart put memory back without running a turn
-function insideJump(why = "") {
+function inspectorJump(why = "") {
   const m = game.m;
   if (!m) return;
-  insideMark();
+  inspectorMark();
   ins.prev = null;
   ins.diff = null;
   ins.turn = { jump: why };
-  if (insideOpen()) drawInside();
+  if (inspectorOpen()) drawInspector();
 }
 
 // reading the tree from a copy of memory; past dynamic memory nothing changes
@@ -2743,7 +2743,7 @@ function propsIn(m, mem, o) {
 const attrCount = (m) => (m.v <= 3 ? 32 : 48);
 
 // what the turn changed: things moved, attributes, properties, globals
-function insideDiff() {
+function inspectorDiff() {
   const m = game.m, before = ins.prev, now = m.mem;
   if (!before || ins.diff) return ins.diff;
   const d = { moved: [], attrs: [], props: [], globals: [], bytes: 0, objs: new Set(), glob: new Set() };
@@ -2776,7 +2776,7 @@ function insideDiff() {
   return (ins.diff = d);
 }
 
-// ---------- Inside: names ----------
+// ---------- Inspector: names ----------
 const objLabel = (m, o) => objName(m, o) || ins.names?.objects[o] || `object ${o}`;
 const attrName = (a) => ins.names?.attributes[a] || "";
 const propName = (p) => ins.names?.properties[p] || "";
@@ -2785,7 +2785,7 @@ const gNum = (i) => "G" + hex(i, 2);
 // a named story lists the globals it has; anything else, all 240
 const globalCount = () => ins.names?.globals.length || 240;
 // you: the game's WINNER, or the one the map learned on your first walk
-function insidePlayer(m) {
+function inspectorPlayer(m) {
   const g = ins.names?.globals;
   for (const name of ["WINNER", "PLAYER"]) {
     const i = g ? g.indexOf(name) : -1;
@@ -2795,23 +2795,23 @@ function insidePlayer(m) {
 }
 const objButton = (m, o) => (o ? `<button type="button" class="ins-link" data-o="${o}">${esc(objLabel(m, o))}</button>` : "nothing");
 
-// ---------- Inside: drawing ----------
-function drawInside() {
-  if (!insideOpen()) return;
+// ---------- Inspector: drawing ----------
+function drawInspector() {
+  if (!inspectorOpen()) return;
   document.querySelectorAll(".ins-views [data-view]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === ins.view));
   for (const v of ["objects", "globals", "turn"]) $("ins" + v[0].toUpperCase() + v.slice(1)).hidden = v !== ins.view;
   $("insWhole").setAttribute("aria-pressed", ins.whole);
   $("insChanged").setAttribute("aria-pressed", ins.changed);
   const m = game.m;
   if (!m) return;
-  if (ins.view === "objects") drawInsideTree(m);
-  else if (ins.view === "globals") drawInsideGlobals(m);
-  else drawInsideTurn(m);
+  if (ins.view === "objects") drawInspectorTree(m);
+  else if (ins.view === "globals") drawInspectorGlobals(m);
+  else drawInspectorTurn(m);
 }
 
-function drawInsideTree(m) {
+function drawInspectorTree(m) {
   const box = $("insTreeBox"), tree = $("insTree"), count = m.s.objs.count;
-  const here = map.data.here, you = insidePlayer(m), d = insideDiff();
+  const here = map.data.here, you = inspectorPlayer(m), d = inspectorDiff();
   const focused = document.activeElement?.closest?.("#insTree [data-o]")?.dataset.o;
   const top = box.scrollTop;
   if (!count) { tree.innerHTML = ""; $("insCard").innerHTML = `<p class="ins-empty">This story has no objects.</p>`; return; }
@@ -2846,15 +2846,15 @@ function drawInsideTree(m) {
   tree.innerHTML = roots.map((o) => row(o, 0)).join("");
   box.scrollTop = top;
   if (focused) tree.querySelector(`.ins-node[data-o="${focused}"]`)?.focus({ preventScroll: true });
-  drawInsideCard(m);
+  drawInspectorCard(m);
 }
 function within(m, o, anc) {
   for (let x = o, g = 0; x && g < 64; x = parentOf(m, x), g++) if (x === anc) return true;
   return false;
 }
 
-function drawInsideCard(m) {
-  const o = ins.pick, d = insideDiff();
+function drawInspectorCard(m) {
+  const o = ins.pick, d = inspectorDiff();
   if (!o) { $("insCard").innerHTML = ""; return; }
   const zil = ins.names?.objects[o];
   const moved = d?.moved.find((x) => x.o === o);
@@ -2882,8 +2882,8 @@ function drawInsideCard(m) {
   $("insCard").innerHTML = h;
 }
 
-function drawInsideGlobals(m) {
-  const d = insideDiff(), q = ins.find.trim().toLowerCase();
+function drawInspectorGlobals(m) {
+  const d = inspectorDiff(), q = ins.find.trim().toLowerCase();
   const n = globalCount();
   let rows = "";
   for (let i = 0; i < n; i++) {
@@ -2898,8 +2898,8 @@ function drawInsideGlobals(m) {
     `<tr><td colspan="3">${ins.changed ? "This turn left every global as it was." : "Try another name or number."}</td></tr>`}</tbody>`;
 }
 
-function drawInsideTurn(m) {
-  const t = ins.turn, d = insideDiff(), box = $("insTurnBody");
+function drawInspectorTurn(m) {
+  const t = ins.turn, d = inspectorDiff(), box = $("insTurnBody");
   if (!t) { box.innerHTML = `<p>The game hasn't reached its first prompt.</p>`; return; }
   if (t.jump !== undefined) {
     const what = { undo: "Undo put memory back as it was at your last prompt.", resume: "Picked up where you left off, from the copy this browser kept." }[t.jump] || "Restart copied the story file's dynamic memory back and started again.";
@@ -2914,7 +2914,7 @@ function drawInsideTurn(m) {
     const shown = items.slice(0, 60).map((x) => `<li>${fmt(x)}</li>`).join("");
     return `<h3>${title}</h3><ul>${shown}${items.length > 60 ? `<li>and ${items.length - 60} more</li>` : ""}</ul>`;
   };
-  const you = insidePlayer(m), here = map.data.here;
+  const you = inspectorPlayer(m), here = map.data.here;
   const who = (o) => (o && o === you ? `<button type="button" class="ins-link" data-o="${o}">you</button>` : objButton(m, o));
   // Without the whole tree, only what happened in your room: the thief
   // walking a passage you haven't found stays out of it.
@@ -2936,26 +2936,26 @@ function drawInsideTurn(m) {
   box.innerHTML = h;
 }
 
-// ---------- Inside: controls ----------
+// ---------- Inspector: controls ----------
 document.querySelectorAll(".ins-views [data-view]").forEach((b) => b.addEventListener("click", () => {
   ins.view = b.dataset.view;
-  try { localStorage.setItem("zmi:inside-view", ins.view); } catch { /* storage is off */ }
-  drawInside();
+  try { localStorage.setItem("zmi:inspector-view", ins.view); } catch { /* storage is off */ }
+  drawInspector();
 }));
 $("insWhole").addEventListener("click", () => {
   ins.whole = !ins.whole;
-  try { localStorage.setItem("zmi:inside-whole", ins.whole ? "on" : "off"); } catch { /* storage is off */ }
-  drawInside();
+  try { localStorage.setItem("zmi:inspector-whole", ins.whole ? "on" : "off"); } catch { /* storage is off */ }
+  drawInspector();
 });
-$("insChanged").addEventListener("click", () => { ins.changed = !ins.changed; drawInside(); });
-$("insFind").addEventListener("input", (e) => { ins.find = e.target.value; drawInside(); });
+$("insChanged").addEventListener("click", () => { ins.changed = !ins.changed; drawInspector(); });
+$("insFind").addEventListener("input", (e) => { ins.find = e.target.value; drawInspector(); });
 // picking an object anywhere in the panel shows its card
-$("insidepad").addEventListener("click", (e) => {
+$("inspectorpad").addEventListener("click", (e) => {
   const t = e.target.closest("[data-tog]");
   if (t) {
     const o = +t.dataset.tog;
     if (ins.open.has(o)) ins.open.delete(o); else ins.open.add(o);
-    drawInside();
+    drawInspector();
     $("insTree").querySelector(`[data-tog="${o}"]`)?.focus({ preventScroll: true });
     return;
   }
@@ -2966,7 +2966,7 @@ $("insidepad").addEventListener("click", (e) => {
   // a thing outside the room you're in needs the whole tree to show it
   if (!ins.whole && !(map.data.here && within(m, o, map.data.here))) ins.whole = true;
   ins.view = "objects";
-  drawInside();
+  drawInspector();
   const node = $("insTree").querySelector(`.ins-node[data-o="${o}"]`);
   if (node) { node.scrollIntoView({ block: "nearest" }); if (b.classList.contains("ins-node")) node.focus({ preventScroll: true }); }
 });
