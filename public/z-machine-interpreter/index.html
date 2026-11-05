@@ -1784,6 +1784,12 @@ function start(buffer, meta) {
   if (w.blorb) bits.push(`taken out of a ${commas(buffer.byteLength)}-byte Blorb`);
   $("fileMeta").textContent = (game.title ? meta.name + ". " : "") + (w.author ? `By ${w.author}. ` : "") + bits.join(", ") + ".";
   if (game.builtin) { try { localStorage.setItem("zmi:last", game.builtin); } catch { /* storage is off */ } }
+  // a built-in story is named in the address, and the analyzer opens the same one;
+  // a visitor's own file never leaves the browser, so that link stays general
+  const tag = game.builtin ? "#" + game.builtin : "";
+  history.replaceState(null, "", location.pathname + location.search + tag);
+  $("insideLink").href = "../z-machine/" + tag;
+  $("insideLink").textContent = game.builtin ? "See inside this story file" : "See inside a story file";
   loadNotes();
   loadMap();
   loadEnhanced();
