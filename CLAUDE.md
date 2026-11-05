@@ -19,14 +19,14 @@ Pushing to `main` deploys. Only `public/` is published.
 ## Run it locally
 
 ```sh
-scripts/serve          # then open http://localhost:8000/
+scripts/serve          # then open http://localhost:8020/
 scripts/serve 9000     # or pick a port
 scripts/serve --list   # Python servers still running, with their pids
 ```
 
 Use a server, not `file://`. Each page's back link points at `/`, which only works when served.
 
-After cloning, turn on the hook once: `git config core.hooksPath .githooks`.
+After cloning, turn on the hook once: `git config core.hooksPath .githooks`. `direnv allow` once puts `scripts/` on PATH via `.envrc`.
 
 ## The API Worker
 
