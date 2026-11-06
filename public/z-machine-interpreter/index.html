@@ -356,6 +356,10 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 /* the one you can't take back sits apart from the rest */
 .save-acts [data-act=delete] { margin-left: auto; }
 .save-empty { margin: .25rem; color: var(--saves-dim); }
+.save-ask { border: 0; margin: .4rem 0 0; padding: 0; min-width: 0; }
+.save-ask legend { padding: 0; font-size: .85rem; }
+.save-ask label { display: flex; align-items: center; gap: .5rem; min-height: 40px; cursor: pointer; }
+.save-ask input { flex: none; width: 1.15rem; height: 1.15rem; margin: 0; accent-color: var(--saves-tab); }
 .saves-say { margin: 0; padding: .3rem .75rem; font-size: .85rem; border-top: 1px solid var(--saves-rule); background: var(--saves-card); }
 .saves-say:empty { display: none; }
 .saves-say.trouble { color: var(--accent); }
@@ -585,7 +589,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes inside. Open a save file there, or drop one on the page, to add it. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -663,7 +667,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <div class="pad-foot">
         <button type="button" class="save-act" id="saveOpen">Open a save file…</button>
         <input type="file" id="saveFile" class="visually-hidden" tabindex="-1" aria-hidden="true">
-        <span>A download carries your notes.<span class="ins-esc"> <kbd>Esc</kbd> goes back to the game.</span></span>
+        <span>A download carries your notes and map.<span class="ins-esc"> <kbd>Esc</kbd> goes back to the game.</span></span>
       </div>
     </aside>
     <aside class="pad inspectorpad" id="inspectorpad" aria-labelledby="inspectorH" hidden>
@@ -730,7 +734,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>A game can keep time while you type.</b> From Version 4, a game asking for a line or a key can also name a routine and a time, in tenths of a second. Each time that runs out, the interpreter calls the routine while your half-typed line waits. The routine may print something, and you carry on typing below it, or it may end your line where it stands. A Version 5 game can then hand back what you'd typed, and this page puts it back in the input for you to finish.</li>
       <li><b>Each screen shows colours its own way.</b> From Version 5 a game can ask for eight named colours, or any of 32,768 more. The desk shows them as the Standard lists them, and the Atari 800 uses its own palette, with its own blue. The green screen shows the same colours with a touch of its green mixed in. The printout prints letters in coloured inks and leaves backgrounds as paper, since a ribbon can't print white. A game that clears the screen in its colours gets the whole screen in them, the way <i>Photopia</i> changes colour from scene to scene.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
-      <li><b>A save file works in other interpreters.</b> <b>Download</b> in <b>Saves</b> writes a Quetzal file, the save format Frotz and many other interpreters read and write. It says which story it's for by release, serial number, and checksum, then holds dynamic memory packed the same way this page keeps it, and the call stack, oldest call first. The page adds the save's name and your notes for the story in a chunk of its own, and other interpreters skip chunks they don't know. Open the file on another computer, phone, or tablet, and the save joins the list there and the notes join yours. A save for one of the built-in stories opens that story first.</li>
+      <li><b>A save file works in other interpreters.</b> <b>Download</b> in <b>Saves</b> writes a Quetzal file, the save format Frotz and many other interpreters read and write. It says which story it's for by release, serial number, and checksum, then holds dynamic memory packed the same way this page keeps it, and the call stack, oldest call first. The page adds the save's name, your notes, and your map in chunks of its own, and other interpreters skip chunks they don't know. Open the file on another computer, phone, or tablet, and the save joins the list there. Restore it, and you choose whether its notes and map replace the ones there. A save for one of the built-in stories opens that story first.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
     </ul>
   </section>
@@ -1461,9 +1465,9 @@ const unpackSnap = (m, data) => ({ ...data, mem: unpackMem(data.mem, m.pristine,
 // FORM of type IFZS, holding which story it's for (IFhd), dynamic memory
 // packed against the story file (CMem, the same packing this page keeps),
 // and the call frames, oldest first (Stks). The page adds the save's name
-// and the story's notes in an IntD chunk, which other interpreters skip.
+// and the story's notes and map in IntD chunks, which other interpreters skip.
 const QZ_ME = "CURI";                    // this page, as an IntD interpreter ID
-const QZ_NOTES = 1, QZ_NAME = 2;         // what an IntD chunk of ours holds
+const QZ_NOTES = 1, QZ_NAME = 2, QZ_MAP = 3;  // what an IntD chunk of ours holds
 const byteStr = (bytes) => { let s = ""; for (let i = 0; i < bytes.length; i += 4096) s += String.fromCharCode(...bytes.subarray(i, i + 4096)); return s; };
 const strBytes = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
 // where a save's answer goes: its branch bytes up to Version 3 and its
@@ -1496,6 +1500,7 @@ function toQuetzal(m, data, extra = {}) {
   const intd = (id, text) => chunk("IntD", [...strBytes("    "), 0, id, 0, 0, ...strBytes(QZ_ME), ...new TextEncoder().encode(text)]);
   if (extra.name) intd(QZ_NAME, extra.name);
   if (extra.notes) intd(QZ_NOTES, extra.notes);
+  if (extra.map) intd(QZ_MAP, JSON.stringify(extra.map));
   const size = out.reduce((n, b) => n + b.length, 4);
   const file = new Uint8Array(8 + size);
   file.set(strBytes("FORM"));
@@ -1522,8 +1527,8 @@ function quetzalStory(bytes) {
   return null;
 }
 const sameStory = (s, q) => !!q && q.release === s.h.release && q.serial === s.h.serial && q.checksum === storySum(s);
-// Reads a Quetzal file into the page's own save, plus the name and notes
-// if this page wrote it. Throws with a sentence to show if it can't.
+// Reads a Quetzal file into the page's own save, plus the name, notes, and
+// map if this page wrote it. Throws with a sentence to show if it can't.
 function fromQuetzal(m, bytes) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   if (!isQuetzal(b)) throw new Error("That isn't a Quetzal save file.");
@@ -1596,6 +1601,8 @@ function fromQuetzal(m, bytes) {
     data: { mem: packMem(mem, orig), stack, frames, pc: ins.next, after: ins.addr, waiting: null },
     name: text(QZ_NAME) || (anno ? byteStr(anno).trim() : ""),
     notes: text(QZ_NOTES),
+    // a map that doesn't parse is left behind; the save still opens
+    map: (() => { try { return mapOk(JSON.parse(text(QZ_MAP) || "null")); } catch { return null; } })(),
   };
 }
 
@@ -2184,7 +2191,8 @@ function finishSave(name) {
     const data = packSnap(m, snap);
     const saves = (store.get(savesKey()) || []).filter((x) => x.name !== name);
     saveNotes();
-    saves.push({ name, at: Date.now(), data, ...(notesText.value.trim() ? { notes: notesText.value } : {}) });
+    const mapCopy = mapNow();
+    saves.push({ name, at: Date.now(), data, ...(notesText.value.trim() ? { notes: notesText.value } : {}), ...(mapCopy ? { map: mapCopy } : {}) });
     while (saves.length > 30) saves.shift();
     ok = store.set(savesKey(), saves);
     say(ok ? `Saved as “${name}” in this browser, ${commas(JSON.stringify(data).length)} bytes.` : "This browser wouldn't store the save. Its storage may be full or turned off.");
@@ -2194,7 +2202,9 @@ function finishSave(name) {
   answer(m, w.ins, ok ? 1 : 0);
   go();
 }
-function finishRestore(text) {
+// `use` says whether the save's notes and map come back too (from Saves);
+// the game's own RESTORE can't ask, so they come back only where yours are empty
+function finishRestore(text, use = {}) {
   const m = game.m, w = m.waiting;
   echo(text);
   const saves = store.get(savesKey()) || [];
@@ -2203,7 +2213,8 @@ function finishRestore(text) {
     try {
       applySnapshot(m, unpackSnap(m, pick.data));
       say(`Restored “${pick.name}”.`);
-      notesBack(pick);
+      notesFrom(pick, use.notes);
+      mapFrom(pick, use.map);
       answer(m, decodeAt(m.s, pick.data.after), 2);
       return go();
     } catch (err) { say(`That save couldn't be read: ${err.message}`); }
@@ -2595,12 +2606,15 @@ for (const el of [notesText, $("mapSvg"), $("inspectorpad"), $("savespad")]) el.
 // ---------- Saves ----------
 // Every game saved for this story in this browser, newest first: restore
 // one, rename it, delete it, or download it as a Quetzal file that other
-// interpreters open. Each save keeps a copy of the notes as they were, and
-// a download carries the notes as they are now, so a game
-// carried to another computer, phone, or tablet brings them along. A save
-// file opened or dropped here joins the list, and its notes join yours.
+// interpreters open. Each save keeps a copy of the notes and map as they
+// were, and a download carries them as they are now, so a game carried to
+// another computer, phone, or tablet brings them along. A save file opened
+// or dropped here joins the list. Restoring a save that has notes or a map
+// asks whether to bring its copies back too.
 const savesNow = () => (game.m ? store.get(savesKey()) || [] : []);
-const saves = { renaming: "", armed: "", disarm: 0 };
+const saves = { renaming: "", armed: "", disarm: 0, asking: "" };
+// what a save brings that Restore offers to bring back: its notes, its map
+const savesAsk = (x) => ({ notes: !!x.notes?.trim(), map: !!x.map });
 function sayInSaves(text, trouble) {
   const el = $("savesSay");
   el.textContent = text;
@@ -2610,7 +2624,7 @@ const shortTitle = () => (game.builtin ? game.title.split(":")[0] : game.title |
 // the game's own RESTORE prompt takes a pick too
 const canRestoreNow = () => game.mode === "line" || game.mode === "restore";
 function savesReady() {
-  document.querySelectorAll("#saveList [data-act=restore]").forEach((b) => { b.disabled = !canRestoreNow(); });
+  document.querySelectorAll("#saveList [data-act=restore], #saveList [data-act=go]").forEach((b) => { b.disabled = !canRestoreNow(); });
 }
 function drawSaves() {
   if (panel !== "saves") return;
@@ -2640,18 +2654,37 @@ function drawSaves() {
     }
     const meta = document.createElement("span");
     meta.className = "save-meta";
-    meta.textContent = `${new Date(x.at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })} · ${commas(JSON.stringify(x.data).length)} bytes`;
+    const brings = [x.notes && "notes", x.map && "map"].filter(Boolean).join(" and ");
+    meta.textContent = `${new Date(x.at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })} · ${commas(JSON.stringify(x.data).length)} bytes${brings ? ` · with ${brings}` : ""}`;
     li.append(meta);
+    const asking = saves.asking === x.name;
+    if (asking) {
+      const ask = savesAsk(x), set = document.createElement("fieldset"), legend = document.createElement("legend");
+      set.className = "save-ask";
+      legend.textContent = "Restore with this save's own:";
+      set.append(legend);
+      for (const what of ["notes", "map"]) {
+        if (!ask[what]) continue;
+        const label = document.createElement("label"), box = document.createElement("input");
+        Object.assign(box, { type: "checkbox" });
+        box.dataset.use = what;
+        const mine = what === "notes" ? notesText.value.trim() : mapNow();
+        label.append(box, `${what === "notes" ? "Notes" : "Map"}${mine ? ", in place of yours" : ""}`);
+        set.append(label);
+      }
+      li.append(set);
+    }
     const acts = document.createElement("div");
     acts.className = "save-acts";
-    for (const [act, label] of [["restore", "Restore"], ["rename", "Rename"], ["download", "Download"], ["delete", "Delete"]]) {
+    const choices = asking ? [["go", "Restore"], ["cancel", "Cancel"]] : [["restore", "Restore"], ["rename", "Rename"], ["download", "Download"], ["delete", "Delete"]];
+    for (const [act, label] of choices) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "save-act";
       b.dataset.act = act;
       b.textContent = label;
       b.setAttribute("aria-describedby", id);
-      if (act === "restore") { b.disabled = !canRestoreNow(); b.title = "Restores while the game waits for a command"; }
+      if (act === "restore" || act === "go") { b.disabled = !canRestoreNow(); b.title = "Restores while the game waits for a command"; }
       if (act === "delete" && saves.armed === x.name) { b.classList.add("armed"); b.textContent = "Press again to delete"; }
       acts.append(b);
     }
@@ -2660,6 +2693,8 @@ function drawSaves() {
   });
   const input = list.querySelector(".save-rename");
   if (input) { input.focus(); input.select(); return; }
+  const ask = list.querySelector(".save-ask input");
+  if (ask && !list.contains(document.activeElement)) { ask.focus({ preventScroll: true }); ask.closest("li").scrollIntoView({ block: "nearest" }); return; }
   if (keep) {
     const li = [...list.children].find((r) => r.dataset.name === keep.name);
     (li?.querySelector(`[data-act=${keep.act}]`) || list.querySelector("[data-act]") || $("saveOpen")).focus({ preventScroll: true });
@@ -2668,16 +2703,40 @@ function drawSaves() {
 $("saveList").addEventListener("click", (e) => {
   const b = e.target.closest("[data-act]");
   if (!b || b.disabled) return;
-  const name = b.closest("li").dataset.name;
-  ({ restore: restoreSave, rename: startRename, download: downloadSave, delete: deleteSave })[b.dataset.act](name);
+  const li = b.closest("li"), name = li.dataset.name, act = b.dataset.act;
+  if (act === "cancel") {
+    saves.asking = "";
+    drawSaves();
+    [...$("saveList").children].find((r) => r.dataset.name === name)?.querySelector("[data-act=restore]")?.focus({ preventScroll: true });
+    return;
+  }
+  if (act === "go") {
+    const use = (w) => !!li.querySelector(`[data-use=${w}]`)?.checked;
+    restoreSave(name, { notes: use("notes"), map: use("map") });
+    return;
+  }
+  saves.asking = "";
+  ({ restore: restoreSave, rename: startRename, download: downloadSave, delete: deleteSave })[act](name);
 });
 
 // Restore here does what the game's RESTORE does: the save's own save
-// instruction answers 2, and the game carries on from there.
-function restoreSave(name) {
+// instruction answers 2, and the game carries on from there. A save with
+// notes or a map asks first, in its row, whether to bring them back too.
+function restoreSave(name, use) {
   const m = game.m, all = savesNow(), i = all.findIndex((x) => x.name === name);
   if (i < 0 || !canRestoreNow()) return;
-  if (game.mode === "restore") { finishRestore(String(i + 1)); afterRestore(); return; }
+  if (!use) {
+    const ask = savesAsk(all[i]);
+    if (ask.notes || ask.map) {
+      saves.asking = name;
+      sayInSaves(`“${name}” has its own ${ask.notes && ask.map ? "notes and map" : ask.notes ? "notes" : "map"}. Tick what to bring back with it, then Restore.`);
+      drawSaves();
+      return;
+    }
+    use = {};
+  }
+  saves.asking = "";
+  if (game.mode === "restore") { finishRestore(String(i + 1), use); afterRestore(); return; }
   let snap;
   try { snap = unpackSnap(m, all[i].data); } catch (err) { sayInSaves(`That save couldn't be read: ${err.message}`, true); return; }
   clearTimeout(game.tick);
@@ -2686,23 +2745,43 @@ function restoreSave(name) {
   if (top) top.cmd = "restore";
   mapJump();
   say(`Restored “${name}”.`);
-  notesBack(all[i]);
+  notesFrom(all[i], use.notes);
+  mapFrom(all[i], use.map);
   applySnapshot(m, snap);
   answer(m, decodeAt(m.s, snap.after), 2);
   setMode(null);
   go();
   afterRestore();
 }
-// an empty notepad takes the save's copy; one you've written in is yours
-function notesBack(x) {
-  if (!x.notes || notesText.value.trim()) return;
+// The save's copy comes back when you ticked it (`take` true), never when
+// you didn't (false), and, from the game's own RESTORE (undefined), only
+// into an empty notepad or map.
+function notesFrom(x, take) {
+  if (!x.notes || notesText.value === x.notes) return;
+  const empty = !notesText.value.trim();
+  if (take === false || (take === undefined && !empty)) return;
   notesText.value = x.notes;
   notes.dirty = true;
   saveNotes();
-  say("Your notes were empty, so this save's copy of them is back in Notes.");
+  say(empty ? "This save's notes are back in Notes." : "This save's notes are in Notes now, in place of yours.");
+}
+function mapFrom(x, take) {
+  if (!x.map) return;
+  const here = mapNow();
+  if (take === false || (take === undefined && here) || (here && sameMap(x.map, here))) return;
+  map.data = { ...blankMap(), ...structuredClone(x.map) };
+  map.pending = null;
+  map.kids = null;
+  map.carried = null;
+  saveMap();
+  centerMap();
+  drawMap();
+  say(here ? "This save's map is on the Map now, in place of yours." : "This save's map is back on the Map.");
 }
 function afterRestore() {
   sayInSaves("");
+  saves.asking = "";
+  drawSaves();
   if (!touchFirst && !cmd.hidden) cmd.focus({ preventScroll: true });
 }
 
@@ -2771,8 +2850,9 @@ function downloadSave(name) {
   if (!x) return;
   saveNotes();
   const notesNow = notesText.value.trim() ? notesText.value : x.notes || "";
+  const mapOut = mapNow() || x.map || null;
   let file;
-  try { file = toQuetzal(game.m, x.data, { name: x.name, notes: notesNow }); }
+  try { file = toQuetzal(game.m, x.data, { name: x.name, notes: notesNow, map: mapOut }); }
   catch (err) { sayInSaves(err.message, true); return; }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([file], { type: "application/octet-stream" }));
@@ -2781,7 +2861,8 @@ function downloadSave(name) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  sayInSaves(`Downloaded ${a.download}, ${commas(file.length)} bytes${notesNow ? ", with your notes" : ""}.`);
+  const brings = [notesNow && "notes", mapOut && "map"].filter(Boolean).join(" and ");
+  sayInSaves(`Downloaded ${a.download}, ${commas(file.length)} bytes${brings ? `, with your ${brings}` : ""}.`);
 }
 
 $("saveOpen").addEventListener("click", () => $("saveFile").click());
@@ -2823,32 +2904,26 @@ async function importSave(buffer, f) {
   const twin = all.find((x) => sameAs(x.data) === sameAs(got.data));
   if (twin) {
     said.push(`That game is already here as “${twin.name}”.`);
-    if (got.notes && !twin.notes) { twin.notes = got.notes; store.set(savesKey(), all); }
+    // the file's notes and map are the newer copies
+    if (got.notes || got.map) {
+      if (got.notes) twin.notes = got.notes;
+      if (got.map) twin.map = got.map;
+      store.set(savesKey(), all);
+    }
   }
   else {
     const base = got.name || f.name.replace(/\.[^.]*$/, "") || "Opened save";
     let name = base;
     for (let n = 2; all.some((x) => x.name === name); n++) name = `${base} (${n})`;
-    all.push({ name, at: f.lastModified || Date.now(), data: got.data, ...(got.notes ? { notes: got.notes } : {}) });
+    all.push({ name, at: f.lastModified || Date.now(), data: got.data, ...(got.notes ? { notes: got.notes } : {}), ...(got.map ? { map: got.map } : {}) });
     while (all.length > 30) all.shift();
     if (!store.set(savesKey(), all)) { sayInSaves("This browser wouldn't store the save. Its storage may be full or turned off.", true); return; }
     said.push(`Added “${name}”.`);
   }
-  if (got.notes) said.push(takeNotes(got.notes, got.name || f.name));
+  const brings = [got.notes && "notes", got.map && "map"].filter(Boolean).join(" and ");
+  if (brings) said.push(`It brings its own ${brings}, which you can use when you restore it.`);
   sayInSaves(said.join(" "));
   drawSaves();
-}
-// Notes from a save file: kept whole when yours are empty or are the start
-// of them, left out when yours already hold them, and otherwise added below
-// yours, so nothing you wrote here is lost.
-function takeNotes(incoming, from) {
-  const text = incoming.replace(/\s+$/, ""), cur = notesText.value.replace(/\s+$/, "");
-  if (!text.trim() || cur.includes(text)) return "Your notes already hold its notes.";
-  const whole = !cur.trim() || text.startsWith(cur);
-  notesText.value = whole ? text : `${cur}\n\nFrom “${from}”:\n${text}`;
-  notes.dirty = true;
-  saveNotes();
-  return whole ? "Its notes are in Notes." : "Its notes are at the end of yours in Notes.";
 }
 
 // ---------- The map ----------
@@ -2857,8 +2932,9 @@ function takeNotes(incoming, from) {
 // line: the first global in Versions 1 to 3 (§8.2.2), and in later versions
 // the object the game names first when it draws its own status line in the
 // upper window. When the room changes after a command, the command is the
-// way between them. Like the notes, the map is knowledge: Undo, Restart and
-// Restore leave it alone.
+// way between them. Like the notes, the map is knowledge: Undo and Restart
+// leave it alone, and Restore in Saves brings back a save's copy only when
+// you tick it. The game's own RESTORE can't ask, so it fills an empty map.
 const MAP_DIRS = { n: "north", s: "south", e: "east", w: "west", ne: "northeast", nw: "northwest", se: "southeast", sw: "southwest", u: "up", d: "down",
   north: "north", south: "south", east: "east", west: "west", northeast: "northeast", northwest: "northwest", southeast: "southeast", southwest: "southwest",
   up: "up", down: "down", in: "in", inside: "in", enter: "in", out: "out", outside: "out", exit: "out", leave: "out" };
@@ -2899,6 +2975,12 @@ function loadMap() {
   drawMap();
 }
 const saveMap = () => store.set(map.key, map.data);
+// the map as worth keeping with a save: a copy, once it has a room on it
+const mapNow = () => (map.data && Object.keys(map.data.rooms).length ? structuredClone(map.data) : null);
+// the same rooms, ways, and things; where you stand doesn't count
+const sameMap = (a, b) => ["rooms", "ways", "items"].every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k]));
+// a map read from a file, if it looks like one this page drew
+const mapOk = (d) => (d && typeof d === "object" && d.rooms && typeof d.rooms === "object" && Object.keys(d.rooms).length && Array.isArray(d.ways) ? d : null);
 // the move you just typed, to be matched with where you end up
 function mapCommand(text) {
   let t = text.trim();
