@@ -1190,7 +1190,9 @@ const XS6 = [
 const STEPS6 = [
   { code: "x", how: "Read straight out of the buffer", fn: (x) => x },
   { code: "({ v: x }).v", how: "Kept on an object", fn: (x) => ({ v: x }).v },
-  { code: "[1.5, x][1]", how: "Kept in an array beside other numbers", fn: (x) => [1.5, x][1] },
+  { id: "nums", code: "[1.5, x][1]", how: "Kept in an array beside other numbers", fn: (x) => [1.5, x][1] },
+  { id: "mixed", code: '["a", x][1]', how: "Kept in an array that also holds a string", fn: (x) => ["a", x][1] },
+  { code: "new Map([[1, x]]).get(1)", how: "Kept as a value in a Map", fn: (x) => new Map([[1, x]]).get(1) },
   { code: "new Float64Array([x])[0]", how: "Kept in a typed array", fn: (x) => new Float64Array([x])[0] },
   { code: "structuredClone(x)", how: "Copied the way postMessage copies", fn: (x) => structuredClone(x), needs: "structuredClone" },
   { code: "Math.abs(x)", how: "Only needs the sign bit", fn: (x) => Math.abs(x) },
@@ -1230,6 +1232,7 @@ function bits(n) {
   return view.getBigUint64(0).toString(16);
 }`;
   let kept = 0, tried = 0, quieted = 0;
+  const after = {};
   const rows = STEPS6.map((st) => {
     let cell;
     if (st.needs && typeof window[st.needs] !== "function") {
@@ -1239,6 +1242,7 @@ function bits(n) {
       cell = `<td><p class="hexline">${esc(out)}</p><span class="how">${isNaN64(xb) ? "JSON has no way to write NaN, so every NaN goes out as null" : "An ordinary number goes out as itself"}</span></td>`;
     } else {
       const ab = viewBits(st.fn(x)), c = change6(xb, ab);
+      if (st.id) after[st.id] = ab;
       tried++;
       if (c.kept) kept++;
       if (c.quieted) quieted++;
@@ -1251,6 +1255,7 @@ function bits(n) {
   let say = `<b>${kept} of ${tried} steps kept every bit</b> in your browser.`;
   if (s6.x === "stale") say += ` Prometheus compares all 64 bits, so only after those would it still see the end of a series.`;
   else if (s6.x === "na") say += ` R only checks the low 32 bits, so it still sees <code>NA</code> after any step that kept the payload.`;
+  if (after.nums !== after.mixed) say += ` The two arrays came out different: in your browser, what else an array holds decides whether x keeps its bits.`;
   if (quieted) say += ` ${quieted === 1 ? "One step" : `${quieted} steps`} turned the signaling NaN quiet, as Station 4 showed arithmetic does.`;
   if (!isNaN64(xb)) say = `x isn't a NaN right now, so these steps are ordinary arithmetic. Make Station 3's number a NaN, or pick another x, to see the rest.`;
   $("s6-say").innerHTML = say;
