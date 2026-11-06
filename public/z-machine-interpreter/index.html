@@ -500,6 +500,7 @@ html.full-on { overflow: hidden; }
    that came with the machine. Desk follows light and dark. */
 .themes { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .5rem; }
 .themes-lbl { color: var(--muted); font-size: .95rem; margin-right: .25rem; }
+.cheats[hidden] { display: none; }
 @media (min-width: 1100px) { .machine { --screen-full-size: 1.125rem; } }
 
 /* an Infocom game on an Atari 800, as on the hub */
@@ -589,7 +590,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. The Zorks also get <b>Cheats</b>: <b>Well lit</b> gives every room light, and in Zork I, <b>No thief</b> keeps the thief out of the game and <b>Stable objects</b> stops him taking what you leave lying around. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -718,6 +719,12 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" data-theme-pick="atari" aria-pressed="false">Atari 800</button>
     <button type="button" class="btn" data-theme-pick="printout" aria-pressed="false">Printout</button>
   </div>
+  <div class="themes cheats" id="cheats" role="group" aria-labelledby="cheatsLbl" hidden>
+    <span class="themes-lbl" id="cheatsLbl">Cheats:</span>
+    <button type="button" class="btn" data-cheat="lit" aria-pressed="false">Well lit</button>
+    <button type="button" class="btn" data-cheat="thief" aria-pressed="false">No thief</button>
+    <button type="button" class="btn" data-cheat="stable" aria-pressed="false">Stable objects</button>
+  </div>
   <p class="note" id="note" role="status" aria-live="polite"></p>
   </div>
 
@@ -729,6 +736,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
       <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
       <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know whether a room has light of its own, how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “It is pitch black.” once your light is gone, “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. A room with light of its own carries a flag, ONBIT, and the game checks it before looking for anything lit you carry, so the line can tell you a room is dark while your lamp is on, or lit well enough to turn the lamp off and save it. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
+      <li><b>A cheat answers for one of the game's own routines.</b> Each time the game calls a routine, the interpreter checks its address, and when a cheat that's on covers that routine, it hands back an answer without running any of it. Zork asks a routine called LIT? whether a room has light, and Well lit always answers yes, the same answer the game gives in Zork I once you've died and wander as a spirit. The game's clock calls I-THIEF every turn to move the thief and let him rob, and No thief answers for it, so he never moves. Then the page does what the game does when he slips away and when he gets home: he goes out of sight, and any treasures he was carrying wait in his Treasure Room. Stable objects answers for the three routines that take things from a room, and leaves alone the one that robs you. Turn a cheat off and those routines run again. Only the thief opens the jeweled egg without breaking it. To keep the canary whole, turn No thief off once you've found the egg: he starts out again from where he stood, and a treasure you carry or leave lying is his to take home and open.</li>
       <li><b>One command is thousands of instructions.</b> Typing <kbd>take leaflet</kbd> at the start of Zork I runs about 1,650 of them, through 37 routines: the parser matching your words, the checks on whether you can reach the leaflet, the take itself, and then each timer and creature on the game's clock, the thief among them. In the <b>Inspector</b>, <b>This turn</b> lists the routines in the order they were first called, and what the command moved, switched, and changed.</li>
       <li><b><kbd>x</kbd> means examine, even where the game never heard of it.</b> The Zorks want <kbd>examine lamp</kbd> or <kbd>look at lamp</kbd>, and many players now type <kbd>x lamp</kbd> without thinking. When a game's dictionary has no <kbd>x</kbd>, the interpreter passes <kbd>examine</kbd> in its place at the start of each command. The game itself is unchanged.</li>
       <li><b>A game can keep time while you type.</b> From Version 4, a game asking for a line or a key can also name a routine and a time, in tenths of a second. Each time that runs out, the interpreter calls the routine while your half-typed line waits. The routine may print something, and you carry on typing below it, or it may end your line where it stands. A Version 5 game can then hand back what you'd typed, and this page puts it back in the input for you to finish.</li>
@@ -1163,6 +1171,12 @@ function detach(m, o) {
   objLink_(m, o, "parent", 0);
   objLink_(m, o, "sibling", 0);
 }
+function insertObj(m, o, into) {
+  detach(m, o);
+  objLink_(m, o, "sibling", childOf(m, into));
+  objLink_(m, into, "child", o);
+  objLink_(m, o, "parent", into);
+}
 function attrAt(m, o, a, set) {
   const at = objEntry(m, o) + (a >> 3), bit = 0x80 >> (a & 7);
   if (set === undefined) return !!(m.mem[at] & bit);
@@ -1279,6 +1293,9 @@ function callRoutine(m, packed, args, store) {
   const locals = [];
   for (let i = 0; i < n; i++) locals.push(m.v <= 4 ? m.s.u16(a + 1 + 2 * i) : 0);
   args.slice(0, n).forEach((x, i) => { locals[i] = x; });
+  // the page may answer for a routine without running it (its Cheats)
+  const skipped = m.skip && m.skip(m, a, args);
+  if (skipped !== undefined) { if (store !== undefined) setVar(m, store, skipped); return; }
   // the page's Inspector panel lists the routines each turn called
   if (m.calls) m.calls.set(a, (m.calls.get(a) || 0) + 1);
   m.frames.push({ locals, store, ret: m.pc, stackLen: m.stack.length, argc: args.length });
@@ -1656,7 +1673,7 @@ function stepMachine(m) {
     case "get_child": { const x = childOf(m, a); store(x); branch(x !== 0); break; }
     case "get_sibling": { const x = siblingOf(m, a); store(x); branch(x !== 0); break; }
     case "insert_obj":
-      if (a && b) { detach(m, a); objLink_(m, a, "sibling", childOf(m, b)); objLink_(m, b, "child", a); objLink_(m, a, "parent", b); }
+      if (a && b) insertObj(m, a, b);
       break;
     case "remove_obj": if (a) detach(m, a); break;
     case "set_attr": if (a) attrAt(m, a, b, true); break;
@@ -2033,6 +2050,7 @@ function go() {
   const why = m.halted.why;
   if (why === "timer") return afterTimer();
   if (why === "input") {
+    cheatTurn();
     // a line the game's timer cut short isn't a move of yours: Undo, the
     // map, and the Inspector wait for the next one you finish
     if (!game.cutShort) {
@@ -2332,6 +2350,7 @@ function start(buffer, meta) {
   drawSaves();
   loadMap();
   loadEnhanced();
+  loadCheats();
   loadInspector();
   const back = resume();
   if (back) inspectorJump("resume");
@@ -3967,6 +3986,113 @@ function setEnhanced(on) {
 }
 $("enhancedBtn").setAttribute("aria-pressed", enhanced.on);
 $("enhancedBtn").addEventListener("click", () => setEnhanced(!enhanced.on));
+
+// ---------- Cheats ----------
+// For the built-in Zorks, switches that change how the game plays. Each one
+// answers for some of the game's own routines: when the game calls one, the
+// machine asks m.skip first, and if the page hands back a value the routine
+// never runs. The routines are found by the names ZILF lists, as Enhanced
+// finds its globals, so turning a cheat off puts the game back as it was.
+//
+// Well lit: LIT? (gparser.zil) begins by answering yes when ALWAYS-LIT is
+// set and you're the one asking, the switch Zork I throws while you're a
+// spirit. The cheat gives the same answer without touching the switch.
+// No thief: the clock calls I-THIEF every turn to move and rob, and
+// TREASURE-ROOM-FCN calls him home when you walk into his lair.
+// Stable objects: ROB (when it's a room he's robbing into his bag),
+// STEAL-JUNK, and ROB-MAZE are how the thief takes what you've left lying.
+const CHEATS = {
+  lit: { stories: ["zork1", "zork2", "zork3"], said: "Well lit: every room has light, so no lamp is needed and no grue can find you." },
+  thief: { stories: ["zork1"], said: "No thief: he stays out of sight, and what he took waits in his treasure room." },
+  stable: { stories: ["zork1"], said: "Stable objects: what you leave lying stays where you left it." },
+};
+const cheats = { story: "", on: new Set(), hooks: null };
+const cheatsSaved = () => store.get("zmi:cheats") || {};
+
+function cheatHooks(n) {
+  const rtn = (name) => (n.routines.find((r) => r.name === name) || {}).addr || 0;
+  const glob = (g) => { const i = n.globals.indexOf(g); return i < 0 ? 0 : 16 + i; };
+  const flip = (o) => Object.fromEntries(Object.entries(o).map(([k, x]) => [x, +k]));
+  const objs = flip(n.objects), attrs = flip(n.attributes), props = flip(n.properties);
+  return {
+    lit: rtn("LIT?"), winner: glob("WINNER"), player: glob("PLAYER"),
+    thief: rtn("I-THIEF"), lair: rtn("TREASURE-ROOM-FCN"),
+    rob: rtn("ROB"), junk: rtn("STEAL-JUNK"), maze: rtn("ROB-MAZE"),
+    robber: objs.THIEF, stiletto: objs.STILETTO, bag: objs["LARGE-BAG"], room: objs["TREASURE-ROOM"], egg: objs.EGG,
+    thiefHere: glob("THIEF-HERE"), eggSolve: glob("EGG-SOLVE"),
+    invisible: attrs.INVISIBLE, fight: attrs.FIGHTBIT, open: attrs.OPENBIT, ndesc: attrs.NDESCBIT,
+    strength: props.STRENGTH, tvalue: props.TVALUE,
+  };
+}
+// the machine calls this before every routine; undefined means run it
+function cheatSkip(m, a, args) {
+  const h = cheats.hooks, on = cheats.on;
+  if (!h || !on.size) return undefined;
+  const you = (o) => o === getVar(m, h.winner) || o === getVar(m, h.player);
+  if (on.has("lit") && a === h.lit && you(getVar(m, h.winner))) return 1;
+  if (on.has("thief") && (a === h.thief || a === h.lair)) return 0;
+  if (on.has("stable") && (a === h.junk || a === h.maze || (a === h.rob && args[1] === h.robber && !you(args[0])))) return 0;
+  return undefined;
+}
+// With No thief on, the thief can't move, so once each turn the page does
+// what the game does when he slips away (THIEF-VS-ADVENTURER) and when he
+// gets home (DEPOSIT-BOOTY, HACK-TREASURES): out of sight, the stiletto back
+// in hand, the treasures he carries left in the Treasure Room, visible.
+// He keeps the bag, the stiletto, and any junk. Out cold or dead, the game
+// already has him in hand.
+function cheatTurn() {
+  const m = game.m, h = cheats.hooks;
+  if (!m || !h || !cheats.on.has("thief") || !h.robber || !h.room) return;
+  const t = h.robber, at = parentOf(m, t);
+  if (!at || s16(propOf(m, t, h.strength)) < 0) return;
+  attrAt(m, t, h.invisible, true);
+  attrAt(m, t, h.fight, false);
+  if (h.thiefHere) setVar(m, h.thiefHere, 0);
+  if (parentOf(m, h.stiletto) === at) { insertObj(m, h.stiletto, t); attrAt(m, h.stiletto, h.ndesc, true); }
+  for (let x = childOf(m, t), k = 0; x && k < 255; k++) {
+    const next = siblingOf(m, x);
+    if (x !== h.stiletto && x !== h.bag && s16(propOf(m, x, h.tvalue)) > 0) {
+      insertObj(m, x, h.room);
+      // as DEPOSIT-BOOTY does: the egg comes home opened
+      if (x === h.egg) { if (h.eggSolve) setVar(m, h.eggSolve, 1); attrAt(m, x, h.open, true); }
+    }
+    x = next;
+  }
+  for (let x = childOf(m, h.room), k = 0; x && k < 255; x = siblingOf(m, x), k++) if (x !== t) attrAt(m, x, h.invisible, false);
+}
+
+async function loadCheats() {
+  const key = game.builtin, row = $("cheats");
+  cheats.story = key;
+  cheats.hooks = null;
+  cheats.on = new Set((cheatsSaved()[key] || []).filter((id) => CHEATS[id] && CHEATS[id].stories.includes(key)));
+  game.m.skip = cheatSkip;
+  let any = false;
+  row.querySelectorAll("[data-cheat]").forEach((b) => {
+    const fits = CHEATS[b.dataset.cheat].stories.includes(key);
+    b.hidden = !fits;
+    any ||= fits;
+    b.setAttribute("aria-pressed", cheats.on.has(b.dataset.cheat));
+  });
+  row.hidden = !any;
+  if (!any) return;
+  const names = await namesFor(key);
+  if (cheats.story !== key || !names) return;
+  cheats.hooks = cheatHooks(names);
+  if (game.mode === "line") cheatTurn();
+}
+function setCheat(id, on) {
+  const key = cheats.story;
+  if (on) cheats.on.add(id); else cheats.on.delete(id);
+  const saved = cheatsSaved();
+  saved[key] = [...cheats.on];
+  store.set("zmi:cheats", saved);
+  $("cheats").querySelector(`[data-cheat="${id}"]`).setAttribute("aria-pressed", on);
+  $("note").textContent = on ? CHEATS[id].said : `${$("cheats").querySelector(`[data-cheat="${id}"]`).textContent} is off.`;
+  // the game reads the cheats from your next command on; No thief tidies now
+  if (on && game.mode === "line") { cheatTurn(); autosave(); }
+}
+$("cheats").querySelectorAll("[data-cheat]").forEach((b) => b.addEventListener("click", () => setCheat(b.dataset.cheat, b.getAttribute("aria-pressed") !== "true")));
 
 // ---------- Start ----------
 (async () => {
