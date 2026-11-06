@@ -736,7 +736,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>The interpreter doesn't understand a word you type.</b> It turns your line to lower case, splits it at spaces and at the few punctuation marks the game lists as separators, and looks each piece up in the game's dictionary. The game gets back a list: where each word sits in its dictionary, how long it is, and where it was in your line. Working out what <kbd>put the crank in the socket</kbd> means is the game's own code.</li>
       <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
-      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
+      <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. Dying in the Zorks moves you too, to the forest or the gates of Hell, so when the game says “You have died” the map draws no way at all. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
       <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know whether a room has light of its own, how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “It is pitch black.” once your light is gone, “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. A room with light of its own carries a flag, ONBIT, and the game checks it before looking for anything lit you carry, so the line can tell you a room is dark while your lamp is on, or lit well enough to turn the lamp off and save it. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
       <li><b>A cheat answers for one of the game's own routines.</b> Each time the game calls a routine, the interpreter checks its address, and when a cheat that's on covers that routine, it hands back an answer without running any of it. Zork asks a routine called LIT? whether a room has light, and Well lit always answers yes, the same answer the game gives in Zork I once you've died and wander as a spirit. The game's clock calls I-THIEF every turn to move the thief and let him rob, and Thief stays home answers for it, so he never wanders. While you're elsewhere, the page does what the game does each time he gets home: he puts down the treasures he's carrying, opening the jeweled egg if he has it. Walk into his Treasure Room and the game's own code takes over: he's there on guard, his treasures vanish, and you have to beat him to see them again. With the cheat on he never runs from a fight. Stable objects answers for the three routines that take things from a room, and leaves alone the one that robs you. The lamp's routine runs at the end of each stage of its life to dim it, and at the last stage to put it out, so Endless lights answers by setting the same stage going again. No wizard is choosier: the Wizard's routine also ends a spell that has worn off, and brings him for the demon near the end of Zork II, so the cheat lets it run for those and only stops his visits. Turn a cheat off and those routines run again. Only the thief opens the jeweled egg without breaking it. Give it to him in his Treasure Room, and he stops to admire it long enough for you to leave; when you come back, it's open, with the canary whole, and his to defend.</li>
       <li><b>One command is thousands of instructions.</b> Typing <kbd>take leaflet</kbd> at the start of Zork I runs about 1,650 of them, through 37 routines: the parser matching your words, the checks on whether you can reach the leaflet, the take itself, and then each timer and creature on the game's clock, the thief among them. In the <b>Inspector</b>, <b>This turn</b> lists the routines in the order they were first called, and what the command moved, switched, and changed.</li>
@@ -1111,6 +1111,7 @@ function resetMachine(m, restarting) {
   m.upperObj = 0;
   m.saidObjs = new Set();
   m.saidStrs = new Set();
+  m.saidText = "";
   m.undo = [];
   clearLower(m);
 }
@@ -1249,7 +1250,11 @@ function emit(m, text) {
       if (m.row >= 1 && m.row <= m.upper.length && m.col >= 1 && m.col <= SCREEN.width) m.upper[m.row - 1][m.col - 1] = [ch, m.style, tint(m)];
       m.col++;
     }
-  } else emitLower(m, text);
+  } else {
+    // the map reads the turn's words for a death, which moves you without a way
+    m.saidText = (m.saidText + text).slice(-4000);
+    emitLower(m, text);
+  }
 }
 const blankRow = (c = 0) => Array.from({ length: SCREEN.width }, () => [" ", 0, c]);
 // Clearing paints the background colour, never reversed (§8.7.3.2), and
@@ -2964,6 +2969,8 @@ const MAP_STEP = { north: [0, -1], south: [0, 1], east: [1, 0], west: [-1, 0], n
 const MAP_SHORT = { north: "N", south: "S", east: "E", west: "W", northeast: "NE", northwest: "NW", southeast: "SE", southwest: "SW", up: "up", down: "down", in: "in", out: "out" };
 // these change where you are without walking anywhere
 const NOT_A_WAY = /^\s*(undo|restore|restart|load|oops)\b/i;
+// and so does dying: the Zorks print this, then set you down in the forest
+const DIED = /\byou have died\b/i;
 const CW = 176, CH = 104, BW = 120, BH = 46;
 const map = { key: "", data: null, pending: null, lastCmd: "", view: { x: 0, y: 0, z: 0.9 }, armed: 0 };
 const blankMap = () => ({ rooms: {}, ways: [], items: {}, player: 0, here: 0, last: 0, found: false });
@@ -3065,13 +3072,15 @@ function mapTurn() {
   map.pending = null;
   const room = whereNow(m);
   const said = { objs: m.saidObjs, strs: m.saidStrs };
+  const died = DIED.test(m.saidText);
   m.saidObjs = new Set();
   m.saidStrs = new Set();
+  m.saidText = "";
   if (room < 0) { if (d.here) { noteItems(m, d.here, said); saveMap(); drawMap(); } return; }
   if (!room) { d.here = 0; map.kids = null; saveMap(); drawMap(); return; }
   d.found = true;
   const name = objName(m, room) || `Room ${room}`;
-  const from = p && d.rooms[p.from] ? p.from : 0;
+  const from = p && d.rooms[p.from] && !died ? p.from : 0;
   const dir = p ? dirOf(p.cmd) : "";
   if (!d.rooms[room]) {
     // a new room goes one step the way you went, or to the nearest free square
