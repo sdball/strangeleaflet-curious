@@ -452,6 +452,13 @@ h2 {
   max-width: 62ch;
 }
 .known:empty { display: none; }
+.kv dd .chars {
+  font-size: 1.25rem;
+  letter-spacing: .12em;
+  white-space: pre;
+  margin-right: .5rem;
+}
+.kv dd .hexb { color: var(--muted); }
 .known strong { font-weight: 600; }
 .acts {
   display: flex;
@@ -870,6 +877,29 @@ const floatSigAlts = ({ F }) => [
   nanSig({ quiet: 0 }), nanSig({ quiet: 1 }),
 ];
 const nanPayload = (d, F) => `0x${hex(d.payload, Math.ceil((F - 1) / 4))} in the other ${F - 1} fraction bits`;
+function showKnown(root, v, w, d) {
+  const name = d.kind === "nan" && NAMED_NANS[w]?.[hex(v, w / 4)];
+  const known = root.querySelector('[data-k="known"]'), key = name ? hex(v, w / 4) : "";
+  if (known.dataset.shown !== key) { known.dataset.shown = key; known.innerHTML = name || ""; }   // only on change, so the live region speaks once
+}
+
+// ---------- NaN ----------
+const NAN_Q_ALTS = [
+  "0, signaling: arithmetic on it raises an invalid-operation flag",
+  "1, quiet: arithmetic passes it along without complaint",
+  "0, and with the payload also zero this is infinity",
+];
+const MSG_BYTES = { 16: 1, 32: 2, 64: 6 };   // whole bytes that fit in the payload, under the quiet bit
+const nanCount = (w) => 2n * ((1n << BigInt(FLOATS[w].F)) - 1n);   // either sign, any fraction but zero
+// x + 1 done by this browser's own floating point: bits in, bits out
+function browserPlusOne(v, w) {
+  const [Fl, Raw] = { 16: [globalThis.Float16Array, Uint16Array], 32: [Float32Array, Uint32Array], 64: [Float64Array, BigUint64Array] }[w];
+  if (!Fl) return null;
+  const raw = new Raw(1), fl = new Fl(raw.buffer);
+  raw[0] = w === 64 ? BigInt(v) : Number(v);
+  fl[0] = fl[0] + 1;
+  return BigInt(raw[0]);
+}
 
 // ---------- Lenses ----------
 // Each lens: name, widths, fields(w) MSB-first, html(w), update(v, w, root), bind(root, w).
@@ -937,12 +967,7 @@ const LENSES = {
            FLOATS[w].e4m3 ? "" : row("NaN payload", "payload", [nanPayload({ payload: 0 }, FLOATS[w].F)]),
            row("Exact value", "exact"))}
       <div class="known" data-k="known" aria-live="polite"></div>
-      ${w === 64 ? `
-      <div class="acts">
-        <button type="button" class="act" data-bits="7FF0000000000002">Prometheus's staleness marker</button>
-        <button type="button" class="act" data-bits="7FF8000000000001">Go's NaN</button>
-      </div>
-      <p class="fmt">Any pattern with the exponent all ones and a fraction that isn't zero is NaN, so a double has 2<sup>53</sup> − 2 of them, and programs use the spare bits to carry messages. <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a> marks the end of a time series with one particular NaN, and <a href="https://github.com/golang/go/blob/master/src/math/bits.go">Go</a> makes its ordinary NaN with a payload of 1. This page keeps the bits as a 64-bit integer, never as a JavaScript number, because the <a href="https://tc39.es/ecma262/multipage/structured-data.html#sec-numerictorawbytes">JavaScript spec</a> lets an engine swap any NaN for one of its own when it stores the number as bytes.</p>` : ""}
+      ${FLOATS[w].e4m3 ? "" : `<p class="acts"><button type="button" class="act" data-goto="nan">Take NaNs apart in the NaN tab</button></p>`}
       <p class="fmt">Add 1 and Subtract 1 on the panel step to the next representable number, which is a good way to see the gaps between floats grow.</p>`,
     update(v, w, root) {
       const fmt = FLOATS[w], d = decodeFloat(v, fmt), F = fmt.F;
@@ -950,9 +975,7 @@ const LENSES = {
       if (input && document.activeElement !== input) input.value = shortestDecimal(v, fmt, d.value);
       put(root, "kind", floatKind(d));
       put(root, "payload", d.kind === "nan" ? nanPayload(d, F) : "None. Only a NaN carries one");
-      const name = d.kind === "nan" && NAMED_NANS[w]?.[hex(v, w / 4)];
-      const known = root.querySelector('[data-k="known"]'), key = name ? hex(v, w / 4) : "";
-      if (known.dataset.shown !== key) { known.dataset.shown = key; known.innerHTML = name || ""; }   // only on change, so the live region speaks once
+      showKnown(root, v, w, d);
       put(root, "sign", d.s ? "1, negative" : "0, positive");
       const fracBits = d.f.toString(2).padStart(F, "0");
       if (d.kind === "normal") {
@@ -981,7 +1004,107 @@ const LENSES = {
         setValue(r.bits, "lens");
       });
       input.addEventListener("blur", () => { msg.textContent = ""; field.classList.remove("bad"); render("lens-blur"); });
-      root.querySelectorAll("[data-bits]").forEach((b) => b.addEventListener("click", () => setValue(BigInt("0x" + b.dataset.bits), "lens")));
+    },
+  },
+
+  nan: {
+    name: "NaN", widths: [16, 32, 64],
+    fields: (w) => [
+      { name: "Sign", bits: 1, color: "var(--f4)" },
+      { name: "Exponent", bits: FLOATS[w].E, color: "var(--f2)" },
+      { name: "Quiet bit", bits: 1, color: "var(--f6)" },
+      { name: "Payload", bits: FLOATS[w].F - 1, color: "var(--f1)" },
+    ],
+    html(w) {
+      const { E, F } = FLOATS[w], n = MSG_BYTES[w], count = nanCount(w), total = 1n << BigInt(w);
+      const plus = browserPlusOne(0n, w) === null ? "" : row("<code>x + 1</code> in your browser", "plus",
+        [`${hex(maskOf(w), w / 4)}, a NaN with a different payload`, `${hex(maskOf(w), w / 4)}, quiet now, payload kept`]);
+      return `
+      <p class="fmt"><strong>NaN, short for not a number,</strong> is what 0 ÷ 0 and √−1 give back. Any float with all ${E} exponent switches on and a fraction that isn't all zeros is a NaN. That leaves the rest of the fraction free: its top bit is the quiet bit, and the ${F - 1} bits below it are the payload.</p>
+      <p class="big sans stack"><span data-k="big"></span>${ghosts(["Signaling NaN", "Infinity, not NaN"])}</p>
+      ${kv(row("Exponent", "exp", [`${E - 1} of ${E} switches off, so this is an ordinary number`]),
+           row("Quiet bit", "q", NAN_Q_ALTS),
+           row("Payload", "payload", [`0x${hex(P2(F - 1) - 1, Math.ceil((F - 1) / 4))}, a payload once this is a NaN`]),
+           row(n === 1 ? "Payload as a character" : `Payload as ${n} characters`, "text"),
+           plus,
+           row("<code>x == x</code>", "eq", ["false: a NaN never equals anything, itself included"]))}
+      <div class="known" data-k="known" aria-live="polite"></div>
+      <label class="numin" for="nmsg">Hide ${n === 1 ? "a character" : `up to ${n} characters`} in the payload
+        <span class="field"><input id="nmsg" maxlength="${n}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="nmsgerr"></span>
+      </label>
+      <p class="msg" id="nmsgerr" role="status"></p>
+      <div class="acts">
+        <button type="button" class="act" data-act="make">Make it a NaN</button>
+        ${plus ? `<button type="button" class="act" data-act="plus">Keep x + 1</button>` : ""}
+        <button type="button" class="act" data-bits="${hex(packFloat(0, P2(E) - 1, P2(F - 1), FLOATS[w]), w / 4)}">Plainest quiet NaN</button>
+        ${w === 64 ? `<button type="button" class="act" data-bits="7FF8000000000001">Go's NaN</button>
+        <button type="button" class="act" data-bits="7FF0000000000002">Prometheus's staleness marker</button>` : ""}
+      </div>
+      <p class="fmt">So there isn't one NaN. There are ${count.toLocaleString()} of them among the ${total.toLocaleString()} ${w}-bit patterns, about 1 in ${Math.round(Number(total) / Number(count)).toLocaleString()}. Every one of them reads as NaN, and none of them equals any other, or itself.</p>
+      <p class="fmt">Arithmetic on a NaN gives back a NaN. The IEEE 754 standard asks that it keep the payload, and that a signaling NaN come out quiet, with its quiet bit switched on, as <a href="https://en.wikipedia.org/wiki/NaN">Wikipedia's NaN article</a> explains. ${plus ? "The <code>x + 1</code> line does the sum with your browser's own floating point. Try a signaling NaN, then press Keep x + 1." : "This browser has no 16-bit floats to try it with; switch to 32 or 64 bits."}</p>
+      ${w === 64 ? `
+      <p class="fmt"><a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a> marks the end of a time series with the signaling NaN <code>7FF0000000000002</code> and checks for it bit by bit, while <a href="https://github.com/golang/go/blob/master/src/math/bits.go">Go</a> makes its ordinary NaN with a payload of 1. Add 1 to the marker and you get <code>7FF8000000000002</code>, which to Prometheus is just another NaN.</p>
+      <p class="fmt">51 payload bits are room for a pointer or a 32-bit integer. Firefox's and Safari's JavaScript engines have used that room to fit every value, number or not, into one 64-bit word, a trick called <a href="https://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations">NaN-boxing</a>. The <a href="https://tc39.es/ecma262/multipage/structured-data.html#sec-numerictorawbytes">JavaScript spec</a> also lets an engine swap one NaN for another when it stores a number as bytes, which is why this page keeps the bits as an integer.</p>` : ""}`;
+    },
+    update(v, w, root) {
+      const fmt = FLOATS[w], { E, F } = fmt, d = decodeFloat(v, fmt), n = MSG_BYTES[w];
+      const big = root.querySelector('[data-k="big"]');
+      big.textContent = d.kind === "nan" ? FLOAT_KINDS[d.quiet ? "qnan" : "snan"] : d.kind === "inf" ? "Infinity, not NaN" : "Not a NaN";
+      big.classList.toggle("invalid", d.kind !== "nan");
+      const off = E - d.e.toString(2).replace(/0/g, "").length;
+      put(root, "exp", off ? `${off} of ${E} switches off, so this is an ordinary number`
+        : d.kind === "inf" ? `All ${E} switches on, but the fraction is all zeros` : `All ${E} switches on, as every NaN needs`);
+      const q = bitsOf(v, F - 1, 1), payload = bitsOf(v, 0, F - 1);
+      put(root, "q", d.kind === "nan" ? NAN_Q_ALTS[q] : d.kind === "inf" ? NAN_Q_ALTS[2] : `${q}, just a fraction bit until the exponent is all ones`);
+      const ph = `0x${hex(payload, Math.ceil((F - 1) / 4))}`;
+      put(root, "payload", d.kind === "nan" ? `${ph}, which is ${payload.toLocaleString()}` : `${ph}, a payload once this is a NaN`);
+      const bytes = Array.from({ length: n }, (_, i) => bitsOf(v, 8 * (n - 1 - i), 8));
+      put(root, "text", `<span class="chars">${bytes.map((b) => b >= 32 && b < 127 ? esc(String.fromCharCode(b)) : "·").join("")}</span>`
+        + ` <span class="hexb">${bytes.map((b) => hex(b)).join(" ")}</span>`);
+      const r = browserPlusOne(v, w);
+      if (r !== null) {
+        const rd = decodeFloat(r, fmt);
+        let what;
+        if (d.kind !== "nan") what = rd.kind === "nan" ? ", a NaN" : `, which is ${shortestDecimal(r, fmt, rd.value)}`;
+        else if (r === v) what = ", the same NaN";
+        else if (rd.kind === "nan" && rd.payload === d.payload) what = ", quiet now, payload kept";
+        else what = ", a NaN with a different payload";
+        put(root, "plus", hex(r, w / 4) + what);
+        root.querySelector('[data-act="plus"]').disabled = r === v;
+      }
+      put(root, "eq", d.value === d.value ? "true" : "false: a NaN never equals anything, itself included");
+      showKnown(root, v, w, d);
+      // show the hidden message in the box, if the payload bytes spell one
+      const input = root.querySelector("#nmsg");
+      if (document.activeElement !== input) {
+        const s = String.fromCharCode(...bytes).replace(/\0+$/, "");
+        input.value = d.kind === "nan" && d.quiet && /^[\x20-\x7E]*$/.test(s) ? s : "";
+      }
+    },
+    bind(root, w) {
+      const { E, F } = FLOATS[w], n = MSG_BYTES[w], expBits = BigInt(P2(E) - 1) << BigInt(F);
+      root.querySelector('[data-act="make"]').addEventListener("click", () => {
+        let x = state.v | expBits;
+        if (bitsOf(x, 0, F) === 0) x |= 1n << BigInt(F - 1);   // an empty fraction would be infinity
+        setValue(x, "lens");
+      });
+      root.querySelector('[data-act="plus"]')?.addEventListener("click", () => setValue(browserPlusOne(state.v, w), "lens"));
+      const input = root.querySelector("#nmsg"), msg = root.querySelector("#nmsgerr"), field = input.parentElement;
+      input.addEventListener("input", () => {
+        const s = input.value;
+        if (!/^[\x20-\x7E]*$/.test(s)) {
+          msg.textContent = "Plain ASCII only: letters, digits, spaces, and punctuation.";
+          field.classList.add("bad"); input.setAttribute("aria-invalid", "true");
+          return;
+        }
+        msg.textContent = ""; field.classList.remove("bad"); input.removeAttribute("aria-invalid");
+        let p = 0n;
+        for (let i = 0; i < n; i++) p = (p << 8n) | BigInt(i < s.length ? s.charCodeAt(i) : 0);
+        // keep the sign, switch the exponent and quiet bit on, and put the message in the low bytes
+        const sign = state.v >> BigInt(E + F) << BigInt(E + F);
+        setValue(sign | expBits | (1n << BigInt(F - 1)) | p, "lens");
+      });
+      input.addEventListener("blur", () => { msg.textContent = ""; field.classList.remove("bad"); input.removeAttribute("aria-invalid"); render("lens-blur"); });
     },
   },
 
@@ -1304,6 +1427,12 @@ function buildLens() {
   const lens = LENSES[state.lens], body = $("lensBody");
   body.innerHTML = lens.html(state.w);
   if (lens.bind) lens.bind(body, state.w);
+  body.querySelectorAll("[data-bits]").forEach((b) => b.addEventListener("click", () => setValue(BigInt("0x" + b.dataset.bits), "lens")));
+  body.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => {
+    state.lens = b.dataset.goto;
+    buildLens(); render();
+    document.querySelector(`#tabs [data-lens="${state.lens}"]`).focus();
+  }));
   if (lens.now) {
     body.querySelector('[data-act="now"]').addEventListener("click", () => setValue(lens.now(), "lens"));
     body.querySelector('[data-act="tick"]')?.addEventListener("click", () => (clockTimer ? stopClock() : startClock()));
