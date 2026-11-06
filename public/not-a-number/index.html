@@ -357,16 +357,27 @@ table.cmp td.yes { background: var(--pay); color: var(--felt); font-weight: 600;
 .numin input[aria-invalid="true"] { border-color: var(--bad); }
 .msg { margin: .3rem 0 0; font-size: .9rem; color: #FF9B8F; }
 .msg:empty { display: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* ---------- Station 4: before and after ---------- */
 .choose { display: grid; gap: .5rem; margin-bottom: 1rem; }
 .choose .lbl { font-size: .9rem; color: var(--drawer-muted); }
 .rows4 { display: grid; gap: .8rem; }
-.row4 { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .3rem .8rem; align-items: start; }
-.row4 .who { font: 500 .95rem var(--mono); padding-top: .1rem; }
+.row4 { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: .3rem .8rem; align-items: start; }
+.row4 .who { font: 500 .95rem var(--mono); padding-top: .1rem; overflow-wrap: anywhere; }
 .row4 .hexline { margin: 0; font-size: .92rem; }
 .row4 .hexline .chg { background: var(--drawer-ink); color: var(--drawer); border-radius: 2px; }
 .say4 { margin: 1rem 0 0; max-width: 64ch; }
+
+/* ---------- Station 5: readings ---------- */
+table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
+table.reads caption { padding-bottom: .4rem; }
+table.reads th, table.reads td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--drawer-edge); vertical-align: top; }
+table.reads thead th { font: 500 .78rem var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--drawer-muted); }
+table.reads tbody th { font-weight: 600; width: 45%; }
+table.reads .how { display: block; font-weight: 400; color: var(--drawer-muted); font-size: .88rem; margin-top: .15rem; }
+table.reads td.special { color: var(--quiet); font-weight: 600; }
+table.reads td.changed { box-shadow: inset 3px 0 0 var(--drawer-ink); }
 
 /* ---------- Prose ---------- */
 .notes { max-width: 66ch; margin-top: 2.25rem; }
@@ -407,7 +418,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Not a Number</h1>
-  <p class="lede">Divide 0 by 0 and a computer hands back NaN, short for not a number. It looks like one special value. It's really a whole family of bit patterns that all print the same way. Start with a map of every NaN a small float can hold, then line some up side by side, then take one apart.</p>
+  <p class="lede">Divide 0 by 0 and a computer hands back NaN, short for not a number. It looks like one special value. It's really a whole family of bit patterns that all print the same way. Start with a map of every NaN a small float can hold, line some up side by side, take one apart, and meet the NaNs real programs put to work.</p>
   <p class="howto">Every map and row of switches works from the keyboard: Tab to it and use the arrow keys (<kbd>Shift</kbd> moves further). Letter keys shown on a button go to the station you're using.</p>
 
   <!-- 1. Every pattern -->
@@ -528,6 +539,33 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <p class="say4" id="s4-say" aria-live="polite"></p>
   </section>
 
+  <!-- 5. NaNs with jobs -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
+      <h2 id="s5-h">NaNs with jobs</h2>
+      <p>Real programs put those spare bits to work. A monitoring system marks the end of a data series with one, a statistics language marks missing data with another, and language runtimes hide whole values inside them, a trick called NaN-boxing. Firefox's and Safari's JavaScript engines <a href="https://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations">have done it too</a>. <b>Pick a specimen and see how each program reads the same 64 bits.</b></p>
+    </div>
+    <div class="btns tight" role="group" aria-label="Specimens" id="s5-picks"></div>
+    <div class="rows4" style="margin-top: 1rem">
+      <div class="row4"><span class="who">bits</span><div>
+        <div class="strip wide" id="s5-strip" style="--n: 64" aria-hidden="true"></div>
+        <p class="hexline" id="s5-hex"></p>
+      </div></div>
+    </div>
+    <p class="say4" id="s5-about" aria-live="polite"></p>
+    <div class="btns">
+      <button type="button" class="btn" id="s5-plus" aria-keyshortcuts="A">Add 1 in your browser<kbd>A</kbd></button>
+    </div>
+    <div class="table-wrap" style="margin-top: 1rem">
+      <table class="reads" id="s5-reads">
+        <caption class="station" style="text-align:left">How each program reads these bits</caption>
+        <thead><tr><th scope="col">Program, and what it checks</th><th scope="col">Reads it as</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="notes" aria-labelledby="notice-h">
     <h2 id="notice-h">Things to notice</h2>
     <ul>
@@ -538,7 +576,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       <li><b>Not every chip keeps the payload.</b> Keeping it is a recommendation, not a rule. RISC-V chips give back one standard NaN from most operations whatever went in, and ARM chips have a mode that does the same.</li>
       <li><b>Your browser may swap NaNs too.</b> The JavaScript spec lets an engine store any NaN it likes when it writes a NaN number out as bytes. This page keeps each NaN's bits as a whole number and only turns them into a float to do the sums in Station 4.</li>
       <li><b>Which way round the quiet bit goes was once up for grabs.</b> The 1985 standard that introduced NaNs didn't say which bit pattern means quiet. Most chips, x86 and ARM among them, made a 1 in the top fraction bit mean quiet, but PA-RISC and early MIPS chips used it the other way round. The 2008 revision settled on the first choice.</li>
-      <li><b>The payload has jobs.</b> A program can use those 51 spare bits for an error code, a marker, or a whole other value. Language runtimes that pack every value, number or not, into one 64-bit word use NaN payloads to hold the values that aren't numbers, a trick called NaN-boxing. The <a href="../bitfield-explorer/">bitfield explorer</a> has a NaN tab for trying patterns of your own, and the <a href="../minifloat-ruler/">minifloat ruler</a> shows where NaN sits among an 8-bit float's other values.</li>
+      <li><b>The same 64 bits mean different things to different programs.</b> In Station 5, <code>7FFC000000000003</code> is <code>true</code> to clox and the number NaN to everything else, and <code>FFFFFFFFFFFFFFFF</code> is <code>nil</code> to LuaJIT. Bits only mean something once a program decides how to read them.</li>
+      <li><b>A marker is only as safe as its check.</b> Prometheus compares all 64 bits, so one sum that quiets its marker turns it into an ordinary NaN. R checks only the low 32 bits, so its <code>NA</code> survives being quieted, though R still doesn't promise which of <code>NA</code> and <code>NaN</code> a sum mixing them gives back.</li>
+      <li><b>More to try.</b> The <a href="../bitfield-explorer/">bitfield explorer</a> has a NaN tab for trying patterns of your own, and the <a href="../minifloat-ruler/">minifloat ruler</a> shows where NaN sits among an 8-bit float's other values.</li>
     </ul>
   </section>
 
@@ -551,7 +591,11 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       <li>Agner Fog, <a href="https://www.agner.org/optimize/nan_propagation.pdf">"Parallel floating point exception tracking and NaN propagation"</a> (2019, updated 2026), for most processors returning the first of two NaNs.</li>
       <li>Ecma International, <a href="https://tc39.es/ecma262/multipage/structured-data.html#sec-numerictorawbytes"><i>ECMAScript Language Specification</i>, NumericToRawBytes</a>, for an engine's freedom to choose any NaN encoding when storing a NaN.</li>
       <li>Prometheus, <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go"><code>model/value/value.go</code></a>, for the staleness marker <code>StaleNaN</code>.</li>
-      <li>Robert Nystrom, <a href="https://craftinginterpreters.com/optimization.html#nan-boxing"><i>Crafting Interpreters</i>, section 30.3, "NaN Boxing"</a> (Genever Benning, 2021).</li>
+      <li>Robert Nystrom, <a href="https://craftinginterpreters.com/optimization.html#nan-boxing"><i>Crafting Interpreters</i>, section 30.3, "NaN Boxing"</a> (Genever Benning, 2021), for clox's value layout.</li>
+      <li>Go, <a href="https://github.com/golang/go/blob/master/src/math/bits.go"><code>src/math/bits.go</code></a>, for the bits of <code>math.NaN()</code>.</li>
+      <li>The R Project, <a href="https://github.com/wch/r-source/blob/trunk/src/main/arithmetic.c"><code>src/main/arithmetic.c</code></a>, for how <code>NA</code> is built and recognized, and the R documentation for <a href="https://github.com/wch/r-source/blob/trunk/src/library/base/man/NA.Rd"><code>NA</code></a> and <a href="https://github.com/wch/r-source/blob/trunk/src/library/base/man/is.finite.Rd"><code>is.nan</code></a>.</li>
+      <li>Mike Pall, LuaJIT 2.1, <a href="https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lj_obj.h"><code>src/lj_obj.h</code></a>, for its tagged NaNs in the 64-bit (GC64) layout and the one NaN its floating-point unit makes.</li>
+      <li>Andy Wingo, <a href="https://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations">"value representation in javascript implementations"</a> (2011), for NaN-boxing in JavaScriptCore and Mozilla's engine.</li>
     </ul>
   </section>
 
@@ -840,6 +884,7 @@ function paint3() {
     input.value = isNaN64(v) && !(v & (0x7n << 48n)) && /^[\x20-\x7E]*$/.test(s) ? s : "";
   }
   if (s4.x === "s3") paint4();
+  if (s5.id === "s3" && !s5.prev) { s5.v = s3.v; paint5(); }
   queueHash();
 }
 function set3(v) { s3.v = BigInt.asUintN(64, v); paint3(); }
@@ -978,12 +1023,108 @@ function paint4() {
   document.querySelectorAll("#s4-ops button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.op === s4.op)));
 }
 
+// ---------- Station 5: NaNs with jobs ----------
+const STALE = 0x7FF0000000000002n;
+const CLOX_QNAN = 0x7FFC000000000000n;
+const LUA_TYPES = ["nil", "false", "true", "a light userdata", "a string", "an upvalue", "a thread",
+  "a function prototype", "a function", "a trace", "a cdata object", "a table", "a userdata"];
+const asNumber = (v) => esc(String(toNum(v)));
+
+// each reader follows that program's own test, from its source
+const READERS = [
+  { name: "JavaScript", how: "Any NaN is just NaN",
+    read: (v) => ({ text: asNumber(v) }) },
+  { name: "Prometheus", how: "All 64 bits equal <code>7FF0000000000002</code>",
+    read: (v) => v === STALE ? { text: "End of series: the staleness marker", special: true }
+      : { text: isNaN64(v) ? "A sample whose value is NaN" : `A sample worth ${asNumber(v)}` } },
+  { name: "R", how: "A NaN whose low 32 bits hold 1954",
+    read: (v) => isNaN64(v) && (v & 0xFFFFFFFFn) === 1954n ? { text: "<code>NA</code>, a missing value", special: true }
+      : { text: isNaN64(v) ? "<code>NaN</code>" : asNumber(v) } },
+  { name: "clox", how: "The bits of <code>7FFC000000000000</code> all set, then a tag",
+    read(v) {
+      if ((v & CLOX_QNAN) !== CLOX_QNAN) return { text: `The number ${asNumber(v)}` };
+      const tag = v ^ CLOX_QNAN;   // only small when the sign bit is clear
+      if (tag >= 1n && tag <= 3n) return { text: `<code>${["nil", "false", "true"][Number(tag) - 1]}</code>`, special: true };
+      if (v & SIGN) return { text: `An object at address <code>0x${hex(v & ~(SIGN | CLOX_QNAN), 12)}</code>`, special: true };
+      return { text: "Not a value clox ever makes" };
+    } },
+  { name: "LuaJIT", how: "The top 13 bits all set, then a 4-bit type",
+    read(v) {
+      const s = BigInt.asIntN(64, v);
+      if (s === -1n) return { text: "<code>nil</code>", special: true };
+      const itype = Number(BigInt.asUintN(32, s >> 47n));
+      if (itype < 0xFFFFFFF2) return { text: `The number ${asNumber(v)}` };
+      const t = (~itype) >>> 0;
+      if (t === 1 || t === 2) return { text: `<code>${LUA_TYPES[t]}</code>`, special: true };
+      if (t >= 3 && t <= 12) return { text: `${LUA_TYPES[t][0].toUpperCase() + LUA_TYPES[t].slice(1)} at address <code>0x${hex(v & ((1n << 47n) - 1n), 12)}</code>`, special: true };
+      return { text: "Not a value LuaJIT ever makes" };
+    } },
+];
+
+const PROM = '<a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a>';
+const SPECIMENS = [
+  { id: "stale", label: "Prometheus: end of series", bits: STALE,
+    about: `${PROM}, a monitoring system, stores this NaN when a scrape stops returning a series, and its queries treat the series as ended. It checks all 64 bits. Press Add 1: the quiet bit switches on, and to Prometheus the marker becomes an ordinary NaN.` },
+  { id: "normal", label: "Go and Prometheus: plain NaN", bits: 0x7FF8000000000001n,
+    about: `What <a href="https://github.com/golang/go/blob/master/src/math/bits.go">Go's <code>math.NaN()</code></a> returns, a quiet NaN with a payload of 1. ${PROM} calls it <code>NormalNaN</code> and stores it for a sample that really is NaN, so it never gets mistaken for the end of a series.` },
+  { id: "na", label: "R: NA", bits: 0x7FF00000000007A2n,
+    about: `The R statistics language marks a missing number, <code>NA</code>, with a NaN whose low 32 bits hold 1954, and keeps its ordinary <code>NaN</code> for sums like 0 ÷ 0. <a href="https://github.com/wch/r-source/blob/trunk/src/main/arithmetic.c">R's source</a> only checks those 32 bits, so <code>NA</code> survives Add 1. Even so, <a href="https://github.com/wch/r-source/blob/trunk/src/library/base/man/NA.Rd">R's documentation</a> warns that sums mixing <code>NA</code> and <code>NaN</code> may give either, depending on the platform.` },
+  { id: "cloxtrue", label: "clox: true", bits: CLOX_QNAN | 3n,
+    about: `clox, the interpreter built in <a href="https://craftinginterpreters.com/optimization.html#nan-boxing"><i>Crafting Interpreters</i></a>, keeps every value in one 64-bit word. A float is a number. Anything with all the bits of <code>7FFC000000000000</code> set is something else, and its lowest two bits say <code>nil</code> (1), <code>false</code> (2), or <code>true</code> (3).` },
+  { id: "cloxobj", label: "clox: an object", bits: SIGN | CLOX_QNAN | 0x600012345670n,
+    about: `With the sign bit set as well, clox reads the low bits as a pointer to an object in memory: a string, a function, a class. This address is made up. Pointers on today's 64-bit machines fit in 48 bits, which leaves room for the tag.` },
+  { id: "luanil", label: "LuaJIT: nil", bits: 0xFFFFFFFFFFFFFFFFn,
+    about: `LuaJIT, a fast Lua, reads any NaN with the top 13 bits set as something other than a number, in its <a href="https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lj_obj.h">64-bit layout</a>. The next 4 bits say which kind of value, and the lowest 47 hold a pointer. Its <code>nil</code> is every bit set.` },
+  { id: "luatrue", label: "LuaJIT: true", bits: 0xFFFEFFFFFFFFFFFFn,
+    about: `LuaJIT's <code>true</code>: the top 13 bits set, then the type 1101, then every bit after that set. <code>false</code> is the same with type 1110.` },
+  { id: "fpu", label: "The FPU's own NaN", bits: 0xFFF8000000000000n,
+    about: `<a href="https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lj_obj.h">LuaJIT's source</a> explains why borrowing NaNs is safe: the floating-point unit it was written for only ever makes this one NaN itself, from sums like 0 ÷ 0. Every other NaN is free to mean something else, and LuaJIT reads this one as a number.` },
+  { id: "s3", label: "Station 3’s number" },
+];
+const s5 = { id: "stale", v: STALE, prev: null };
+
+$("s5-picks").innerHTML = SPECIMENS.map((sp) => `<button type="button" class="btn" data-sp="${sp.id}">${sp.label}</button>`).join("");
+$("s5-picks").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const sp = SPECIMENS.find((x) => x.id === b.dataset.sp);
+  s5.id = sp.id; s5.v = sp.id === "s3" ? s3.v : sp.bits; s5.prev = null;
+  paint5();
+});
+function plus5() {
+  s5.prev = READERS.map((r) => r.read(s5.v).text);
+  s5.v = toBits(toNum(s5.v) + 1);
+  paint5();
+}
+$("s5-plus").addEventListener("click", plus5);
+
+function paint5() {
+  const v = s5.v, sp = SPECIMENS.find((x) => x.id === s5.id);
+  $("s5-strip").innerHTML = stripHTML(v, 64, fieldOf64);
+  $("s5-hex").innerHTML = `0x${hexHTML(v)} · ${KIND_NAMES[kind64(v)]}`;
+  const now = READERS.map((r) => r.read(v)), changed = now.map((got, i) => Boolean(s5.prev) && s5.prev[i] !== got.text);
+  let about = sp.id === "s3" ? "Station 3's number, read by each program. Change it there and the readings follow." : sp.about;
+  if (s5.prev) {
+    const names = READERS.filter((_, i) => changed[i]).map((r) => r.name);
+    about = `That's after Add 1 in your browser. ${names.length ? `The reading for ${names.join(" and ")} changed, and is marked at its left edge.` : "Every program reads it the same as before."}`;
+    if (s5.id === "stale" && changed[1]) about += " Prometheus no longer sees the end of a series.";
+    if (s5.id === "na" && now[2].special) about += " R still sees <code>NA</code>, because it only checks the low 32 bits.";
+  }
+  $("s5-about").innerHTML = about;
+  $("s5-reads").tBodies[0].innerHTML = READERS.map((r, i) => {
+    const got = now[i];
+    return `<tr><th scope="row">${r.name}<span class="how">${r.how}</span></th><td class="${got.special ? "special" : ""}${changed[i] ? " changed" : ""}">${got.text}${changed[i] ? " <span class=\"vh\">(changed)</span>" : ""}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("#s5-picks button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sp === s5.id)));
+}
+
 // ---------- Keyboard ----------
 // letter keys go to the station holding focus, or with nothing focused, the one most in view
 const STATION_KEYS = [
   ["s1-map", { n: () => set1(randomHalf(true)), r: () => set1(randomHalf(false)) }],
   ["s2-cards", { e: () => setMode2("eq"), o: () => setMode2("is"), b: () => setMode2("bits") }],
   ["s3-pins", { m: make3, n: () => set3(randomNaN()), c: clear3 }],
+  ["s5-picks", { a: plus5 }],
 ].map(([id, keys]) => [$(id).closest(".panel"), keys]);
 function stationInView() {
   let best = null, most = 0;
@@ -1025,6 +1166,7 @@ build3();
 paint2();
 paint3();
 paint4();
+paint5();
 drawMap();
 paint1();
 // the map takes its colors from the page, so redraw when the theme changes; the close-up also follows its box's width
