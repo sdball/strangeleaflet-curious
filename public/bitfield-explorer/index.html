@@ -160,12 +160,17 @@ h1 {
   -webkit-user-select: none;
 }
 
+/* Row breaks, each marked with the screen sizes it applies at: t-xl wide, t-md under 1080px, t-sm under 520px */
 .brk {
   display: none;
   flex-basis: 100%;
   height: 0;
 }
-@media (max-width: 1080px) { .brk.wide { display: block; } }
+.brk.t-xl { display: block; }
+@media (max-width: 1080px) {
+  .brk.t-xl { display: none; }
+  .brk.t-md { display: block; }
+}
 
 .grp {
   display: flex;
@@ -438,6 +443,23 @@ h2 {
   font-weight: 600;
 }
 
+.known {
+  margin: 0 0 1rem;
+  padding: .6rem .8rem;
+  border-left: 4px solid var(--f4);
+  background: var(--plate);
+  border-radius: 0 6px 6px 0;
+  max-width: 62ch;
+}
+.known:empty { display: none; }
+.known strong { font-weight: 600; }
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 0 0 1rem;
+}
+
 .big {
   font: 600 clamp(1.4rem, 4vw, 2rem)/1.25 var(--mono);
   margin: 0 0 1rem;
@@ -584,7 +606,15 @@ footer {
   .panel { padding: .9rem .75rem 1rem; }
   .sw { width: 22px; }
   .switches { gap: .55rem .7rem; }
-  .brk { display: block; }
+  .brk.t-md { display: none; }
+  .brk.t-sm { display: block; }
+  /* 64 switches: narrower paddles so a phone fits 16 to a row */
+  .switches.w64 { gap: .55rem .45rem; }
+  .w64 .sw { width: 15px; }
+  .w64 .slot { width: 9px; }
+  .w64 .paddle { left: -3px; right: -3px; }
+  .w64 .lamp { width: 10px; height: 10px; }
+  .w64 .digit { font-size: 1.1rem; }
   .reg { grid-template-columns: 1fr; }
   .msg { grid-column: 1; }
   .kv { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
@@ -614,6 +644,7 @@ footer {
         <button type="button" data-w="8">8 bits</button>
         <button type="button" data-w="16">16 bits</button>
         <button type="button" data-w="32">32 bits</button>
+        <button type="button" data-w="64">64 bits</button>
       </div>
       <div class="seg" role="group" aria-label="Group switches by" id="groupings">
         <button type="button" data-g="4">Hex groups</button>
@@ -656,9 +687,10 @@ footer {
 // ---------- Small helpers ----------
 const $ = (id) => document.getElementById(id);
 const P2 = (n) => 2 ** n;
-const bitsOf = (v, lo, n) => Math.floor(v / P2(lo)) % P2(n);   // safe for 32-bit unsigned
-const maskOf = (w) => (w === 32 ? 0xFFFFFFFF : P2(w) - 1);
-const toSigned = (v, w) => (v >= P2(w - 1) ? v - P2(w) : v);
+// the value is a BigInt so all 64 bits survive; a field of up to 53 bits comes back as a plain number
+const bitsOf = (v, lo, n) => Number(BigInt.asUintN(n, BigInt(v) >> BigInt(lo)));
+const maskOf = (w) => (1n << BigInt(w)) - 1n;
+const toSigned = (v, w) => BigInt.asIntN(w, BigInt(v));
 const hex = (n, d = 2) => n.toString(16).toUpperCase().padStart(d, "0");
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const groupFromRight = (s, size, sep = " ") => {
@@ -669,7 +701,7 @@ const groupFromRight = (s, size, sep = " ") => {
 const PALETTE = ["var(--f1)", "var(--f2)", "var(--f3)", "var(--f4)", "var(--f5)", "var(--f6)"];
 
 // ---------- State ----------
-const state = { w: 16, v: 21332, lens: "text", g: 4 };   // 21332 = 0x5354 = "ST"
+const state = { w: 16, v: 21332n, lens: "text", g: 4 };   // 21332 = 0x5354 = "ST"
 
 // ---------- ASCII Characters ----------
 const CTRL = [
@@ -735,6 +767,16 @@ const FLOATS = {
         blurb: "Common in graphics and machine learning. About three decimal digits of precision, with a largest value of 65504." },
   32: { E: 8, F: 23, name: "IEEE 754 single precision",
         blurb: "The everyday float in C, shaders, and audio. About seven decimal digits of precision." },
+  64: { E: 11, F: 52, name: "IEEE 754 double precision",
+        blurb: "The float behind every JavaScript number, Python float, and Go float64. About sixteen decimal digits of precision." },
+};
+
+// NaNs that programs give a meaning to, by their exact bits
+const NAMED_NANS = {
+  64: {
+    "7FF0000000000002": `<strong>Prometheus's staleness marker.</strong> When a scrape stops returning a time series, Prometheus stores one last sample with exactly these bits, and queries treat the series as ended. Its code checks all 64 bits, so any other NaN is just a value that happens to be NaN. The quiet bit is 0, making this a signaling NaN, and the payload is 2 rather than 1 so a person debugging can tell it from Go's ordinary NaN, which ends in 1.`,
+    "7FF8000000000001": `<strong>Go's <code>math.NaN()</code>,</strong> which Prometheus calls <code>NormalNaN</code>. A metric that really is NaN gets stored with these bits, and stays distinct from the staleness marker.`,
+  },
 };
 
 function decodeFloat(bits, fmt) {
@@ -744,7 +786,9 @@ function decodeFloat(bits, fmt) {
   if (fmt.e4m3) {
     if (e === maxE && f === P2(F) - 1) return { ...base, kind: "nan", value: NaN };
   } else if (e === maxE) {
-    return f === 0 ? { ...base, kind: "inf", value: sign * Infinity } : { ...base, kind: "nan", value: NaN };
+    if (f === 0) return { ...base, kind: "inf", value: sign * Infinity };
+    // the top fraction bit says quiet (1) or signaling (0); the rest is a payload programs can use
+    return { ...base, kind: "nan", value: NaN, quiet: bitsOf(bits, F - 1, 1), payload: bitsOf(bits, 0, F - 1) };
   }
   if (e === 0) {
     if (f === 0) return { ...base, kind: "zero", value: s ? -0 : 0, m: 0, k: 0 };
@@ -758,20 +802,22 @@ function roundHalfEven(x) {
   if (d < 0.5) return fl;
   return fl % 2 ? fl + 1 : fl;
 }
+// built with + so a subnormal that rounds up carries into the exponent
+const packFloat = (s, e, f, { E, F }) => (BigInt(s) << BigInt(E + F)) + (BigInt(e) << BigInt(F)) + BigInt(f);
 function encodeFloat(x, fmt) {
   const { E, F } = fmt, bias = P2(E - 1) - 1, maxE = P2(E) - 1;
-  const top = (x < 0 || Object.is(x, -0)) ? P2(E + F) : 0;
-  if (Number.isNaN(x)) return { bits: fmt.e4m3 ? maxE * P2(F) + P2(F) - 1 : maxE * P2(F) + P2(F - 1) };
+  const s = (x < 0 || Object.is(x, -0)) ? 1 : 0;
+  if (Number.isNaN(x)) return { bits: fmt.e4m3 ? packFloat(0, maxE, P2(F) - 1, fmt) : packFloat(0, maxE, P2(F - 1), fmt) };
   const a = Math.abs(x);
   if (a === Infinity) {
-    return fmt.e4m3 ? { error: "FP8 E4M3 has no infinity. Its largest value is ±448." } : { bits: top + maxE * P2(F) };
+    return fmt.e4m3 ? { error: "FP8 E4M3 has no infinity. Its largest value is ±448." } : { bits: packFloat(s, maxE, 0, fmt) };
   }
-  if (a === 0) return { bits: top };
+  if (a === 0) return { bits: packFloat(s, 0, 0, fmt) };
   let e = Math.floor(Math.log2(a));
   if (P2(e) > a) e--;
   if (P2(e + 1) <= a) e++;
   if (e < 1 - bias) { // subnormal (may round up into the smallest normal)
-    return { bits: top + roundHalfEven(a / P2(1 - bias - F)) };
+    return { bits: packFloat(s, 0, roundHalfEven(a / P2(1 - bias - F)), fmt) };
   }
   let m = roundHalfEven(a / P2(e - F));
   if (m === P2(F + 1)) { m = P2(F); e++; }
@@ -779,9 +825,9 @@ function encodeFloat(x, fmt) {
   if (fmt.e4m3) {
     if (expField > maxE || (expField === maxE && frac === P2(F) - 1)) return { error: "Too large. FP8 E4M3 tops out at ±448." };
   } else if (expField >= maxE) {
-    return { bits: top + maxE * P2(F) }; // overflow rounds to infinity
+    return { bits: packFloat(s, maxE, 0, fmt) }; // overflow rounds to infinity
   }
-  return { bits: top + expField * P2(F) + frac };
+  return { bits: packFloat(s, expField, frac, fmt) };
 }
 function exactDecimal(m, k) { // exact decimal of m × 2^k
   if (k >= 0) return (BigInt(m) << BigInt(k)).toString();
@@ -809,16 +855,21 @@ function parseFloatInput(raw) {
 }
 
 const FLOAT_KINDS = { normal: "Normal", sub: "Subnormal, with reduced precision near zero", zero: "Zero",
-                      inf: "Infinity", nan: "Not a number (NaN)" };
+                      inf: "Infinity", nan: "Not a number (NaN)", qnan: "Quiet NaN", snan: "Signaling NaN" };
+const floatKind = (d) => d.kind !== "nan" || d.quiet === undefined ? FLOAT_KINDS[d.kind] : FLOAT_KINDS[d.quiet ? "qnan" : "snan"];
 const floatExpAlts = ({ E }) => {
   const bias = P2(E - 1) - 1;
   return [`${P2(E) - 2} − ${bias} = ${P2(E) - 2 - bias}`, `0, read as 1 − ${bias} = ${1 - bias}`, `${P2(E) - 1}, all ones, reserved for infinity`];
 };
+const nanSig = (d) => d.quiet === undefined ? "Fraction is not zero, so this is NaN"
+  : d.quiet ? "Top fraction bit is 1, so this NaN is quiet: it passes through arithmetic"
+  : "Top fraction bit is 0, so this NaN is signaling: it's meant to raise an alarm when used";
 const floatSigAlts = ({ F }) => [
   `1.${"1".repeat(F)} in binary, which is ${exactDecimal(P2(F + 1) - 1, -F)}`,
   `0.${"0".repeat(F - 1)}1 in binary, which is ${exactDecimal(1, -F)}`,
-  "Fraction is not zero, so this is NaN",
+  nanSig({ quiet: 0 }), nanSig({ quiet: 1 }),
 ];
+const nanPayload = (d, F) => `0x${hex(d.payload, Math.ceil((F - 1) / 4))} in the other ${F - 1} fraction bits`;
 
 // ---------- Lenses ----------
 // Each lens: name, widths, fields(w) MSB-first, html(w), update(v, w, root), bind(root, w).
@@ -836,7 +887,7 @@ const dosDateText = (y, m, d) => new Intl.DateTimeFormat(undefined, { weekday: "
 
 const LENSES = {
   text: {
-    name: "Text", widths: [8, 16, 32],
+    name: "Text", widths: [8, 16, 32, 64],
     fields: (w) => Array.from({ length: w / 8 }, (_, i) => ({
       name: w === 8 ? "Byte" : i === 0 ? "High byte" : i === w / 8 - 1 ? "Low byte" : `Byte ${i + 1}`,
       bits: 8, color: i % 2 ? "var(--f3)" : "var(--f1)",
@@ -859,8 +910,8 @@ const LENSES = {
           <span class="nums"><span>0x${hex(b)}</span><span>${b}</span></span>
           <small class="stack"><span>${d.note}</span>${ghosts(BYTE_NOTES)}</small></div>`;
       }).join(""));
-      if (w === 16) put(root, "unit", describeCodePoint(v, true));
-      if (w === 32) put(root, "cp", describeCodePoint(v, false));
+      if (w === 16) put(root, "unit", describeCodePoint(Number(v), true));
+      if (w === 32) put(root, "cp", describeCodePoint(Number(v), false));
       if (w > 8) {
         const bytes = fields.map((_, i) => hex(bitsOf(v, w - 8 * (i + 1), 8)));
         put(root, "le", bytes.reverse().join(" "));
@@ -869,7 +920,7 @@ const LENSES = {
   },
 
   float: {
-    name: "Float", widths: [8, 16, 32],
+    name: "Float", widths: [8, 16, 32, 64],
     fields: (w) => [
       { name: "Sign", bits: 1, color: "var(--f4)" },
       { name: "Exponent", bits: FLOATS[w].E, color: "var(--f2)" },
@@ -883,13 +934,25 @@ const LENSES = {
       <p class="msg" id="fmsg" role="status"></p>
       ${kv(row("Kind", "kind", Object.values(FLOAT_KINDS)), row("Sign", "sign"),
            row("Exponent", "exp", floatExpAlts(FLOATS[w])), row("Significand", "sig", floatSigAlts(FLOATS[w])),
+           FLOATS[w].e4m3 ? "" : row("NaN payload", "payload", [nanPayload({ payload: 0 }, FLOATS[w].F)]),
            row("Exact value", "exact"))}
+      <div class="known" data-k="known" aria-live="polite"></div>
+      ${w === 64 ? `
+      <div class="acts">
+        <button type="button" class="act" data-bits="7FF0000000000002">Prometheus's staleness marker</button>
+        <button type="button" class="act" data-bits="7FF8000000000001">Go's NaN</button>
+      </div>
+      <p class="fmt">Any pattern with the exponent all ones and a fraction that isn't zero is NaN, so a double has 2<sup>53</sup> − 2 of them, and programs use the spare bits to carry messages. <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a> marks the end of a time series with one particular NaN, and <a href="https://github.com/golang/go/blob/master/src/math/bits.go">Go</a> makes its ordinary NaN with a payload of 1. This page keeps the bits as a 64-bit integer, never as a JavaScript number, because the <a href="https://tc39.es/ecma262/multipage/structured-data.html#sec-numerictorawbytes">JavaScript spec</a> lets an engine swap any NaN for one of its own when it stores the number as bytes.</p>` : ""}
       <p class="fmt">Add 1 and Subtract 1 on the panel step to the next representable number, which is a good way to see the gaps between floats grow.</p>`,
     update(v, w, root) {
       const fmt = FLOATS[w], d = decodeFloat(v, fmt), F = fmt.F;
       const input = root.querySelector("#fval");
       if (input && document.activeElement !== input) input.value = shortestDecimal(v, fmt, d.value);
-      put(root, "kind", FLOAT_KINDS[d.kind]);
+      put(root, "kind", floatKind(d));
+      put(root, "payload", d.kind === "nan" ? nanPayload(d, F) : "None. Only a NaN carries one");
+      const name = d.kind === "nan" && NAMED_NANS[w]?.[hex(v, w / 4)];
+      const known = root.querySelector('[data-k="known"]'), key = name ? hex(v, w / 4) : "";
+      if (known.dataset.shown !== key) { known.dataset.shown = key; known.innerHTML = name || ""; }   // only on change, so the live region speaks once
       put(root, "sign", d.s ? "1, negative" : "0, positive");
       const fracBits = d.f.toString(2).padStart(F, "0");
       if (d.kind === "normal") {
@@ -900,9 +963,9 @@ const LENSES = {
         put(root, "sig", `0.${fracBits} in binary, which is ${exactDecimal(d.f, -F)}`);
       } else {
         put(root, "exp", `${d.e}, all ones, reserved for ${d.kind === "inf" ? "infinity" : "NaN"}`);
-        put(root, "sig", d.kind === "inf" ? "Fraction is zero, so this is infinity" : "Fraction is not zero, so this is NaN");
+        put(root, "sig", d.kind === "inf" ? "Fraction is zero, so this is infinity" : nanSig(d));
       }
-      put(root, "exact", d.kind === "inf" || d.kind === "nan" ? "—"
+      put(root, "exact", d.kind === "inf" || d.kind === "nan" ? "None, since this isn't a finite number"
         : (d.s ? "−" : "") + exactDecimal(d.m, d.k));
     },
     bind(root, w) {
@@ -918,6 +981,7 @@ const LENSES = {
         setValue(r.bits, "lens");
       });
       input.addEventListener("blur", () => { msg.textContent = ""; field.classList.remove("bad"); render("lens-blur"); });
+      root.querySelectorAll("[data-bits]").forEach((b) => b.addEventListener("click", () => setValue(BigInt("0x" + b.dataset.bits), "lens")));
     },
   },
 
@@ -994,7 +1058,7 @@ const LENSES = {
       put(root, "ls", esc(ls));
       put(root, "type", tname ? `${tname} (${t.toString(8).padStart(2, "0")} octal)` : `Unused type code ${t.toString(8).padStart(2, "0")}`);
       put(root, "oct", v.toString(8).padStart(6, "0"));
-      const perms = v & 0o7777;
+      const perms = Number(v) & 0o7777;
       put(root, "chmod", `chmod ${perms > 0o777 ? perms.toString(8) : perms.toString(8).padStart(3, "0")}`);
       const sp = [suid && "set user ID", sgid && "set group ID", sticky && "sticky"].filter(Boolean);
       put(root, "special", sp.length ? sp.join(", ") : "None");
@@ -1104,7 +1168,7 @@ const LENSES = {
       <p><button type="button" class="act" data-act="now">Set to now</button> <button type="button" class="act" data-act="tick" aria-pressed="false">Follow clock</button></p>
       <p class="fmt">A signed 32-bit count of seconds since 1 January 1970 UTC. It runs out at 03:14:07 UTC on 19 January 2038; one more second wraps it back to December 1901. Try 7FFFFFFF in hex, then Add 1.</p>`,
     update(v, w, root) {
-      const s = toSigned(v, 32), dt = new Date(s * 1000);
+      const s = Number(toSigned(v, 32)), dt = new Date(s * 1000);
       put(root, "big", dt.toISOString().replace("T", " ").replace(".000Z", " UTC"));
       put(root, "local", esc(new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "long" }).format(dt)));
       put(root, "secs", s.toLocaleString());
@@ -1123,14 +1187,14 @@ const REGS = [
       s = s.replace(/[\s_]/g, "").replace(/^0b/i, "");
       if (!/^[01]+$/.test(s)) return { error: "Use only 0 and 1." };
       if (s.replace(/^0+/, "").length > w) return { error: `That needs more than ${w} bits.` };
-      return { v: parseInt(s, 2) };
+      return { v: BigInt("0b" + s) };
     } },
   { id: "hex", label: "Hexadecimal", prefix: "0x", mode: "text",
     fmt: (v, w) => hex(v, w / 4),
     parse(s, w) {
       s = s.replace(/[\s_]/g, "").replace(/^0x/i, "");
       if (!/^[0-9a-f]+$/i.test(s)) return { error: "Use 0 to 9 and A to F." };
-      const v = parseInt(s, 16);
+      const v = BigInt("0x" + s);
       return v > maskOf(w) ? { error: `The largest ${w}-bit value is ${hex(maskOf(w), w / 4)}.` } : { v };
     } },
   { id: "oct", label: "Octal", prefix: "0o", mode: "numeric",
@@ -1138,7 +1202,7 @@ const REGS = [
     parse(s, w) {
       s = s.replace(/[\s_]/g, "").replace(/^0o/i, "");
       if (!/^[0-7]+$/.test(s)) return { error: "Use only 0 to 7." };
-      const v = parseInt(s, 8);
+      const v = BigInt("0o" + s);
       return v > maskOf(w) ? { error: `The largest ${w}-bit value is ${maskOf(w).toString(8)}.` } : { v };
     } },
   { id: "udec", label: "Unsigned", prefix: "", mode: "numeric",
@@ -1146,7 +1210,7 @@ const REGS = [
     parse(s, w) {
       s = s.replace(/[\s_,]/g, "");
       if (!/^\d+$/.test(s)) return { error: "Use only digits." };
-      const v = Number(s);
+      const v = BigInt(s);
       return v > maskOf(w) ? { error: `The largest ${w}-bit value is ${maskOf(w)}.` } : { v };
     } },
   { id: "sdec", label: "Signed", prefix: "", mode: "text", hint: "two's complement",
@@ -1154,9 +1218,9 @@ const REGS = [
     parse(s, w) {
       s = s.replace(/[\s_,]/g, "").replace("\u2212", "-");
       if (!/^[+-]?\d+$/.test(s)) return { error: "Use digits, with an optional minus sign." };
-      const n = Number(s), lo = -P2(w - 1), hi = P2(w - 1) - 1;
+      const n = BigInt(s), hi = maskOf(w - 1), lo = -hi - 1n;
       if (n < lo || n > hi) return { error: `Signed ${w}-bit values run from ${lo} to ${hi}.` };
-      return { v: n < 0 ? n + P2(w) : n };
+      return { v: BigInt.asUintN(w, n) };
     } },
 ];
 function buildRegisters() {
@@ -1197,18 +1261,21 @@ function buildSwitches() {
       <span class="digit" aria-hidden="true"></span><div class="grp-sw">`;
     for (let k = 0; k < size; k++) {
       bit--;
+      const worth = (1n << BigInt(bit)).toLocaleString();
       html += `<button type="button" class="sw" role="switch" data-bit="${bit}"
-        aria-label="Bit ${bit}, worth ${P2(bit).toLocaleString()}" title="Bit ${bit}: ${P2(bit).toLocaleString()}">
+        aria-label="Bit ${bit}, worth ${worth}" title="Bit ${bit}: ${worth}">
         <span class="lamp"></span><span class="slot"><span class="paddle"></span></span>
         <span class="band"></span><span class="idx">${bit}</span></button>`;
     }
     html += `</div></div>`;
-    // Line breaks that only show on narrower screens, so rows split on byte-ish boundaries
-    const perRow = g === 4 ? 2 : 3;
-    if (fromRight > 0 && fromRight % (perRow * 2) === 0) html += `<span class="brk wide" aria-hidden="true"></span>`;
-    else if (fromRight > 0 && fromRight % perRow === 0) html += `<span class="brk" aria-hidden="true"></span>`;
+    // Row breaks so rows split on byte-ish boundaries: groups per row at each screen size
+    const perRow = w === 64 ? (g === 4 ? { xl: 8, md: 4, sm: 4 } : { xl: 6, md: 6, sm: 5 })
+                            : (g === 4 ? { md: 4, sm: 2 } : { md: 6, sm: 3 });
+    const tiers = fromRight > 0 ? Object.keys(perRow).filter((t) => fromRight % perRow[t] === 0) : [];
+    if (tiers.length) html += `<span class="brk ${tiers.map((t) => "t-" + t).join(" ")}" aria-hidden="true"></span>`;
   });
   $("switches").innerHTML = html;
+  $("switches").classList.toggle("w64", w === 64);
   const sweep = $("sweep");
   sweep.max = String(maskOf(w));
   colorBands();
@@ -1248,7 +1315,7 @@ function buildLens() {
 let clockTimer = null;
 function startClock() {
   const lens = LENSES[state.lens], btn = $("lensBody").querySelector('[data-act="tick"]');
-  const tick = () => { const v = lens.now(); if (v !== state.v) setValue(v, "clock"); };
+  const tick = () => { const v = BigInt(lens.now()); if (v !== state.v) setValue(v, "clock"); };
   tick();
   clockTimer = setInterval(tick, 250);
   btn.setAttribute("aria-pressed", "true");
@@ -1280,7 +1347,7 @@ function render(src = "") {
   let ones = 0;
   for (let i = 0; i < w; i++) ones += bitsOf(v, i, 1);
   const countText = (n, p) => `${n} of ${w} bits set.` + (n === 1 ? ` That makes it a power of two: 2^${p}.` : "");
-  $("count").textContent = countText(ones, Math.log2(v));
+  $("count").textContent = countText(ones, v.toString(2).length - 1);
   $("countGhost").textContent = countText(1, w - 1);
 
   const lens = LENSES[state.lens];
@@ -1304,32 +1371,36 @@ function render(src = "") {
 }
 function setValue(v, src) {
   if (src !== "clock") stopClock();
-  state.v = (v & maskOf(state.w)) >>> 0;
+  state.v = BigInt.asUintN(state.w, BigInt(v));
   render(src);
 }
 
 // ---------- Operations ----------
+// v is a BigInt; setValue trims each result back to the current width
 const OPS = [
-  { id: "not",  label: "Invert",       key: "~", fn: (v, w) => ~v },
-  { id: "shl",  label: "Shift left",   key: "<", fn: (v) => v << 1 },
-  { id: "shr",  label: "Shift right",  key: ">", fn: (v) => v >>> 1 },
-  { id: "rol",  label: "Rotate left",  key: "[", fn: (v, w) => (v << 1) | (v >>> (w - 1)) },
-  { id: "ror",  label: "Rotate right", key: "]", fn: (v, w) => (v >>> 1) | (v << (w - 1)) },
-  { id: "inc",  label: "Add 1",        key: "+", fn: (v, w) => (v + 1) % P2(w) },
-  { id: "dec",  label: "Subtract 1",   key: "-", fn: (v, w) => (v - 1 + P2(w)) % P2(w) },
+  { id: "not",  label: "Invert",       key: "~", fn: (v) => ~v },
+  { id: "shl",  label: "Shift left",   key: "<", fn: (v) => v << 1n },
+  { id: "shr",  label: "Shift right",  key: ">", fn: (v) => v >> 1n },
+  { id: "rol",  label: "Rotate left",  key: "[", fn: (v, w) => (v << 1n) | (v >> BigInt(w - 1)) },
+  { id: "ror",  label: "Rotate right", key: "]", fn: (v, w) => (v >> 1n) | (v << BigInt(w - 1)) },
+  { id: "inc",  label: "Add 1",        key: "+", fn: (v) => v + 1n },
+  { id: "dec",  label: "Subtract 1",   key: "-", fn: (v) => v - 1n },
   { id: "swap", label: "Swap bytes",   key: "",  fn: (v, w) => {
-      if (w === 8) return ((v & 0x0F) << 4) | (v >>> 4);
-      let out = 0;
-      for (let i = 0; i < w / 8; i++) out = out * 256 + bitsOf(v, 8 * i, 8);
+      if (w === 8) return ((v & 0x0Fn) << 4n) | (v >> 4n);
+      let out = 0n;
+      for (let i = 0; i < w / 8; i++) out = (out << 8n) | BigInt(bitsOf(v, 8 * i, 8));
       return out;
     } },
   { id: "rev",  label: "Reverse bits", key: "",  fn: (v, w) => {
-      let out = 0;
-      for (let i = 0; i < w; i++) out = out * 2 + bitsOf(v, i, 1);
+      let out = 0n;
+      for (let i = 0; i < w; i++) out = (out << 1n) | BigInt(bitsOf(v, i, 1));
       return out;
     } },
-  { id: "clr",  label: "Clear",        key: "0", fn: () => 0 },
-  { id: "rnd",  label: "Random",       key: "r", fn: (v, w) => Math.floor(Math.random() * P2(w)) },
+  { id: "clr",  label: "Clear",        key: "0", fn: () => 0n },
+  { id: "rnd",  label: "Random",       key: "r", fn: () => {
+      const [hi, lo] = crypto.getRandomValues(new Uint32Array(2));
+      return (BigInt(hi) << 32n) | BigInt(lo);
+    } },
 ];
 function runOp(id) {
   const op = OPS.find((o) => o.id === id);
@@ -1354,7 +1425,7 @@ const swEl = $("switches");
 let paint = null, pointerToggled = false;
 function setBit(bit, on) {
   const cur = bitsOf(state.v, bit, 1) === 1;
-  if (cur !== on) setValue(state.v + (on ? 1 : -1) * P2(bit), "switch");
+  if (cur !== on) setValue(state.v ^ (1n << BigInt(bit)), "switch");
 }
 swEl.addEventListener("pointerdown", (e) => {
   const sw = e.target.closest(".sw");
@@ -1390,12 +1461,16 @@ swEl.addEventListener("keydown", (e) => {
 });
 
 // ---------- Other controls ----------
-$("sweep").addEventListener("input", (e) => setValue(Number(e.target.value), "sweep"));
+// a range input holds a double, so past 2^53 the sweep moves in big steps; clamp the top end
+$("sweep").addEventListener("input", (e) => {
+  const n = BigInt(Math.round(Number(e.target.value))), max = maskOf(state.w);
+  setValue(n > max ? max : n, "sweep");
+});
 $("widths").addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (!b || +b.dataset.w === state.w) return;
   state.w = +b.dataset.w;
-  state.v = (state.v & maskOf(state.w)) >>> 0;
+  state.v = BigInt.asUintN(state.w, state.v);
   buildTabs(); buildSwitches(); buildLens(); render();
 });
 $("groupings").addEventListener("click", (e) => {
@@ -1419,9 +1494,9 @@ function writeHash() {
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const w = +p.get("w");
-  if ([8, 16, 32].includes(w)) state.w = w;
-  const v = parseInt(p.get("v") || "", 16);
-  if (Number.isFinite(v) && v >= 0) state.v = (v & maskOf(state.w)) >>> 0;
+  if ([8, 16, 32, 64].includes(w)) state.w = w;
+  const v = p.get("v") || "";
+  if (/^[0-9a-f]{1,16}$/i.test(v)) state.v = BigInt.asUintN(state.w, BigInt("0x" + v));
   if ([3, 4].includes(+p.get("g"))) state.g = +p.get("g");
   if (LENSES[p.get("lens")]) state.lens = p.get("lens");
 }
