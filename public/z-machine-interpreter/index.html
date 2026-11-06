@@ -476,6 +476,17 @@ html.full-on { overflow: hidden; }
   .machine.full .pad { flex: 0 0 clamp(16rem, 30%, 26rem); border-width: 0 0 0 1px; padding-left: 0; }
   .machine.full .pad-head { padding-top: env(safe-area-inset-top, 0px); }
 }
+/* on a phone there isn't room for the game and a panel at once, so the
+   panel takes the whole screen until you close it */
+.machine.full .deck { position: relative; }
+@container (max-width: 719px) {
+  .machine.full .pad { position: absolute; inset: 0; z-index: 2; border: 0; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  .machine.full .pad-head { padding-top: env(safe-area-inset-top, 0px); }
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .machine.full .pad { position: absolute; inset: 0; z-index: 2; border: 0; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  .machine.full .pad-head { padding-top: env(safe-area-inset-top, 0px); }
+}
 .machine.full .screen:focus-within { box-shadow: none; }
 .machine.full .controls, .machine.full .themes, .machine.full .note { display: none; }
 .machine.full .status-bar { padding-top: calc(.1rem + env(safe-area-inset-top, 0px)); }
@@ -590,7 +601,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. The Zorks also get <b>Cheats</b>: <b>Well lit</b> gives every room light, and <b>Endless lights</b> keeps the lamp, candles, and matches from running out. In Zork I, <b>Thief stays home</b> keeps the thief in his treasure room and <b>Stable objects</b> stops him taking what you leave lying around. In Zork II, <b>No wizard</b> stops the Wizard dropping in to cast spells. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. The Zorks also get <b>Cheats</b>: <b>Well lit</b> gives every room light, and <b>Endless lights</b> keeps the lamp, candles, and matches from running out. In Zork I, <b>Thief stays home</b> keeps the thief in his treasure room and <b>Stable objects</b> stops him taking what you leave lying around. In Zork II, <b>No wizard</b> stops the Wizard dropping in to cast spells. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -2493,6 +2504,7 @@ function setFull(on) {
   if (on && root.requestFullscreen && !touchFirst && !document.fullscreenElement) root.requestFullscreen().catch(() => { /* the window will do */ });
   if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
   fitViewport();
+  coverScreen();
   requestAnimationFrame(resizeScreen);
   if (!cmd.hidden) cmd.focus({ preventScroll: true });
   else if (!on) machine.scrollIntoView({ block: "nearest" });
@@ -2612,10 +2624,23 @@ function setPanel(name, quiet) {
   if (name === "inspector") drawInspector();
   if (name === "saves") drawSaves();
   else if (was === "saves") endRename(false);
+  const covered = coverScreen();
   if (quiet) return;
   if (name === "notes" && !touchFirst) notesText.focus({ preventScroll: true });
+  // the close button, not the prompt, so a phone's keyboard goes away
+  else if (covered) $(PANELS[name]).querySelector(".pad-close").focus({ preventScroll: true });
   else if (!cmd.hidden && (!name || document.activeElement?.closest("[data-panel]"))) cmd.focus({ preventScroll: true });
 }
+// In full screen on a phone the panel covers the game (see the CSS). The
+// game behind it is out of reach until the panel closes, so nothing it
+// does can pull focus, and the keyboard, back to the hidden prompt.
+function coverScreen() {
+  const pad = panel && $(PANELS[panel]);
+  const covered = !!pad && isFull() && getComputedStyle(pad).position === "absolute";
+  $("screen").inert = covered;
+  return covered;
+}
+window.addEventListener("resize", coverScreen);
 document.querySelectorAll("[data-panel]").forEach((b) => b.addEventListener("click", () => setPanel(panel === b.dataset.panel ? "" : b.dataset.panel)));
 $("padClose").addEventListener("click", () => setPanel(""));
 $("mapClose").addEventListener("click", () => setPanel(""));
