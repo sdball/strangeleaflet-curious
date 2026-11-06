@@ -514,7 +514,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 3</p>
       <h2 id="s3-h">Inside one NaN</h2>
-      <p>These are the 64 bits of one JavaScript number, sorted into their four fields. <b>A float is NaN when all 11 exponent bits are on and the bits after them aren't all off.</b> Turn off any exponent bit and it's an ordinary number again. The first bit after the exponent is the quiet bit. The other 51 are the payload, and nothing about NaN uses them, so a program can keep whatever it likes there.</p>
+      <p>These are the 64 bits of one JavaScript number, sorted into their four fields. <b>A float is NaN when all 11 exponent bits are on and the bits after them aren't all off.</b> Turn off any exponent bit and it's an ordinary number again. The first bit after the exponent is the quiet bit. The other 51 are the payload. With the quiet bit on, the payload can be anything, even all zeros. With it off, the NaN is signaling (Station 4), and the payload needs at least one bit on, since all ones followed by all zeros is infinity. That's why Station 1 counts one fewer signaling NaN than quiet for each sign. Past that one rule, nothing about NaN reads the payload, so a program can keep whatever it likes there.</p>
     </div>
     <div class="pins" id="s3-pins" role="group" aria-label="The 64 bits, sign first"></div>
     <div class="split">
@@ -888,7 +888,8 @@ function paint3() {
     ["Quiet bit", k === "qnan" ? "On: a quiet NaN passes through arithmetic without complaint"
       : k === "snan" ? "Off: a signaling NaN is meant to raise an alarm when used (Station 4)"
       : "Just another fraction bit until the exponent is all ones"],
-    ["Payload", `<code>0x${hex(pay, 13)}</code>, which is ${pay.toLocaleString()}`],
+    ["Payload", `<code>0x${hex(pay, 13)}</code>, which is ${pay.toLocaleString()}`
+      + (k === "snan" ? ". With the quiet bit off, at least one of these bits has to stay on" : "")],
     ["As text", `<span class="chars">${esc(showChars(bytes))}</span>`],
     ["String(x)", `<code>${esc(String(x))}</code>`],
   ];
