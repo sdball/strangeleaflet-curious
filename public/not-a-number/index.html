@@ -100,6 +100,15 @@ h1 {
 }
 .lede { margin: 0 0 .75rem; color: var(--muted); max-width: 62ch; }
 .howto { margin: 0 0 1.5rem; color: var(--muted); font-size: .95rem; max-width: 62ch; }
+.meme { margin: 0 0 1.75rem; max-width: 20rem; }
+.meme img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.meme figcaption { margin-top: .4rem; color: var(--muted); font-size: .9rem; }
 h2 { font: 400 1.65rem/1.2 var(--serif); margin: 0 0 .75rem; }
 
 /* ---------- Panels ---------- */
@@ -420,6 +429,12 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
   <h1>Not a Number</h1>
   <p class="lede">Divide 0 by 0 and a computer hands back NaN, short for not a number. It looks like one special value. It's really a whole family of bit patterns that all print the same way. Start with a map of every NaN a small float can hold, line some up side by side, take one apart, and meet the NaNs real programs put to work.</p>
   <p class="howto">Every map and row of switches works from the keyboard: Tab to it and use the arrow keys (<kbd>Shift</kbd> moves further). Letter keys shown on a button go to the station you're using.</p>
+
+  <figure class="meme">
+    <img src="is-this-a-number.webp" width="720" height="649"
+         alt="The butterfly meme: an anime man labeled typeof gestures at a yellow butterfly labeled NaN and asks, Is this a number?">
+    <figcaption>In JavaScript, <code>typeof NaN</code> really is <code>"number"</code>.</figcaption>
+  </figure>
 
   <!-- 1. Every pattern -->
   <section class="panel" aria-labelledby="s1-h">
