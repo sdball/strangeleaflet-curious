@@ -388,6 +388,24 @@ table.reads .how { display: block; font-weight: 400; color: var(--drawer-muted);
 table.reads td.special { color: var(--quiet); font-weight: 600; }
 table.reads td.changed { box-shadow: inset 3px 0 0 var(--drawer-ink); }
 
+/* ---------- Station 6: code ---------- */
+.code {
+  margin: 0 0 1rem;
+  padding: .8rem .9rem;
+  background: var(--felt);
+  border-radius: 6px;
+  overflow-x: auto;
+  font: 400 .88rem/1.55 var(--mono);
+  color: var(--drawer-ink);
+  white-space: pre;
+}
+.code .cm { color: var(--drawer-muted); }
+.code .lit { color: var(--pay); }
+table.reads td .hexline { margin: 0; font-size: .92rem; }
+table.reads td .chg { background: var(--drawer-ink); color: var(--drawer); border-radius: 2px; }
+table.reads td.kept .how { color: var(--pay); }
+table.reads tbody th code { font-size: .92em; white-space: nowrap; }
+
 /* ---------- Prose ---------- */
 .notes { max-width: 66ch; margin-top: 2.25rem; }
 .notes li { margin-bottom: .65rem; }
@@ -427,7 +445,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Not a Number</h1>
-  <p class="lede">Divide 0 by 0 and a computer hands back NaN, short for not a number. It looks like one special value. It's really a whole family of bit patterns that all print the same way. Start with a map of every NaN a small float can hold, line some up side by side, take one apart, and meet the NaNs real programs put to work.</p>
+  <p class="lede">Divide 0 by 0 and a computer hands back NaN, short for not a number. It looks like one special value. It's really a whole family of bit patterns that all print the same way. Start with a map of every NaN a small float can hold, line some up side by side, take one apart, meet the NaNs real programs put to work, and build one yourself in JavaScript.</p>
   <p class="howto">Every map and row of switches works from the keyboard: Tab to it and use the arrow keys (<kbd>Shift</kbd> moves further). Letter keys shown on a button go to the station you're using.</p>
 
   <figure class="meme">
@@ -581,6 +599,29 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     </div>
   </section>
 
+  <!-- 6. See it in JavaScript -->
+  <section class="panel" aria-labelledby="s6-h">
+    <div class="panel-head">
+      <p class="station">Station 6</p>
+      <h2 id="s6-h">See it in JavaScript</h2>
+      <p>Type <code>0x7FF0000000000002</code> into a JavaScript console hoping for Prometheus's marker and you get back <code>9218868437227405000</code>. A hex literal is a whole number, not a bit pattern, and that one is too big to keep exactly. <b>To get the NaN, write the 64 bits into a buffer and read them back out as a float.</b> Then see which everyday steps keep those bits. Your browser runs each one below, so another browser or another kind of chip may give different answers.</p>
+    </div>
+    <div class="choose">
+      <span class="lbl" id="s6-x-lbl">x is</span>
+      <div class="btns tight" role="group" aria-labelledby="s6-x-lbl" id="s6-xs"></div>
+    </div>
+    <pre class="code" id="s6-code" tabindex="0" aria-label="JavaScript that builds x from its bits"></pre>
+    <div class="table-wrap">
+      <table class="reads" id="s6-reads">
+        <caption class="station" style="text-align:left">What happens to x in your browser</caption>
+        <thead><tr><th scope="col">What you do with x</th><th scope="col">Bits afterward</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="say4" id="s6-say" aria-live="polite"></p>
+    <p class="note">So treat a marker as bits for as long as you can. Coming in, check the raw bytes before they become a number, with <code>view.getBigUint64(0) === 0x7FF0000000000002n</code>. Going out, write the bits with <code>setBigUint64</code>, rather than passing a NaN around and writing it at the end.</p>
+  </section>
+
   <section class="notes" aria-labelledby="notice-h">
     <h2 id="notice-h">Things to notice</h2>
     <ul>
@@ -589,10 +630,11 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       <li><b>The sign of a NaN means nothing.</b> Half of all NaNs have the sign bit set, and they behave exactly like the other half.</li>
       <li><b>Two NaNs in, one out.</b> When both sides of a sum are NaN, the standard says the answer's payload should come from one of them, but not which. Most chips return the first, so <code>a + b</code> and <code>b + a</code> can come out different. Try <code>x + y</code> and <code>y + x</code> in Station 4.</li>
       <li><b>Not every chip keeps the payload.</b> Keeping it is a recommendation, not a rule. RISC-V chips give back one standard NaN from most operations whatever went in, and ARM chips have a mode that does the same.</li>
-      <li><b>Your browser may swap NaNs too.</b> The JavaScript spec lets an engine store any NaN it likes when it writes a NaN number out as bytes. This page keeps each NaN's bits as a whole number and only turns them into a float to do the sums in Station 4.</li>
+      <li><b>Your browser may swap NaNs too.</b> The JavaScript spec lets an engine store any NaN it likes when it writes a NaN number out as bytes. This page keeps each NaN's bits as a whole number and only turns them into a float to do the sums. Station 6 shows which everyday steps keep a NaN's bits in your browser.</li>
       <li><b>Which way round the quiet bit goes was once up for grabs.</b> The 1985 standard that introduced NaNs didn't say which bit pattern means quiet. Most chips, x86 and ARM among them, made a 1 in the top fraction bit mean quiet, but PA-RISC and early MIPS chips used it the other way round. The 2008 revision settled on the first choice.</li>
       <li><b>The same 64 bits mean different things to different programs.</b> In Station 5, <code>7FFC000000000003</code> is <code>true</code> to clox and the number NaN to everything else, and <code>FFFFFFFFFFFFFFFF</code> is <code>nil</code> to LuaJIT. Bits only mean something once a program decides how to read them.</li>
       <li><b>A marker is only as safe as its check.</b> Prometheus compares all 64 bits, so one sum that quiets its marker turns it into an ordinary NaN. R checks only the low 32 bits, so its <code>NA</code> survives being quieted, though R still doesn't promise which of <code>NA</code> and <code>NaN</code> a sum mixing them gives back.</li>
+      <li><b>A marker can earn its own shorthand.</b> Prometheus's <a href="https://github.com/prometheus/prometheus/blob/main/tsdb/chunkenc/xor2.go">xor2 storage format</a>, added in 2026, squeezes each sample into as few bits as it can. It spots a stale marker by comparing all 64 bits, then stores the marker's value as the three-bit code <code>111</code> in place of 64 bits. When the gap since the last sample also matches the gap before it, the five-bit code <code>11111</code> stands for the timestamp and the marker together.</li>
       <li><b>More to try.</b> The <a href="../bitfield-explorer/">bitfield explorer</a> has a NaN tab for trying patterns of your own, and the <a href="../minifloat-ruler/">minifloat ruler</a> shows where NaN sits among an 8-bit float's other values.</li>
     </ul>
   </section>
@@ -605,7 +647,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       <li><a href="https://en.wikipedia.org/wiki/NaN">"NaN"</a>, Wikipedia, for the quiet bit's history, payload propagation, and RISC-V's and ARM's default NaNs.</li>
       <li>Agner Fog, <a href="https://www.agner.org/optimize/nan_propagation.pdf">"Parallel floating point exception tracking and NaN propagation"</a> (2019, updated 2026), for most processors returning the first of two NaNs.</li>
       <li>Ecma International, <a href="https://tc39.es/ecma262/multipage/structured-data.html#sec-numerictorawbytes"><i>ECMAScript Language Specification</i>, NumericToRawBytes</a>, for an engine's freedom to choose any NaN encoding when storing a NaN.</li>
-      <li>Prometheus, <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go"><code>model/value/value.go</code></a>, for the staleness marker <code>StaleNaN</code>.</li>
+      <li>Prometheus, <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go"><code>model/value/value.go</code></a>, for <code>StaleNaN</code> and <code>NormalNaN</code> and the comment explaining the marker's payload; <a href="https://github.com/prometheus/prometheus/blob/main/model/textparse/promparse.go"><code>model/textparse/promparse.go</code></a> and <a href="https://github.com/prometheus/prometheus/blob/main/model/textparse/openmetricsparse.go"><code>openmetricsparse.go</code></a>, for scraped NaNs becoming <code>NormalNaN</code>; and <a href="https://github.com/prometheus/prometheus/blob/main/tsdb/chunkenc/xor2.go"><code>tsdb/chunkenc/xor2.go</code></a>, for the xor2 format's stale codes.</li>
       <li>Robert Nystrom, <a href="https://craftinginterpreters.com/optimization.html#nan-boxing"><i>Crafting Interpreters</i>, section 30.3, "NaN Boxing"</a> (Genever Benning, 2021), for clox's value layout.</li>
       <li>Go, <a href="https://github.com/golang/go/blob/master/src/math/bits.go"><code>src/math/bits.go</code></a>, for the bits of <code>math.NaN()</code>.</li>
       <li>The R Project, <a href="https://github.com/wch/r-source/blob/trunk/src/main/arithmetic.c"><code>src/main/arithmetic.c</code></a>, for how <code>NA</code> is built and recognized, and the R documentation for <a href="https://github.com/wch/r-source/blob/trunk/src/library/base/man/NA.Rd"><code>NA</code></a> and <a href="https://github.com/wch/r-source/blob/trunk/src/library/base/man/is.finite.Rd"><code>is.nan</code></a>.</li>
@@ -813,7 +855,7 @@ const s2 = {
   cards: [
     { bits: 0x7FF8000000000000n, label: "The plainest quiet NaN" },
     { bits: 0xFFF8000000000000n, label: "The same, with the sign bit set" },
-    { bits: 0x7FF0000000000002n, label: "Signaling, payload 2" },
+    { bits: 0x7FF0000000000002n, label: "Signaling: Prometheus’s end-of-series marker" },
     { bits: 0x7FF848656C6C6F21n, label: "Quiet, carrying “Hello!”" },
     { bits: 0x3FF8000000000000n, label: "1.5, an ordinary number", fixed: true },
   ],
@@ -901,6 +943,7 @@ function paint3() {
   }
   if (s4.x === "s3") paint4();
   if (s5.id === "s3" && !s5.prev) { s5.v = s3.v; paint5(); }
+  if (s6.x === "s3") paint6();
   queueHash();
 }
 function set3(v) { s3.v = BigInt.asUintN(64, v); paint3(); }
@@ -969,7 +1012,7 @@ $("s3-word").addEventListener("blur", (e) => { $("s3-msg").textContent = ""; e.t
 // ---------- Station 4: what arithmetic does to a NaN ----------
 const Y4 = 0x7FF8000000000063n;
 const XS4 = [
-  { id: "snan", label: "Signaling, payload 2", bits: 0x7FF0000000000002n },
+  { id: "snan", label: "Signaling: Prometheus’s marker", bits: 0x7FF0000000000002n },
   { id: "neg", label: "Negative, signaling, payload 0x2A", bits: 0xFFF000000000002An },
   { id: "qnan", label: "Quiet, payload 0x2A", bits: 0x7FF800000000002An },
   { id: "s3", label: "Station 3’s number" },
@@ -1080,9 +1123,9 @@ const READERS = [
 const PROM = '<a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a>';
 const SPECIMENS = [
   { id: "stale", label: "Prometheus: end of series", bits: STALE,
-    about: `${PROM}, a monitoring system, stores this NaN when a scrape stops returning a series, and its queries treat the series as ended. It checks all 64 bits. Press Add 1: the quiet bit switches on, and to Prometheus the marker becomes an ordinary NaN.` },
+    about: `${PROM}, a monitoring system, stores this NaN when a scrape stops returning a series, and its queries treat the series as ended. Its payload is 2 rather than 1 so that a person debugging can tell it from Prometheus's plain NaN at a glance, and the run of zeros above it leaves room for more markers later. It checks all 64 bits. Press Add 1: the quiet bit switches on, and to Prometheus the marker becomes an ordinary NaN. Station 6 builds this marker in JavaScript.` },
   { id: "normal", label: "Go and Prometheus: plain NaN", bits: 0x7FF8000000000001n,
-    about: `What <a href="https://github.com/golang/go/blob/master/src/math/bits.go">Go's <code>math.NaN()</code></a> returns, a quiet NaN with a payload of 1. ${PROM} calls it <code>NormalNaN</code> and stores it for a sample that really is NaN, so it never gets mistaken for the end of a series.` },
+    about: `What <a href="https://github.com/golang/go/blob/master/src/math/bits.go">Go's <code>math.NaN()</code></a> returns, a quiet NaN with a payload of 1. ${PROM} calls it <code>NormalNaN</code> and stores it for a sample that really is NaN, so it never gets mistaken for the end of a series. Any NaN Prometheus <a href="https://github.com/prometheus/prometheus/blob/main/model/textparse/promparse.go">reads from a scraped page</a> becomes this one, whatever its bits were, so an exporter can't send the end-of-series marker, or any other payload, as text.` },
   { id: "na", label: "R: NA", bits: 0x7FF00000000007A2n,
     about: `The R statistics language marks a missing number, <code>NA</code>, with a NaN whose low 32 bits hold 1954, and keeps its ordinary <code>NaN</code> for sums like 0 ÷ 0. <a href="https://github.com/wch/r-source/blob/trunk/src/main/arithmetic.c">R's source</a> only checks those 32 bits, so <code>NA</code> survives Add 1. Even so, <a href="https://github.com/wch/r-source/blob/trunk/src/library/base/man/NA.Rd">R's documentation</a> warns that sums mixing <code>NA</code> and <code>NaN</code> may give either, depending on the platform.` },
   { id: "cloxtrue", label: "clox: true", bits: CLOX_QNAN | 3n,
@@ -1134,6 +1177,86 @@ function paint5() {
   document.querySelectorAll("#s5-picks button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sp === s5.id)));
 }
 
+// ---------- Station 6: see it in JavaScript ----------
+// a fresh DataView each time, just as the code shown on the page does it
+function viewNum(bits) { const d = new DataView(new ArrayBuffer(8)); d.setBigUint64(0, bits); return d.getFloat64(0); }
+function viewBits(x) { const d = new DataView(new ArrayBuffer(8)); d.setFloat64(0, x); return d.getBigUint64(0); }
+
+const XS6 = [
+  { id: "stale", label: "Prometheus’s marker", bits: STALE },
+  { id: "na", label: "R’s NA", bits: 0x7FF00000000007A2n },
+  { id: "s3", label: "Station 3’s number" },
+];
+const STEPS6 = [
+  { code: "x", how: "Read straight out of the buffer", fn: (x) => x },
+  { code: "({ v: x }).v", how: "Kept on an object", fn: (x) => ({ v: x }).v },
+  { code: "[1.5, x][1]", how: "Kept in an array beside other numbers", fn: (x) => [1.5, x][1] },
+  { code: "new Float64Array([x])[0]", how: "Kept in a typed array", fn: (x) => new Float64Array([x])[0] },
+  { code: "structuredClone(x)", how: "Copied the way postMessage copies", fn: (x) => structuredClone(x), needs: "structuredClone" },
+  { code: "Math.abs(x)", how: "Only needs the sign bit", fn: (x) => Math.abs(x) },
+  { code: "-x", how: "Flips the sign", fn: (x) => -x },
+  { code: "x * 1", how: "Arithmetic that changes nothing", fn: (x) => x * 1 },
+  { code: "x + 0", how: "More arithmetic that changes nothing", fn: (x) => x + 0 },
+  { code: "JSON.stringify(x)", how: "Sent as JSON", fn: (x) => JSON.stringify(x), text: true },
+];
+const s6 = { x: "stale" };
+const x6 = () => (s6.x === "s3" ? s3.v : XS6.find((c) => c.id === s6.x).bits);
+
+$("s6-xs").innerHTML = XS6.map((c) => `<button type="button" class="btn" data-x="${c.id}">${c.label}</button>`).join("");
+$("s6-xs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { s6.x = b.dataset.x; paint6(); } });
+
+function change6(before, after) {
+  const d = before ^ after;
+  if (!d) return { text: "Every bit kept", kept: true };
+  if (d === QUIET && kind64(before) === "snan") return { text: "The quiet bit switched on", quieted: true };
+  if (d === SIGN) return { text: "Only the sign bit changed" };
+  if (isNaN64(before) && isNaN64(after) && (before & PAY) && !(after & PAY))
+    return { text: "Swapped for a standard NaN, payload gone", quieted: kind64(before) === "snan" };
+  const names = [["sign", SIGN], ["exponent", EXP], ["quiet bit", QUIET], ["payload", PAY]].filter(([, m]) => d & m).map(([n]) => n);
+  return { text: `Changed the ${names.join(", ")}`, quieted: kind64(before) === "snan" && kind64(after) === "qnan" };
+}
+
+function paint6() {
+  const xb = x6(), x = viewNum(xb);
+  const said = isNaN64(xb) ? "NaN, with exactly these bits" : esc(String(x));
+  $("s6-code").innerHTML =
+`const view = new DataView(new ArrayBuffer(8));
+view.setBigUint64(0, <span class="lit">0x${hex(xb, 16)}n</span>);  <span class="cm">// the n makes it a BigInt, so all 64 bits stay exact</span>
+const x = view.getFloat64(0);  <span class="cm">// ${said}</span>
+
+<span class="cm">// read any number's bits back the same way</span>
+function bits(n) {
+  view.setFloat64(0, n);
+  return view.getBigUint64(0).toString(16);
+}`;
+  let kept = 0, tried = 0, quieted = 0;
+  const rows = STEPS6.map((st) => {
+    let cell;
+    if (st.needs && typeof window[st.needs] !== "function") {
+      cell = `<td><span class="how">Your browser doesn't have <code>${st.needs}</code>.</span></td>`;
+    } else if (st.text) {
+      const out = st.fn(x);
+      cell = `<td><p class="hexline">${esc(out)}</p><span class="how">${isNaN64(xb) ? "JSON has no way to write NaN, so every NaN goes out as null" : "An ordinary number goes out as itself"}</span></td>`;
+    } else {
+      const ab = viewBits(st.fn(x)), c = change6(xb, ab);
+      tried++;
+      if (c.kept) kept++;
+      if (c.quieted) quieted++;
+      cell = `<td class="${c.kept ? "kept" : ""}"><p class="hexline">0x${ab === xb ? hex(ab, 16) : hexDiffHTML(ab, xb)}</p><span class="how">${c.text}</span></td>`;
+    }
+    return `<tr><th scope="row"><code>${esc(st.code)}</code><span class="how">${st.how}</span></th>${cell}</tr>`;
+  });
+  $("s6-reads").tBodies[0].innerHTML = rows.join("");
+
+  let say = `<b>${kept} of ${tried} steps kept every bit</b> in your browser.`;
+  if (s6.x === "stale") say += ` Prometheus compares all 64 bits, so only after those would it still see the end of a series.`;
+  else if (s6.x === "na") say += ` R only checks the low 32 bits, so it still sees <code>NA</code> after any step that kept the payload.`;
+  if (quieted) say += ` ${quieted === 1 ? "One step" : `${quieted} steps`} turned the signaling NaN quiet, as Station 4 showed arithmetic does.`;
+  if (!isNaN64(xb)) say = `x isn't a NaN right now, so these steps are ordinary arithmetic. Make Station 3's number a NaN, or pick another x, to see the rest.`;
+  $("s6-say").innerHTML = say;
+  document.querySelectorAll("#s6-xs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.x === s6.x)));
+}
+
 // ---------- Keyboard ----------
 // letter keys go to the station holding focus, or with nothing focused, the one most in view
 const STATION_KEYS = [
@@ -1183,6 +1306,7 @@ paint2();
 paint3();
 paint4();
 paint5();
+paint6();
 drawMap();
 paint1();
 // the map takes its colors from the page, so redraw when the theme changes; the close-up also follows its box's width
