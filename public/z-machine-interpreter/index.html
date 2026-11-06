@@ -584,7 +584,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes inside. Open a save file there, or drop one on the page, to add it. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes inside. Open a save file there, or drop one on the page, to add it. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -722,7 +722,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b>Only the start of a long word counts.</b> A Version 3 game keeps six Z-characters of each dictionary word, and Version 4 and later keep nine. So in <i>After Hours</i>, <kbd>examine odometry</kbd> examines the odometer, since both pack to <code>odomet</code>.</li>
       <li><b>In Version 3, the status line is the interpreter's job.</b> The game only keeps the current room in its first global variable, and the score and moves in the next two. The interpreter draws the bar from those just before it reads a line, or when the game asks with <code>show_status</code>. From Version 4 on, games draw their own status line in an upper window.</li>
       <li><b>The map knows where you are from the status line.</b> In Version 3 it reads the same global the status line does. Later games draw their own status line, so the map takes the first object a game names there, which is the room in Inform and ZIL games. When the room changes after a command, the map draws that command as the way between the two rooms. When a direction leaves you where you were and the game describes the room again, as in Zork's maze, the map draws a small loop on that side of the room. A way you can't take says so without naming the room, so it draws nothing. A game that writes its room name some other way gets no map. Things go on the map once the game names them, or prints one of their own descriptions, while they're in your room, so whatever is still hidden stays off it.</li>
-      <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
+      <li><b>Enhanced reads what the Zorks keep to themselves.</b> The games know whether a room has light of its own, how long your lamp has left, how much more you can carry, and how long your wounds take to heal, and only hint at them: “It is pitch black.” once your light is gone, “The lamp appears a bit dimmer.”, “Your load is too heavy.”, or the numbers <kbd>diagnose</kbd> gives in Zork I. The line under the status line reads them from the game's memory each turn. A room with light of its own carries a flag, ONBIT, and the game checks it before looking for anything lit you carry, so the line can tell you a room is dark while your lamp is on, or lit well enough to turn the lamp off and save it. Lights come from the clock, a table holding every timer: whether it's running, how many turns until it goes off, and which routine it calls then. The lamp's routine runs at each stage of a second table (in Zork I, 200 turns, then 100, 70, and 15), so the turns left are the turns to the next stage plus every stage after it, and turning the lamp off stops the clock. Load adds up the size of everything you carry, the way the game does before it lets you take something, and the limit drops while you're hurt. The page finds all this by the names ZILF lists when it builds each game, so Enhanced comes only with the built-in Zorks. Any command the game understands takes a turn, even walking into a wall, and <kbd>wait</kbd> takes three. Only a few, like <kbd>save</kbd>, <kbd>score</kbd>, and <kbd>verbose</kbd>, are free.</li>
       <li><b>One command is thousands of instructions.</b> Typing <kbd>take leaflet</kbd> at the start of Zork I runs about 1,650 of them, through 37 routines: the parser matching your words, the checks on whether you can reach the leaflet, the take itself, and then each timer and creature on the game's clock, the thief among them. In the <b>Inspector</b>, <b>This turn</b> lists the routines in the order they were first called, and what the command moved, switched, and changed.</li>
       <li><b><kbd>x</kbd> means examine, even where the game never heard of it.</b> The Zorks want <kbd>examine lamp</kbd> or <kbd>look at lamp</kbd>, and many players now type <kbd>x lamp</kbd> without thinking. When a game's dictionary has no <kbd>x</kbd>, the interpreter passes <kbd>examine</kbd> in its place at the start of each command. The game itself is unchanged.</li>
       <li><b>A game can keep time while you type.</b> From Version 4, a game asking for a line or a key can also name a routine and a time, in tenths of a second. Each time that runs out, the interpreter calls the routine while your half-typed line waits. The routine may print something, and you carry on typing below it, or it may end your line where it stands. A Version 5 game can then hand back what you'd typed, and this page puts it back in the input for you to finish.</li>
@@ -3654,7 +3654,8 @@ $("inspectorpad").addEventListener("click", (e) => {
 
 // ---------- Enhanced ----------
 // For the built-in Zorks, a line under the status line with what the games
-// keep to themselves: how long each light has left, how much more you can
+// keep to themselves: whether the room has light of its own, how long each
+// light has left, how much more you can
 // carry, how long your wounds take to heal, and (in Zork I) how many
 // treasures are in the case. Nothing here counts anything itself. Each turn
 // it reads the game's own memory, finding things by the names ZILF lists
@@ -3666,6 +3667,10 @@ $("inspectorpad").addEventListener("click", (e) => {
 // The lamp's routine fires at each stage of LAMP-TABLE (turns, a message,
 // turns, a message, …, 0), so the light left is the turns to the next stage
 // plus every stage after it.
+//
+// Room: LIT? (gparser.zil) calls a room lit when the room itself has ONBIT,
+// and only otherwise looks for something lit you can see. So with the lamp
+// on you can't tell a lit room from a dark one; the line can.
 const LAMP = { name: "Lamp", obj: "LAMP", timer: "I-LANTERN", table: "LAMP-TABLE", on: "on", off: "off" };
 // MATCH-FUNCTION lights one only while MATCH-COUNT stays above 0 after taking one away
 const MATCHES = { name: "Matches", obj: "MATCH", count: "MATCH-COUNT" };
@@ -3700,6 +3705,7 @@ function enhancedGauge(names, spec) {
   const rtn = (name) => { const r = names.routines.find((x) => x.name === name); return r ? r.addr / 2 : 0; };
   const g = {
     clock: glob("C-TABLE"), ints: glob("C-INTS"), winner: glob("WINNER"), player: glob("PLAYER"),
+    here: glob("HERE"),
     onbit: attrs.ONBIT, outbit: attrs.RMUNGBIT, wearbit: attrs.WEARBIT, openbit: attrs.OPENBIT, transbit: attrs.TRANSBIT, touchbit: attrs.TOUCHBIT, size: props.SIZE,
     allowed: glob("LOAD-ALLOWED"), most: glob("LOAD-MAX"), fumble: glob("FUMBLE-NUMBER"), lights: [],
   };
@@ -3794,12 +3800,15 @@ async function loadEnhanced() {
   drawEnhanced();
 }
 // Lights show only while you carry them, wounds only while you have some,
-// and the trophy case once you've opened it. Load is always there.
+// and the trophy case once you've opened it. The room and load are always there.
 function drawEnhanced() {
   const bar = $("enhancedBar"), m = game.m, g = enhanced.gauge;
   if (!enhanced.on || !g || !m || m.v > 3) { bar.hidden = true; return; }
   const who = getVar(m, g.winner), parts = [];
   const turns = (n) => `${n} ${n === 1 ? "turn" : "turns"}`;
+  // the room's own light only; what you carry is yours to know
+  const here = g.here && getVar(m, g.here);
+  if (here) parts.push({ name: "Room", text: attrAt(m, here, g.onbit) ? "lit" : "dark" });
   for (const it of g.lights) {
     if (!carried(m, it.o, who)) continue;
     const st = lightLeft(m, g, it);
