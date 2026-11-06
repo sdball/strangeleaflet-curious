@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Not a Number — The Cabinet of Curios</title>
+<meta name="description" content="NaN isn't one value. See every one of the 2,046 NaNs a 16-bit float can hold, compare NaNs that print the same, and take one apart bit by bit.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦋</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: the cream liner of a specimen drawer */
+  --bg: #EEE8DA;
+  --ink: #2B2420;
+  --muted: #6B5F55;
+  --plate: #F8F4EB;
+  --line: #CDBFA8;
+  --bad: #A3271B;
+  --focus: #1F6F8B;
+
+  /* Panel: the walnut drawer itself, dark in either theme */
+  --drawer: #2A1F18;
+  --drawer-edge: #4A382B;
+  --drawer-ink: #F1E8D8;
+  --drawer-muted: #BFAE98;
+  --felt: #1A130F;
+  --drawer-focus: #F3D27A;
+
+  /* The four fields of a float, the same in every station */
+  --sign: #AFC0CC;
+  --exp: #E8B04A;
+  --quiet: #EF6F8E;
+  --pay: #5CC9B5;
+
+  /* Map of every 16-bit pattern */
+  --m-norm-lo: #3A2D24;
+  --m-norm-hi: #7D6650;
+  --m-sub: #45535E;
+  --m-zero: #8FA3B2;
+  --m-inf: #F1E8D8;
+  --m-qnan: #EF6F8E;
+  --m-snan: #9C3651;
+
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17120F; --ink: #EDE4D6; --muted: #B3A594; --plate: #221B16; --line: #3E3229;
+    --bad: #FF8F86; --focus: #7CC7DD; --drawer: #241A14; --drawer-edge: #473527; --felt: #140E0B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17120F; --ink: #EDE4D6; --muted: #B3A594; --plate: #221B16; --line: #3E3229;
+  --bad: #FF8F86; --focus: #7CC7DD; --drawer: #241A14; --drawer-edge: #473527; --felt: #140E0B;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code { font: 400 .9em var(--mono); }
+kbd {
+  font: 500 .75rem var(--mono);
+  border: 1px solid currentColor;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 .3em;
+  opacity: .8;
+}
+
+.back {
+  display: inline-block;
+  color: var(--muted);
+  font-size: .95rem;
+  margin-bottom: 1rem;
+}
+h1 {
+  font: 400 clamp(2.4rem, 7vw, 3.6rem)/1.05 var(--serif);
+  letter-spacing: -0.015em;
+  margin: 0 0 .5rem;
+}
+.lede { margin: 0 0 .75rem; color: var(--muted); max-width: 62ch; }
+.howto { margin: 0 0 1.5rem; color: var(--muted); font-size: .95rem; max-width: 62ch; }
+h2 { font: 400 1.65rem/1.2 var(--serif); margin: 0 0 .75rem; }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--drawer);
+  color: var(--drawer-ink);
+  border: 1px solid var(--drawer-edge);
+  border-radius: 12px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  margin-bottom: 1.75rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 18px 32px -24px rgba(0,0,0,.8);
+}
+.panel :focus-visible { outline-color: var(--drawer-focus); }
+.panel a { color: var(--drawer-ink); }
+.station {
+  font: 500 .75rem var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--drawer-muted);
+  margin: 0 0 .1rem;
+}
+.panel-head { margin-bottom: 1rem; }
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .35rem 0 0; color: var(--drawer-muted); max-width: 66ch; }
+.panel-head p b { color: var(--drawer-ink); font-weight: 600; }
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+}
+
+/* Field key, shared by every station */
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem 1rem;
+  margin: 0 0 .9rem;
+  padding: 0;
+  list-style: none;
+  font-size: .88rem;
+  color: var(--drawer-muted);
+}
+.key li { display: inline-flex; align-items: center; gap: .4rem; }
+.key i { width: 11px; height: 11px; border-radius: 3px; background: var(--c); flex: none; }
+
+/* Buttons */
+.btns { display: flex; flex-wrap: wrap; gap: .5rem; margin: .9rem 0 0; }
+.btn {
+  font: 500 .95rem var(--sans);
+  color: var(--drawer-ink);
+  background: var(--drawer-edge);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 6px;
+  padding: .45rem .8rem;
+  min-height: 42px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0,0,0,.35);
+}
+.btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.btn kbd { margin-left: .45rem; }
+.btn[aria-pressed="true"] { background: var(--drawer-ink); color: var(--drawer); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btns.tight { margin: 0 0 .4rem; gap: .4rem; }
+.btn.mono { font-family: var(--mono); font-size: .9rem; }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--drawer-edge); border-radius: 6px; overflow: hidden; }
+.seg button {
+  font: 500 .92rem var(--mono);
+  color: var(--drawer-muted);
+  background: transparent;
+  border: 0;
+  padding: .45rem .75rem;
+  min-height: 42px;
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--drawer-edge); }
+.seg button[aria-pressed="true"] { background: var(--drawer-edge); color: var(--drawer-ink); }
+.seg button kbd { margin-left: .4rem; font-size: .7rem; }
+
+/* Readouts */
+.verdict {
+  font: 400 clamp(1.5rem, 4vw, 2rem)/1.2 var(--serif);
+  margin: 0 0 .35rem;
+}
+.verdict.plain { color: var(--drawer-muted); }
+.hexline { font: 500 1.05rem var(--mono); margin: 0 0 .8rem; overflow-wrap: anywhere; }
+.hexline .x-se { color: var(--exp); }
+.hexline .x-fr { color: var(--pay); }
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: .4rem 1rem;
+  margin: 0;
+  font-size: .95rem;
+}
+.facts dt { color: var(--drawer-muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.facts code { font-size: .92em; }
+.chars { font: 500 1.15rem var(--mono); letter-spacing: .1em; white-space: pre; }
+.note { margin: .8rem 0 0; font-size: .95rem; color: var(--drawer-muted); max-width: 66ch; }
+.note b { color: var(--drawer-ink); font-weight: 600; }
+
+/* A little strip of bits: a square per bit, colored by field, lit when 1 */
+.strip {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 2px;
+  margin: 0 0 .5rem;
+}
+.strip span {
+  aspect-ratio: 1 / 1.5;
+  border-radius: 2px;
+  border: 1px solid var(--c);
+  background: transparent;
+}
+.strip span.on { background: var(--c); }
+.strip span.chg { box-shadow: 0 0 0 2px var(--drawer-ink); }
+.c-sign { --c: var(--sign); }
+.c-exp { --c: var(--exp); }
+.c-quiet { --c: var(--quiet); }
+.c-pay { --c: var(--pay); }
+
+/* ---------- Station 1: the map ---------- */
+.mapbox { position: relative; width: 100%; max-width: 540px; }
+.mapbox canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  background: var(--felt);
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+.mapbox .sel-tile, .mapbox .sel-cell { position: absolute; pointer-events: none; }
+.mapbox .sel-tile { outline: 2px solid var(--drawer-ink); outline-offset: 1px; border-radius: 1px; }
+.mapbox .sel-cell {
+  width: 11px; height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border: 2px solid var(--drawer-ink);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--felt);
+}
+.zoombox canvas { display: block; width: 100%; height: auto; background: var(--felt); border-radius: 4px; cursor: crosshair; touch-action: manipulation; }
+.tile-title { font: 500 .85rem var(--mono); color: var(--drawer-muted); margin: 0 0 .4rem; }
+.picker:focus-visible { outline: 2px solid var(--drawer-focus); outline-offset: 3px; border-radius: 4px; }
+.map-key i { border-radius: 2px; }
+
+/* ---------- Station 2: specimen cards ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+.card {
+  background: var(--plate);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: .65rem .75rem .75rem;
+  box-shadow: 0 2px 0 rgba(0,0,0,.35);
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-width: 0;
+}
+.card .tag { display: flex; align-items: baseline; gap: .5rem; }
+.card .letter { font: 600 1.4rem/1 var(--serif); }
+.card .label { font: italic 400 .98rem/1.25 var(--serif); color: var(--muted); }
+.card .bits { font: 500 .82rem var(--mono); overflow-wrap: anywhere; }
+.card .bits .x-se { color: #B07A12; }
+.card .bits .x-fr { color: #1E8A77; }
+.card dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .1rem .6rem; margin: 0; font: 400 .82rem var(--mono); }
+.card dt { color: var(--muted); }
+.card dd { margin: 0; }
+.card button {
+  margin-top: auto;
+  font: 500 .85rem var(--sans);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  min-height: 40px;
+  cursor: pointer;
+}
+.card :focus-visible { outline-color: var(--focus); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .card .bits .x-se { color: var(--exp); }
+  :root:not([data-theme="light"]) .card .bits .x-fr { color: var(--pay); }
+}
+:root[data-theme="dark"] .card .bits .x-se { color: var(--exp); }
+:root[data-theme="dark"] .card .bits .x-fr { color: var(--pay); }
+
+.cmp-top { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: center; margin-bottom: .75rem; }
+.table-wrap { overflow-x: auto; }
+table.cmp { border-collapse: separate; border-spacing: 4px; font: 500 .9rem var(--mono); }
+table.cmp th { font: 600 1.05rem var(--serif); color: var(--drawer-muted); padding: 0 .3rem; text-align: center; }
+table.cmp th[scope="row"] { text-align: right; padding-right: .5rem; }
+table.cmp td {
+  width: 3.4rem;
+  height: 2.6rem;
+  text-align: center;
+  border-radius: 5px;
+  background: var(--felt);
+  color: var(--drawer-muted);
+}
+table.cmp td.yes { background: var(--pay); color: var(--felt); font-weight: 600; }
+.cmp-say { margin: .75rem 0 0; max-width: 62ch; }
+
+/* ---------- Station 3: pins ---------- */
+.pins { display: flex; flex-wrap: wrap; gap: .9rem 1.1rem; align-items: flex-start; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.fgroup { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.flabel { font: 500 .8rem var(--mono); color: var(--c); letter-spacing: .04em; }
+.pinrow { display: flex; flex-wrap: wrap; gap: 2px; }
+.g-pay .pinrow { max-width: calc(17 * 24px); }
+.pin {
+  width: 22px;
+  height: 44px;
+  padding: 4px 0 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: var(--drawer-muted);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.pin .dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  background: transparent;
+  transition: background-color 80ms;
+}
+.pin[aria-checked="true"] .dot { background: var(--c); box-shadow: 0 0 8px -1px var(--c); }
+.pin .idx { font: 400 .58rem var(--mono); }
+.s3 .split { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); margin-top: 1.25rem; }
+.numin { display: grid; gap: .3rem; max-width: 20rem; font-size: .95rem; color: var(--drawer-muted); margin-top: 1rem; }
+.numin input {
+  font: 400 16px var(--mono);
+  color: var(--ink);
+  background: var(--plate);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: .5rem .6rem;
+  min-height: 42px;
+}
+.numin input[aria-invalid="true"] { border-color: var(--bad); }
+.msg { margin: .3rem 0 0; font-size: .9rem; color: #FF9B8F; }
+.msg:empty { display: none; }
+
+/* ---------- Station 4: before and after ---------- */
+.choose { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.choose .lbl { font-size: .9rem; color: var(--drawer-muted); }
+.rows4 { display: grid; gap: .8rem; }
+.row4 { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .3rem .8rem; align-items: start; }
+.row4 .who { font: 500 .95rem var(--mono); padding-top: .1rem; }
+.row4 .hexline { margin: 0; font-size: .92rem; }
+.row4 .hexline .chg { background: var(--drawer-ink); color: var(--drawer); border-radius: 2px; }
+.say4 { margin: 1rem 0 0; max-width: 64ch; }
+
+/* ---------- Prose ---------- */
+.notes { max-width: 66ch; margin-top: 2.25rem; }
+.notes li { margin-bottom: .65rem; }
+.notes code { white-space: nowrap; }
+.sources { max-width: 66ch; margin-top: 2.25rem; color: var(--muted); font-size: .92rem; }
+.sources h2 { color: var(--ink); }
+.sources li { margin-bottom: .45rem; }
+footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 760px) {
+  .split, .s3 .split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .panel { padding: .9rem .75rem 1rem; }
+  .pin { width: 19px; }
+  .pin .dot { width: 13px; height: 13px; }
+  .g-pay .pinrow { max-width: none; }
+  .pins { gap: .7rem .8rem; }
+  .strip.wide { grid-template-columns: repeat(32, minmax(0, 1fr)); }
+  .row4 { grid-template-columns: minmax(0, 1fr); }
+  table.cmp td { width: 2.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pin .dot { transition: none; }
+  .btn:active { transform: none; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Not a Number</h1>
+  <p class="lede">Divide 0 by 0 and a computer hands back NaN, short for not a number. It looks like one special value. It's really a whole family of bit patterns that all print the same way. Start with a map of every NaN a small float can hold, then line some up side by side, then take one apart.</p>
+  <p class="howto">Every map and row of switches works from the keyboard: Tab to it and use the arrow keys (<kbd>Shift</kbd> moves further). Letter keys shown on a button go to the station you're using.</p>
+
+  <!-- 1. Every pattern -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="s1-h">Every 16-bit pattern</h2>
+      <p>A 16-bit float has 65,536 possible bit patterns, and this map has a cell for every one. They're sorted into 64 tiles of 1,024. Every cell in a tile shares the same sign and exponent, the part of a float that says how big it is. <b>Two whole tiles are NaN</b>, apart from one corner cell each, which is infinity. Pick any cell to see what it holds.</p>
+    </div>
+    <ul class="key map-key" aria-label="Map colors">
+      <li><i style="--c: var(--m-norm-hi)"></i>Ordinary numbers, darker when smaller</li>
+      <li><i style="--c: var(--m-sub)"></i>Tiny numbers near zero</li>
+      <li><i style="--c: var(--m-inf)"></i>Infinity</li>
+      <li><i style="--c: var(--m-qnan)"></i>Quiet NaN</li>
+      <li><i style="--c: var(--m-snan)"></i>Signaling NaN</li>
+    </ul>
+    <div class="split">
+      <div>
+        <div class="mapbox picker" id="s1-map" tabindex="0" role="application" aria-roledescription="map of every 16-bit pattern"
+             aria-label="Every 16-bit pattern. Arrow keys move one cell, Shift and an arrow moves one tile." aria-describedby="s1-say">
+          <canvas id="s1-canvas" width="270" height="270"></canvas>
+          <div class="sel-tile" id="s1-seltile"></div>
+          <div class="sel-cell" id="s1-selcell"></div>
+        </div>
+        <div class="btns">
+          <button type="button" class="btn" id="s1-nan" aria-keyshortcuts="N">A random NaN<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s1-num" aria-keyshortcuts="R">A random number<kbd>R</kbd></button>
+        </div>
+      </div>
+      <div>
+        <p class="tile-title" id="s1-tiletitle"></p>
+        <div class="zoombox picker" id="s1-zoom" tabindex="0" role="application" aria-roledescription="one tile, close up"
+             aria-label="The chosen tile, close up. Arrow keys move one cell." aria-describedby="s1-say">
+          <canvas id="s1-zcanvas"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="split" style="margin-top: 1.1rem">
+      <div>
+        <ul class="key" aria-label="Fields">
+          <li><i style="--c: var(--sign)"></i>Sign</li>
+          <li><i style="--c: var(--exp)"></i>Exponent</li>
+          <li><i style="--c: var(--quiet)"></i>Quiet bit</li>
+          <li><i style="--c: var(--pay)"></i>Payload</li>
+        </ul>
+        <div class="strip" id="s1-strip" style="--n: 16" aria-hidden="true"></div>
+        <p class="hexline" id="s1-hex"></p>
+      </div>
+      <div aria-live="polite" id="s1-say">
+        <p class="verdict" id="s1-verdict"></p>
+        <p class="note" id="s1-what" style="margin-top: 0"></p>
+      </div>
+    </div>
+    <p class="note">That's 2,046 different NaNs among 65,536 patterns: <b>1,024 quiet and 1,022 signaling</b>, half of each with the sign bit set. Station 3 explains the difference. A 32-bit float has 16,777,214 NaNs and a 64-bit float, the kind JavaScript uses for every number, has 9,007,199,254,740,990.</p>
+  </section>
+
+  <!-- 2. They all look alike -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="s2-h">They all look alike</h2>
+      <p>Here are four NaNs at 64 bits, the size JavaScript uses for every number, and one ordinary number to compare them with. Every one of the NaNs prints as <code>NaN</code>. Now compare them three ways. <b>The bits say these are four different values. JavaScript's comparisons can't tell them apart.</b></p>
+    </div>
+    <div class="cards" id="s2-cards"></div>
+    <div class="cmp-top">
+      <div class="seg" role="group" aria-label="Compare by" id="s2-modes">
+        <button type="button" data-mode="eq" aria-keyshortcuts="E">a == b<kbd>E</kbd></button>
+        <button type="button" data-mode="is" aria-keyshortcuts="O">Object.is(a, b)<kbd>O</kbd></button>
+        <button type="button" data-mode="bits" aria-keyshortcuts="B">same bits<kbd>B</kbd></button>
+      </div>
+    </div>
+    <div class="table-wrap"><table class="cmp" id="s2-table"></table></div>
+    <p class="cmp-say" id="s2-say" aria-live="polite"></p>
+  </section>
+
+  <!-- 3. Inside one NaN -->
+  <section class="panel s3" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s3-h">Inside one NaN</h2>
+      <p>These are the 64 bits of one JavaScript number, sorted into their four fields. <b>A float is NaN when all 11 exponent bits are on and the bits after them aren't all off.</b> Turn off any exponent bit and it's an ordinary number again. The first bit after the exponent is the quiet bit. The other 51 are the payload, and nothing about NaN uses them, so a program can keep whatever it likes there.</p>
+    </div>
+    <div class="pins" id="s3-pins" role="group" aria-label="The 64 bits, sign first"></div>
+    <div class="split">
+      <div aria-live="polite">
+        <p class="verdict" id="s3-verdict"></p>
+        <p class="hexline" id="s3-hex"></p>
+        <dl class="facts" id="s3-facts"></dl>
+      </div>
+      <div>
+        <label class="numin" for="s3-word" style="margin-top: 0">Hide up to 6 characters in the payload
+          <input id="s3-word" maxlength="6" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="s3-msg">
+        </label>
+        <p class="msg" id="s3-msg" role="status"></p>
+        <div class="btns">
+          <button type="button" class="btn" id="s3-make" aria-keyshortcuts="M">Make it a NaN<kbd>M</kbd></button>
+          <button type="button" class="btn" id="s3-nan" aria-keyshortcuts="N">A random NaN<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s3-clear" aria-keyshortcuts="C">Clear the payload<kbd>C</kbd></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Quiet and signaling -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="s4-h">Quiet and signaling</h2>
+      <p>Arithmetic on a NaN gives back a NaN, and the floating-point standard asks that it keep the payload. A <b>signaling</b> NaN, with its quiet bit off, is meant to raise an alarm when used, and comes out <b>quiet</b>, with the quiet bit on. Pick a NaN and an operation. Your browser does the sum with its own floating point, and every bit that changed is ringed.</p>
+    </div>
+    <div class="choose">
+      <span class="lbl" id="s4-x-lbl">x is</span>
+      <div class="btns tight" role="group" aria-labelledby="s4-x-lbl" id="s4-xs"></div>
+      <span class="lbl" id="s4-op-lbl">Do</span>
+      <div class="btns tight" role="group" aria-labelledby="s4-op-lbl" id="s4-ops"></div>
+    </div>
+    <div class="rows4" id="s4-rows"></div>
+    <p class="say4" id="s4-say" aria-live="polite"></p>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <ul>
+      <li><b>NaN is a region, not a value.</b> Any pattern with the exponent all ones and the rest of the fraction not all zeros is NaN. In Station 1 that's two whole tiles. The same is true at every size, so a 64-bit float has about nine quadrillion NaNs.</li>
+      <li><b>Printing and comparing can't tell NaNs apart.</b> <code>==</code> says a NaN equals nothing, itself included, and <code>Object.is</code> says every NaN is the same as every other. Only the bits show the difference, which is why code that cares, like the <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a> monitoring system marking the end of a time series with one particular NaN, compares bits.</li>
+      <li><b>The sign of a NaN means nothing.</b> Half of all NaNs have the sign bit set, and they behave exactly like the other half.</li>
+      <li><b>Two NaNs in, one out.</b> When both sides of a sum are NaN, the standard says the answer's payload should come from one of them, but not which. Most chips return the first, so <code>a + b</code> and <code>b + a</code> can come out different. Try <code>x + y</code> and <code>y + x</code> in Station 4.</li>
+      <li><b>Not every chip keeps the payload.</b> Keeping it is a recommendation, not a rule. RISC-V chips give back one standard NaN from most operations whatever went in, and ARM chips have a mode that does the same.</li>
+      <li><b>Your browser may swap NaNs too.</b> The JavaScript spec lets an engine store any NaN it likes when it writes a NaN number out as bytes. This page keeps each NaN's bits as a whole number and only turns them into a float to do the sums in Station 4.</li>
+      <li><b>Which way round the quiet bit goes was once up for grabs.</b> The 1985 standard that introduced NaNs didn't say which bit pattern means quiet. Most chips, x86 and ARM among them, made a 1 in the top fraction bit mean quiet, but PA-RISC and early MIPS chips used it the other way round. The 2008 revision settled on the first choice.</li>
+      <li><b>The payload has jobs.</b> A program can use those 51 spare bits for an error code, a marker, or a whole other value. Language runtimes that pack every value, number or not, into one 64-bit word use NaN payloads to hold the values that aren't numbers, a trick called NaN-boxing. The <a href="../bitfield-explorer/">bitfield explorer</a> has a NaN tab for trying patterns of your own, and the <a href="../minifloat-ruler/">minifloat ruler</a> shows where NaN sits among an 8-bit float's other values.</li>
+    </ul>
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <ul>
+      <li>IEEE Computer Society, <i>IEEE Standard for Binary Floating-Point Arithmetic</i>, IEEE Std 754-1985.</li>
+      <li>IEEE Computer Society, <i>IEEE Standard for Floating-Point Arithmetic</i>, IEEE Std 754-2008 and IEEE Std 754-2019, section 6.2 on NaN operands and payloads.</li>
+      <li><a href="https://en.wikipedia.org/wiki/NaN">"NaN"</a>, Wikipedia, for the quiet bit's history, payload propagation, and RISC-V's and ARM's default NaNs.</li>
+      <li>Agner Fog, <a href="https://www.agner.org/optimize/nan_propagation.pdf">"Parallel floating point exception tracking and NaN propagation"</a> (2019, updated 2026), for most processors returning the first of two NaNs.</li>
+      <li>Ecma International, <a href="https://tc39.es/ecma262/multipage/structured-data.html#sec-numerictorawbytes"><i>ECMAScript Language Specification</i>, NumericToRawBytes</a>, for an engine's freedom to choose any NaN encoding when storing a NaN.</li>
+      <li>Prometheus, <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go"><code>model/value/value.go</code></a>, for the staleness marker <code>StaleNaN</code>.</li>
+      <li>Robert Nystrom, <a href="https://craftinginterpreters.com/optimization.html#nan-boxing"><i>Crafting Interpreters</i>, section 30.3, "NaN Boxing"</a> (Genever Benning, 2021).</li>
+    </ul>
+  </section>
+
+  <footer>The NaN in Station 3 and the cell picked in Station 1 live in the address bar, so you can share a link to them.</footer>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const hex = (n, d) => n.toString(16).toUpperCase().padStart(d, "0");
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const plural = (n, word, many = word + "s") => `${n.toLocaleString()} ${n === 1 ? word : many}`;
+
+// ---------- 64-bit floats ----------
+// bits are kept as BigInts; they only become a float for a real comparison or sum
+const b64 = new BigUint64Array(1), f64 = new Float64Array(b64.buffer);
+const toNum = (bits) => { b64[0] = bits; return f64[0]; };
+const toBits = (x) => { f64[0] = x; return b64[0]; };
+
+const SIGN = 1n << 63n, EXP = 0x7FFn << 52n, QUIET = 1n << 51n, PAY = (1n << 51n) - 1n;
+const isNaN64 = (v) => (v & EXP) === EXP && (v & (QUIET | PAY)) !== 0n;
+const FIELDS64 = [
+  { name: "Sign", cls: "sign", hi: 63, lo: 63 },
+  { name: "Exponent", cls: "exp", hi: 62, lo: 52 },
+  { name: "Quiet bit", cls: "quiet", hi: 51, lo: 51 },
+  { name: "Payload", cls: "pay", hi: 50, lo: 0 },
+];
+const fieldOf64 = (bit) => FIELDS64.find((f) => bit <= f.hi && bit >= f.lo);
+
+function random64() {
+  const [hi, lo] = crypto.getRandomValues(new Uint32Array(2));
+  return (BigInt(hi) << 32n) | BigInt(lo);
+}
+function randomNaN() {
+  let v = random64() | EXP;
+  if ((v & (QUIET | PAY)) === 0n) v |= QUIET;   // an empty fraction would be infinity
+  return v;
+}
+function kind64(v) {
+  if ((v & EXP) === EXP) return (v & (QUIET | PAY)) === 0n ? "inf" : (v & QUIET ? "qnan" : "snan");
+  return "num";
+}
+const KIND_NAMES = { qnan: "Quiet NaN", snan: "Signaling NaN", inf: "Infinity", num: "An ordinary number" };
+
+// hex with the sign and exponent (the first three digits) set apart from the fraction
+const hexHTML = (v) => { const h = hex(v, 16); return `<span class="x-se">${h.slice(0, 3)}</span><span class="x-fr">${h.slice(3)}</span>`; };
+
+function stripHTML(v, width, fieldOf, changed = 0n) {
+  let out = "";
+  for (let bit = width - 1; bit >= 0; bit--) {
+    const f = fieldOf(bit), m = 1n << BigInt(bit);
+    out += `<span class="c-${f.cls}${v & m ? " on" : ""}${changed & m ? " chg" : ""}"></span>`;
+  }
+  return out;
+}
+const payloadChars = (v) => Array.from({ length: 6 }, (_, i) => Number((v >> BigInt(8 * (5 - i))) & 0xFFn));
+const showChars = (bytes) => bytes.map((b) => (b >= 32 && b < 127 ? String.fromCharCode(b) : "·")).join("");
+
+// ---------- Station 1: every 16-bit pattern ----------
+const TILE = 32, GAP = 2, STEP = TILE + GAP, MAP = 8 * STEP - GAP;
+const FIELDS16 = [
+  { cls: "sign", hi: 15, lo: 15 }, { cls: "exp", hi: 14, lo: 10 }, { cls: "quiet", hi: 9, lo: 9 }, { cls: "pay", hi: 8, lo: 0 },
+];
+const fieldOf16 = (bit) => FIELDS16.find((f) => bit <= f.hi && bit >= f.lo);
+function half(p) {
+  const s = p >> 15, e = (p >> 10) & 31, f = p & 1023, sign = s ? -1 : 1;
+  if (e === 31) return f ? { s, e, f, kind: f >> 9 ? "qnan" : "snan", payload: f & 511 } : { s, e, f, kind: "inf", value: sign * Infinity };
+  if (e === 0) return f ? { s, e, f, kind: "sub", value: sign * f * 2 ** -24 } : { s, e, f, kind: "zero", value: s ? -0 : 0 };
+  return { s, e, f, kind: "num", value: sign * (1024 + f) * 2 ** (e - 25) };
+}
+// tile t holds sign and exponent (t = sign × 32 + exponent); inside it, rows and columns are the fraction's high and low five bits
+const cellOf = (p) => { const t = p >> 10; return { t, x: (t % 8) * STEP + (p & 31), y: (t >> 3) * STEP + ((p >> 5) & 31) }; };
+
+const s1 = { p: 0x7E00 };
+
+function rgbOf(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function mapColors() {
+  const get = (n) => rgbOf(cssVar(n));
+  return { lo: get("--m-norm-lo"), hi: get("--m-norm-hi"), sub: get("--m-sub"), zero: get("--m-zero"), inf: get("--m-inf"),
+           qnan: get("--m-qnan"), snan: get("--m-snan"), felt: get("--felt") };
+}
+function colorOf(d, C) {
+  if (d.kind === "num") {
+    // bigger exponents are lighter, with a faint ramp across the tile as the fraction grows
+    const k = Math.min(1, (d.e - 1) / 29 * 0.9 + d.f / 1023 * 0.1);
+    return C.lo.map((a, i) => Math.round(a + (C.hi[i] - a) * k));
+  }
+  return { sub: C.sub, zero: C.zero, inf: C.inf, qnan: C.qnan, snan: C.snan }[d.kind];
+}
+let mapImage = null;
+function drawMap() {
+  const C = mapColors(), cv = $("s1-canvas"), ctx = cv.getContext("2d");
+  const img = ctx.createImageData(MAP, MAP), px = img.data;
+  for (let i = 0; i < MAP * MAP; i++) { px.set(C.felt, i * 4); px[i * 4 + 3] = 255; }
+  for (let p = 0; p < 65536; p++) {
+    const { x, y } = cellOf(p), c = colorOf(half(p), C), i = (y * MAP + x) * 4;
+    px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2];
+  }
+  ctx.putImageData(img, 0, 0);
+  mapImage = C;
+  drawZoom();
+}
+function drawZoom() {
+  const cv = $("s1-zcanvas"), C = mapImage, box = cv.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1, size = Math.max(160, Math.round(box.width));
+  cv.width = size * dpr; cv.height = size * dpr;
+  const ctx = cv.getContext("2d"), cell = size / TILE, base = (s1.p >> 10) << 10;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = cssVar("--felt");
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 1024; i++) {
+    const c = colorOf(half(base + i), C);
+    ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+    ctx.fillRect((i & 31) * cell + 0.5, (i >> 5) * cell + 0.5, cell - 1, cell - 1);
+  }
+  // the chosen cell: a light ring with a dark one inside, so it shows on any color
+  const i = s1.p & 1023, cx = (i & 31) * cell, cy = (i >> 5) * cell;
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = cssVar("--drawer-ink");
+  ctx.strokeRect(cx - 1.5, cy - 1.5, cell + 3, cell + 3);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = cssVar("--felt");
+  ctx.strokeRect(cx + 0.75, cy + 0.75, cell - 1.5, cell - 1.5);
+}
+
+const size = (n) => n.toLocaleString(undefined, { maximumSignificantDigits: 6 });
+function paint1() {
+  const p = s1.p, d = half(p), { t, x, y } = cellOf(p);
+  const sel = $("s1-seltile"), dot = $("s1-selcell"), pct = (n) => `${(n / MAP) * 100}%`;
+  Object.assign(sel.style, { left: pct((t % 8) * STEP), top: pct((t >> 3) * STEP), width: pct(TILE), height: pct(TILE) });
+  Object.assign(dot.style, { left: pct(x + 0.5), top: pct(y + 0.5) });
+  if (mapImage) drawZoom();
+
+  const sign = d.s ? "negative" : "positive";
+  $("s1-tiletitle").textContent = d.e === 31
+    ? `Tile ${t + 1} of 64: ${sign}, exponent all ones. Every cell but the corner is NaN.`
+    : d.e === 0 ? `Tile ${t + 1} of 64: ${sign}, exponent all zeros. Zero, then tiny numbers.`
+    : `Tile ${t + 1} of 64: ${sign}, exponent ${d.e}. Ordinary numbers sized from ${size(2 ** (d.e - 15))} to just under ${size(2 ** (d.e - 14))}.`;
+  const bits = BigInt(p);
+  $("s1-strip").innerHTML = stripHTML(bits, 16, fieldOf16);
+  $("s1-hex").textContent = `0x${hex(p, 4)} · ${p.toString(2).padStart(16, "0").replace(/^(.)(.{5})(.)/, "$1 $2 $3 ")}`;
+  const verdict = $("s1-verdict");
+  verdict.classList.toggle("plain", d.kind !== "qnan" && d.kind !== "snan");
+  if (d.kind === "qnan" || d.kind === "snan") {
+    verdict.textContent = d.kind === "qnan" ? "Quiet NaN" : "Signaling NaN";
+    $("s1-what").innerHTML = `Payload <code>0x${hex(d.payload, 3)}</code>, ${d.s ? "sign bit set" : "sign bit clear"}. One of 2,046 NaNs, and it prints as <code>NaN</code> like all the rest.`;
+  } else if (d.kind === "inf") {
+    verdict.textContent = d.s ? "−Infinity" : "Infinity";
+    $("s1-what").innerHTML = "The corner of a NaN tile: exponent all ones, but every fraction bit is off. Turn on any fraction bit and it's NaN.";
+  } else {
+    verdict.textContent = d.kind === "zero" ? (d.s ? "−0" : "0") : String(d.value).replace("-", "−");
+    $("s1-what").innerHTML = d.kind === "sub" ? "A tiny number near zero, from the tile with every exponent bit off."
+      : d.kind === "zero" ? "Zero: every bit after the sign is off." : "An ordinary number. Its exponent isn't all ones, so it can't be NaN.";
+  }
+  queueHash();
+}
+function set1(p) { s1.p = ((p % 65536) + 65536) % 65536; paint1(); }
+
+function pick1(e, box, zoomed) {
+  const r = box.getBoundingClientRect(), u = (e.clientX - r.left) / r.width, v = (e.clientY - r.top) / r.height;
+  if (zoomed) {
+    const c = Math.min(31, Math.max(0, Math.floor(u * 32))), rr = Math.min(31, Math.max(0, Math.floor(v * 32)));
+    return ((s1.p >> 10) << 10) + rr * 32 + c;
+  }
+  const mx = Math.min(MAP - 1, Math.max(0, Math.floor(u * MAP))), my = Math.min(MAP - 1, Math.max(0, Math.floor(v * MAP)));
+  const tx = Math.floor(mx / STEP), ty = Math.floor(my / STEP);
+  const c = Math.min(31, mx - tx * STEP), rr = Math.min(31, my - ty * STEP);
+  return ((ty * 8 + tx) << 10) + rr * 32 + c;
+}
+for (const [id, zoomed] of [["s1-map", false], ["s1-zoom", true]]) {
+  const box = $(id);
+  let dragging = false;
+  box.addEventListener("pointerdown", (e) => { if (e.button !== 0) return; dragging = true; box.setPointerCapture?.(e.pointerId); set1(pick1(e, box, zoomed)); });
+  box.addEventListener("pointermove", (e) => { if (dragging) set1(pick1(e, box, zoomed)); });
+  box.addEventListener("pointerup", () => { dragging = false; });
+  box.addEventListener("pointercancel", () => { dragging = false; });
+  box.addEventListener("keydown", (e) => {
+    // within a tile a step right is one more in the fraction, a step down is 32 more; Shift jumps a whole tile
+    const steps = e.shiftKey
+      ? { ArrowLeft: -1024, ArrowRight: 1024, ArrowUp: -8192, ArrowDown: 8192 }
+      : { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -32, ArrowDown: 32 };
+    if (!(e.key in steps)) return;
+    e.preventDefault();
+    set1(s1.p + steps[e.key]);
+  });
+}
+function randomHalf(wantNaN) {
+  for (;;) {
+    const p = crypto.getRandomValues(new Uint16Array(1))[0], k = half(p).kind;
+    if (wantNaN ? k === "qnan" || k === "snan" : k === "num") return p;
+  }
+}
+$("s1-nan").addEventListener("click", () => set1(randomHalf(true)));
+$("s1-num").addEventListener("click", () => set1(randomHalf(false)));
+
+// ---------- Station 2: four NaNs and a number ----------
+const s2 = {
+  mode: "eq",
+  cards: [
+    { bits: 0x7FF8000000000000n, label: "The plainest quiet NaN" },
+    { bits: 0xFFF8000000000000n, label: "The same, with the sign bit set" },
+    { bits: 0x7FF0000000000002n, label: "Signaling, payload 2" },
+    { bits: 0x7FF848656C6C6F21n, label: "Quiet, carrying “Hello!”" },
+    { bits: 0x3FF8000000000000n, label: "1.5, an ordinary number", fixed: true },
+  ],
+};
+const LETTERS = "ABCDE";
+function paint2() {
+  $("s2-cards").innerHTML = s2.cards.map((c, i) => {
+    const x = toNum(c.bits);
+    return `<div class="card">
+      <div class="tag"><span class="letter">${LETTERS[i]}</span><span class="label">${esc(c.label)}</span></div>
+      <span class="bits">${hexHTML(c.bits)}</span>
+      <dl><dt>String(x)</dt><dd>${esc(String(x))}</dd><dt>typeof x</dt><dd>${typeof x}</dd><dt>x == x</dt><dd>${x == x}</dd></dl>
+      ${c.fixed ? "" : `<button type="button" data-card="${i}">Swap in a random NaN</button>`}
+    </div>`;
+  }).join("");
+  const nums = s2.cards.map((c) => toNum(c.bits));
+  const same = {
+    eq: (i, j) => nums[i] == nums[j],
+    is: (i, j) => Object.is(nums[i], nums[j]),
+    bits: (i, j) => s2.cards[i].bits === s2.cards[j].bits,
+  }[s2.mode];
+  const opName = { eq: "a == b", is: "Object.is(a, b)", bits: "same bits" }[s2.mode];
+  let yes = 0;
+  const rows = s2.cards.map((_, i) => `<tr><th scope="row">${LETTERS[i]}</th>${s2.cards.map((_, j) => {
+    const r = same(i, j); if (r) yes++;
+    return `<td class="${r ? "yes" : ""}" aria-label="${LETTERS[i]} and ${LETTERS[j]}: ${r ? "yes" : "no"}">${r ? "yes" : "no"}</td>`;
+  }).join("")}</tr>`).join("");
+  $("s2-table").innerHTML = `<caption class="station" style="text-align:left; text-transform:none; letter-spacing:0">${opName}</caption><thead><tr><td aria-hidden="true" style="background:none"></td>${[...LETTERS].map((l) => `<th scope="col">${l}</th>`).join("")}</tr></thead><tbody>${rows}</tbody>`;
+  const nanCount = s2.cards.filter((c) => isNaN64(c.bits)).length;
+  $("s2-say").innerHTML = {
+    eq: `<b>${plural(yes, "match", "matches")} out of 25.</b> <code>==</code> says a NaN equals nothing, not even itself. Only E, the ordinary number, equals itself.`,
+    is: `<b>${plural(yes, "match", "matches")} out of 25.</b> <code>Object.is</code> says every NaN is the same as every other NaN, so the ${nanCount * nanCount} NaN pairs all match, along with E and itself.`,
+    bits: `<b>${plural(yes, "match", "matches")} out of 25.</b> Compared bit by bit, each one only matches itself: ${yes === 5 ? "these are five different values" : "two of the cards hold the same bits right now"}. All four NaNs printed the same, and neither comparison could see the difference.`,
+  }[s2.mode];
+  document.querySelectorAll("#s2-modes button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === s2.mode)));
+}
+$("s2-cards").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-card]");
+  if (!b) return;
+  const i = +b.dataset.card;
+  s2.cards[i] = { bits: randomNaN() };
+  s2.cards[i].label = `A random ${kind64(s2.cards[i].bits) === "qnan" ? "quiet" : "signaling"} NaN`;
+  paint2();
+  $("s2-cards").querySelector(`[data-card="${i}"]`).focus();
+});
+const setMode2 = (m) => { s2.mode = m; paint2(); };
+$("s2-modes").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setMode2(b.dataset.mode); });
+
+// ---------- Station 3: one NaN, bit by bit ----------
+const s3 = { v: 0x7FF848656C6C6F21n };
+function build3() {
+  $("s3-pins").innerHTML = FIELDS64.map((f) => {
+    let pins = "";
+    for (let bit = f.hi; bit >= f.lo; bit--) {
+      pins += `<button type="button" class="pin" role="switch" data-bit="${bit}" aria-label="Bit ${bit}, ${f.name.toLowerCase()}"><span class="dot"></span><span class="idx" aria-hidden="true">${bit}</span></button>`;
+    }
+    return `<div class="fgroup g-${f.cls} c-${f.cls}"><span class="flabel">${f.name}</span><div class="pinrow">${pins}</div></div>`;
+  }).join("");
+}
+function paint3() {
+  const v = s3.v, k = kind64(v);
+  document.querySelectorAll("#s3-pins .pin").forEach((p) => p.setAttribute("aria-checked", String((v >> BigInt(p.dataset.bit)) & 1n ? true : false)));
+  const verdict = $("s3-verdict");
+  verdict.textContent = KIND_NAMES[k];
+  verdict.classList.toggle("plain", k === "num" || k === "inf");
+  $("s3-hex").innerHTML = "0x" + hexHTML(v);
+  const expOn = Number((v & EXP) >> 52n).toString(2).replace(/0/g, "").length;
+  const pay = v & PAY, bytes = payloadChars(v), x = toNum(v);
+  const rows = [
+    ["Exponent", expOn === 11 ? (k === "inf" ? "All 11 bits on, but every bit after them is off, which makes infinity" : "All 11 bits on, as every NaN needs")
+      : `${11 - expOn} of 11 bits off, so this is an ordinary number`],
+    ["Quiet bit", k === "qnan" ? "On: a quiet NaN passes through arithmetic without complaint"
+      : k === "snan" ? "Off: a signaling NaN is meant to raise an alarm when used (Station 4)"
+      : "Just another fraction bit until the exponent is all ones"],
+    ["Payload", `<code>0x${hex(pay, 13)}</code>, which is ${pay.toLocaleString()}`],
+    ["As text", `<span class="chars">${esc(showChars(bytes))}</span>`],
+    ["String(x)", `<code>${esc(String(x))}</code>`],
+  ];
+  $("s3-facts").innerHTML = rows.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("");
+  const input = $("s3-word");
+  if (document.activeElement !== input) {
+    const s = String.fromCharCode(...bytes).replace(/\0+$/, "");
+    input.value = isNaN64(v) && !(v & (0x7n << 48n)) && /^[\x20-\x7E]*$/.test(s) ? s : "";
+  }
+  if (s4.x === "s3") paint4();
+  queueHash();
+}
+function set3(v) { s3.v = BigInt.asUintN(64, v); paint3(); }
+
+// switches: tap, drag across to paint, or arrow keys between them
+const pinsEl = $("s3-pins");
+let paint3State = null, pinTapped = false;
+function setPin(bit, on) {
+  const m = 1n << BigInt(bit);
+  if (Boolean(s3.v & m) !== on) set3(s3.v ^ m);
+}
+pinsEl.addEventListener("pointerdown", (e) => {
+  const pin = e.target.closest(".pin");
+  if (!pin || e.button !== 0) return;
+  const bit = +pin.dataset.bit;
+  paint3State = { on: !(s3.v & (1n << BigInt(bit))) };
+  pinTapped = true;
+  setPin(bit, paint3State.on);
+});
+window.addEventListener("pointermove", (e) => {
+  if (!paint3State) return;
+  const pin = document.elementFromPoint(e.clientX, e.clientY)?.closest("#s3-pins .pin");
+  if (pin) setPin(+pin.dataset.bit, paint3State.on);
+});
+window.addEventListener("pointerup", () => { paint3State = null; });
+window.addEventListener("pointercancel", () => { paint3State = null; });
+pinsEl.addEventListener("click", (e) => {
+  const pin = e.target.closest(".pin");
+  if (!pin) return;
+  const handled = pinTapped && e.detail !== 0;   // pointer taps were handled on pointerdown
+  pinTapped = false;
+  if (handled) return;
+  set3(s3.v ^ (1n << BigInt(pin.dataset.bit)));
+});
+pinsEl.addEventListener("keydown", (e) => {
+  const pin = e.target.closest(".pin");
+  if (!pin) return;
+  const all = [...pinsEl.querySelectorAll(".pin")], i = all.indexOf(pin), n = e.shiftKey ? 8 : 1;
+  const next = { ArrowLeft: i - n, ArrowRight: i + n, Home: 0, End: all.length - 1 }[e.key];
+  if (next === undefined) return;
+  e.preventDefault();
+  all[Math.max(0, Math.min(all.length - 1, next))].focus();
+});
+
+const make3 = () => { let v = s3.v | EXP; if ((v & (QUIET | PAY)) === 0n) v |= QUIET; set3(v); };
+const clear3 = () => set3(s3.v & ~PAY);
+$("s3-make").addEventListener("click", make3);
+$("s3-nan").addEventListener("click", () => set3(randomNaN()));
+$("s3-clear").addEventListener("click", clear3);
+$("s3-word").addEventListener("input", (e) => {
+  const s = e.target.value, msg = $("s3-msg");
+  if (!/^[\x20-\x7E]*$/.test(s)) {
+    msg.textContent = "Plain ASCII only: letters, digits, spaces, and punctuation.";
+    e.target.setAttribute("aria-invalid", "true");
+    return;
+  }
+  msg.textContent = "";
+  e.target.removeAttribute("aria-invalid");
+  let p = 0n;
+  for (let i = 0; i < 6; i++) p = (p << 8n) | BigInt(i < s.length ? s.charCodeAt(i) : 0);
+  // keep the sign, switch on the exponent and quiet bit, and put the letters in the low six bytes
+  set3((s3.v & SIGN) | EXP | QUIET | p);
+});
+$("s3-word").addEventListener("blur", (e) => { $("s3-msg").textContent = ""; e.target.removeAttribute("aria-invalid"); paint3(); });
+
+// ---------- Station 4: what arithmetic does to a NaN ----------
+const Y4 = 0x7FF8000000000063n;
+const XS4 = [
+  { id: "snan", label: "Signaling, payload 2", bits: 0x7FF0000000000002n },
+  { id: "neg", label: "Negative, signaling, payload 0x2A", bits: 0xFFF000000000002An },
+  { id: "qnan", label: "Quiet, payload 0x2A", bits: 0x7FF800000000002An },
+  { id: "s3", label: "Station 3’s number" },
+];
+const OPS4 = [
+  { id: "plus1", label: "x + 1", fn: (x) => x + 1 },
+  { id: "times2", label: "x × 2", fn: (x) => x * 2 },
+  { id: "neg", label: "−x", fn: (x) => -x },
+  { id: "abs", label: "Math.abs(x)", fn: (x) => Math.abs(x) },
+  { id: "xy", label: "x + y", fn: (x, y) => x + y, y: true },
+  { id: "yx", label: "y + x", fn: (x, y) => y + x, y: true },
+];
+const s4 = { x: "snan", op: "plus1" };
+const x4 = () => (s4.x === "s3" ? s3.v : XS4.find((c) => c.id === s4.x).bits);
+
+$("s4-xs").innerHTML = XS4.map((c) => `<button type="button" class="btn" data-x="${c.id}">${c.label}</button>`).join("");
+$("s4-ops").innerHTML = OPS4.map((o) => `<button type="button" class="btn mono" data-op="${o.id}">${o.label}</button>`).join("");
+$("s4-xs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { s4.x = b.dataset.x; paint4(); } });
+$("s4-ops").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { s4.op = b.dataset.op; paint4(); } });
+
+function hexDiffHTML(v, against) {
+  const a = hex(v, 16), b = hex(against, 16);
+  return [...a].map((ch, i) => (ch !== b[i] ? `<span class="chg">${ch}</span>` : ch)).join("");
+}
+function row4(who, v, changed = 0n, against = v) {
+  return `<div class="row4"><span class="who">${who}</span><div>
+    <div class="strip wide" style="--n: 64" aria-hidden="true">${stripHTML(v, 64, fieldOf64, changed)}</div>
+    <p class="hexline">0x${changed ? hexDiffHTML(v, against) : hex(v, 16)} · ${KIND_NAMES[kind64(v)]}</p>
+  </div></div>`;
+}
+function paint4() {
+  const op = OPS4.find((o) => o.id === s4.op), xb = x4();
+  const rb = toBits(op.fn(toNum(xb), toNum(Y4)));
+  const diff = rb ^ xb;
+  $("s4-rows").innerHTML = row4("x", xb) + (op.y ? row4("y", Y4) : "") + row4(op.label, rb, diff, xb);
+
+  const kx = kind64(xb), kr = kind64(rb), quieted = (b) => (isNaN64(b) ? b | QUIET : b);
+  let say;
+  if (!isNaN64(xb)) {
+    say = op.y
+      ? `x isn't a NaN, so the answer is y's NaN${rb === Y4 ? ", unchanged" : ""}. Any sum with a NaN in it is NaN.`
+      : `x isn't a NaN this time, so this is ordinary arithmetic: the answer is ${esc(String(toNum(rb)))}. Make Station 3's number a NaN to see the rest.`;
+  } else if (op.y) {
+    const from = rb === quieted(xb) ? "x" : rb === quieted(Y4) ? "y" : null;
+    const swapped = toBits(op.id === "xy" ? toNum(Y4) + toNum(xb) : toNum(xb) + toNum(Y4));
+    const other = op.id === "xy" ? "y + x" : "x + y";
+    say = from
+      ? `Two NaNs went in and one came out. Your browser kept <b>${from}'s payload</b>${from === "x" && kx === "snan" ? ", switching its quiet bit on," : ""} and dropped the other. The standard doesn't say which to keep. ${swapped === rb
+        ? `Here ${other} gives the same answer${kx === "snan" ? ": with a signaling NaN in the sum, your browser kept that one either way" : ""}.`
+        : `Try ${other}: the order changes the answer.`}`
+      : `Two NaNs went in, and the answer has a payload of its own, <code>0x${hex(rb & PAY, 13)}</code>, kept from neither.`;
+  } else if (diff === 0n) {
+    say = kx === "snan"
+      ? `Nothing changed, so x is <b>still signaling</b>. ${op.id === "neg" || op.id === "abs" ? "Math.abs only needs the sign bit, and your browser left the rest alone." : ""}`
+      : `Nothing changed: a quiet NaN passes through ${op.label} with every bit intact.`;
+  } else if (diff === SIGN) {
+    say = `Only the sign bit changed. ${kx === "snan" ? "The quiet bit stayed off, so x is <b>still signaling</b>. Changing the sign only needs the sign bit, and your browser left the rest alone, unlike in x + 1." : "The payload came through untouched."}`;
+  } else if (diff === QUIET && kx === "snan") {
+    say = `<b>The quiet bit switched on</b> and nothing else changed. The signaling NaN came out quiet, and the payload came through.`;
+  } else if (kr !== "num" && (rb & PAY) === 0n && (xb & PAY) !== 0n) {
+    say = `Your browser handed back a standard NaN and <b>dropped the payload</b>. Keeping it is only a recommendation, and some chips don't.`;
+  } else {
+    say = `Your browser changed ${[["sign", SIGN], ["exponent", EXP], ["quiet bit", QUIET], ["payload", PAY]].filter(([, m]) => diff & m).map(([n]) => n).join(", ")}.`;
+  }
+  $("s4-say").innerHTML = say;
+  document.querySelectorAll("#s4-xs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.x === s4.x)));
+  document.querySelectorAll("#s4-ops button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.op === s4.op)));
+}
+
+// ---------- Keyboard ----------
+// letter keys go to the station holding focus, or with nothing focused, the one most in view
+const STATION_KEYS = [
+  ["s1-map", { n: () => set1(randomHalf(true)), r: () => set1(randomHalf(false)) }],
+  ["s2-cards", { e: () => setMode2("eq"), o: () => setMode2("is"), b: () => setMode2("bits") }],
+  ["s3-pins", { m: make3, n: () => set3(randomNaN()), c: clear3 }],
+].map(([id, keys]) => [$(id).closest(".panel"), keys]);
+function stationInView() {
+  let best = null, most = 0;
+  for (const entry of STATION_KEYS) {
+    const r = entry[0].getBoundingClientRect();
+    const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+    if (seen > most) { most = seen; best = entry; }
+  }
+  return best;
+}
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const key = e.key.toLowerCase();
+  const inPanel = e.target.closest?.(".panel");
+  const entry = inPanel ? STATION_KEYS.find(([panel]) => panel === inPanel) : stationInView();
+  if (!entry || !entry[1][key]) return;
+  e.preventDefault();
+  entry[1][key]();
+});
+
+// ---------- Sharing ----------
+let hashTimer;
+function queueHash() {
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(() => {
+    history.replaceState(null, "", "#" + new URLSearchParams({ p: hex(s1.p, 4), x: hex(s3.v, 16) }).toString());
+  }, 250);
+}
+function readHash() {
+  const q = new URLSearchParams(location.hash.slice(1));
+  if (/^[0-9a-f]{1,4}$/i.test(q.get("p") || "")) s1.p = parseInt(q.get("p"), 16);
+  if (/^[0-9a-f]{1,16}$/i.test(q.get("x") || "")) s3.v = BigInt("0x" + q.get("x"));
+}
+
+// ---------- Start ----------
+readHash();
+build3();
+paint2();
+paint3();
+paint4();
+drawMap();
+paint1();
+// the map takes its colors from the page, so redraw when the theme changes; the close-up also follows its box's width
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawMap);
+new MutationObserver(drawMap).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawZoom, 100); });
+</script>
+</body>
+</html>
