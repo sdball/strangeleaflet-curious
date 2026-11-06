@@ -454,6 +454,15 @@ html.full-on { overflow: hidden; }
   display: flex; flex-direction: column;
   background: var(--screen);
 }
+/* the machine stops at the top of a phone's keyboard, and the keyboard's
+   see-through bar of arrows and Done shows what's under it, so the
+   machine's own colour runs on past both ends instead of the page */
+.machine.full::before, .machine.full::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 100vh;
+  background: inherit; pointer-events: none;
+}
+.machine.full::before { bottom: 100%; }
+.machine.full::after { top: 100%; }
 /* nothing but the screen, like the hub's text adventure */
 .machine.full .console { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .machine.full .deck { flex: 1; min-height: 0; gap: 0; }
