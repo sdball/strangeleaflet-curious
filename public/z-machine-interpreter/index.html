@@ -377,7 +377,8 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 .ins-view[hidden] { display: none; }
 .ins-bar { display: flex; align-items: center; gap: .5rem; padding: .35rem .5rem; border-bottom: 1px solid var(--ins-rule); }
 .ins-bar .ins-switch { flex: none; }
-.ins-bar p { flex: 1; margin: 0; font-size: .8rem; color: var(--ins-dim); }
+.ins-say { margin: 0; padding: .3rem .6rem; font-size: .8rem; color: var(--ins-dim); border-bottom: 1px solid var(--ins-rule); }
+.ins-row.match .ins-node { font-weight: 700; }
 .ins-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .ins-tree, .ins-tree ul { list-style: none; margin: 0; padding: 0; }
 .ins-tree { padding: .25rem .25rem .5rem; }
@@ -584,7 +585,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Z-Machine Interpreter</h1>
   <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes inside. Open a save file there, or drop one on the page, to add it. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes inside. Open a save file there, or drop one on the page, to add it. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -677,7 +678,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
         <button type="button" data-view="turn" aria-pressed="false">This turn</button>
       </div>
       <div class="ins-view" id="insObjects">
-        <div class="ins-bar"><p id="insTreeSay"></p><button type="button" class="ins-switch" id="insWhole" aria-pressed="false" aria-describedby="insTreeSay">Whole tree</button></div>
+        <div class="ins-bar"><input type="search" class="ins-find" id="insObjFind" placeholder="Find an object" aria-label="Find an object by name or number" aria-describedby="insTreeSay" autocomplete="off" spellcheck="false" enterkeyhint="search"><button type="button" class="ins-switch" id="insWhole" aria-pressed="false" aria-describedby="insTreeSay">Whole tree</button></div>
+        <p class="ins-say" id="insTreeSay" aria-live="polite"></p>
         <div class="ins-scroll" id="insTreeBox"><ul class="ins-tree" id="insTree" aria-label="Object tree"></ul></div>
         <div class="ins-card" id="insCard" aria-live="polite"></div>
       </div>
@@ -3346,7 +3348,7 @@ try {
 // command and its answer. The built-in stories bring the names ZILF gave
 // everything; a file of your own shows numbers and the names it prints.
 const ins = {
-  view: "objects", whole: false, pick: 0, open: new Set(), find: "", changed: false,
+  view: "objects", whole: false, pick: 0, open: new Set(), find: "", objFind: "", changed: false,
   names: null, story: "", prev: null, cur: null, count: 0, turn: null, diff: null,
 };
 try {
@@ -3362,6 +3364,7 @@ async function loadInspector() {
   ins.names = null;
   ins.pick = 0;
   ins.open = new Set();
+  ins.objFind = $("insObjFind").value = "";
   $("inspectorFor").textContent = $("padFor").textContent;
   if (!key) return;
   const n = await namesFor(key);
@@ -3497,27 +3500,53 @@ function drawInspectorTree(m) {
   const top = box.scrollTop;
   if (!count) { tree.innerHTML = ""; $("insCard").innerHTML = `<p class="ins-empty">This story has no objects.</p>`; return; }
   // the room you're in, or every object in the game
-  let roots;
+  let roots, say;
   if (ins.whole) {
     roots = [];
     for (let o = 1; o <= count; o++) if (!parentOf(m, o)) roots.push(o);
-    $("insTreeSay").textContent = "Every object in the game, hidden ones too.";
+    say = "Every object in the game, hidden ones too.";
   } else if (here) {
     roots = [here];
-    $("insTreeSay").textContent = "The room you're in and everything in it.";
+    say = "The room you're in and everything in it.";
   } else {
     roots = [];
-    $("insTreeSay").textContent = "The page can't tell which room you're in. Whole tree shows every object.";
+    say = "The page can't tell which room you're in. Whole tree shows every object.";
   }
+  // Find keeps what matches and what it's inside, all opened. It looks only
+  // where the tree does, so hidden things stay hidden until Whole tree.
+  const q = ins.objFind.trim().toLowerCase();
+  let keep = null, hits = new Set();
+  if (q) {
+    keep = new Set();
+    let away = 0;
+    for (let o = 1; o <= count; o++) {
+      const name = objName(m, o).toLowerCase(), zil = (ins.names?.objects[o] || "").toLowerCase();
+      // a number on its own is an object number; MAZE-1 and the like would bury it
+      if (/^\d+$/.test(q) ? String(o) !== q : !(name.includes(q) || zil.includes(q))) continue;
+      if (!ins.whole && !(here && within(m, o, here))) { away++; continue; }
+      hits.add(o);
+      for (let x = o, g = 0; x && g < 64; x = parentOf(m, x), g++) keep.add(x);
+    }
+    roots = roots.filter((o) => keep.has(o));
+    if (hits.size && !hits.has(ins.pick)) {
+      ins.pick = [...hits][0];
+      // so it's still in sight once the field is emptied
+      if (ins.whole) for (let p = parentOf(m, ins.pick), g = 0; p && g < 64; p = parentOf(m, p), g++) ins.open.add(p);
+    }
+    const n = hits.size;
+    say = n ? `${n} ${n === 1 ? "object matches" : "objects match"}${ins.whole ? ", hidden ones too" : " here"}.` : `Nothing ${ins.whole ? "in the game" : "here"} matches.`;
+    if (away) say += ` Whole tree looks in every room, hidden things too.`;
+  }
+  $("insTreeSay").textContent = say;
   if (!ins.pick || ins.pick > count || (!ins.whole && here && !within(m, ins.pick, here))) ins.pick = here || you || roots[0] || 1;
   if (ins.whole) for (let p = parentOf(m, ins.pick), g = 0; p && g < 64; p = parentOf(m, p), g++) ins.open.add(p);
   const row = (o, depth) => {
     const kids = [];
-    for (let c = childOf(m, o), g = 0; c && g < 1000; c = siblingOf(m, c), g++) kids.push(c);
-    const open = !ins.whole || ins.open.has(o);
-    const cls = ["ins-row", o === ins.pick ? "picked" : "", d?.objs.has(o) ? "lit" : ""].filter(Boolean).join(" ");
+    for (let c = childOf(m, o), g = 0; c && g < 1000; c = siblingOf(m, c), g++) if (!keep || keep.has(c)) kids.push(c);
+    const open = !ins.whole || !!keep || ins.open.has(o);
+    const cls = ["ins-row", o === ins.pick ? "picked" : "", d?.objs.has(o) ? "lit" : "", hits.has(o) ? "match" : ""].filter(Boolean).join(" ");
     const tag = o === you ? "you" : o === here ? "here" : "";
-    const tog = ins.whole && kids.length
+    const tog = ins.whole && !keep && kids.length
       ? `<button type="button" class="ins-tog" data-tog="${o}" aria-expanded="${open}" aria-label="${open ? "Close" : "Open"} ${esc(objLabel(m, o))}">${open ? "▾" : "▸"}</button>`
       : `<span class="ins-tog none"></span>`;
     let h = `<li><div class="${cls}">${tog}<button type="button" class="ins-node" data-o="${o}" aria-pressed="${o === ins.pick}"><span class="n">${o}</span> ${esc(objLabel(m, o))}</button>${tag ? `<span class="ins-tag">${tag}</span>` : ""}</div>`;
@@ -3630,6 +3659,12 @@ $("insWhole").addEventListener("click", () => {
 });
 $("insChanged").addEventListener("click", () => { ins.changed = !ins.changed; drawInspector(); });
 $("insFind").addEventListener("input", (e) => { ins.find = e.target.value; drawInspector(); });
+$("insObjFind").addEventListener("input", (e) => { ins.objFind = e.target.value; drawInspector(); });
+// Enter goes to the first match; Esc empties the field before it closes the panel
+$("insObjFind").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); $("insTree").querySelector(".ins-row.match .ins-node")?.focus(); }
+  else if (e.key === "Escape" && e.target.value) { e.preventDefault(); e.stopPropagation(); e.target.value = ins.objFind = ""; drawInspector(); }
+});
 // picking an object anywhere in the panel shows its card
 $("inspectorpad").addEventListener("click", (e) => {
   const t = e.target.closest("[data-tog]");
