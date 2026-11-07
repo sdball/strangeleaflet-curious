@@ -445,8 +445,10 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Not a Number</h1>
+  <!-- md: text.md#intro -->
   <p class="lede">Divide 0 by 0 in JavaScript and you get back NaN, short for not a number. It looks like it's a weird special value. But it's really a whole region of bit patterns that are all represented simply as NaN. In this curio we'll map every NaN in a 16-bit float, see how JavaScript compares NaNs in different ways, take one apart, find out how to store an arbitrary payload in NaN, see some real world uses for different NaN values, and build one in JavaScript.</p>
   <p class="howto">Every map and row of switches works from the keyboard: Tab to it and use the arrow keys (<kbd>Shift</kbd> moves further). Letter keys shown on a button go to the station you're using.</p>
+  <!-- /md -->
 
   <figure class="meme">
     <img src="is-this-a-number.webp" width="720" height="649"
@@ -459,7 +461,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 1</p>
       <h2 id="s1-h">Every 16-bit pattern</h2>
+      <!-- md: text.md#station-1 -->
       <p>A 16-bit float has 65,536 possible bit patterns, and this map has a cell for every one. They're sorted into 64 tiles of 1,024. Every cell in a tile shares the same sign and exponent, the part of a float that says how big it is. <b>Two whole tiles are NaN</b>, apart from one corner cell each, which is infinity. Pick any cell to see what it holds.</p>
+      <!-- /md -->
     </div>
     <ul class="key map-key" aria-label="Map colors">
       <li><i style="--c: var(--m-norm-hi)"></i>Ordinary numbers, darker when smaller</li>
@@ -505,7 +509,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
         <p class="note" id="s1-what" style="margin-top: 0"></p>
       </div>
     </div>
+    <!-- md: text.md#station-1-note -->
     <p class="note">That's 2,046 different NaNs among 65,536 patterns: <b>1,024 quiet and 1,022 signaling</b>, half of each with the sign bit set. Station 3 explains the difference. A 32-bit float has 16,777,214 NaNs and a 64-bit float, the kind JavaScript uses for every number, has 9,007,199,254,740,990.</p>
+    <!-- /md -->
   </section>
 
   <!-- 2. They all look alike -->
@@ -513,7 +519,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 2</p>
       <h2 id="s2-h">They all look alike</h2>
+      <!-- md: text.md#station-2 -->
       <p>Here are four NaNs at 64 bits, the size JavaScript uses for every number, and one ordinary number to compare them with. Every one of the NaNs prints as <code>NaN</code>. Now compare them three ways. <b>The bits say these are four different values. JavaScript's comparisons can't tell them apart.</b></p>
+      <!-- /md -->
     </div>
     <div class="cards" id="s2-cards"></div>
     <div class="cmp-top">
@@ -532,7 +540,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 3</p>
       <h2 id="s3-h">Inside one NaN</h2>
+      <!-- md: text.md#station-3 -->
       <p>These are the 64 bits of one JavaScript number, sorted into their four fields. <b>A float is NaN when all 11 exponent bits are on and the bits after them aren't all off.</b> Turn off any exponent bit and it's an ordinary number again. The first bit after the exponent is the quiet bit. The other 51 are the payload. With the quiet bit on, the payload can be anything, even all zeros. With it off, the NaN is signaling (Station 4), and the payload needs at least one bit on, since all ones followed by all zeros is infinity. That's why Station 1 counts one fewer signaling NaN than quiet for each sign. Past that one rule, nothing about NaN reads the payload, so a program can keep whatever it likes there.</p>
+      <!-- /md -->
     </div>
     <div class="pins" id="s3-pins" role="group" aria-label="The 64 bits, sign first"></div>
     <div class="split">
@@ -560,7 +570,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 4</p>
       <h2 id="s4-h">Quiet and signaling</h2>
+      <!-- md: text.md#station-4 -->
       <p>Arithmetic on a NaN gives back a NaN, and the floating-point standard asks that it keep the payload. A <b>signaling</b> NaN, with its quiet bit off, is meant to raise an alarm when used, and comes out <b>quiet</b>, with the quiet bit on. Pick a NaN and an operation. Your browser does the sum with its own floating point, and every bit that changed is ringed.</p>
+      <!-- /md -->
     </div>
     <div class="choose">
       <span class="lbl" id="s4-x-lbl">x is</span>
@@ -577,7 +589,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 5</p>
       <h2 id="s5-h">NaNs with jobs</h2>
+      <!-- md: text.md#station-5 -->
       <p>Real programs put those spare bits to work. A monitoring system marks the end of a data series with one, a statistics language marks missing data with another, and language runtimes hide whole values inside them, a trick called NaN-boxing. Firefox's and Safari's JavaScript engines <a href="https://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations">have done it too</a>. <b>Pick a specimen and see how each program reads the same 64 bits.</b></p>
+      <!-- /md -->
     </div>
     <div class="btns tight" role="group" aria-label="Specimens" id="s5-picks"></div>
     <div class="rows4" style="margin-top: 1rem">
@@ -604,7 +618,9 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
     <div class="panel-head">
       <p class="station">Station 6</p>
       <h2 id="s6-h">See it in JavaScript</h2>
+      <!-- md: text.md#station-6 -->
       <p>Type <code>0x7FF0000000000002</code> into a JavaScript console hoping for Prometheus's marker and you get back <code>9218868437227405000</code>. A hex literal is a whole number, not a bit pattern, and that one is too big to keep exactly. <b>To get the NaN, write the 64 bits into a buffer and read them back out as a float.</b> Then see which everyday steps keep those bits in Node. These answers were recorded in Node v25.9.0 on an Apple arm64 Mac. Another version, another JavaScript engine, or another kind of chip may give different answers.</p>
+      <!-- /md -->
     </div>
     <div class="choose">
       <span class="lbl" id="s6-x-lbl">x is</span>
@@ -619,12 +635,14 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       </table>
     </div>
     <p class="say4" id="s6-say" aria-live="polite"></p>
+    <!-- md: text.md#station-6-note -->
     <p class="note">So treat a marker as bits for as long as you can. Coming in, check the raw bytes before they become a number, with <code>view.getBigUint64(0) === 0x7FF0000000000002n</code>. Going out, write the bits with <code>setBigUint64</code>, rather than passing a NaN around and writing it at the end.</p>
+    <!-- /md -->
   </section>
 
   <section class="notes" aria-labelledby="notice-h">
     <h2 id="notice-h">Things to notice</h2>
-    <!-- md: notes.md -->
+    <!-- md: text.md#notes -->
     <ul>
       <li><b>NaN is a region, not a value.</b> Any pattern with the exponent all ones and the rest of the fraction not all zeros is NaN. In Station 1 that's two whole tiles. The same is true at every size, so a 64-bit float has about nine quadrillion NaNs.</li>
       <li><b>Printing and comparing can't tell NaNs apart.</b> <code>==</code> says a NaN equals nothing, itself included, and <code>Object.is</code> says every NaN is the same as every other. Only the bits show the difference, which is why code that cares, like the <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a> monitoring system marking the end of a time series with one particular NaN, compares bits.</li>
@@ -643,7 +661,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
 
   <section class="sources" aria-labelledby="sources-h">
     <h2 id="sources-h">Sources</h2>
-    <!-- md: sources.md -->
+    <!-- md: text.md#sources -->
     <ul>
       <li>IEEE Computer Society, <i>IEEE Standard for Binary Floating-Point Arithmetic</i>, IEEE Std 754-1985.</li>
       <li>IEEE Computer Society, <i>IEEE Standard for Floating-Point Arithmetic</i>, IEEE Std 754-2008 and IEEE Std 754-2019, section 6.2 on NaN operands and payloads.</li>
