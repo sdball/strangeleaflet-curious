@@ -5,6 +5,10 @@
 //   …generated HTML, rewritten on every render…
 //   <!-- /md -->
 //
+// A marker can name one section of a file, as text.md#station-1. A section
+// runs from a <!-- #station-1 --> line to the next such line, so one file can
+// hold a page's prose in reading order.
+//
 // Usage: scripts/render [page …]   render every page under public/, or just these
 //        scripts/render --check    list pages out of date with their Markdown, exit 1 if any
 //        scripts/render --staged   the same check against what's staged (the pre-commit hook)
@@ -12,10 +16,12 @@
 //
 // The Markdown is a small subset: paragraphs, - and 1. lists (nested by
 // indenting), # headings, ``` fences, **bold** as <b>, *italic* or _italic_
-// as <i>, `code`, [links](url), and a trailing \ for a line break. Raw HTML
-// passes through, so <span class="v">, <kbd>, and <strong> all work. A line
-// that starts with a block tag (<p class="note">, <div>, <table>) starts a
-// raw HTML block that runs to the next blank line, untouched.
+// as <i>, `code`, [links](url), and a trailing \ for a line break. A
+// paragraph or heading ending in {.lede} or {#id .a .b} gets those attributes,
+// as <p class="lede">. Raw HTML passes through, so <span class="v">, <kbd>,
+// and <strong> all work. A line that starts with a block tag (<p class="note">,
+// <div>, <table>) starts a raw HTML block that runs to the next blank line,
+// untouched.
 
 "use strict";
 
@@ -123,6 +129,19 @@ function joinLines(lines) {
 
 // ---------- Blocks ----------
 
+// a trailing {.class #id} on a paragraph or heading becomes its attributes
+const ATTRS = /\s*\{((?:[.#][\w-]+\s*)+)\}\s*$/;
+
+function attrs(text) {
+  const m = text.match(ATTRS);
+  if (!m) return [text, ""];
+  const parts = m[1].trim().split(/\s+/);
+  const id = parts.filter((a) => a[0] === "#").map((a) => a.slice(1)).pop();
+  const cls = parts.filter((a) => a[0] === ".").map((a) => a.slice(1));
+  return [text.slice(0, m.index), (id ? ` id="${id}"` : "") + (cls.length ? ` class="${cls.join(" ")}"` : "")];
+}
+
+const SECTION = /^<!-- #([\w-]+) -->\s*$/;
 const BLOCK_TAG = /^<\/?(address|article|aside|blockquote|details|dialog|div|dl|figure|figcaption|footer|form|h[1-6]|header|hr|nav|ol|p|pre|section|summary|table|ul|!--)[\s>/]/i;
 const ITEM = /^( *)([-*]|\d+[.)]) +/;
 
@@ -138,6 +157,7 @@ function blocks(lines) {
   while (i < lines.length) {
     const line = lines[i];
     if (blank(line)) { i++; continue; }
+    if (SECTION.test(line)) { i++; continue; }
 
     const fence = line.match(/^ *(```+|~~~+)\s*(\S*)/);
     if (fence) {
@@ -153,7 +173,8 @@ function blocks(lines) {
     const head = line.match(/^ *(#{1,6}) +(.*?)(?: +#+)? *$/);
     if (head) {
       const n = head[1].length;
-      out.push(`<h${n}>${inline(head[2])}</h${n}>`);
+      const [text, at] = attrs(head[2]);
+      out.push(`<h${n}${at}>${inline(text)}</h${n}>`);
       i++;
       continue;
     }
@@ -215,7 +236,8 @@ function blocks(lines) {
     while (i < lines.length && !blank(lines[i]) && !ITEM.test(lines[i]) && !/^ *(#{1,6} |```|~~~)/.test(lines[i]) && !BLOCK_TAG.test(lines[i].trimStart())) {
       para.push(lines[i++]);
     }
-    out.push(`<p>${inline(joinLines(para))}</p>`);
+    const [text, at] = attrs(joinLines(para));
+    out.push(`<p${at}>${inline(text)}</p>`);
   }
   return out.join("\n").split("\n");
 }
@@ -228,14 +250,45 @@ function markdown(src) {
 
 const REGION = /^([ \t]*)<!-- md: *(\S+?) *-->[^\n]*\n[\s\S]*?^[ \t]*<!-- \/md -->[^\n]*$/gm;
 
-// read is (path) => text, so the same render works on staged files
-function render(page, read) {
+// a file's sections by name; text before the first section is under ""
+function sections(md) {
+  const found = new Map([["", []]]);
+  let current = found.get("");
+  for (const line of md.replace(/\r\n?/g, "\n").split("\n")) {
+    const m = line.match(SECTION);
+    if (m) {
+      if (found.has(m[1])) throw new Error(`section #${m[1]} appears twice`);
+      found.set(m[1], (current = []));
+    } else current.push(line);
+  }
+  return new Map([...found].map(([k, v]) => [k, v.join("\n")]));
+}
+
+// read is (path) => text, so the same render works on staged files; warn
+// hears about sections no marker on the page asked for
+function render(page, read, warn = () => {}) {
   const dir = path.dirname(page);
-  return read(page).replace(REGION, (_, indent, file) => {
+  const used = new Map();
+  const html = read(page).replace(REGION, (_, indent, ref) => {
+    const [file, name] = ref.split("#");
     const md = read(path.join(dir, file));
-    const html = markdown(md).map((l) => (l ? indent + l : l)).join("\n");
-    return `${indent}<!-- md: ${file} -->\n${html}\n${indent}<!-- /md -->`;
+    let src = md;
+    if (name !== undefined) {
+      const all = sections(md);
+      if (!all.has(name)) throw new Error(`${file} has no section #${name}`);
+      src = all.get(name);
+      if (!used.has(file)) used.set(file, { all, names: new Set() });
+      used.get(file).names.add(name);
+    }
+    const out = markdown(src).map((l) => (l ? indent + l : l)).join("\n");
+    return `${indent}<!-- md: ${ref} -->\n${out}\n${indent}<!-- /md -->`;
   });
+  for (const [file, { all, names }] of used) {
+    for (const name of all.keys()) {
+      if (name && !names.has(name)) warn(`${file} section #${name} isn't used by ${path.basename(page)}`);
+    }
+  }
+  return html;
 }
 
 function marked(text) {
@@ -263,7 +316,7 @@ function renderAll(pages) {
   for (const page of pages) {
     try {
       const before = readDisk(page);
-      const after = render(page, readDisk);
+      const after = render(page, readDisk, (msg) => console.error(`warning: ${rel(path.dirname(page))}/${msg}`));
       if (after !== before) {
         fs.writeFileSync(page, after);
         console.log(`rendered ${rel(page)}`);
@@ -331,7 +384,7 @@ const flags = new Set(args.filter((a) => a.startsWith("--")));
 const named = args.filter((a) => !a.startsWith("--")).map((a) => path.resolve(a));
 
 if (flags.has("--help")) {
-  console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(1, 18).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
+  console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(1).filter((l, i, a) => a.slice(0, i + 1).every((x) => x.startsWith("//"))).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
 } else if (flags.has("--staged")) {
   const { pages, read } = stagedPages();
   process.exit(check(pages, read) ? 0 : 1);

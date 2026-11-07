@@ -32,16 +32,18 @@ After cloning, turn on the hook once: `git config core.hooksPath .githooks`. `di
 
 ## Prose in Markdown
 
-A page can keep its wordier regions (Things to notice, A little history, Sources, guide lessons) in Markdown files next to it. A pair of comments marks each region, and `scripts/render` replaces what's between them with the rendered file:
+A page can keep its prose (the lede and howto, station intros and notes, Things to notice, A little history, Sources, guide lessons) in a Markdown file next to it. A pair of comments marks each region, and `scripts/render` replaces what's between them with the rendered Markdown:
 
 ```html
 <section class="notes" aria-labelledby="notice-h">
   <h2 id="notice-h">Things to notice</h2>
-  <!-- md: notes.md -->
-  …generated, so edit notes.md instead…
+  <!-- md: text.md#notes -->
+  …generated, so edit text.md instead…
   <!-- /md -->
 </section>
 ```
+
+`text.md#notes` is the part of `text.md` under a `<!-- #notes -->` line, up to the next such line. Keep one `text.md` per page with its sections in page order (`#intro`, `#station-1`, `#station-1-note`, …, `#notes`, `#sources`), so the file reads like the page's script. A marker without `#name` takes the whole file. Rendering warns about a section no marker uses and fails on a marker whose section is missing.
 
 ```sh
 scripts/render           # render every page with markers
@@ -51,8 +53,9 @@ scripts/render --check   # list pages out of date with their Markdown
 
 The generated HTML is committed with its Markdown, like the story files, so the site still deploys `public/` as it is and every page stays self-contained. The pre-commit hook runs `scripts/render --staged` and refuses a page whose staged HTML doesn't match its staged Markdown. `not-a-number` is the first page converted.
 
-- **Keep the frame in HTML.** The `<section>`, its `aria-labelledby`, and its `h2` stay in the page. The Markdown holds only what goes inside.
+- **Keep the frame in HTML.** The `<section>`, its `aria-labelledby`, its `h2`, station labels, and anything a script fills in or reads by id stay in the page. The Markdown holds the static prose inside.
 - **The Markdown is a small subset**: paragraphs, `-` and `1.` lists (nest by indenting), `#` headings, ``` fences, `` `code` ``, `[links](url)`, and a trailing `\` for a line break. `**bold**` renders as `<b>` and `*italic*` as `<i>`, the tags the exhibits' notes already use and style. An item with one paragraph renders as a bare `<li>…</li>`.
+- **Classes and ids go at the end of a block.** A paragraph or heading ending in `{.lede}` renders as `<p class="lede">`, and `{#id .a .b}` sets both.
 - **Raw HTML still works.** Inline tags pass through (`<span class="v">`, `<kbd>`, `<strong>`), and a line opening with a block tag (`<p class="note">`, `<div>`, `<table>`) starts a raw block that runs to the next blank line, with no Markdown inside it.
 - **One item or paragraph per line.** That's how the pages write them, and it keeps diffs to the sentence you changed.
 - **The writing rules still apply.** `tic-check` reads the rendered page, so a tic in the Markdown shows up there. For a deliberate use, end the Markdown line with `<!-- tic-ok -->`. It passes through as a comment onto the same rendered line.
