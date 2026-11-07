@@ -17,6 +17,15 @@ if [ -n "$missing" ]; then
   exit 1
 fi
 
+# Refuse pages whose staged HTML doesn't match their staged Markdown, so the
+# published page is always what the Markdown says.
+if ! command -v node >/dev/null 2>&1; then
+  echo "node isn't on PATH, so pages weren't checked against their Markdown." >&2
+elif ! "$(git rev-parse --show-toplevel)/scripts/render" --staged; then
+  echo "Or commit with --no-verify to skip this check." >&2
+  exit 1
+fi
+
 # Refuse LLM writing tics in page prose, using tic-check from ~/local_bin
 # when it's installed.
 pages=$(git diff --cached --name-only --diff-filter=ACMR -- 'public/*.html')

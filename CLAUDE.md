@@ -1,14 +1,16 @@
 # The Cabinet of Curios
 
-Static site served at curious.strangeleaflet.com: interactive exhibits, toys, guides, and gadgets from Strange Leaflet. There is no build step, no package manager, no framework, and no test suite. Every page is one hand-written, self-contained `index.html`.
+Static site served at curious.strangeleaflet.com: interactive exhibits, toys, guides, and gadgets from Strange Leaflet. There is no build step for the site, no package manager, no framework, and no test suite. Every page is one self-contained `index.html`, hand-written except for any prose regions `scripts/render` fills in from Markdown (see **Prose in Markdown**).
 
 ## Layout
 
 ```
 public/index.html          the hub: the shelf of curio tags plus a text-adventure interface
 public/<slug>/index.html   one curio per directory, served at /<slug>/
+public/<slug>/*.md         prose that scripts/render copies into the page, if the page has any
 scripts/serve              serves public/ locally (python3 http.server)
-.githooks/pre-commit       refuses staged pages without the GoatCounter snippet, or with tic-check findings
+scripts/render             fills pages' marked regions from Markdown (Node, no dependencies)
+.githooks/pre-commit       refuses staged pages without the GoatCounter snippet, out of date with their Markdown, or with tic-check findings
 .github/workflows/static.yml  checks GoatCounter again, then deploys public/ to GitHub Pages
 api/                       a Cloudflare Worker that proxies outside data for curios (not published with the site)
 stories/                   builds the Z-machine curios' story files from their ZIL source (not published)
@@ -27,6 +29,33 @@ scripts/serve --list   # Python servers still running, with their pids
 Use a server, not `file://`. Each page's back link points at `/`, which only works when served.
 
 After cloning, turn on the hook once: `git config core.hooksPath .githooks`. `direnv allow` once puts `scripts/` on PATH via `.envrc`.
+
+## Prose in Markdown
+
+A page can keep its wordier regions (Things to notice, A little history, Sources, guide lessons) in Markdown files next to it. A pair of comments marks each region, and `scripts/render` replaces what's between them with the rendered file:
+
+```html
+<section class="notes" aria-labelledby="notice-h">
+  <h2 id="notice-h">Things to notice</h2>
+  <!-- md: notes.md -->
+  …generated, so edit notes.md instead…
+  <!-- /md -->
+</section>
+```
+
+```sh
+scripts/render           # render every page with markers
+scripts/render --watch   # keep rendering as you edit; reload the browser to see it
+scripts/render --check   # list pages out of date with their Markdown
+```
+
+The generated HTML is committed with its Markdown, like the story files, so the site still deploys `public/` as it is and every page stays self-contained. The pre-commit hook runs `scripts/render --staged` and refuses a page whose staged HTML doesn't match its staged Markdown. `not-a-number` is the first page converted.
+
+- **Keep the frame in HTML.** The `<section>`, its `aria-labelledby`, and its `h2` stay in the page. The Markdown holds only what goes inside.
+- **The Markdown is a small subset**: paragraphs, `-` and `1.` lists (nest by indenting), `#` headings, ``` fences, `` `code` ``, `[links](url)`, and a trailing `\` for a line break. `**bold**` renders as `<b>` and `*italic*` as `<i>`, the tags the exhibits' notes already use and style. An item with one paragraph renders as a bare `<li>…</li>`.
+- **Raw HTML still works.** Inline tags pass through (`<span class="v">`, `<kbd>`, `<strong>`), and a line opening with a block tag (`<p class="note">`, `<div>`, `<table>`) starts a raw block that runs to the next blank line, with no Markdown inside it.
+- **One item or paragraph per line.** That's how the pages write them, and it keeps diffs to the sentence you changed.
+- **The writing rules still apply.** `tic-check` reads the rendered page, so a tic in the Markdown shows up there. For a deliberate use, end the Markdown line with `<!-- tic-ok -->`. It passes through as a comment onto the same rendered line.
 
 ## The API Worker
 
@@ -225,6 +254,7 @@ Cozy Submarine's own sub is not in that set. Players draw their own in `custom-s
 
 - Serve locally and check the page in light and dark, at phone width (~375px), by keyboard alone, and with reduced motion on.
 - Confirm the browser console is clean.
+- If the page has Markdown regions, `scripts/render --check` should print nothing (the hook checks this too).
 - `tic-check public/<slug>/index.html` should print nothing (the hook runs it too).
 - `grep -L 'data-goatcounter="https://sdball.goatcounter.com/count"' public/*.html public/*/*.html` should print nothing.
 
