@@ -624,6 +624,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
 
   <section class="notes" aria-labelledby="notice-h">
     <h2 id="notice-h">Things to notice</h2>
+    <!-- md: notes.md -->
     <ul>
       <li><b>NaN is a region, not a value.</b> Any pattern with the exponent all ones and the rest of the fraction not all zeros is NaN. In Station 1 that's two whole tiles. The same is true at every size, so a 64-bit float has about nine quadrillion NaNs.</li>
       <li><b>Printing and comparing can't tell NaNs apart.</b> <code>==</code> says a NaN equals nothing, itself included, and <code>Object.is</code> says every NaN is the same as every other. Only the bits show the difference, which is why code that cares, like the <a href="https://github.com/prometheus/prometheus/blob/main/model/value/value.go">Prometheus</a> monitoring system marking the end of a time series with one particular NaN, compares bits.</li>
@@ -637,10 +638,12 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       <li><b>A marker can earn its own shorthand.</b> Prometheus's <a href="https://github.com/prometheus/prometheus/blob/main/tsdb/chunkenc/xor2.go">xor2 storage format</a>, added in 2026, squeezes each sample into as few bits as it can. It spots a stale marker by comparing all 64 bits, then stores the marker's value as the three-bit code <code>111</code> in place of 64 bits. When the gap since the last sample also matches the gap before it, the five-bit code <code>11111</code> stands for the timestamp and the marker together.</li>
       <li><b>More to try.</b> The <a href="../bitfield-explorer/">bitfield explorer</a> has a NaN tab for trying patterns of your own, and the <a href="../minifloat-ruler/">minifloat ruler</a> shows where NaN sits among an 8-bit float's other values.</li>
     </ul>
+    <!-- /md -->
   </section>
 
   <section class="sources" aria-labelledby="sources-h">
     <h2 id="sources-h">Sources</h2>
+    <!-- md: sources.md -->
     <ul>
       <li>IEEE Computer Society, <i>IEEE Standard for Binary Floating-Point Arithmetic</i>, IEEE Std 754-1985.</li>
       <li>IEEE Computer Society, <i>IEEE Standard for Floating-Point Arithmetic</i>, IEEE Std 754-2008 and IEEE Std 754-2019, section 6.2 on NaN operands and payloads.</li>
@@ -654,6 +657,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; }
       <li>Mike Pall, LuaJIT 2.1, <a href="https://github.com/LuaJIT/LuaJIT/blob/v2.1/src/lj_obj.h"><code>src/lj_obj.h</code></a>, for its tagged NaNs in the 64-bit (GC64) layout and the one NaN its floating-point unit makes.</li>
       <li>Andy Wingo, <a href="https://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations">"value representation in javascript implementations"</a> (2011), for NaN-boxing in JavaScriptCore and Mozilla's engine.</li>
     </ul>
+    <!-- /md -->
   </section>
 
   <footer>The NaN in Station 3 and the cell picked in Station 1 live in the address bar, so you can share a link to them.</footer>
