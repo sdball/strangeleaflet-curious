@@ -172,12 +172,36 @@ html.terminal-open body { overflow: hidden; }
   background: transparent;
   border: 0;
   border-radius: 0;
-  padding: 0;
+  padding: 0 1ch 0 0; /* room for the cursor at the end of a long line */
   margin: 0;
-  caret-color: var(--atari-text);
-  caret-shape: block;
+  caret-color: transparent; /* the page draws its own cursor */
 }
 .prompt input:focus-visible { outline: none; }
+/* the cursor: an inverse block over the character it sits on, blinking
+   about twice a second, steady while you type */
+.field {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+.cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1ch;
+  height: 100%;
+  font-size: max(16px, 1em);
+  white-space: pre;
+  background: var(--atari-text);
+  color: var(--atari-blue);
+  pointer-events: none;
+  transform: translateX(var(--x, 0px));
+  animation: blink 1.06s steps(1) infinite;
+}
+.cursor[hidden] { display: none; }
+@keyframes blink { 50% { visibility: hidden; } }
 
 /* Filters */
 .filters {
@@ -325,6 +349,7 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   .tag, .toast { transition: none; }
   .flicker .screen { animation: none; }
+  .cursor { animation: none; }
 }
 </style>
 <script>
@@ -368,9 +393,12 @@ footer {
       <div class="log" id="log" aria-live="polite"></div>
       <div class="prompt">
         <span aria-hidden="true">&gt;</span>
-        <input id="cmd" type="text" aria-label="Command"
-               autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-               enterkeyhint="go">
+        <div class="field">
+          <input id="cmd" type="text" aria-label="Command"
+                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+                 enterkeyhint="go">
+          <span class="cursor" id="cursor" aria-hidden="true" hidden></span>
+        </div>
       </div>
     </div>
   </div>
@@ -462,6 +490,7 @@ const shelf = $("shelf"),
   screen = $("screen"),
   log = $("log"),
   input = $("cmd"),
+  cursor = $("cursor"),
   movesEl = $("moves"),
   toast = $("toast");
 
@@ -834,6 +863,35 @@ input.addEventListener("keydown", (e) => {
     input.value = past[++pastAt] ?? "";
   }
 });
+
+// ---------- Cursor ----------
+
+// browsers won't blink a block caret, so the page draws one: it sits at the
+// caret, shows the letter under it in inverse, and hides for a selection
+let cursorFrame = 0;
+function placeCursor() {
+  cursorFrame = 0;
+  const { selectionStart: at, selectionEnd: end } = input;
+  cursor.hidden = document.activeElement !== input || at !== end;
+  if (cursor.hidden) return;
+  cursor.textContent = input.value[at] || " ";
+  const cell = cursor.getBoundingClientRect().width;
+  const x = Math.min(at * cell - input.scrollLeft, input.clientWidth - cell);
+  cursor.style.setProperty("--x", x + "px");
+  // start each blink from on, so it stays lit while you type
+  cursor.style.animation = "none";
+  void cursor.offsetWidth;
+  cursor.style.animation = "";
+}
+function queueCursor() {
+  if (!cursorFrame) cursorFrame = requestAnimationFrame(placeCursor);
+}
+for (const type of ["input", "keydown", "keyup", "focus", "blur", "pointerup", "scroll"]) {
+  input.addEventListener(type, queueCursor);
+}
+document.addEventListener("selectionchange", queueCursor);
+addEventListener("resize", queueCursor);
+document.fonts?.ready.then(queueCursor);
 
 // ---------- Terminal ----------
 
