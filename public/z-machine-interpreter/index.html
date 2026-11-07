@@ -110,8 +110,27 @@ kbd { border: 1px solid var(--case-edge); border-bottom-width: 2px; border-radiu
 
 .back { display: inline-block; color: var(--muted); font-size: 1rem; margin-bottom: 1.25rem; }
 h1 { font-weight: 600; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 .7rem; }
+.title-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 0 0 1.25rem; }
+.title-row h1 { margin: 0; }
 .lede { margin: 0 0 .8rem; max-width: 64ch; font-size: 1.15rem; }
-.howto { margin: 0 0 1.5rem; max-width: 64ch; color: var(--muted); }
+
+/* ---------- About ---------- */
+.about {
+  width: min(42rem, calc(100vw - 2rem)); max-height: min(85dvh, 48rem);
+  padding: 0; border: 1px solid var(--case-edge); border-radius: 10px;
+  background: var(--paper); color: var(--ink);
+  box-shadow: 0 12px 40px rgb(0 0 0 / .3);
+}
+.about[open] { display: flex; flex-direction: column; }
+.about::backdrop { background: rgb(20 19 16 / .55); }
+.about-head { display: flex; align-items: center; gap: .5rem; padding: 0 0 0 1.25rem; border-bottom: 1px solid var(--line); }
+.about-head h2 { flex: 1; margin: 0; font-size: 1.15rem; }
+.about-head .pad-close { color: var(--ink); }
+.about-body { overflow-y: auto; padding: 1rem 1.25rem 1.25rem; overscroll-behavior: contain; }
+.about-body h3 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 .3rem; }
+.about-body p { margin: 0 0 .6rem; }
+.about-body .lede { max-width: none; }
+.about-foot { margin: 0; padding: .6rem 1.25rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
 h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 
 /* ---------- Buttons ---------- */
@@ -624,9 +643,33 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
 <div class="drop-veil" id="dropVeil" aria-hidden="true">Drop a story file to play it</div>
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
-  <h1>Z-Machine Interpreter</h1>
-  <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
-  <p class="howto">Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too. <b>Notes</b> opens a notepad beside the game for clues and combinations, and <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found. In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it. The Zorks also get <b>Cheats</b>: <b>Well lit</b> gives every room light, and <b>Endless lights</b> keeps the lamp, candles, and matches from running out. In Zork I, <b>Thief stays home</b> keeps the thief in his treasure room and <b>Stable objects</b> stops him taking what you leave lying around. In Zork II, <b>No wizard</b> stops the Wizard dropping in to cast spells. <b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it. <kbd>x</kbd> works for examine in every game. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The page remembers where you were, so you can close it and come back.</p>
+  <div class="title-row">
+    <h1>Z-Machine Interpreter</h1>
+    <button type="button" class="btn" id="aboutBtn" aria-haspopup="dialog">About</button>
+  </div>
+  <dialog class="about" id="about" aria-labelledby="aboutH">
+    <div class="about-head">
+      <h2 id="aboutH">About the interpreter</h2>
+      <button type="button" class="pad-close" id="aboutClose" aria-label="Close About">×</button>
+    </div>
+    <div class="about-body">
+      <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
+      <h3>Playing</h3>
+      <p>Pick a built-in story or open one of your own. Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>x</kbd> works for examine in every game. The page remembers where you were, so you can close it and come back.</p>
+      <h3>Saves and Undo</h3>
+      <p><kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too.</p>
+      <h3>Notes and Map</h3>
+      <p><b>Notes</b> opens a notepad beside the game for clues and combinations. <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found.</p>
+      <h3>Enhanced and Cheats</h3>
+      <p>In the three Zorks, <b>Enhanced</b> adds a line under the status line with what the game keeps to itself: whether the room has light of its own, turns left on the lamp you're carrying, how much more you can carry, how long your wounds take to heal, and in Zork I, once you've opened the trophy case, the treasures in it.</p>
+      <p>The Zorks also get <b>Cheats</b>: <b>Well lit</b> gives every room light, and <b>Endless lights</b> keeps the lamp, candles, and matches from running out. In Zork I, <b>Thief stays home</b> keeps the thief in his treasure room and <b>Stable objects</b> stops him taking what you leave lying around. In Zork II, <b>No wizard</b> stops the Wizard dropping in to cast spells.</p>
+      <h3>Inspector</h3>
+      <p><b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside.</p>
+      <h3>Screens and full screen</h3>
+      <p>Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it.</p>
+    </div>
+    <p class="about-foot"><kbd>Esc</kbd> or a click outside closes this.</p>
+  </dialog>
 
   <section class="loader" id="loader" aria-label="Story file">
     <div class="file-card">
@@ -2549,6 +2592,16 @@ document.addEventListener("fullscreenchange", () => { if (!document.fullscreenEl
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isFull() && e.target !== cmd) setFull(false);
 });
+
+// ---------- About ----------
+// what the page is and how to drive it, kept out of the way of the game
+const about = $("about");
+$("aboutBtn").addEventListener("click", () => about.showModal());
+$("aboutClose").addEventListener("click", () => about.close());
+// a click on the backdrop lands on the dialog itself
+about.addEventListener("click", (e) => { if (e.target === about) about.close(); });
+// Safari doesn't focus a clicked button, so put focus back by hand
+about.addEventListener("close", () => $("aboutBtn").focus({ preventScroll: true }));
 
 // ---------- Cursor ----------
 // On the Atari the page draws the cursor: it sits at the caret, shows the
