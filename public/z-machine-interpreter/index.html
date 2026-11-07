@@ -216,7 +216,7 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
   tab-size: 8;
 }
 .ln { min-height: calc(var(--screen-lh) * 1em); }
-.ln.open { display: flex; align-items: baseline; flex-wrap: wrap; }
+.ln.open { display: flex; align-items: baseline; flex-wrap: wrap; position: relative; }
 .ln.open .runs { white-space: pre-wrap; }
 .s1 { background: var(--screen-ink); color: var(--screen); text-shadow: none; }
 .s2 { font-weight: 600; }
@@ -549,7 +549,23 @@ html.full-on { overflow: hidden; }
   --hole-bg: color-mix(in srgb, var(--case) 82%, #000);  /* what shows through a hole, in the paper's shadow */
 }
 .machine[data-screen="atari"] .screen, .machine[data-screen="green"] .screen { color-scheme: dark; }
-.machine[data-screen="atari"] .cmd { caret-shape: block; }
+/* the Atari's cursor: an inverse block over the letter it sits on, blinking
+   about twice a second, steady while you type. The page draws it, since
+   browsers won't blink a block caret. */
+.machine[data-screen="atari"] .cmd { caret-color: transparent; padding-right: 1ch; }
+.cursor { display: none; }
+.machine[data-screen="atari"] .cursor:not([hidden]) {
+  display: block;
+  position: absolute; top: 0; left: 0;
+  width: 1ch;
+  font-size: max(1rem, 1em);
+  white-space: pre;
+  background: var(--typed); color: var(--screen);
+  pointer-events: none;
+  transform: translate(var(--x, 0px), var(--y, 0px));
+  animation: blink 1.06s steps(1) infinite;
+}
+@keyframes blink { 50% { visibility: hidden; } }
 .machine[data-screen="printout"] .screen { color-scheme: light; }
 /* the holes and the tear line beside them scroll with the text, like paper feeding through */
 .machine[data-screen="printout"] .lower {
@@ -719,6 +735,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     </aside>
     </div>
     <input type="text" id="cmd" class="cmd" aria-label="Your command" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send">
+    <span class="cursor" id="cursor" aria-hidden="true" hidden></span>
   </section>
   <div class="controls">
     <button type="button" class="btn" id="undoBtn" disabled>Undo</button>
@@ -1891,7 +1908,7 @@ const game = {
   cutShort: false,       // the last line was ended by the game's timer, not by you
   paper: "",             // the colours the screen was last painted
 };
-const cmd = $("cmd");
+const cmd = $("cmd"), cursor = $("cursor");
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
@@ -2001,8 +2018,9 @@ function flush() {
   if (extra > 0) { for (let i = 0; i < extra; i++) lower.firstChild.remove(); game.base += extra; }
   // the input sits at the end of the last line, after the prompt
   const last = lower.lastElementChild;
-  if (m.waiting && last) { last.classList.add("open"); last.append(cmd); cmd.hidden = false; }
-  else { cmd.hidden = true; $("deck").after(cmd); }
+  if (m.waiting && last) { last.classList.add("open"); last.append(cmd, cursor); cmd.hidden = false; }
+  else { cmd.hidden = true; $("deck").after(cmd, cursor); }
+  queueCursor();
   if (hadFocus && !cmd.hidden) cmd.focus({ preventScroll: true });
   drawTop();
   paintPaper();
@@ -2532,6 +2550,38 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isFull() && e.target !== cmd) setFull(false);
 });
 
+// ---------- Cursor ----------
+// On the Atari the page draws the cursor: it sits at the caret, shows the
+// letter under it in inverse, and hides for a selection.
+let cursorFrame = 0;
+function placeCursor() {
+  cursorFrame = 0;
+  const { selectionStart: at, selectionEnd: end } = cmd;
+  cursor.hidden = machine.dataset.screen !== "atari" || cmd.hidden ||
+    document.activeElement !== cmd || at !== end;
+  if (cursor.hidden) return;
+  // waiting for a key, the block sits on the placeholder's first letter
+  cursor.textContent = cmd.value[at] || (!cmd.value && cmd.placeholder[at]) || " ";
+  const cell = cursor.getBoundingClientRect().width;
+  const x = cmd.offsetLeft + Math.min(at * cell - cmd.scrollLeft, cmd.clientWidth - cell);
+  cursor.style.setProperty("--x", x + "px");
+  cursor.style.setProperty("--y", cmd.offsetTop + "px");
+  cursor.style.height = cmd.offsetHeight + "px";
+  // start each blink from on, so it stays lit while you type
+  cursor.style.animation = "none";
+  void cursor.offsetWidth;
+  cursor.style.animation = "";
+}
+function queueCursor() {
+  if (!cursorFrame) cursorFrame = requestAnimationFrame(placeCursor);
+}
+for (const type of ["input", "keydown", "keyup", "focus", "blur", "pointerup", "scroll"]) {
+  cmd.addEventListener(type, queueCursor);
+}
+document.addEventListener("selectionchange", queueCursor);
+addEventListener("resize", queueCursor);
+document.fonts?.ready.then(queueCursor);
+
 // ---------- Screens ----------
 // Each screen has its own font, so the columns are measured again once
 // the font is in.
@@ -2548,6 +2598,7 @@ function setScreen(name, quiet) {
   const settle = () => requestAnimationFrame(resizeScreen);
   document.fonts?.load(`1em "${SCREENS[name]}"`).then(settle, settle);
   if (!quiet && !cmd.hidden) cmd.focus({ preventScroll: true });
+  queueCursor();
 }
 document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener("click", () => setScreen(b.dataset.themePick, true)));
 // the desk's monitor turns amber after dark, and the game is told so
