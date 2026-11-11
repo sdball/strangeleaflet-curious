@@ -114,6 +114,8 @@ button[aria-pressed="true"] { background: var(--ink); color: var(--panel); borde
 button.small { min-height: 40px; padding: .3rem .7rem; font-size: .88rem; }
 .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
 .seg { display: inline-flex; flex-wrap: wrap; gap: .35rem; }
+.loop-row { margin-top: .5rem; }
+.loop-label { color: var(--muted); font-size: .9rem; }
 .examples { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .5rem 0; }
 .examples > span { color: var(--muted); font-size: .92rem; margin-right: .2rem; }
 
@@ -374,7 +376,7 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
         <h2 id="bench-h">The bench</h2>
       </div>
     </div>
-    <p>Pick a sound and change anything about it. Each layer is a tone or filtered noise with the controls from the stations above, plus a few more: <b>Start at</b> delays a layer, <b>Vary</b> nudges its pitch at random each time it plays so repeats don't sound mechanical, and <b>Repeat</b> scatters copies of it across a <b>Spread</b> of time, which is how the Arc Lance crackles. Press <kbd>P</kbd> anywhere outside a text box to play.</p>
+    <p>Pick a sound and change anything about it. Each layer is a tone or filtered noise with the controls from the stations above, plus a few more: <b>Start at</b> delays a layer, <b>Vary</b> nudges its pitch at random each time it plays so repeats don't sound mechanical, and <b>Repeat</b> scatters copies of it across a <b>Spread</b> of time, which is how the Arc Lance crackles. Press <kbd>P</kbd> anywhere outside a text box to play, or <kbd>L</kbd> to loop: the sound plays over and over with a pause between, and each change you make is in the next play.</p>
     <p>To make something no game has, press <b>New sound</b> for a plain tone to build on, or <b>Random new sound</b> for a surprise. Either one goes into <b>My own sounds</b>, a set that belongs to you rather than to a game.</p>
     <div class="bench-top">
       <label for="pick">Sound</label>
@@ -383,6 +385,11 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
       <button type="button" id="b-mutate">Mutate</button>
       <button type="button" id="b-new">New sound</button>
       <button type="button" id="b-random">Random new sound</button>
+    </div>
+    <div class="row loop-row">
+      <button type="button" id="b-loop" aria-pressed="false" aria-keyshortcuts="L">Loop <kbd>L</kbd></button>
+      <span class="loop-label" id="gap-label">Pause between plays</span>
+      <span class="seg" role="group" aria-labelledby="gap-label" id="b-gaps"></span>
     </div>
     <p class="use" id="b-use"></p>
     <div class="scope" id="b-scope">
@@ -1443,6 +1450,8 @@ $("pick").addEventListener("change", () => {
   select(g, id);
 });
 const playBench = () => {
+  // while looping, Play starts the loop over from now rather than playing on top of it
+  if (loop.on) { loopNext(); return; }
   playNow(current(), { muted: bench.muted }, $("b-head"));
   $("b-cap").textContent = `Playing ${current().name || bench.id}${bench.muted.size ? `, with ${bench.muted.size === 1 ? "one layer" : bench.muted.size + " layers"} muted` : ""}.`;
 };
@@ -1451,7 +1460,36 @@ document.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.matches("input:not([type=range]), textarea, select")) return;
   if (e.key === "p" || e.key === "P") { e.preventDefault(); playBench(); }
+  else if (e.key === "l" || e.key === "L") { e.preventDefault(); setLoop(!loop.on); }
 });
+
+// ---------- The bench: looping ----------
+// plays the sound over and over so you can dial it in by ear. each play reads the sound afresh,
+// so a change lands on the next one, and so does picking another sound
+const loop = { on: false, gap: 0.5, timer: 0 };
+const GAPS = [[0.1, "0.1 s"], [0.25, "0.25 s"], [0.5, "0.5 s"], [1, "1 s"], [2, "2 s"]];
+function loopNext() {
+  clearTimeout(loop.timer);
+  if (!loop.on) return;
+  playNow(current(), { muted: bench.muted }, $("b-head"));
+  loop.timer = setTimeout(loopNext, (soundLength(current()) + loop.gap) * 1000);
+}
+function setLoop(on) {
+  loop.on = on;
+  $("b-loop").setAttribute("aria-pressed", on);
+  $("b-cap").textContent = on
+    ? `Looping ${current().name || bench.id}, ${loop.gap} s apart. Change anything and the next play has it. Press L to stop.`
+    : "Stopped looping.";
+  loopNext();
+}
+$("b-loop").addEventListener("click", () => setLoop(!loop.on));
+segmented($("b-gaps"), GAPS, (v) => v === loop.gap, (v) => {
+  loop.gap = v;
+  $("b-cap").textContent = `${v} s between plays.`;
+  loopNext();
+});
+// a loop left running in a background tab would be a surprise to come back to
+document.addEventListener("visibilitychange", () => { if (document.hidden && loop.on) setLoop(false); });
 
 // nudge every number a little, the way you'd turn every knob a hair
 $("b-mutate").addEventListener("click", () => {
