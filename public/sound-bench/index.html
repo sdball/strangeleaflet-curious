@@ -375,11 +375,13 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
       </div>
     </div>
     <p>Pick a sound and change anything about it. Each layer is a tone or filtered noise with the controls from the stations above, plus a few more: <b>Start at</b> delays a layer, <b>Vary</b> nudges its pitch at random each time it plays so repeats don't sound mechanical, and <b>Repeat</b> scatters copies of it across a <b>Spread</b> of time, which is how the Arc Lance crackles. Press <kbd>P</kbd> anywhere outside a text box to play.</p>
+    <p>To make something no game has, press <b>New sound</b> for a plain tone to build on, or <b>Random new sound</b> for a surprise. Either one goes into <b>My own sounds</b>, a set that belongs to you rather than to a game.</p>
     <div class="bench-top">
       <label for="pick">Sound</label>
       <select id="pick"></select>
       <button type="button" class="go" id="b-play" aria-keyshortcuts="P">Play <kbd>P</kbd></button>
       <button type="button" id="b-mutate">Mutate</button>
+      <button type="button" id="b-new">New sound</button>
       <button type="button" id="b-random">Random new sound</button>
     </div>
     <p class="use" id="b-use"></p>
@@ -408,14 +410,18 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
 
     <div class="take">
       <h3 id="take-h">Take it with you</h3>
-      <p>Your changes stay in this browser. To keep them for good, export the whole set of sounds as a file. It's the same data the game itself plays from, so it can go straight back into the game's source.</p>
+      <p>Your changes stay in this browser. To keep them for good, download the sound on the bench by itself, or the whole set it belongs to. It's the same data the games play from, so a game's set can go straight back into the game's source.</p>
+      <div class="row">
+        <button type="button" id="b-copy-one">Copy this sound</button>
+        <button type="button" id="b-download-one">Download this sound</button>
+      </div>
       <div class="row">
         <button type="button" id="b-copy">Copy the set</button>
         <button type="button" id="b-download">Download the set</button>
         <button type="button" id="b-reset-all">Undo every change in this set</button>
       </div>
-      <h3 id="import-h">Bring a set back</h3>
-      <p>Paste an export, or pick its file, to load it onto the bench.</p>
+      <h3 id="import-h">Bring sounds back</h3>
+      <p>Paste an export, or pick its file, to load it onto the bench. Its sounds join the set they came from, each one taking the place of the sound it was copied from. Sounds from a set the bench doesn't have join My own sounds.</p>
       <textarea id="b-import" aria-labelledby="import-h" spellcheck="false" autocomplete="off"></textarea>
       <div class="row">
         <button type="button" id="b-load">Load what's pasted</button>
@@ -611,7 +617,10 @@ const COZY_SUBMARINE_SOUNDS = {
 const GROUPS = [
   { id: "hardpoint", name: "Hardpoint", href: "../hardpoint/", sounds: HARDPOINT_SOUNDS },
   { id: "cozy-submarine", name: "Cozy Submarine", href: "../cozy-submarine/", sounds: COZY_SUBMARINE_SOUNDS },
+  // sounds of your own, for no game in particular: it ships empty, so every sound in it lives in edits
+  { id: "mine", name: "My own sounds", href: null, sounds: {} },
 ];
+const MINE = "mine";
 const FORMAT = "sound-bench/1";
 const LAYER_KEYS = ["kind", "wave", "filter", "freq", "to", "q", "gain", "attack", "dur", "at", "vary", "repeat", "spread"];
 const WAVES = ["sine", "triangle", "square", "sawtooth"];
@@ -1201,16 +1210,23 @@ function cleanGroup(sounds) {
 }
 
 // ---------- The bench: drawing ----------
+// a game's sounds say when you've changed them; your own are all new, so they don't
+function pickLabel(g, id) {
+  const s = soundsOf(g)[id];
+  return (s.name || id) + (g !== MINE && isEdited(g, id) ? (isShipped(g, id) ? " (changed)" : " (new)") : "");
+}
 function fillPick() {
   const sel = $("pick");
   sel.replaceChildren();
   for (const g of GROUPS) {
+    const ids = Object.keys(soundsOf(g.id));
+    if (!ids.length) continue;
     const og = document.createElement("optgroup");
     og.label = g.name;
-    for (const [id, s] of Object.entries(soundsOf(g.id))) {
+    for (const id of ids) {
       const o = document.createElement("option");
       o.value = `${g.id}/${id}`;
-      o.textContent = (s.name || id) + (isEdited(g.id, id) ? (isShipped(g.id, id) ? " (changed)" : " (new)") : "");
+      o.textContent = pickLabel(g.id, id);
       og.append(o);
     }
     sel.append(og);
@@ -1221,11 +1237,11 @@ function paintMeta() {
   const s = current(), g = groupById(bench.group);
   const edited = isEdited(bench.group, bench.id);
   $("b-use").innerHTML = "";
-  const a = document.createElement("a");
-  a.href = g.href;
+  const a = document.createElement(g.href ? "a" : "span");
+  if (g.href) a.href = g.href;
   a.textContent = g.name;
   $("b-use").append(a, document.createTextNode(`: ${s.use || "no note yet"}.`));
-  if (edited) {
+  if (edited && g.id !== MINE) {
     const b = document.createElement("span");
     b.className = "badge";
     b.textContent = isShipped(bench.group, bench.id) ? "changed" : "new";
@@ -1236,6 +1252,7 @@ function paintMeta() {
   $("b-reset").disabled = !edited || !isShipped(bench.group, bench.id);
   $("b-delete").disabled = isShipped(bench.group, bench.id);
   $("b-reset-all").disabled = !edits[bench.group];
+  $("b-reset-all").hidden = bench.group === MINE;
 }
 function paintTimeline() {
   const s = current(), len = soundLength(s), tl = $("b-timeline");
@@ -1281,9 +1298,7 @@ function changed() {
 }
 function fillPickLabels() {
   const o = $("pick").querySelector(`option[value="${bench.group}/${bench.id}"]`);
-  if (!o) return;
-  const s = current();
-  o.textContent = (s.name || bench.id) + (isEdited(bench.group, bench.id) ? (isShipped(bench.group, bench.id) ? " (changed)" : " (new)") : "");
+  if (o) o.textContent = pickLabel(bench.group, bench.id);
 }
 
 // ---------- The bench: layer cards ----------
@@ -1455,19 +1470,20 @@ $("b-mutate").addEventListener("click", () => {
 });
 
 const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "sound";
-function freshId(base) {
-  const taken = soundsOf(bench.group);
+function freshId(base, group) {
+  const taken = soundsOf(group);
   let id = slug(base), n = 2;
   while (id in taken) id = `${slug(base)}-${n++}`;
   return id;
 }
-function addSound(sound) {
-  if (!edits[bench.group]) edits[bench.group] = clone(groupById(bench.group).sounds);
-  const id = freshId(sound.name);
-  edits[bench.group][id] = sound;
-  select(bench.group, id);
+function addSound(sound, group = bench.group) {
+  if (!edits[group]) edits[group] = clone(groupById(group).sounds);
+  const id = freshId(sound.name, group);
+  edits[group][id] = sound;
+  select(group, id);
   return id;
 }
+const countMine = (prefix) => Object.keys(soundsOf(MINE)).filter((k) => k.startsWith(prefix)).length + 1;
 // a new sound from nothing, in the spirit of sfxr's randomize button
 function randomLayer(kind) {
   const r = (lo, hi) => lo * (hi / lo) ** Math.random();
@@ -1487,10 +1503,16 @@ $("b-random").addEventListener("click", () => {
   const more = Math.random();
   if (more < 0.6) layers.push(randomLayer(layers[0].kind === "tone" ? "noise" : "tone"));
   if (more < 0.2) layers.push(randomLayer(Math.random() < 0.5 ? "tone" : "noise"));
-  const n = Object.keys(soundsOf(bench.group)).filter((k) => k.startsWith("random")).length + 1;
-  addSound({ name: `Random ${n}`, use: "A sound from the Random button", layers });
+  addSound({ name: `Random ${countMine("random")}`, use: "A sound from the Random button", layers }, MINE);
   playBench();
-  $("b-cap").textContent = `Made ${current().name}, with ${plural(layers.length, "layer")}. It's a new sound in the ${groupById(bench.group).name} set.`;
+  $("b-cap").textContent = `Made ${current().name}, with ${plural(layers.length, "layer")}. It's in My own sounds.`;
+});
+$("b-new").addEventListener("click", () => {
+  addSound({ name: `New sound ${countMine("new-sound")}`, use: "", layers: [
+    { kind: "tone", wave: "sine", freq: 440, gain: 0.2, attack: 0.003, dur: 0.2 }
+  ] }, MINE);
+  $("b-cap").textContent = `Made ${current().name}, one plain tone in My own sounds. Change its layer, add more, and name it below.`;
+  $("b-name").focus();
 });
 const plural = (n, w) => `${n} ${n === 1 ? w : w + "s"}`;
 
@@ -1521,7 +1543,10 @@ $("b-delete").addEventListener("click", () => {
   const gone = current().name || bench.id;
   delete edits[bench.group][bench.id];
   tidy(bench.group);
-  select(bench.group, Object.keys(soundsOf(bench.group))[0], `Deleted ${gone}.`);
+  // deleting the last of your own sounds leaves that set empty, so go back to the first game's
+  const rest = Object.keys(soundsOf(bench.group));
+  if (rest.length) select(bench.group, rest[0], `Deleted ${gone}.`);
+  else select(GROUPS[0].id, Object.keys(soundsOf(GROUPS[0].id))[0], `Deleted ${gone}. That was the last of your own sounds.`);
   $("pick").focus();
 });
 $("b-reset-all").addEventListener("click", () => {
@@ -1533,43 +1558,54 @@ $("b-reset-all").addEventListener("click", () => {
 });
 
 // ---------- Export and import ----------
-const fileName = () => `${bench.group}-sounds.json`;
-$("b-copy").addEventListener("click", async () => {
-  const text = exportText(bench.group, soundsOf(bench.group));
+// one sound exports the same way as a set, as a set of one, so it loads back the same way too
+const setText = () => exportText(bench.group, soundsOf(bench.group));
+const oneText = () => exportText(bench.group, { [bench.id]: current() });
+const setFile = () => `${bench.group}-sounds.json`;
+const oneFile = () => (bench.group === MINE ? `${bench.id}-sound.json` : `${bench.group}-${bench.id}-sound.json`);
+async function copyOut(text, what, done) {
   try {
     await navigator.clipboard.writeText(text);
-    $("b-take-cap").textContent = `Copied all ${plural(Object.keys(soundsOf(bench.group)).length, "sound")} in the ${groupById(bench.group).name} set.`;
+    $("b-take-cap").textContent = done;
   } catch (e) {
     // no clipboard access: put it in the box to copy by hand
     $("b-import").value = text;
     $("b-import").select();
-    $("b-take-cap").textContent = "Your browser wouldn't let the page copy, so the set is in the box below, selected and ready to copy.";
+    $("b-take-cap").textContent = `Your browser wouldn't let the page copy, so ${what} is in the box below, selected and ready to copy.`;
   }
-});
-$("b-download").addEventListener("click", () => {
-  const blob = new Blob([exportText(bench.group, soundsOf(bench.group))], { type: "application/json" });
+}
+function saveOut(text, name) {
+  const blob = new Blob([text], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = fileName();
+  a.download = name;
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  $("b-take-cap").textContent = `Saved ${fileName()}.`;
-});
+  $("b-take-cap").textContent = `Saved ${name}.`;
+}
+$("b-copy").addEventListener("click", () => copyOut(setText(), "the set",
+  `Copied all ${plural(Object.keys(soundsOf(bench.group)).length, "sound")} in the ${groupById(bench.group).name} set.`));
+$("b-download").addEventListener("click", () => saveOut(setText(), setFile()));
+$("b-copy-one").addEventListener("click", () => copyOut(oneText(), "the sound", `Copied ${current().name || bench.id}.`));
+$("b-download-one").addEventListener("click", () => saveOut(oneText(), oneFile()));
 function load(text) {
   let data;
   try { data = JSON.parse(text); } catch (e) { $("b-take-cap").textContent = "That isn't an export: it doesn't read as JSON."; return; }
   if (!data || data.format !== FORMAT) { $("b-take-cap").textContent = "That isn't a Sound Bench export."; return; }
-  const g = groupById(data.group);
-  if (!g) { $("b-take-cap").textContent = `That export is for "${data.group}", which the bench doesn't have.`; return; }
+  // a set the bench doesn't have, or none at all, goes into your own sounds
+  const g = groupById(data.group) || groupById(MINE), moved = g.id !== data.group;
   const sounds = cleanGroup(data.sounds);
   if (!sounds) { $("b-take-cap").textContent = "That export has no sounds the bench can play."; return; }
-  edits[g.id] = sounds;
+  // loaded sounds join the set, replacing the ones with the same ids and leaving the rest alone
+  edits[g.id] = { ...clone(soundsOf(g.id)), ...sounds };
   tidy(g.id);
-  const id = bench.group === g.id && bench.id in sounds ? bench.id : Object.keys(sounds)[0];
-  select(g.id, id);
-  $("b-take-cap").textContent = `Loaded ${plural(Object.keys(sounds).length, "sound")} into the ${g.name} set.`;
+  const ids = Object.keys(sounds);
+  select(g.id, bench.group === g.id && ids.includes(bench.id) ? bench.id : ids[0]);
+  const from = typeof data.group === "string" && data.group ? `the "${data.group.slice(0, 40)}" set` : "no set in particular";
+  $("b-take-cap").textContent = `Loaded ${plural(ids.length, "sound")} into ${g.id === MINE ? "My own sounds" : `the ${g.name} set`}.` +
+    (moved ? ` ${ids.length === 1 ? "It" : "They"} came from ${from}, which the bench doesn't have.` : "");
 }
 $("b-load").addEventListener("click", () => load($("b-import").value));
 $("b-file").addEventListener("change", async () => {
