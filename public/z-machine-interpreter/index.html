@@ -540,6 +540,8 @@ html.full-on { overflow: hidden; }
 .themes { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .5rem; }
 .themes-lbl { color: var(--muted); font-size: .95rem; margin-right: .25rem; }
 .cheats[hidden] { display: none; }
+/* only the Atari clicks as you type */
+.machine:not([data-screen="atari"]) .key-clicks { display: none; }
 @media (min-width: 1100px) { .machine { --screen-full-size: 1.125rem; } }
 
 /* an Infocom game on an Atari 800, as on the hub */
@@ -666,7 +668,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <h3>Inspector</h3>
       <p><b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside.</p>
       <h3>Screens and full screen</h3>
-      <p>Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it.</p>
+      <p>Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The Atari clicks with every key you press, the way its own speaker did, and <b>Key clicks</b> turns that off or on. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it.</p>
     </div>
     <p class="about-foot"><kbd>Esc</kbd> or a click outside closes this.</p>
   </dialog>
@@ -798,6 +800,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" data-theme-pick="green" aria-pressed="false">Green screen</button>
     <button type="button" class="btn" data-theme-pick="atari" aria-pressed="false">Atari 800</button>
     <button type="button" class="btn" data-theme-pick="printout" aria-pressed="false">Printout</button>
+    <button type="button" class="btn key-clicks" id="clickBtn" aria-pressed="true">Key clicks</button>
   </div>
   <div class="themes cheats" id="cheats" role="group" aria-labelledby="cheatsLbl" hidden>
     <span class="themes-lbl" id="cheatsLbl">Cheats:</span>
@@ -2634,6 +2637,84 @@ for (const type of ["input", "keydown", "keyup", "focus", "blur", "pointerup", "
 document.addEventListener("selectionchange", queueCursor);
 addEventListener("resize", queueCursor);
 document.fonts?.ready.then(queueCursor);
+
+// ---------- Key clicks ----------
+// The Atari 800 clicked its own speaker for every key, so its screen does
+// too. The sound is data, like the games' sounds; the Sound Bench
+// (../sound-bench/) has an identical copy to play and edit, so a change
+// here goes there too, and the other way round.
+const SOUNDS = {
+  "atari-keyclick": { "name": "Atari Typing Feedback", "use": "Each key you press on the Atari 800 screen", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 985, "gain": 0.08, "attack": 0.001, "dur": 0.07 },
+    { "kind": "tone", "wave": "square", "freq": 95, "gain": 0.03, "attack": 0.001, "dur": 0.05 }
+  ] }
+};
+let clicks = true;
+try { clicks = localStorage.getItem("zmi:clicks") !== "off"; } catch { /* storage is off */ }
+let audio = null, master = null;
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    // playback, so a phone with its silent switch on still clicks. Key clicks mutes it
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+    // the same output as the games' sounds: master gain into a light limiter
+    const comp = audio.createDynamicsCompressor();
+    comp.threshold.value = -4;
+    comp.knee.value = 0;
+    comp.ratio.value = 20;
+    comp.attack.value = 0.001;
+    comp.release.value = 0.1;
+    master = audio.createGain();
+    master.gain.value = 0.8;
+    master.connect(comp).connect(audio.destination);
+  }
+  // iOS can leave the context suspended or "interrupted" after calls and app switches
+  if (audio.state !== "running") audio.resume();
+  return audio;
+}
+// a gain that jumps up over attack seconds, then dies away by dur
+function env(a, t, peak, attack, dur) {
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(master);
+  return g;
+}
+// only tones so far; the bench's noise layers would need a noise buffer here too
+function play(id) {
+  const a = ac(), s = SOUNDS[id];
+  if (!a || !s) return;
+  for (const L of s.layers) {
+    const t = a.currentTime + (L.at || 0), v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+    const src = a.createOscillator();
+    src.type = L.wave || "sine";
+    src.frequency.setValueAtTime(L.freq * v, t);
+    if (L.to) src.frequency.exponentialRampToValueAtTime(L.to * v, t + L.dur);
+    src.connect(env(a, t, L.gain, Math.min(L.attack || 0.003, L.dur * 0.95), L.dur));
+    src.start(t);
+    src.stop(t + L.dur + 0.05);
+  }
+}
+function setClicks(on) {
+  clicks = on;
+  $("clickBtn").setAttribute("aria-pressed", on);
+  try { localStorage.setItem("zmi:clicks", on ? "on" : "off"); } catch { /* storage is off */ }
+}
+setClicks(clicks);
+$("clickBtn").addEventListener("click", () => {
+  setClicks(!clicks);
+  if (clicks) play("atari-keyclick");
+});
+// every key clicks, held keys too as they repeat, but not Shift and the like on their own
+const SILENT_KEYS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock", "Fn", "Dead"]);
+cmd.addEventListener("keydown", (e) => {
+  if (!clicks || machine.dataset.screen !== "atari") return;
+  if (e.metaKey || e.ctrlKey || e.altKey || SILENT_KEYS.has(e.key)) return;
+  play("atari-keyclick");
+});
 
 // ---------- Screens ----------
 // Each screen has its own font, so the columns are measured again once
