@@ -668,7 +668,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <h3>Inspector</h3>
       <p><b>Inspector</b> shows what the machine holds as you play: the object tree, every global variable, and what each command changed, named the way ZILF named them in the built-in stories. It starts with only the room you're in, and <b>Whole tree</b> shows the rest, hidden things too. Type in <b>Find an object</b> to pick out things by name or number, and see what each is inside.</p>
       <h3>Screens and full screen</h3>
-      <p>Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. The Atari clicks with every key you press, the way its own speaker did, and <b>Key clicks</b> turns that off or on. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it.</p>
+      <p>Pick a screen to play on: a desk monitor, a green screen, an Atari 800, or a printout on fanfold paper. On the Atari, <b>Keyboard Sound</b> makes every key you press click the way its own speaker did. <b>Full screen</b> gives the story the whole window, with nothing else on it, and <kbd>Esc</kbd> brings you back. In full screen, Saves, Notes, Map, and Inspector are on the right end of the screen's top line, and on a phone each one fills the screen until you close it.</p>
     </div>
     <p class="about-foot"><kbd>Esc</kbd> or a click outside closes this.</p>
   </dialog>
@@ -800,7 +800,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" data-theme-pick="green" aria-pressed="false">Green screen</button>
     <button type="button" class="btn" data-theme-pick="atari" aria-pressed="false">Atari 800</button>
     <button type="button" class="btn" data-theme-pick="printout" aria-pressed="false">Printout</button>
-    <button type="button" class="btn key-clicks" id="clickBtn" aria-pressed="true">Key clicks</button>
+    <button type="button" class="btn key-clicks" id="clickBtn" aria-pressed="false">Keyboard Sound</button>
   </div>
   <div class="themes cheats" id="cheats" role="group" aria-labelledby="cheatsLbl" hidden>
     <span class="themes-lbl" id="cheatsLbl">Cheats:</span>
@@ -2650,15 +2650,16 @@ const SOUNDS = {
     { "kind": "tone", "wave": "square", "freq": 981, "gain": 0.09, "attack": 0.001, "hold": 0.007, "dur": 0.03 }
   ] }
 };
-let clicks = true;
-try { clicks = localStorage.getItem("zmi:clicks") !== "off"; } catch { /* storage is off */ }
+// off until you turn it on
+let clicks = false;
+try { clicks = localStorage.getItem("zmi:clicks") === "on"; } catch { /* storage is off */ }
 let audio = null, master = null;
 function ac() {
   if (!audio) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     audio = new AC();
-    // playback, so a phone with its silent switch on still clicks. Key clicks mutes it
+    // playback, so a phone with its silent switch on still clicks. Keyboard Sound mutes it
     if (navigator.audioSession) navigator.audioSession.type = "playback";
     // the same output as the games' sounds: master gain into a light limiter
     const comp = audio.createDynamicsCompressor();
