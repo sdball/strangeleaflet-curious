@@ -451,9 +451,12 @@ textarea {
       <p class="readout" id="b-size"></p>
     </div>
     <p>Pick any creature and change anything about it: its pixels, its colors and their marks, its size, and its frames. Click or drag to paint, and right-click to rub out. On the grid, the arrow keys move a cursor, <kbd>Space</kbd> paints, and <kbd>Delete</kbd> rubs out. <kbd>P</kbd> pencil, <kbd>F</kbd> fill, <kbd>I</kbd> picker, <kbd>0</kbd>–<kbd>9</kbd> pick a color, <kbd>[</kbd> <kbd>]</kbd> change frame, <kbd>Ctrl</kbd> <kbd>Z</kbd> undo.</p>
+    <p>To draw something no game has, press <b>New creature</b> for an empty grid, or <b>Copy as my own</b> to start from the creature on the bench. Either one goes into <b>My own creatures</b>, a set that belongs to you rather than to a game.</p>
     <div class="bench-top">
       <label for="b-pick">Creature</label>
       <select id="b-pick"></select>
+      <button type="button" id="b-new">New creature</button>
+      <button type="button" id="b-copy-mine">Copy as my own</button>
     </div>
     <p class="use" id="b-use"></p>
 
@@ -503,6 +506,7 @@ textarea {
     <div class="row" role="group" aria-labelledby="trial-h">
       <button type="button" id="p-play" aria-pressed="true">Play the frames</button>
       <button type="button" id="p-left" aria-pressed="false">Face left</button>
+      <button type="button" id="p-grass" aria-pressed="false" hidden>On grass</button>
     </div>
     <div class="row" role="group" aria-label="Pose to preview" id="p-poses" hidden></div>
     <div class="preview">
@@ -516,18 +520,23 @@ textarea {
     </div>
     <div class="row">
       <button type="button" id="b-reset">Undo my changes to this creature</button>
+      <button type="button" id="b-delete">Delete this creature</button>
     </div>
 
     <div class="take">
       <h3 id="take-h">Take it with you</h3>
-      <p>Your changes stay in this browser. To keep them for good, export the whole set as a file. Its <code>sprites</code> part is laid out exactly like the game's own source, so it can be pasted straight back in.</p>
+      <p>Your changes stay in this browser. To keep them for good, download the creature on the bench by itself, or the whole set it belongs to. Its <code>sprites</code> part is laid out exactly like the games' own source, so a game's set can be pasted straight back in.</p>
+      <div class="row">
+        <button type="button" id="x-copy-one">Copy this creature</button>
+        <button type="button" id="x-download-one">Download this creature</button>
+      </div>
       <div class="row">
         <button type="button" id="x-copy">Copy the set</button>
         <button type="button" id="x-download">Download the set</button>
         <button type="button" id="x-reset-all">Undo every change in this set</button>
       </div>
-      <h3 id="import-h">Bring a set back</h3>
-      <p>Paste an export, or pick its file, to load it onto the bench.</p>
+      <h3 id="import-h">Bring creatures back</h3>
+      <p>Paste an export, or pick its file, to load it onto the bench. Its creatures join the set they came from, each one taking the place of the creature it was copied from. Creatures from a set the bench doesn't have join My own creatures.</p>
       <textarea id="x-import" aria-labelledby="import-h" spellcheck="false" autocomplete="off"></textarea>
       <div class="row">
         <button type="button" id="x-load">Load what's pasted</button>
@@ -1462,7 +1471,11 @@ const POCKET_PLACES_SPRITES = {
 const GROUPS = [
   { id: "cozy-submarine", name: "Cozy Submarine", href: "../cozy-submarine/", sprites: COZY_SUBMARINE_SPRITES, scene: "sea" },
   { id: "pocket-places", name: "Pocket Places", href: "../pocket-places/", sprites: POCKET_PLACES_SPRITES, scene: "grass" },
+  // creatures of your own, for no game in particular: it ships empty, so every one lives in edits,
+  // and its preview can be either scene
+  { id: "mine", name: "My own creatures", href: null, sprites: {}, scene: "sea" },
 ];
+const MINE = "mine";
 const FORMAT = "pixel-bench/1";
 const groupById = (id) => GROUPS.find((g) => g.id === id);
 // a sprite "like" another gets that one's frames and poses with its own palette
@@ -2198,17 +2211,23 @@ function fillPick() {
       if (!resolve(all, id)) continue;
       const o = document.createElement("option");
       o.value = `${g.id}/${id}`;
-      o.textContent = (s.name || id) + (g.id === bench.group && changedIds.has(id) ? " (changed)" : "");
+      o.textContent = (s.name || id) + (g.id === bench.group && changedIds.has(id) && id in g.sprites ? " (changed)" : "");
       og.append(o);
     }
-    sel.append(og);
+    if (og.children.length) sel.append(og);
   }
   sel.value = `${bench.group}/${bench.id}`;
 }
 function select(gid, id) {
-  const set = spritesOf(gid);
+  let set = spritesOf(gid);
   if (!resolve(set, id)) id = Object.keys(set).find((k) => resolve(set, k));
+  // nothing left in your own set: go back to the first game's
+  if (!id) { gid = GROUPS[0].id; set = spritesOf(gid); id = Object.keys(set)[0]; }
   bench.group = gid; bench.id = id; bench.f = 0;
+  // a game's creatures preview in its own scene; yours keep whichever you last picked
+  if (gid !== MINE) trial.scene = groupById(gid).scene;
+  $("p-grass").hidden = gid !== MINE;
+  $("p-grass").setAttribute("aria-pressed", trial.scene === "grass");
   art = toArt(resolve(set, id));
   trial.pose = art.poses ? Object.keys(art.poses)[0] : null;
   undos = []; redos = []; before = null;
@@ -2231,7 +2250,7 @@ function drawBenchGrid() {
   bench.cell = drawCells($("b-grid"), $("b-board"), cells(), colorOf, { hover, cursor: cursor.show ? cursor : null, under });
   $("b-grid").setAttribute("aria-label", `Pixel grid for ${plainName(art.name)}, frame ${bench.f + 1}, ${art.w} wide and ${art.h} tall, cursor at column ${cursor.i + 1}, row ${cursor.j + 1}`);
 }
-const trial = { play: !reduced, left: false, f: 0, timer: 0, pose: null };
+const trial = { play: !reduced, left: false, f: 0, timer: 0, pose: null, scene: "sea" };
 // the frames the preview plays: the chosen pose's, or every frame
 const playing = () => (trial.pose && art.poses && art.poses[trial.pose]) || art.frames.map((_, i) => i);
 const SCENES = {
@@ -2239,7 +2258,7 @@ const SCENES = {
   grass: { a: "Grass by day, at the game's size", b: "Grass at night, where glowing colors stay bright", la: "on grass by day", lb: "on grass at night" },
 };
 function drawPreview() {
-  const s = fromArt(art), fs = playing(), f = trial.play ? fs[trial.f % fs.length] : bench.f, scene = groupById(bench.group).scene;
+  const s = fromArt(art), fs = playing(), f = trial.play ? fs[trial.f % fs.length] : bench.f, scene = trial.scene;
   const W = Math.max(scene === "sea" ? 48 : 32, art.w + 16), H = Math.max(scene === "sea" ? 20 : 16, art.h + 10), words = SCENES[scene];
   if (scene === "sea") { drawSea($("p-day"), W, H, 10, s, f, trial.left); drawSea($("p-deep"), W, H, 1500, s, f, trial.left); }
   else { drawGrass($("p-day"), W, H, false, s, f, trial.left); drawGrass($("p-deep"), W, H, true, s, f, trial.left); }
@@ -2379,7 +2398,7 @@ function paint() {
   const s = spritesOf(bench.group)[bench.id], others = sharers(bench.group, bench.id), all = spritesOf(bench.group);
   const names = others.map((k) => all[k].name);
   const list = names.length < 2 ? names.join("") : names.slice(0, -1).join(", ") + (names.length > 2 ? "," : "") + " and " + names[names.length - 1];
-  $("b-use").textContent = (s.use || "") + (others.length ? `. It shares its drawing with ${list}: change the pixels and they change too. Its palette is its own.` : "");
+  $("b-use").textContent = (s.use || (bench.group === MINE ? "One of your own creatures" : "")) + (others.length ? `. It shares its drawing with ${list}: change the pixels and they change too. Its palette is its own.` : "");
   if (document.activeElement !== $("b-name")) $("b-name").value = art.name;
   if (document.activeElement !== $("b-usefield")) $("b-usefield").value = art.use;
   drawFrames();
@@ -2396,8 +2415,13 @@ function paint() {
   $("h-less").disabled = art.h <= 1; $("h-more").disabled = art.h >= MAX_H;
   const any = painted();
   for (const [id, dx, dy] of [["m-left", -1, 0], ["m-right", 1, 0], ["m-up", 0, -1], ["m-down", 0, 1]]) $(id).disabled = !any || !edgeClear(dx, dy);
-  $("b-reset").disabled = !(edits[bench.group] && edits[bench.group][bench.id]);
+  $("b-reset").disabled = !(edits[bench.group] && edits[bench.group][bench.id]) || !(bench.id in groupById(bench.group).sprites);
+  $("b-reset").hidden = bench.group === MINE;
+  $("b-delete").hidden = bench.group !== MINE;
+  $("b-delete").disabled = borrowers().length > 0;
+  $("b-delete").title = borrowers().length ? `${borrowers().map((k) => all[k].name).join(" and ")} ${borrowers().length === 1 ? "borrows" : "borrow"} this drawing.` : "";
   $("x-reset-all").disabled = !edits[bench.group];
+  $("x-reset-all").hidden = bench.group === MINE;
 }
 
 // ---------- The bench: colors ----------
@@ -2591,6 +2615,12 @@ $("p-left").addEventListener("click", () => {
   $("p-left").setAttribute("aria-pressed", trial.left);
   drawPreview();
 });
+$("p-grass").addEventListener("click", () => {
+  trial.scene = trial.scene === "grass" ? "sea" : "grass";
+  $("p-grass").setAttribute("aria-pressed", trial.scene === "grass");
+  drawPreview();
+  say(trial.scene === "grass" ? "The preview stands it on Pocket Places' grass." : "The preview puts it in Cozy Submarine's sea.");
+});
 for (const [id, key] of [["b-name", "name"], ["b-usefield", "use"]]) {
   $(id).addEventListener("input", () => { begin(); art[key] = $(id).value; });
   $(id).addEventListener("change", commit);
@@ -2603,6 +2633,42 @@ $("b-reset").addEventListener("click", () => {
   commit();
   say(`${plainName(art.name)} is back as the game draws it. Undo brings your changes back.`);
 });
+// ---------- The bench: creatures of your own ----------
+// the creatures in your own set drawn "like" this one; deleting it would leave them nothing to draw
+const borrowers = () => (bench.group === MINE ? Object.keys(spritesOf(MINE)).filter((k) => spritesOf(MINE)[k].like === bench.id) : []);
+const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "creature";
+function addMine(sprite) {
+  const set = edits[MINE] || (edits[MINE] = {});
+  let id = slug(sprite.name), n = 2;
+  while (id in set) id = `${slug(sprite.name)}-${n++}`;
+  set[id] = sprite;
+  saveEdits();
+  select(MINE, id);
+}
+$("b-new").addEventListener("click", () => {
+  const n = Object.keys(spritesOf(MINE)).filter((k) => k.startsWith("new-creature")).length + 1;
+  addMine({ name: `New creature ${n}`, use: "", palette: { A: NEW_COLORS[0], B: NEW_COLORS[5] },
+    frames: [Array.from({ length: 8 }, () => " ".repeat(16))] });
+  say(`Made ${art.name}, an empty 16 × 8 grid with two colors in My own creatures. Paint on it, and name it below.`);
+  $("b-grid").focus();
+});
+// the copy stands on its own: a creature that borrows its frames gets its own copy of them
+$("b-copy-mine").addEventListener("click", () => {
+  const from = plainName(art.name);
+  addMine({ ...fromArt(art), name: `${art.name} copy` });
+  say(`Made ${art.name}, a copy of ${from} in My own creatures. Change it as much as you like: the original stays as it was.`);
+});
+$("b-delete").addEventListener("click", () => {
+  if (bench.group !== MINE || borrowers().length) return;
+  const gone = plainName(art.name);
+  delete edits[MINE][bench.id];
+  if (!Object.keys(edits[MINE]).length) delete edits[MINE];
+  saveEdits();
+  select(MINE, null);
+  say(`Deleted ${gone}.` + (bench.group === MINE ? "" : " That was the last of your own creatures."));
+  $("b-pick").focus();
+});
+
 $("x-reset-all").addEventListener("click", () => {
   const g = groupById(bench.group), n = Object.keys(edits[g.id] || {}).length;
   delete edits[g.id];
@@ -2624,46 +2690,59 @@ function writeSprites(set) {
   });
   return "{\n" + out.join(",\n") + "\n}";
 }
-const exportText = (gid) => `{ "format": ${JSON.stringify(FORMAT)}, "group": ${JSON.stringify(gid)}, "sprites": ${writeSprites(spritesOf(gid))} }\n`;
-const fileName = () => `${bench.group}-sprites.json`;
-$("x-copy").addEventListener("click", async () => {
-  const text = exportText(bench.group), n = Object.keys(spritesOf(bench.group)).length;
+const exportText = (gid, set = spritesOf(gid)) => `{ "format": ${JSON.stringify(FORMAT)}, "group": ${JSON.stringify(gid)}, "sprites": ${writeSprites(set)} }\n`;
+// one creature exports as a set of one, so it loads back the same way. it carries its own frames,
+// even one drawn "like" another, so the file stands on its own
+const oneText = () => exportText(bench.group, { [bench.id]: fromArt(art) });
+const setFile = () => `${bench.group}-sprites.json`;
+const oneFile = () => (bench.group === MINE ? `${bench.id}-sprite.json` : `${bench.group}-${bench.id}-sprite.json`);
+async function copyOut(text, what, done) {
   try {
     await navigator.clipboard.writeText(text);
-    $("x-cap").textContent = `Copied all ${plural(n, "creature")} in the ${groupById(bench.group).name} set.`;
+    $("x-cap").textContent = done;
   } catch (e) {
     // no clipboard access: put it in the box to copy by hand
     $("x-import").value = text;
     $("x-import").select();
-    $("x-cap").textContent = "Your browser wouldn't let the page copy, so the set is in the box below, selected and ready to copy.";
+    $("x-cap").textContent = `Your browser wouldn't let the page copy, so ${what} is in the box below, selected and ready to copy.`;
   }
-});
-$("x-download").addEventListener("click", () => {
-  const blob = new Blob([exportText(bench.group)], { type: "application/json" });
+}
+function saveOut(text, name) {
+  const blob = new Blob([text], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = fileName();
+  a.download = name;
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  $("x-cap").textContent = `Saved ${fileName()}.`;
-});
+  $("x-cap").textContent = `Saved ${name}.`;
+}
+$("x-copy").addEventListener("click", () => copyOut(exportText(bench.group), "the set",
+  `Copied all ${plural(Object.keys(spritesOf(bench.group)).length, "creature")} in the ${groupById(bench.group).name} set.`));
+$("x-download").addEventListener("click", () => saveOut(exportText(bench.group), setFile()));
+$("x-copy-one").addEventListener("click", () => copyOut(oneText(), "the creature", `Copied ${plainName(art.name)}.`));
+$("x-download-one").addEventListener("click", () => saveOut(oneText(), oneFile()));
 function load(text) {
   let data;
   try { data = JSON.parse(text); } catch (e) { $("x-cap").textContent = "That isn't an export: it doesn't read as JSON."; return; }
   if (!data || data.format !== FORMAT) { $("x-cap").textContent = "That isn't a Pixel Bench export."; return; }
   if (data.sprite === "sub") { $("x-cap").textContent = "That's a sub. Load it in Custom Submarine instead."; return; }
-  const g = groupById(data.group);
-  if (!g) { $("x-cap").textContent = `That export is for "${data.group}", which the bench doesn't have.`; return; }
+  // a set the bench doesn't have, or none at all, goes into your own creatures
+  const g = groupById(data.group) || groupById(MINE), moved = g.id !== data.group;
   const set = cleanSet(data.sprites);
   if (!set) { $("x-cap").textContent = "That export has no creatures the bench can draw."; return; }
-  const total = Object.keys(set).length;
-  edits[g.id] = set;
+  const ids = Object.keys(set);
+  // loaded creatures join the set, replacing the ones with the same ids and leaving the rest alone
+  edits[g.id] = { ...(edits[g.id] || {}), ...set };
   tidy(g.id);
-  const differ = Object.keys(edits[g.id] || {});
-  select(g.id, bench.group === g.id ? bench.id : differ[0] || bench.id);
-  $("x-cap").textContent = `Loaded ${plural(total, "creature")} into the ${g.name} set. ${!differ.length ? "They all match the game's." : differ.length === 1 ? "1 of them differs from the game's." : `${differ.length} of them differ from the game's.`}`;
+  const differ = ids.filter((k) => edits[g.id] && edits[g.id][k] && k in g.sprites);
+  select(g.id, bench.group === g.id && ids.includes(bench.id) ? bench.id : ids[0]);
+  const from = typeof data.group === "string" && data.group ? `the "${data.group.slice(0, 40)}" set` : "no set in particular";
+  $("x-cap").textContent = g.id === MINE
+    ? `Loaded ${plural(ids.length, "creature")} into My own creatures.` + (moved ? ` ${ids.length === 1 ? "It" : "They"} came from ${from}, which the bench doesn't have.` : "")
+    : `Loaded ${plural(ids.length, "creature")} into the ${g.name} set. ` + (ids.length === 1 ? (differ.length ? "It differs from the game's." : "It matches the game's.")
+      : !differ.length ? "They all match the game's." : differ.length === 1 ? "1 of them differs from the game's." : `${differ.length} of them differ from the game's.`);
 }
 $("x-load").addEventListener("click", () => load($("x-import").value));
 $("x-file").addEventListener("change", async () => {
