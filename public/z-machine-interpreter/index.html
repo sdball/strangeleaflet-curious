@@ -2641,13 +2641,13 @@ document.fonts?.ready.then(queueCursor);
 // ---------- Key clicks ----------
 // The Atari 800 clicked its own speaker for every key, so its screen does
 // too. The OS flipped the speaker bit once a scanline for 128 lines, a
-// 981 Hz square wave for about 8 ms; this one fades a little past that,
-// as the small speaker rang on. The sound is data, like the games'
+// 981 Hz square wave for about 8 ms. This one holds for those 8 ms, then
+// fades over a few more, as the small speaker rang on. The sound is data, like the games'
 // sounds; the Sound Bench (../sound-bench/) has an identical copy to play
 // and edit, so a change here goes there too, and the other way round.
 const SOUNDS = {
   "atari-keyclick": { "name": "Atari Typing Feedback", "use": "Each key you press on the Atari 800 screen", "layers": [
-    { "kind": "tone", "wave": "square", "freq": 981, "gain": 0.09, "attack": 0.001, "dur": 0.04 }
+    { "kind": "tone", "wave": "square", "freq": 981, "gain": 0.09, "attack": 0.001, "hold": 0.007, "dur": 0.03 }
   ] }
 };
 let clicks = true;
@@ -2675,11 +2675,12 @@ function ac() {
   if (audio.state !== "running") audio.resume();
   return audio;
 }
-// a gain that jumps up over attack seconds, then dies away by dur
-function env(a, t, peak, attack, dur) {
+// a gain that jumps up over attack seconds, stays up for hold, then dies away by dur
+function env(a, t, peak, attack, dur, hold = 0) {
   const g = a.createGain();
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  if (hold > 0) g.gain.setValueAtTime(peak, t + attack + hold);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   g.connect(master);
   return g;
@@ -2694,7 +2695,8 @@ function play(id) {
     src.type = L.wave || "sine";
     src.frequency.setValueAtTime(L.freq * v, t);
     if (L.to) src.frequency.exponentialRampToValueAtTime(L.to * v, t + L.dur);
-    src.connect(env(a, t, L.gain, Math.min(L.attack || 0.003, L.dur * 0.95), L.dur));
+    const attack = Math.min(L.attack || 0.003, L.dur * 0.95);
+    src.connect(env(a, t, L.gain, attack, L.dur, Math.min(L.hold || 0, L.dur * 0.95 - attack)));
     src.start(t);
     src.stop(t + L.dur + 0.05);
   }

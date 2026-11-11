@@ -376,7 +376,7 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
         <h2 id="bench-h">The bench</h2>
       </div>
     </div>
-    <p>Pick a sound and change anything about it. Each layer is a tone or filtered noise with the controls from the stations above, plus a few more: <b>Start at</b> delays a layer, <b>Vary</b> nudges its pitch at random each time it plays so repeats don't sound mechanical, and <b>Repeat</b> scatters copies of it across a <b>Spread</b> of time, which is how the Arc Lance crackles. Press <kbd>P</kbd> anywhere outside a text box to play, or <kbd>L</kbd> to loop: the sound plays over and over with a pause between, and each change you make is in the next play.</p>
+    <p>Pick a sound and change anything about it. Each layer is a tone or filtered noise with the controls from the stations above, plus a few more: <b>Hold</b> keeps a layer at full volume for that long before its fade begins, <b>Start at</b> delays a layer, <b>Vary</b> nudges its pitch at random each time it plays so repeats don't sound mechanical, and <b>Repeat</b> scatters copies of it across a <b>Spread</b> of time, which is how the Arc Lance crackles. Press <kbd>P</kbd> anywhere outside a text box to play, or <kbd>L</kbd> to loop: the sound plays over and over with a pause between, and each change you make is in the next play.</p>
     <p>To make something no game has, press <b>New sound</b> for a plain tone to build on, or <b>Random new sound</b> for a surprise. Either one goes into <b>My own sounds</b>, a set that belongs to you rather than to a game.</p>
     <div class="bench-top">
       <label for="pick">Sound</label>
@@ -480,7 +480,8 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // ---------- Sound data ----------
 // each sound is layers of tones and noise. a tone is an oscillator gliding from freq to to; noise
 // runs through a filter whose cutoff glides from freq to to. every layer rises to gain over attack
-// seconds and dies away by dur. at starts a layer late, vary nudges its pitch each time it plays,
+// seconds, stays there for hold seconds if it has a hold, and dies away by dur. at starts a layer
+// late, vary nudges its pitch each time it plays,
 // and repeat scatters that many copies across spread seconds. each curio with sound keeps its own
 // copy of its set, and this page keeps an identical one, so a change in one goes into the other too.
 
@@ -624,7 +625,7 @@ const COZY_SUBMARINE_SOUNDS = {
 // The Z-Machine Interpreter's sounds, exactly as public/z-machine-interpreter/index.html has them
 const Z_MACHINE_INTERPRETER_SOUNDS = {
   "atari-keyclick": { "name": "Atari Typing Feedback", "use": "Each key you press on the Atari 800 screen", "layers": [
-    { "kind": "tone", "wave": "square", "freq": 981, "gain": 0.09, "attack": 0.001, "dur": 0.04 }
+    { "kind": "tone", "wave": "square", "freq": 981, "gain": 0.09, "attack": 0.001, "hold": 0.007, "dur": 0.03 }
   ] }
 };
 
@@ -637,7 +638,7 @@ const GROUPS = [
 ];
 const MINE = "mine";
 const FORMAT = "sound-bench/1";
-const LAYER_KEYS = ["kind", "wave", "filter", "freq", "to", "q", "gain", "attack", "dur", "at", "vary", "repeat", "spread"];
+const LAYER_KEYS = ["kind", "wave", "filter", "freq", "to", "q", "gain", "attack", "hold", "dur", "at", "vary", "repeat", "spread"];
 const WAVES = ["sine", "triangle", "square", "sawtooth"];
 const FILTERS = ["lowpass", "highpass", "bandpass"];
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -667,22 +668,25 @@ function output(ctx) {
   master.connect(comp).connect(ctx.destination);
   return master;
 }
-// a gain that jumps up over attack seconds, then dies away by dur; straight is station 2's comparison
-function env(ctx, out, t, peak, attack, dur, straight) {
+// a gain that jumps up over attack seconds, stays up for hold, then dies away by dur; straight is
+// station 2's comparison
+function env(ctx, out, t, peak, attack, dur, hold, straight) {
   const g = ctx.createGain();
   if (straight) {
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(peak, t + attack);
+    if (hold > 0) g.gain.setValueAtTime(peak, t + attack + hold);
     g.gain.linearRampToValueAtTime(0, t + dur);
   } else {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(peak, t + attack);
+    if (hold > 0) g.gain.setValueAtTime(peak, t + attack + hold);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   }
   g.connect(out);
   return g;
 }
-function voice(ctx, out, L, t, dur, attack, v, straight) {
+function voice(ctx, out, L, t, dur, attack, hold, v, straight) {
   const tone = L.kind === "tone";
   const src = tone ? ctx.createOscillator() : ctx.createBufferSource();
   let node = src, glide;
@@ -700,7 +704,8 @@ function voice(ctx, out, L, t, dur, attack, v, straight) {
   }
   glide.setValueAtTime(L.freq * v, t);
   if (L.to) glide.exponentialRampToValueAtTime(L.to * v, t + dur);
-  node.connect(env(ctx, out, t, L.gain, Math.min(attack, dur * 0.95), dur, straight));
+  attack = Math.min(attack, dur * 0.95);
+  node.connect(env(ctx, out, t, L.gain, attack, dur, Math.min(hold, dur * 0.95 - attack), straight));
   if (tone) src.start(t); else src.start(t, Math.random() * 0.8);
   src.stop(t + dur + 0.05);
 }
@@ -711,7 +716,7 @@ function schedule(ctx, out, s, t0, { muted, straight } = {}) {
     for (let n = 0; n < (L.repeat || 1); n++) {
       const v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
       const late = (L.at || 0) + (L.repeat > 1 ? Math.random() * (L.spread || 0) : 0);
-      voice(ctx, out, L, t0 + late, L.dur, L.attack || 0.003, v, straight);
+      voice(ctx, out, L, t0 + late, L.dur, L.attack || 0.003, L.hold || 0, v, straight);
     }
   });
 }
@@ -1193,13 +1198,13 @@ function tidy(g) {
 }
 
 // check and clamp a group from storage or an import; null when it isn't a group of sounds at all
-const LIMITS = { freq: [20, 20000], to: [20, 20000], q: [0.1, 30], gain: [0.001, 2], attack: [0.001, 2], dur: [0.005, 4], at: [0, 4], vary: [0, 0.5], repeat: [1, 32], spread: [0, 4] };
+const LIMITS = { freq: [20, 20000], to: [20, 20000], q: [0.1, 30], gain: [0.001, 2], attack: [0.001, 2], hold: [0, 4], dur: [0.005, 4], at: [0, 4], vary: [0, 0.5], repeat: [1, 32], spread: [0, 4] };
 function cleanLayer(L) {
   if (!L || (L.kind !== "tone" && L.kind !== "noise")) return null;
   const out = { kind: L.kind };
   if (L.kind === "tone") out.wave = WAVES.includes(L.wave) ? L.wave : "sine";
   else out.filter = FILTERS.includes(L.filter) ? L.filter : "bandpass";
-  for (const k of ["freq", "to", "q", "gain", "attack", "dur", "at", "vary", "repeat", "spread"]) {
+  for (const k of ["freq", "to", "q", "gain", "attack", "hold", "dur", "at", "vary", "repeat", "spread"]) {
     if (!(k in L)) continue;
     const v = +L[k];
     if (!Number.isFinite(v)) continue;
@@ -1392,6 +1397,9 @@ function layerCard(L, i) {
       const E = editable().layers[i];
       if (opts.unset && opts.unset(v)) delete E[key]; else E[key] = v;
       if (key === "dur" && E.attack > v * 0.95) E.attack = sig(v * 0.95, 3);
+      // the hold sits inside the length, between the attack and the fade
+      if (key === "dur" && E.hold > v * 0.95 - (E.attack || 0.003)) E.hold = sig(Math.max(0, v * 0.95 - (E.attack || 0.003)), 3);
+      if (E.hold === 0) delete E.hold;
       changed();
       refresh();
     },
@@ -1405,6 +1413,7 @@ function layerCard(L, i) {
   parts.push(
     field("gain", { label: "Gain", min: 0.001, max: 2, log: true }),
     field("attack", { label: "Attack", min: 0.001, max: 2, log: true, unit: "s", fallback: 0.003 }),
+    field("hold", { label: "Hold", min: 0, max: 1, unit: "s", fallback: 0, unset: (v) => v === 0 }),
     field("dur", { label: "Length", min: 0.005, max: 4, log: true, unit: "s" }),
     field("at", { label: "Start at", min: 0, max: 4, unit: "s", fallback: 0, unset: (v) => v === 0 }),
     field("vary", { label: "Vary", min: 0, max: 0.5, fallback: 0, unset: (v) => v === 0 }),
@@ -1509,6 +1518,7 @@ $("b-mutate").addEventListener("click", () => {
     L.gain = sig(clamp(wob(L.gain, 0.15), 0.001, 2));
     L.dur = sig(clamp(wob(L.dur, 0.15), 0.005, 4));
     L.attack = sig(clamp(wob(L.attack || 0.003, 0.2), 0.001, L.dur * 0.95));
+    if (L.hold) L.hold = sig(clamp(wob(L.hold, 0.2), 0, L.dur * 0.95 - L.attack));
   }
   rebuild();
   playBench();

@@ -229,7 +229,7 @@ Game sounds are synthesized with Web Audio, never recorded files. A curio with s
 { "kind": "noise", "filter": "lowpass", "freq": 1200, "to": 120, "q": 1, "gain": 1.1, "attack": 0.005, "dur": 0.9 }
 ```
 
-`to` glides the pitch or cutoff, `at` starts the layer late, `vary` nudges its pitch at random on each play, and `repeat` scatters that many copies across `spread` seconds. Keep one layer per line and one sound per stanza (see `SOUNDS` in `hardpoint`). Play them with the same player and output chain as `hardpoint` (master gain 0.8 into a light limiter), so they sound the same everywhere.
+`to` glides the pitch or cutoff, `hold` keeps the layer at full gain for that many seconds after its attack (inside `dur`, before the fade), `at` starts the layer late, `vary` nudges its pitch at random on each play, and `repeat` scatters that many copies across `spread` seconds. Keep one layer per line and one sound per stanza (see `SOUNDS` in `hardpoint`). Play them with the same player and output chain as `hardpoint` (master gain 0.8 into a light limiter), so they sound the same everywhere.
 
 `sound-bench` holds an identical copy of every curio's sounds as its presets, one set per curio (`HARDPOINT_SOUNDS`, registered in its `GROUPS`). The data is duplicated on purpose, so each page stays self-contained. When one copy changes, change the other to match in the same commit. A Sound Bench export (`{ "format": "sound-bench/1", "group": "hardpoint", "sounds": {...} }`) uses the same layout, so its `sounds` object pastes straight into both pages. A new curio with sounds adds its set to `sound-bench` too.
 
