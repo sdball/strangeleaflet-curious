@@ -268,7 +268,7 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Sound Bench</h1>
-  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a>, <a href="../cozy-submarine/">Cozy Submarine</a>, and the <a href="../z-machine-interpreter/">Z-Machine Interpreter</a>, or build your own.</p>
+  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a>, <a href="../cozy-submarine/">Cozy Submarine</a>, the <a href="../z-machine-interpreter/">Z-Machine Interpreter</a>, and <a href="../chyron-wire/">Chyron Wire</a>, or build your own.</p>
   <p class="howto">Every station has a Play button. Change a control, press Play again, and listen for the difference. The pictures are drawn from the exact sound you'll hear. No sound on a phone? Check its volume.</p>
 
   <!-- ---------- Station 1 ---------- -->
@@ -629,10 +629,18 @@ const Z_MACHINE_INTERPRETER_SOUNDS = {
   ] }
 };
 
+// Chyron Wire's sounds, exactly as public/chyron-wire/index.html has them
+const CHYRON_WIRE_SOUNDS = {
+  "terminal-type": { "name": "Terminal Typing", "use": "Each frame the green terminal types characters", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 1460, "gain": 0.295, "attack": 0.001, "hold": 0.00633, "dur": 0.00772, "vary": 0.052 }
+  ] }
+};
+
 const GROUPS = [
   { id: "hardpoint", name: "Hardpoint", href: "../hardpoint/", sounds: HARDPOINT_SOUNDS },
   { id: "cozy-submarine", name: "Cozy Submarine", href: "../cozy-submarine/", sounds: COZY_SUBMARINE_SOUNDS },
   { id: "z-machine-interpreter", name: "Z-Machine Interpreter", href: "../z-machine-interpreter/", sounds: Z_MACHINE_INTERPRETER_SOUNDS },
+  { id: "chyron-wire", name: "Chyron Wire", href: "../chyron-wire/", sounds: CHYRON_WIRE_SOUNDS },
   // sounds of your own, for no game in particular: it ships empty, so every sound in it lives in edits
   { id: "mine", name: "My own sounds", href: null, sounds: {} },
 ];
