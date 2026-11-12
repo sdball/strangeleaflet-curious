@@ -2641,13 +2641,14 @@ document.fonts?.ready.then(queueCursor);
 // ---------- Key clicks ----------
 // The Atari 800 clicked its own speaker for every key, so its screen does
 // too. The OS flipped the speaker bit once a scanline for 128 lines, a
-// 981 Hz square wave for about 8 ms. This one holds for those 8 ms, then
-// fades over a few more, as the small speaker rang on. The sound is data, like the games'
+// 981 Hz square wave for about 8 ms. This one is a triangle wave near that
+// pitch for the same 8 ms: softer than the square, closer to how it sounds
+// in memory, and a little higher or lower on each key. The sound is data, like the games'
 // sounds; the Sound Bench (../sound-bench/) has an identical copy to play
 // and edit, so a change here goes there too, and the other way round.
 const SOUNDS = {
   "atari-keyclick": { "name": "Atari Typing Feedback", "use": "Each key you press on the Atari 800 screen", "layers": [
-    { "kind": "tone", "wave": "square", "freq": 981, "gain": 0.09, "attack": 0.001, "hold": 0.007, "dur": 0.03 }
+    { "kind": "tone", "wave": "triangle", "freq": 977, "gain": 0.295, "attack": 0.001, "hold": 0.00633, "dur": 0.00772, "vary": 0.052 }
   ] }
 };
 // off until you turn it on
