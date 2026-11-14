@@ -521,7 +521,7 @@ function build(m) {
   const body = el("p", "body");
   const ft = el("p", "ft");
   ft.hidden = true;
-  const post = el("a", null, m.embed.includes("images") ? "Post and photo on Bluesky" : m.embed.includes("record") ? "Post and the post it quotes" : "Post on Bluesky");
+  const post = el("a", null, m.embed.includes("images") ? "View post and photo on Bluesky" : m.embed.includes("record") ? "View post and the post it quotes" : "View post on Bluesky");
   post.href = m.url; post.target = "_blank"; post.rel = "noopener";
   post.setAttribute("aria-label", post.textContent + " (opens in a new tab)");
   ft.append(post);
