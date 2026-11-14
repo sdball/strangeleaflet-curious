@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Air to Ground — The Cabinet of Curios</title>
+<meta name="description" content="Messages between airline crews and their dispatchers type themselves out on an air traffic console as ACARS Drama posts them to Bluesky.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛫</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* a console keeps its own dark palette, like the hub's text interface: no light version */
+:root {
+  --bg: #06090C; --panel: #0A1117; --bar: #0D1820; --edge: #1B2B35; --grid: #101D26;
+  --ink: #C9D7DF; --dim: #6F8898; --faint: #2E4250; --hi: #F2F7FA;
+  --dn: #6CF08A; --up: #5ED3FF; --note: #FFC247; --alert: #FF5E52;
+  --dn-ink: #D9F9E1; --up-ink: #D6F2FF; --note-ink: #FFE9BC;
+  --chip: #101C24; --chip-hover: #3E5868;
+  --mono: 'B612 Mono', ui-monospace, Menlo, Consolas, monospace;
+  --sans: 'B612', 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: dark;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; } }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--mono); -webkit-font-smoothing: antialiased; overflow: hidden; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--note); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.console {
+  position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ---------- top bar ---------- */
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; padding: 6px 16px;
+  background: var(--bar); border-bottom: 1px solid var(--edge); font-size: 13px; color: var(--dim);
+}
+.back { display: inline-flex; align-items: center; min-height: 40px; color: var(--dim); text-decoration: none; font-family: var(--sans); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.back::before { content: "◂ "; white-space: pre; }
+.back:hover { color: var(--ink); }
+.bar h1 { margin: 0; font: 700 16px/1 var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--hi); }
+.readouts { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-left: auto; align-items: center; }
+.readout b { font-weight: 400; color: var(--ink); }
+.lamp b { color: var(--dn); }
+.lamp b::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; vertical-align: 1px; }
+.lamp[data-state="poll"] b { color: var(--note); }
+.lamp[data-state="lost"] b { color: var(--alert); }
+
+/* ---------- message list ---------- */
+.deck { display: grid; grid-template-columns: minmax(0, 1fr) 320px; min-height: 0; position: relative; }
+.scope { display: flex; flex-direction: column; min-height: 0; min-width: 0; position: relative; border-right: 1px solid var(--edge); }
+.pane-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 4px 16px; min-height: 36px;
+  background: var(--panel); border-bottom: 1px solid var(--edge);
+  font: 12px/1.3 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
+}
+.pane-head h2 { margin: 0; font: inherit; font-weight: 700; color: var(--ink); }
+#focus {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 10px; cursor: pointer;
+  background: var(--note); color: var(--bg); border: 0; border-radius: 2px; font: 700 12px var(--mono); letter-spacing: 0.06em;
+}
+#focus[hidden] { display: none; }
+#focus::after { content: "✕"; }
+.list-wrap {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 0 20px;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 100% 48px,
+    var(--bg);
+}
+#earlier { display: block; margin: 12px 16px 6px; }
+#earlier[hidden] { display: none; }
+#list { list-style: none; margin: 0; padding: 0; }
+.msg { position: relative; padding: 9px 16px 10px 14px; border-left: 3px solid var(--faint); border-bottom: 1px solid var(--grid); background: var(--bg); }
+.msg.dn { border-left-color: var(--dn); }
+.msg.up { border-left-color: var(--up); }
+.msg.note { border-left-color: var(--note); }
+.msg.pending, .msg[hidden] { display: none; }
+.msg.typing { background: #0B141A; }
+.msg.flash { animation: flash 1.6s ease-out; }
+@keyframes flash { from { background: #1D2F3B; } }
+.hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; margin: 0; font-size: 13px; color: var(--dim); }
+.hd .t { color: var(--ink); }
+.dir { font-weight: 700; text-decoration: none; }
+.dn .dir { color: var(--dn); }
+.up .dir { color: var(--up); }
+.note .dir { color: var(--note); }
+.alrt { padding: 0 5px; background: var(--alert); color: var(--bg); font-weight: 700; }
+.tag {
+  position: relative; padding: 0; border: 0; background: none; cursor: pointer; color: var(--ink);
+  text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; letter-spacing: 0.02em;
+}
+/* 40px to tap without spreading the header apart */
+.tag::before { content: ""; position: absolute; inset: -12px -4px; }
+.tag:hover { color: var(--hi); text-decoration-color: currentColor; }
+.re { color: var(--up); }
+.body { margin: 4px 0 0; font-size: 16.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.dn .body { color: var(--dn-ink); }
+.up .body { color: var(--up-ink); }
+.note .body { color: var(--note-ink); font-family: var(--sans); font-size: 15.5px; line-height: 1.4; white-space: pre-line; }
+.body a { color: var(--note); }
+.body.live::after {
+  content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px; vertical-align: -0.18em;
+  background: currentColor; animation: blink 1.06s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+.ft { display: flex; flex-wrap: wrap; gap: 0 16px; margin: 3px 0 0; font-size: 12.5px; color: var(--dim); }
+.ft[hidden] { display: none; }
+.ft a { display: inline-flex; align-items: center; min-height: 32px; color: var(--dim); text-underline-offset: 3px; }
+.ft a:hover { color: var(--ink); }
+.sys { padding: 22px 16px; color: var(--dim); }
+.sys strong { display: block; margin-bottom: 4px; color: var(--alert); letter-spacing: 0.1em; }
+#newer {
+  position: absolute; right: 16px; bottom: 14px; z-index: 1; min-height: 40px; padding: 0 14px; cursor: pointer;
+  background: var(--up); color: var(--bg); border: 0; border-radius: 2px; font: 700 13px var(--mono); letter-spacing: 0.06em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+#newer[hidden] { display: none; }
+
+/* ---------- side panel ---------- */
+.side { min-height: 0; overflow-y: auto; padding: 4px 16px 24px; background: var(--panel); }
+.side h2 {
+  margin: 16px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--edge);
+  font: 700 12px/1.3 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim);
+}
+#radar { display: block; width: 100%; max-width: 288px; aspect-ratio: 1; margin: 0 auto; }
+.cap { margin: 8px 0 0; font: 13px/1.5 var(--sans); color: var(--dim); }
+.spark { display: flex; align-items: flex-end; gap: 3px; height: 34px; margin: 0; border-bottom: 1px solid var(--faint); }
+.spark i { flex: 1; min-height: 1px; background: var(--dn); }
+.spark i.unknown { min-height: 0; height: 0; border-bottom: 2px dotted var(--faint); background: none; }
+.spark-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); }
+#areas { list-style: none; margin: 0; padding: 0; }
+#areas button {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 10px; width: 100%;
+  min-height: 40px; padding: 4px 6px; border: 1px solid transparent; border-radius: 2px; background: none; cursor: pointer;
+  text-align: left; font-size: 13px;
+}
+#areas button:hover { border-color: var(--edge); }
+#areas button[aria-pressed="true"] { border-color: var(--note); color: var(--note); }
+#areas .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#areas .n { color: var(--dim); }
+#areas .meter { grid-column: 1 / -1; height: 3px; background: var(--grid); }
+#areas .meter i { display: block; height: 100%; background: var(--dn); }
+.legend { margin: 0; padding: 0; list-style: none; font: 13px/1.5 var(--sans); }
+.legend li { margin: 0 0 6px; }
+.legend b { display: inline-block; min-width: 3.4em; font: 700 13px var(--mono); }
+.prose { margin: 0 0 8px; font: 13.5px/1.55 var(--sans); color: var(--ink); }
+.prose a { color: var(--note); }
+
+/* ---------- controls ---------- */
+.tray {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; padding: 8px 16px;
+  background: var(--bar); border-top: 1px solid var(--edge);
+}
+.group { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+.lbl { flex: 0 0 auto; font: 12px var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; min-width: 0; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 40px; padding: 0 11px; cursor: pointer;
+  background: var(--chip); color: var(--ink); border: 1px solid var(--edge); border-radius: 2px; font: 14px var(--mono);
+}
+.chip:hover { border-color: var(--chip-hover); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.chip kbd { margin-left: 8px; padding: 0 4px; border: 1px solid currentColor; border-radius: 2px; font: 11px var(--mono); opacity: 0.65; }
+.chip[hidden] { display: none; }
+#status { flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--dim); }
+#scope-btn { display: none; }
+
+@media (max-width: 900px) {
+  .deck { grid-template-columns: minmax(0, 1fr); }
+  .scope { border-right: 0; }
+  /* on a narrow screen the side panel opens over the list */
+  .side { display: none; position: absolute; inset: 0; z-index: 2; }
+  .deck.side-open .side { display: block; }
+  #scope-btn { display: inline-flex; }
+}
+@media (max-width: 640px) {
+  .bar { gap: 2px 14px; padding: 4px 12px; }
+  .bar h1 { font-size: 14px; letter-spacing: 0.14em; }
+  .readouts { margin-left: 0; gap: 2px 14px; }
+  #lcl, #last { display: none; }
+  .pane-head, .msg { padding-left: 12px; padding-right: 12px; }
+  .tray { gap: 4px; padding: 6px 10px; }
+  .group { width: 100%; }
+  .lbl { min-width: 46px; }
+  .chip kbd { display: none; }
+  .body { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .body.live::after { animation: none; }
+  .msg.flash { animation: none; outline: 1px solid var(--up); }
+  * { transition: none !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="console">
+  <header class="bar">
+    <a class="back" href="/">The Cabinet of Curios</a>
+    <h1>Air to Ground</h1>
+    <div class="readouts">
+      <span class="readout">UTC <b id="utc">----Z</b></span>
+      <span class="readout" id="lcl">LCL <b id="local">--:--</b></span>
+      <span class="readout" id="last">LAST MSG <b id="last-msg">----</b></span>
+      <span class="readout lamp" id="lamp" data-state="poll">DATALINK <b id="lamp-text">CONNECTING</b></span>
+    </div>
+  </header>
+
+  <div class="deck" id="deck">
+    <main class="scope" aria-labelledby="msgs-h">
+      <div class="pane-head">
+        <h2 id="msgs-h">Messages</h2>
+        <span id="count">Waiting on the datalink</span>
+        <button id="focus" type="button" hidden aria-keyshortcuts="Escape"></button>
+      </div>
+      <div class="list-wrap" id="wrap" tabindex="0" aria-label="Message list. Newest at the bottom.">
+        <button class="chip" id="earlier" type="button" hidden aria-keyshortcuts="e">Load earlier traffic<kbd>E</kbd></button>
+        <ol id="list"></ol>
+      </div>
+      <button id="newer" type="button" hidden aria-keyshortcuts="End"></button>
+    </main>
+
+    <aside class="side" id="side" aria-labelledby="side-h">
+      <h2 id="side-h">Scope · last 60 min</h2>
+      <canvas id="radar" role="img" aria-label="A round scope with a dot for each message in the last hour, drifting outward as it ages."></canvas>
+      <p class="cap">Each dot is a message from the last hour. It starts at the centre and drifts out to the rim as it ages. Its bearing comes from its area's name, so one place's messages line up on one spoke. The bearings are for show, not real directions.</p>
+
+      <h2 id="flow-h">Traffic · last 3 h</h2>
+      <p class="spark" id="spark" role="img" aria-label="Messages per 15 minutes"></p>
+      <div class="spark-axis" aria-hidden="true"><span>−3H</span><span>−2H</span><span>−1H</span><span>NOW</span></div>
+      <p class="cap" id="spark-cap">Each bar counts the messages in 15 minutes. A dotted gap is a stretch older than anything loaded.</p>
+
+      <h2 id="areas-h">Busiest areas</h2>
+      <ol id="areas" aria-labelledby="areas-h"></ol>
+      <p class="cap" id="areas-cap">Press an area to show only its messages.</p>
+
+      <h2 id="legend-h">Reading the list</h2>
+      <ul class="legend" aria-labelledby="legend-h">
+        <li><b style="color: var(--dn)">DNLK</b> Downlink: the crew writes to the ground.</li>
+        <li><b style="color: var(--up)">UPLK</b> Uplink: a dispatcher writes back. <span style="color: var(--up)">RE</span> points at the message it answers.</li>
+        <li><b style="color: var(--note)">NOTE</b> ACARS Drama's own commentary.</li>
+        <li><b><span class="alrt">ALRT</span></b> The message mentions a diversion, a medical problem, an emergency, fire, smoke, fumes, or low fuel.</li>
+        <li><b>FLT</b> A scrambled tag for one flight. Press it to follow that flight's messages.</li>
+      </ul>
+
+      <h2 id="about-h">What this is</h2>
+      <p class="prose">ACARS is the text link between an airliner and its airline. Crews type to dispatch and maintenance, dispatchers type back, and it all comes through in capital letters.</p>
+      <p class="prose"><a href="https://bsky.app/profile/acarsdrama.bsky.social">ACARS Drama</a> on Bluesky posts the human ones, with names and numbers blanked out as XXXX. This page reads their public feed every 30 seconds through Bluesky's public API and types each new message as it lands.</p>
+      <p class="prose">For TV news on the same kind of screen, try <a href="../chyron-wire/">Chyron Wire</a>.</p>
+    </aside>
+  </div>
+
+  <section class="tray" aria-label="Controls">
+    <div class="group" role="group" aria-labelledby="l-show">
+      <span class="lbl" id="l-show">Show</span>
+      <div class="chips">
+        <button class="chip" type="button" data-show="all" aria-pressed="true" aria-keyshortcuts="a">All<kbd>A</kbd></button>
+        <button class="chip" type="button" data-show="dn" aria-pressed="false" aria-keyshortcuts="d">Downlink<kbd>D</kbd></button>
+        <button class="chip" type="button" data-show="up" aria-pressed="false" aria-keyshortcuts="u">Uplink<kbd>U</kbd></button>
+        <button class="chip" type="button" data-show="note" aria-pressed="false" aria-keyshortcuts="n">Notes<kbd>N</kbd></button>
+      </div>
+    </div>
+    <div class="group" role="group" aria-labelledby="l-opts">
+      <span class="lbl" id="l-opts">Desk</span>
+      <div class="chips">
+        <button class="chip" type="button" id="lower" aria-pressed="false" aria-keyshortcuts="l">Lower case<kbd>L</kbd></button>
+        <button class="chip" type="button" id="chime" aria-pressed="false" aria-keyshortcuts="c">Chime<kbd>C</kbd></button>
+        <button class="chip" type="button" id="scope-btn" aria-pressed="false" aria-controls="side" aria-keyshortcuts="s">Scope<kbd>S</kbd></button>
+      </div>
+    </div>
+    <span id="status" aria-live="polite"></span>
+    <button class="chip" type="button" id="retry" hidden>Try again</button>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+const ACTOR = "acarsdrama.bsky.social";
+// Bluesky's public API sends CORS headers, so the page reads it directly
+const FEED = "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed";
+const POLL = 30000;
+const MIN = 60000, HOUR = 3600000;
+
+// ---------- state ----------
+const S = { show: "all", focus: null, lower: false, chime: false, side: false };
+try {
+  S.lower = localStorage.getItem("air-to-ground-case") === "lower";
+  // the chime is off until you turn it on
+  S.chime = localStorage.getItem("air-to-ground-chime") === "on";
+} catch (e) {}
+
+const byUri = new Map();
+const orphans = new Map();   // parent uri -> a "(2/2)" post that arrived before its first half
+let msgs = [];               // on the list, oldest first
+let cursor = null, ready = false, fetching = false, failures = 0, lastTry = 0;
+const queue = [];
+let job = null, carry = 0;
+let stick = true, unseen = 0;
+
+// ---------- time ----------
+const pad = (n) => String(n).padStart(2, "0");
+const zulu = (t) => { const d = new Date(t); return pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + "Z"; };
+const zday = (t) => new Date(t).toISOString().slice(0, 10);
+const localFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+const longFmt = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+// an older day's message carries its UTC date, as in 12/2313Z
+const stamp = (t) => (zday(t) === zday(Date.now()) ? "" : new Date(t).getUTCDate() + "/") + zulu(t);
+function ago(t) {
+  const m = Math.floor((Date.now() - t) / MIN);
+  return m < 1 ? "JUST NOW" : m < 60 ? `${m} MIN AGO` : `${Math.floor(m / 60)} H ${m % 60} MIN AGO`;
+}
+
+function say(msg) { $("status").textContent = msg; }
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+// ---------- the feed ----------
+async function load(params) {
+  const q = new URLSearchParams({ actor: ACTOR, filter: "posts_and_author_threads", ...params });
+  const res = await fetch(`${FEED}?${q}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+const postUrl = (uri) => `https://bsky.app/profile/${ACTOR}/post/${uri.split("/").pop()}`;
+const PART = /^\((\d+)\/(\d+)\)\s*/;
+
+function toMsg(item) {
+  if (item.reason) return null;   // reposts of other accounts
+  const p = item.post, r = p && p.record;
+  if (!r || typeof r.text !== "string" || p.author.handle !== ACTOR) return null;
+  const part = r.text.match(PART);
+  return {
+    uri: p.uri, url: postUrl(p.uri), raw: r.text, facets: r.facets || [],
+    t: Date.parse(r.createdAt) || Date.parse(p.indexedAt) || Date.now(),
+    parent: (r.reply && r.reply.parent && r.reply.parent.uri) || null,
+    part: part ? Number(part[1]) : 0,
+    embed: p.embed ? p.embed.$type : "",
+  };
+}
+
+// ---------- reading a message ----------
+const HEAD = /^(?:\(\d+\/\d+\)\s*)?(Air to Ground|Ground to Air) Message:\s*/;
+const FIELD = /^(Area|Type|A|F):\s*(.*)$/;
+const ALERT = /\b(DIVERT\w*|DIVERSION|MEDICAL|MEDLINK|EMERG\w*|MAYDAY|PAN PAN|FIRE|SMOKE|FUMES|MIN(IMUM)? FUEL|LOW FUEL|BIRD ?STRIKE|7700)\b/;
+
+function interpret(m) {
+  const h = m.raw.match(HEAD);
+  m.area = m.type = m.flt = "";
+  m.alert = false;
+  if (!h) {
+    m.kind = "note";
+    m.segs = segments(m.raw.replace(PART, ""), m.part ? [] : m.facets);
+    if (m.segs.length) m.segs[0].text = m.segs[0].text.replace(/^Explaincars Drama:\s*/i, "");
+    return;
+  }
+  m.kind = h[1] === "Air to Ground" ? "dn" : "up";
+  // the fields are the "Key: value" lines at the end
+  const lines = m.raw.slice(h[0].length).split("\n");
+  let end = lines.length;
+  const f = {};
+  while (end > 0) {
+    const l = lines[end - 1].trim();
+    const k = l.match(FIELD);
+    if (l && !k) break;
+    if (k) f[k[1]] = k[2].trim();
+    end--;
+  }
+  m.body = lines.slice(0, end).join(" ").replace(/\s+/g, " ").trim();
+  m.area = f.Area || "";
+  m.type = f.Type || "";
+  const flt = (f.F || "").replace(/^#/, "");
+  m.flt = /^[0-9a-f]{6,}$/i.test(flt) ? flt : "";
+  m.alert = ALERT.test(m.body);
+}
+
+// facets give links by UTF-8 byte offsets
+const enc = new TextEncoder(), dec = new TextDecoder();
+function segments(text, facets) {
+  const bytes = enc.encode(text);
+  const links = facets.map((f) => {
+    const link = (f.features || []).find((x) => x.$type === "app.bsky.richtext.facet#link");
+    return { s: f.index && f.index.byteStart, e: f.index && f.index.byteEnd, href: link && link.uri };
+  }).filter((l) => l.href && /^https?:\/\//.test(l.href) && l.s >= 0 && l.e <= bytes.length && l.s < l.e)
+    .sort((a, b) => a.s - b.s);
+  const out = [];
+  let at = 0;
+  for (const l of links) {
+    if (l.s < at) continue;
+    if (l.s > at) out.push({ text: dec.decode(bytes.slice(at, l.s)) });
+    out.push({ text: dec.decode(bytes.slice(l.s, l.e)), href: l.href });
+    at = l.e;
+  }
+  if (at < bytes.length) out.push({ text: dec.decode(bytes.slice(at)) });
+  return out;
+}
+
+function shortType(t) {
+  return t.replace(/^Boeing\s+/i, "B").replace(/^Airbus\s+/i, "")
+    .replace(/^(Embraer|Bombardier|Canadair|De Havilland Canada|McDonnell Douglas)\s+/i, "").toUpperCase();
+}
+
+const DIR = {
+  dn: { tag: "DNLK", label: "Downlink: crew to ground" },
+  up: { tag: "UPLK", label: "Uplink: ground to crew" },
+  note: { tag: "NOTE", label: "Note from ACARS Drama" },
+};
+
+// ---------- taking in posts ----------
+// a long message is split over a thread, "(1/2) …" then "(2/2) …"; glue the halves back together
+function headOf(uri) {
+  const p = byUri.get(uri);
+  if (!p) return null;
+  if (p.headUri) return byUri.get(p.headUri);
+  return p.part > 1 ? null : p;
+}
+
+function attach(head, m) {
+  head.raw += " " + m.raw.replace(PART, "");
+  m.headUri = head.uri;
+  const next = orphans.get(m.uri);
+  if (next) { orphans.delete(m.uri); attach(head, next); }
+}
+
+function ingest(items) {
+  const fresh = [];
+  for (const it of items) {
+    const m = toMsg(it);
+    if (!m || byUri.has(m.uri)) continue;
+    byUri.set(m.uri, m);
+    fresh.push(m);
+  }
+  fresh.sort((a, b) => a.t - b.t);
+  const added = [], grown = new Set();
+  for (const m of fresh) {
+    if (m.part > 1 && m.parent) {
+      const head = headOf(m.parent);
+      if (head) { attach(head, m); if (head.li) grown.add(head); }
+      else orphans.set(m.parent, m);
+      continue;
+    }
+    const tail = orphans.get(m.uri);
+    if (tail) { orphans.delete(m.uri); attach(m, tail); }
+    interpret(m);
+    insert(m);
+    added.push(m);
+  }
+  for (const m of grown) { interpret(m); refresh(m); }
+  return added;
+}
+
+// keep msgs and the list in time order; a late arrival slots in where it belongs
+function insert(m) {
+  let lo = 0, hi = msgs.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (msgs[mid].t <= m.t) lo = mid + 1; else hi = mid; }
+  msgs.splice(lo, 0, m);
+  build(m);
+  const after = msgs[lo + 1];
+  $("list").insertBefore(m.li, after ? after.li : null);
+  m.li.hidden = !visible(m);
+}
+
+// ---------- drawing a message ----------
+function build(m) {
+  const li = el("li", `msg ${m.kind} pending`);
+  li.id = "m-" + m.uri.split("/").pop();
+  const hd = el("p", "hd");
+  const time = el("time", "t", stamp(m.t));
+  time.dateTime = new Date(m.t).toISOString();
+  time.title = longFmt.format(m.t);
+  const dir = el("abbr", "dir", DIR[m.kind].tag);
+  dir.title = DIR[m.kind].label;
+  hd.append(time, dir);
+  if (m.alert) {
+    const a = el("abbr", "alrt", "ALRT");
+    a.title = "Mentions a diversion, a medical problem, an emergency, fire, smoke, fumes, or low fuel";
+    hd.append(a);
+  }
+  if (m.area) {
+    const b = el("button", "tag", m.area.toUpperCase());
+    b.type = "button";
+    b.dataset.area = m.area;
+    b.setAttribute("aria-label", `Area ${m.area}. Show only its messages`);
+    hd.append(b);
+  }
+  if (m.type) { const s = el("span", "ac", shortType(m.type)); s.title = m.type; hd.append(s); }
+  if (m.flt) {
+    const b = el("button", "tag", "FLT " + m.flt.slice(1, 7).toUpperCase());
+    b.type = "button";
+    b.dataset.flt = m.flt;
+    b.setAttribute("aria-label", `Flight ${m.flt.slice(1, 7)}. Follow its messages`);
+    hd.append(b);
+  }
+  if (m.parent) {
+    const p = byUri.get(m.parent);
+    const a = el("a", "re", p && p.li ? `RE ${stamp(p.t)}` : "RE EARLIER MSG");
+    if (p && p.li) { a.href = "#" + p.li.id; a.dataset.to = p.uri; }
+    else { a.href = postUrl(m.parent); a.target = "_blank"; a.rel = "noopener"; }
+    hd.append(a);
+  }
+  const body = el("p", "body");
+  const ft = el("p", "ft");
+  ft.hidden = true;
+  const post = el("a", null, m.embed.includes("images") ? "Post and photo on Bluesky" : m.embed.includes("record") ? "Post and the post it quotes" : "Post on Bluesky");
+  post.href = m.url; post.target = "_blank"; post.rel = "noopener";
+  post.setAttribute("aria-label", post.textContent + " (opens in a new tab)");
+  ft.append(post);
+  li.append(hd, body, ft);
+  m.li = li; m.body$ = body; m.ft$ = ft;
+}
+
+function segsFor(m) {
+  if (m.kind === "note") return m.segs;
+  return [{ text: S.lower ? m.body.toLowerCase() : m.body }];
+}
+
+// types the body a few characters per frame; finish() puts the rest down at once
+function typer(m) {
+  const segs = segsFor(m), body = m.body$;
+  body.textContent = "";
+  const nodes = segs.map((s) => {
+    const t = document.createTextNode("");
+    if (s.href) {
+      const a = el("a");
+      a.href = s.href; a.target = "_blank"; a.rel = "noopener";
+      a.append(t);
+      body.append(a);
+    } else body.append(t);
+    return t;
+  });
+  m.li.classList.remove("pending");
+  m.li.classList.add("typing");
+  body.classList.add("live");
+  let si = 0, ci = 0;
+  const t = {
+    m,
+    put(k) {
+      while (k > 0 && si < segs.length) {
+        const n = Math.min(k, segs[si].text.length - ci);
+        ci += n; k -= n;
+        nodes[si].data = segs[si].text.slice(0, ci);
+        if (ci >= segs[si].text.length) { si++; ci = 0; }
+      }
+      if (si < segs.length) return false;
+      body.classList.remove("live");
+      m.li.classList.remove("typing");
+      m.ft$.hidden = false;
+      m.typed = true;
+      return true;
+    },
+    finish() { return t.put(Infinity); },
+  };
+  return t;
+}
+
+function settle() { if (job) { job.finish(); job = null; } }
+
+// redraw a message that's changed (its second half arrived, or the case switched)
+function refresh(m) {
+  if (job && job.m === m) settle();
+  if (!m.typed) return;
+  const old = m.li;
+  build(m);
+  m.li.hidden = old.hidden;
+  old.replaceWith(m.li);
+  typer(m).finish();
+}
+
+// ---------- typing ----------
+function begin() {
+  const m = queue.shift();
+  job = typer(m);
+  if (m.live) {
+    if (S.chime) play("company-call");
+    if (!stick && !m.li.hidden) { unseen++; paintNewer(); }
+  }
+  radarDirty = true;
+}
+
+function type(dt) {
+  if (!job && queue.length) begin();
+  if (!job) return;
+  if (reduce.matches || job.m.li.hidden) { settle(); return; }
+  // a backlog types faster, so the desk catches up
+  carry += 45 * (1 + queue.length * 0.8) * dt;
+  const n = Math.floor(carry);
+  carry -= n;
+  if (n > 0 && job.put(n)) job = null;
+}
+
+// ---------- scrolling ----------
+const wrap = $("wrap");
+function toBottom() { wrap.scrollTop = wrap.scrollHeight; }
+wrap.addEventListener("scroll", () => {
+  stick = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
+  if (stick && unseen) { unseen = 0; paintNewer(); }
+}, { passive: true });
+
+function paintNewer() {
+  $("newer").hidden = !unseen;
+  $("newer").textContent = `▾ ${unseen} NEW`;
+  $("newer").setAttribute("aria-label", `${unseen} new ${unseen === 1 ? "message" : "messages"} below. Jump to the latest`);
+}
+$("newer").addEventListener("click", jumpToLatest);
+function jumpToLatest() { stick = true; unseen = 0; paintNewer(); toBottom(); }
+
+// ---------- filters ----------
+function visible(m) {
+  if (S.show !== "all" && m.kind !== S.show) return false;
+  if (!S.focus) return true;
+  return S.focus.kind === "area" ? m.area === S.focus.value : m.flt === S.focus.value;
+}
+
+function applyFilter() {
+  for (const m of msgs) m.li.hidden = !visible(m);
+  paintUI();
+  paintCount();
+  stick = true; unseen = 0; paintNewer();
+  toBottom();
+}
+
+function setShow(s) { S.show = s; applyFilter(); }
+
+function setFocus(f) {
+  const same = f && S.focus && f.kind === S.focus.kind && f.value === S.focus.value;
+  S.focus = same ? null : f;
+  applyFilter();
+  if (S.focus) say(S.focus.kind === "area" ? `Showing only messages from ${S.focus.value}.` : `Following flight ${S.focus.value.slice(1, 7)}.`);
+  else say("Showing every area and flight again.");
+}
+
+function paintCount() {
+  if (!ready) return;
+  const shown = msgs.filter((m) => !m.li.hidden).length;
+  const since = msgs.length ? `SINCE ${stamp(msgs[0].t)}` : "";
+  $("count").textContent = shown === msgs.length ? `${msgs.length} loaded ${since}` : `${shown} of ${msgs.length} shown`;
+  $("earlier").hidden = !cursor;
+}
+
+// ---------- clicks in the list ----------
+$("list").addEventListener("click", (e) => {
+  const b = e.target.closest("button.tag");
+  if (b) { setFocus(b.dataset.area ? { kind: "area", value: b.dataset.area } : { kind: "flight", value: b.dataset.flt }); return; }
+  const re = e.target.closest("a.re[data-to]");
+  if (re) { e.preventDefault(); reveal(byUri.get(re.dataset.to)); }
+});
+
+// scroll the message it answers into view, clearing a filter that hides it
+function reveal(m) {
+  if (!m || !m.li) return;
+  if (m.li.hidden) { S.show = "all"; S.focus = null; applyFilter(); }
+  stick = false;
+  m.li.scrollIntoView({ block: "center", behavior: reduce.matches ? "auto" : "smooth" });
+  m.li.classList.remove("flash");
+  void m.li.offsetWidth;
+  m.li.classList.add("flash");
+  m.li.querySelector(".t").setAttribute("tabindex", "-1");
+  m.li.querySelector(".t").focus({ preventScroll: true });
+}
+
+// ---------- loading ----------
+async function start() {
+  $("retry").hidden = true;
+  fetching = true; lastTry = Date.now(); paintLamp();
+  say("Raising the datalink…");
+  try {
+    const d = await load({ limit: 100 });
+    cursor = d.cursor || null;
+    const added = ingest(d.feed || []);
+    $("list").querySelector(".sys")?.remove();
+    // all but the last few go straight onto the list; those type out so the desk wakes up
+    const typeN = added.slice(-4);
+    for (const m of added.slice(0, -4)) typer(m).finish();
+    queue.push(...typeN);
+    ready = true; failures = 0;
+    say(`Connected. ${msgs.length} messages loaded. New ones type out as ACARS Drama posts them.`);
+  } catch (e) {
+    failures++;
+    showDown(e.message);
+  } finally {
+    fetching = false;
+    paintLamp(); paintCount(); paintSide(); toBottom();
+  }
+}
+
+function showDown(why) {
+  say(`Couldn't reach Bluesky (${why}). Trying again every 30 seconds.`);
+  $("retry").hidden = false;
+  if ($("list").querySelector(".sys")) return;
+  const li = el("li", "sys");
+  li.append(el("strong", null, "NO DATALINK"),
+    document.createTextNode(`This desk reads ACARS Drama's posts from Bluesky's public API, and it isn't answering (${why}). It will keep trying every 30 seconds, or press Try again.`));
+  $("list").append(li);
+}
+
+async function poll() {
+  fetching = true; lastTry = Date.now(); paintLamp();
+  try {
+    const d = await load({ limit: 30 });
+    const added = ingest(d.feed || []);
+    for (const m of added) { m.live = true; queue.push(m); }
+    if (failures >= 2) say("Datalink back.");
+    else if (added.length) say(`${added.length} new ${added.length === 1 ? "message" : "messages"}.`);
+    failures = 0;
+  } catch (e) {
+    if (++failures === 2) say(`Lost the datalink (${e.message}). Trying again every 30 seconds.`);
+  } finally {
+    fetching = false;
+    paintLamp(); paintCount(); paintSide();
+  }
+}
+
+async function earlier() {
+  if (!cursor || fetching) return;
+  fetching = true;
+  $("earlier").disabled = true;
+  say("Pulling earlier traffic…");
+  try {
+    const d = await load({ limit: 100, cursor });
+    cursor = d.cursor || null;
+    // grow the list above the reader without moving what they're looking at
+    const before = wrap.scrollHeight - wrap.scrollTop;
+    settle();
+    const added = ingest(d.feed || []);
+    for (const m of added) if (!m.typed) typer(m).finish();
+    // replies whose first message just arrived can point at it on the page now
+    for (const m of msgs) if (m.parent && m.li.querySelector("a.re:not([data-to])") && byUri.get(m.parent)?.li) refresh(m);
+    wrap.scrollTop = wrap.scrollHeight - before;
+    say(added.length ? `${added.length} earlier messages, back to ${longFmt.format(msgs[0].t)}.` : "No earlier messages came back.");
+  } catch (e) {
+    say(`Couldn't load earlier traffic (${e.message}).`);
+  } finally {
+    fetching = false;
+    $("earlier").disabled = false;
+    paintCount(); paintSide();
+  }
+}
+
+// ---------- readouts ----------
+function paintLamp() {
+  const state = fetching ? "poll" : failures >= 2 || (!ready && failures) ? "lost" : "ok";
+  $("lamp").dataset.state = state;
+  if (state === "lost") $("lamp-text").textContent = "LOST";
+  else if (state === "poll") $("lamp-text").textContent = ready ? "POLLING" : "CONNECTING";
+  else $("lamp-text").textContent = `OK · ${Math.max(0, Math.ceil((lastTry + POLL - Date.now()) / 1000))}S`;
+}
+
+function paintClock() {
+  const now = new Date();
+  $("utc").textContent = pad(now.getUTCHours()) + pad(now.getUTCMinutes()) + ":" + pad(now.getUTCSeconds()) + "Z";
+  $("local").textContent = localFmt.format(now);
+  const last = msgs.length ? msgs[msgs.length - 1].t : 0;
+  $("last-msg").textContent = last ? ago(last) : "----";
+}
+
+// ---------- side panel ----------
+function paintSide() {
+  if (!ready) return;
+  const now = Date.now();
+  const acars = msgs.filter((m) => m.kind !== "note");
+  const oldest = msgs.length ? msgs[0].t : now;
+  // twelve 15-minute bins, oldest first
+  const bins = Array(12).fill(0);
+  for (const m of acars) {
+    const i = 11 - Math.floor((now - m.t) / (15 * MIN));
+    if (i >= 0 && i < 12) bins[i]++;
+  }
+  const top = Math.max(1, ...bins);
+  const known = (i) => now - (12 - i) * 15 * MIN >= oldest;
+  $("spark").textContent = "";
+  bins.forEach((n, i) => {
+    const bar = el("i", known(i) ? null : "unknown");
+    if (known(i)) bar.style.height = (n / top) * 100 + "%";
+    $("spark").append(bar);
+  });
+  $("spark").setAttribute("aria-label", "Messages per 15 minutes, oldest first: " + bins.map((n, i) => (known(i) ? n : "not loaded")).join(", "));
+
+  const counts = new Map();
+  for (const m of acars) if (m.area) counts.set(m.area, (counts.get(m.area) || 0) + 1);
+  const ranked = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 8);
+  const max = ranked.length ? ranked[0][1] : 1;
+  const ol = $("areas");
+  ol.textContent = "";
+  for (const [area, n] of ranked) {
+    const li = el("li");
+    const b = el("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(!!S.focus && S.focus.kind === "area" && S.focus.value === area));
+    b.setAttribute("aria-label", `${area}: ${n} ${n === 1 ? "message" : "messages"}. Show only these`);
+    b.append(el("span", "name", area.toUpperCase()), el("span", "n", String(n)));
+    const meter = el("span", "meter"), fill = el("i");
+    fill.style.width = (n / max) * 100 + "%";
+    meter.append(fill);
+    b.append(meter);
+    b.addEventListener("click", () => setFocus({ kind: "area", value: area }));
+    li.append(b);
+    ol.append(li);
+  }
+  $("areas-cap").textContent = `Across the ${acars.length} crew and dispatcher messages loaded. Press an area to show only its messages.`;
+  radarDirty = true;
+}
+
+// ---------- scope ----------
+const radar = $("radar"), rctx = radar.getContext("2d");
+let radarDirty = true, radarAt = 0;
+const css = getComputedStyle(document.documentElement);
+const INK = Object.fromEntries(["dn", "up", "note", "alert", "faint", "dim", "grid"].map((k) => [k, css.getPropertyValue("--" + k).trim()]));
+
+// a bearing from a name, so each place keeps one spoke
+function bearing(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ((h >>> 0) % 360) * Math.PI / 180;
+}
+
+function drawRadar(now) {
+  if (!radar.offsetParent) return;
+  // with reduced motion the sweep stands still, and the dots move only as the minutes pass
+  if (reduce.matches && !radarDirty && now - radarAt < 20000) return;
+  radarDirty = false; radarAt = now;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = radar.clientWidth;
+  if (radar.width !== Math.round(W * dpr)) { radar.width = radar.height = Math.round(W * dpr); }
+  const g = rctx;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, W);
+  const c = W / 2, R = W / 2 - 4;
+  g.fillStyle = "#03070A";
+  g.beginPath(); g.arc(c, c, R, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = INK.faint; g.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) { g.beginPath(); g.arc(c, c, (R * i) / 4, 0, Math.PI * 2); g.stroke(); }
+  g.beginPath(); g.moveTo(c - R, c); g.lineTo(c + R, c); g.moveTo(c, c - R); g.lineTo(c, c + R); g.stroke();
+  g.fillStyle = INK.dim; g.font = "10px 'B612 Mono', monospace"; g.textBaseline = "top";
+  ["15", "30", "45", "60"].forEach((s, i) => g.fillText(s, c + 3, c - (R * (i + 1)) / 4 + 2));
+
+  // the sweep: one turn every four seconds, compass style (0 at the top, clockwise)
+  const sweep = reduce.matches ? null : ((now / 4000) % 1) * Math.PI * 2;
+  if (sweep !== null && g.createConicGradient) {
+    const grad = g.createConicGradient(sweep - Math.PI / 2 - 0.9, c, c);
+    grad.addColorStop(0, "rgba(108, 240, 138, 0)");
+    grad.addColorStop(0.9 / (Math.PI * 2), "rgba(108, 240, 138, 0.22)");
+    grad.addColorStop(0.9 / (Math.PI * 2) + 0.001, "rgba(108, 240, 138, 0)");
+    g.fillStyle = grad;
+    g.beginPath(); g.arc(c, c, R, 0, Math.PI * 2); g.fill();
+  }
+  if (sweep !== null) {
+    g.strokeStyle = "rgba(108, 240, 138, 0.7)";
+    g.beginPath(); g.moveTo(c, c); g.lineTo(c + R * Math.sin(sweep), c - R * Math.cos(sweep)); g.stroke();
+  }
+
+  const nowMs = Date.now();
+  const current = job ? job.m : null;
+  for (const m of msgs) {
+    if (m.kind === "note" || !m.typed && m !== current) continue;
+    const age = nowMs - m.t;
+    if (age < 0 || age > HOUR) continue;
+    const th = bearing(m.area || m.flt || m.uri), r = (age / HOUR) * R;
+    const x = c + r * Math.sin(th), y = c - r * Math.cos(th);
+    // a dot glows as the sweep passes and dims until it comes round again
+    const behind = sweep === null ? 0 : (((sweep - th) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI * 2);
+    g.globalAlpha = m.li.hidden ? 0.18 : 1 - 0.75 * behind;
+    g.fillStyle = m.alert ? INK.alert : INK[m.kind];
+    g.fillRect(x - 2, y - 2, 4, 4);
+    if (m === current) {
+      // the message typing now gets a data block, as a controller's selected target does
+      g.globalAlpha = 1;
+      g.strokeStyle = g.fillStyle;
+      g.strokeRect(x - 5, y - 5, 10, 10);
+      g.beginPath(); g.moveTo(x + 5, y - 5); g.lineTo(x + 12, y - 12); g.stroke();
+      const label = [(m.area.split(",")[0] || "").toUpperCase().slice(0, 14), shortType(m.type).slice(0, 14)].filter(Boolean);
+      const left = x + 14 + 90 > W;
+      g.textAlign = left ? "right" : "left";
+      g.textBaseline = "bottom";
+      label.forEach((s, i) => g.fillText(s, left ? x - 14 : x + 14, y - 12 + i * 12));
+      g.textAlign = "left";
+    }
+  }
+  g.globalAlpha = 1;
+}
+
+// ---------- sound ----------
+// A two-note chime as each new message arrives, like a cockpit's company call.
+// The sound is data, like the games' sounds; the Sound Bench (../sound-bench/)
+// has an identical copy to play and edit, so a change here goes there too, and
+// the other way round.
+const SOUNDS = {
+  "company-call": { "name": "Company Call", "use": "A new message arrives on the datalink", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 1319, "gain": 0.3, "attack": 0.004, "dur": 0.55 },
+    { "kind": "tone", "wave": "sine", "freq": 988, "gain": 0.3, "attack": 0.004, "dur": 0.8, "at": 0.17 }
+  ] }
+};
+let audio = null, master = null;
+// called only from a click, tap, or key, since browsers start audio only from one of those
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    // playback, so a phone with its silent switch on still chimes. The Chime button mutes it
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+    // the same output as the games' sounds: master gain into a light limiter
+    const comp = audio.createDynamicsCompressor();
+    comp.threshold.value = -4;
+    comp.knee.value = 0;
+    comp.ratio.value = 20;
+    comp.attack.value = 0.001;
+    comp.release.value = 0.1;
+    master = audio.createGain();
+    master.gain.value = 0.8;
+    master.connect(comp).connect(audio.destination);
+  }
+  // iOS can leave the context suspended or "interrupted" after calls and app switches
+  if (audio.state !== "running") audio.resume();
+  return audio;
+}
+// a gain that jumps up over attack seconds, stays up for hold, then dies away by dur
+function env(a, t, peak, attack, dur, hold = 0) {
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  if (hold > 0) g.gain.setValueAtTime(peak, t + attack + hold);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(master);
+  return g;
+}
+// only tones so far; the bench's noise layers would need a noise buffer here too
+function play(id) {
+  const a = audio, s = SOUNDS[id];
+  if (!a || a.state !== "running" || !s) return;
+  for (const L of s.layers) {
+    const t = a.currentTime + (L.at || 0), v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+    const src = a.createOscillator();
+    src.type = L.wave || "sine";
+    src.frequency.setValueAtTime(L.freq * v, t);
+    if (L.to) src.frequency.exponentialRampToValueAtTime(L.to * v, t + L.dur);
+    const attack = Math.min(L.attack || 0.003, L.dur * 0.95);
+    src.connect(env(a, t, L.gain, attack, L.dur, Math.min(L.hold || 0, L.dur * 0.95 - attack)));
+    src.start(t);
+    src.stop(t + L.dur + 0.05);
+  }
+}
+function setChime(on) {
+  S.chime = on;
+  try { localStorage.setItem("air-to-ground-chime", on ? "on" : "off"); } catch (e) {}
+  if (on) { ac(); setTimeout(() => play("company-call"), 60); }
+  paintUI();
+  say(on ? "Chime on: it sounds as each new message arrives." : "Chime off.");
+}
+// with the chime left on from last time, the first click, tap, or key wakes the audio
+for (const ev of ["pointerup", "touchend", "keydown"]) addEventListener(ev, () => { if (S.chime) ac(); }, { passive: true });
+
+// ---------- controls ----------
+function paintUI() {
+  document.querySelectorAll("[data-show]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.show === S.show)));
+  $("lower").setAttribute("aria-pressed", String(S.lower));
+  $("chime").setAttribute("aria-pressed", String(S.chime));
+  $("scope-btn").setAttribute("aria-pressed", String(S.side));
+  $("deck").classList.toggle("side-open", S.side);
+  const f = $("focus");
+  f.hidden = !S.focus;
+  if (S.focus) {
+    const name = S.focus.kind === "area" ? S.focus.value.toUpperCase() : "FLT " + S.focus.value.slice(1, 7).toUpperCase();
+    f.textContent = name;
+    f.setAttribute("aria-label", `Showing only ${name}. Show everything again`);
+  }
+  document.querySelectorAll("#areas button").forEach((b, i) => {
+    const name = b.querySelector(".name").textContent;
+    b.setAttribute("aria-pressed", String(!!S.focus && S.focus.kind === "area" && S.focus.value.toUpperCase() === name));
+  });
+}
+
+function setLower(on) {
+  S.lower = on;
+  try { localStorage.setItem("air-to-ground-case", on ? "lower" : "raw"); } catch (e) {}
+  settle();
+  for (const m of msgs) if (m.typed && m.kind !== "note") typer(m).finish();
+  paintUI();
+  say(on ? "Messages in lower case, easier on the eyes and on screen readers." : "Messages as sent, in capitals.");
+}
+
+function setSide(on) {
+  S.side = on;
+  paintUI();
+  radarDirty = true;
+}
+
+document.querySelectorAll("[data-show]").forEach((b) => b.addEventListener("click", () => setShow(b.dataset.show)));
+$("lower").addEventListener("click", () => setLower(!S.lower));
+$("chime").addEventListener("click", () => setChime(!S.chime));
+$("scope-btn").addEventListener("click", () => setSide(!S.side));
+$("focus").addEventListener("click", () => setFocus(null));
+$("earlier").addEventListener("click", earlier);
+$("retry").addEventListener("click", () => { if (!fetching) (ready ? poll : start)(); });
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const k = e.key.toLowerCase();
+  if (k === "a") setShow("all");
+  else if (k === "d") setShow("dn");
+  else if (k === "u") setShow("up");
+  else if (k === "n") setShow("note");
+  else if (k === "l") setLower(!S.lower);
+  else if (k === "c") setChime(!S.chime);
+  else if (k === "s" && getComputedStyle($("scope-btn")).display !== "none") setSide(!S.side);
+  else if (k === "e") earlier();
+  else if (k === "escape" && S.side) setSide(false);
+  else if (k === "escape" && S.focus) setFocus(null);
+  else if (k === "end" && !e.target.closest("button, a")) { e.preventDefault(); jumpToLatest(); }
+});
+
+// ---------- go ----------
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  type(dt);
+  if (stick) toBottom();
+  drawRadar(now);
+  requestAnimationFrame(tick);
+}
+
+setInterval(() => {
+  paintClock();
+  if (!fetching) paintLamp();
+  // a tab in the background doesn't need the feed; it catches up when it's back
+  if (!fetching && !document.hidden && Date.now() - lastTry >= POLL) (ready ? poll : start)();
+}, 1000);
+setInterval(paintSide, MIN);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && !fetching && Date.now() - lastTry >= POLL) (ready ? poll : start)();
+});
+
+(async () => {
+  paintUI();
+  paintClock();
+  try { await document.fonts.load("16px 'B612 Mono'"); } catch (e) {}
+  requestAnimationFrame(tick);
+  start();
+})();
+</script>
+</body>
+</html>
