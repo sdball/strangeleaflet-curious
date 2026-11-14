@@ -610,9 +610,17 @@ function type(dt) {
 
 // ---------- scrolling ----------
 const wrap = $("wrap");
-function toBottom() { wrap.scrollTop = wrap.scrollHeight; }
+let lastTop = 0, lastHeight = 0;
+function toBottom() { wrap.scrollTop = wrap.scrollHeight; lastTop = wrap.scrollTop; lastHeight = wrap.scrollHeight; }
 wrap.addEventListener("scroll", () => {
-  stick = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
+  const top = wrap.scrollTop, height = wrap.scrollHeight;
+  const gap = height - top - wrap.clientHeight;
+  // any move up lets go of the bottom, however small, or the next frame drags the reader back down.
+  // the list shrinking under the reader isn't a move, and neither is a rubber-band settling at the end
+  if (gap <= 1) stick = true;
+  else if (top < lastTop - 1 && height >= lastHeight) stick = false;
+  else if (gap < 60) stick = true;
+  lastTop = top; lastHeight = height;
   if (stick && unseen) { unseen = 0; paintNewer(); }
 }, { passive: true });
 
