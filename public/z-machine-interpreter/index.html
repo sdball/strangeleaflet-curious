@@ -657,9 +657,10 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <div class="about-body">
       <p class="lede">Infocom wrote its games for a computer that didn't exist, the Z-machine, and shipped a small program for each real computer that pretended to be one. This page is one of those programs. It loads a story file and plays it: you type, the game answers.</p>
       <h3>Playing</h3>
-      <p>Pick a built-in story or open one of your own. Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before. <kbd>x</kbd> works for examine in every game. The page remembers where you were, so you can close it and come back.</p>
+      <p>Pick a built-in story or open one of your own. Type a command and press <kbd>Enter</kbd>: <kbd>look</kbd>, <kbd>take leaflet</kbd>, <kbd>go north</kbd> or just <kbd>n</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> bring back what you typed before, unless the game wants those keys for itself. <kbd>x</kbd> works for examine in every game. The page remembers where you were, so you can close it and come back.</p>
+      <p>Type <kbd>script</kbd> in a game that keeps transcripts, as Infocom's do, and the page keeps one from then on. <b>Transcript</b>, below the screen, downloads it as a text file.</p>
       <h3>Saves and Undo</h3>
-      <p><kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too.</p>
+      <p><kbd>save</kbd> and <kbd>restore</kbd> keep games in this browser, and <b>Undo</b> takes back a move, even after you close the page and come back. <b>Saves</b> lists the games you've saved: restore one, rename it, delete it, or download it as a file that other interpreters open, with your notes and map inside. Open a save file there, or drop one on the page, to add it. When a save brings notes or a map, Restore asks whether to bring them back too.</p>
       <h3>Notes and Map</h3>
       <p><b>Notes</b> opens a notepad beside the game for clues and combinations. <b>Map</b> draws the rooms you walk through as you go, with the things you've seen in each, and <b>Redraw</b> tidies it from every way you've found.</p>
       <h3>Enhanced and Cheats</h3>
@@ -791,6 +792,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
     <button type="button" class="btn" id="mapBtn" data-panel="map" aria-pressed="false">Map</button>
     <button type="button" class="btn" id="enhancedBtn" aria-pressed="false" hidden>Enhanced</button>
     <button type="button" class="btn" id="inspectorBtn" data-panel="inspector" aria-pressed="false">Inspector</button>
+    <button type="button" class="btn" id="scriptBtn" hidden>Transcript</button>
     <span class="spacer"></span>
     <a href="../z-machine/" id="insideLink">See inside a story file</a>
   </div>
@@ -826,6 +828,8 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
       <li><b><kbd>x</kbd> means examine, even where the game never heard of it.</b> The Zorks want <kbd>examine lamp</kbd> or <kbd>look at lamp</kbd>, and many players now type <kbd>x lamp</kbd> without thinking. When a game's dictionary has no <kbd>x</kbd>, the interpreter passes <kbd>examine</kbd> in its place at the start of each command. The game itself is unchanged.</li>
       <li><b>A game can keep time while you type.</b> From Version 4, a game asking for a line or a key can also name a routine and a time, in tenths of a second. Each time that runs out, the interpreter calls the routine while your half-typed line waits. The routine may print something, and you carry on typing below it, or it may end your line where it stands. A Version 5 game can then hand back what you'd typed, and this page puts it back in the input for you to finish.</li>
       <li><b>Each screen shows colours its own way.</b> From Version 5 a game can ask for eight named colours, or any of 32,768 more. The desk shows them as the Standard lists them, and the Atari 800 uses its own palette, with its own blue. The green screen shows the same colours with a touch of its green mixed in. The printout prints letters in coloured inks and leaves backgrounds as paper, since a ribbon can't print white. A game that clears the screen in its colours gets the whole screen in them, the way <i>Photopia</i> changes colour from scene to scene.</li>
+      <li><b>A transcript starts with one bit.</b> Infocom's SCRIPT command sets the lowest bit of a header word called Flags 2, and UNSCRIPT clears it. While the bit is set, the interpreter copies what the game prints in the lower window into the transcript, along with each line you type. The status line stays out. Undo takes nothing back out of it, so the transcript keeps every move you made, even the ones you took back.</li>
+      <li><b>A game can pick keys that end a line.</b> From Version 5 a game can list arrow and function keys that finish your line the way <kbd>Enter</kbd> does, and it learns which one you pressed. The game then decides what happens next: it might fill in a command for you, which lands in the input to finish or rub out. A game that lists <kbd>↑</kbd> and <kbd>↓</kbd> gets them, and they stop bringing back what you typed.</li>
       <li><b>A save is small.</b> Everything a game can change sits in its dynamic memory, so a save needs only that, the stack, and where the game was in its code. This page stores only the bytes that differ from the story file as it was loaded, and says how many bytes each save took.</li>
       <li><b>A save file works in other interpreters.</b> <b>Download</b> in <b>Saves</b> writes a Quetzal file, the save format Frotz and many other interpreters read and write. It says which story it's for by release, serial number, and checksum, then holds dynamic memory packed the same way this page keeps it, and the call stack, oldest call first. The page adds the save's name, your notes, and your map in chunks of its own, and other interpreters skip chunks they don't know. Open the file on another computer, phone, or tablet, and the save joins the list there. Restore it, and you choose whether its notes and map replace the ones there. A save for one of the built-in stories opens that story first.</li>
       <li><b>Restart doesn't reload the file.</b> The game can't change static or high memory, so restarting copies the story file's dynamic memory back over the changed copy and starts at the first instruction again. Only the transcript and fixed-pitch bits of the header survive.</li>
@@ -855,7 +859,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   <section class="sources" aria-labelledby="sources-h">
     <h2 id="sources-h">Sources</h2>
     <ul>
-      <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, §8.2 on the status line, and §8.3 on colours), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code> and its timed interrupts, <code>set_colour</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
+      <li>Graham Nelson, <i>The Z-Machine Standards Document</i>, version 1.1, edited by David Fillmore (2014): §1 (memory map), §3 (text), §4 (instructions), §5 (routines), §6 (the stack and calls), §7 (output streams), §8 (the screen, §8.2 on the status line, and §8.3 on colours), §10 (input, and §10.5.2.1 on keys that end a line), §11 (header), §12 (objects), §13 (the dictionary and splitting what you type into words), and §15 (what each opcode does, including <code>read</code> and its timed interrupts, <code>set_colour</code>, <code>save</code>, <code>restore</code>, and <code>restart</code>). <a href="https://inform-fiction.org/zmachine/standards/z1point1/">inform-fiction.org</a>.</li>
       <li>Martin Frost, <i>Quetzal: Z-machine Common Save-File Format Standard</i>, version 1.4 (1997): §3 (memory), §4 (the stack), §5 (the story a save belongs to and where it stopped), §7 (annotations and interpreter chunks), §8 (IFF). <a href="https://inform-fiction.org/zmachine/standards/quetzal/">inform-fiction.org</a>.</li>
       <li>ZILF 1.9, a ZIL compiler, assembler, and library by Tara McGrew and others, which built <i>After Hours</i> and the three Zorks for this page. <a href="https://zilf.io/">zilf.io</a>.</li>
       <li>Tim Anderson, Marc Blank, Bruce Daniels, and Dave Lebling, Zork I source code, in ZIL. MIT License, © 2025 Microsoft. <a href="https://github.com/historicalsource/zork1">github.com/historicalsource/zork1</a>.</li>
@@ -864,7 +868,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line
   </section>
 
   <footer>
-    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games, notes, and maps stay in this browser's storage. A save leaves it only when you download one.</p>
+    <p>The interpreter runs entirely in your browser. A story file you open never leaves your computer, and saved games, notes, maps, and transcripts stay in this browser's storage. A save or a transcript leaves it only when you download it.</p>
     <p><i>After Hours at the Cabinet</i> was written for the cabinet: <a href="after-hours.z3">after-hours.z3</a>. Its source, and a station-by-station look inside it, are on <a href="../z-machine/">The Z-Machine and how it runs stories</a>. ZILF's library asks that games built with it name it in their opening credits, and <i>After Hours</i> does.</p>
     <p>The three Zorks were built here with ZILF from the Infocom source Microsoft released, and each is shared under its MIT License: <a href="zork1/zork1.z3">zork1.z3</a> (<a href="zork1/LICENSE">license</a>), <a href="zork2/zork2.z3">zork2.z3</a> (<a href="zork2/LICENSE">license</a>), and <a href="zork3/zork3.z3">zork3.z3</a> (<a href="zork3/LICENSE">license</a>). Zork II needed one bracket moved before ZILF would compile it, and <a href="../z-machine/">the Z-machine exhibit</a> explains why that changes nothing in the game. Zork is a trademark, and the name is used here only to say which game this is.</p>
   </footer>
@@ -1165,7 +1169,7 @@ const STYLE = { reverse: 1, bold: 2, italic: 4, fixed: 8, typed: 16, meta: 32 };
 
 function makeMachine(s, pristine, seed) {
   s.code = new Map();
-  const m = { s, mem: s.bytes, pristine, v: s.v, clears: 0, count: 0, undo: [], rng: (seed ?? (Math.random() * 0xFFFFFFFF)) >>> 0 || 1 };
+  const m = { s, mem: s.bytes, pristine, v: s.v, clears: 0, count: 0, undo: [], script: "", rng: (seed ?? (Math.random() * 0xFFFFFFFF)) >>> 0 || 1 };
   resetMachine(m, false);
   return m;
 }
@@ -1326,6 +1330,8 @@ function emit(m, text) {
     for (const ch of text) m.mem[(t.table + 2 + t.len++) & 0xFFFF] = m.s.toZscii(ch) || 63;
     return;
   }
+  // the transcript takes what the lower window gets, screen on or off (§7.1)
+  if (m.win === 0) transcribe(m, text);
   if (!m.screenOn) return;
   if (m.win === 1) {
     for (const ch of text) {
@@ -1338,6 +1344,16 @@ function emit(m, text) {
     m.saidText = (m.saidText + text).slice(-4000);
     emitLower(m, text);
   }
+}
+// Output stream 2, the transcript, runs while bit 0 of Flags 2 is set: by
+// output_stream 2, or by the game writing the bit itself, as Infocom's
+// SCRIPT does (§7.4). What you type goes in too (§7.1.1.1). The page offers
+// it as a file, keeping the newest 400,000 characters if it runs long.
+const MAX_SCRIPT = 400000;
+function transcribe(m, text) {
+  if (!(m.mem[0x11] & 1) || !text) return;
+  m.script += text;
+  if (m.script.length > MAX_SCRIPT) { const cut = m.script.indexOf("\n", m.script.length - MAX_SCRIPT * 0.8); m.script = m.script.slice(cut + 1); }
 }
 const blankRow = (c = 0) => Array.from({ length: SCREEN.width }, () => [" ", 0, c]);
 // Clearing paints the background colour, never reversed (§8.7.3.2), and
@@ -1474,6 +1490,23 @@ function leftOver(m) {
   let out = "";
   for (let i = 0; i < n; i++) out += m.s.zscii(m.mem[text + 2 + i]);
   return out;
+}
+// From Version 5, the header at $2E may point to a list of keys, ending in
+// 0, that end a line as Enter does: function keys (129 to 154, arrows
+// first, and 252 to 254 for mouse clicks) and 255 for all of them
+// (§10.5.2.1). The page has no mouse input, so clicks never come. The key comes back as read's
+// answer in place of 13 (§15, read).
+function terminators(m) {
+  const keys = new Set(), w = m.waiting;
+  if (m.v < 5 || !w || w.kind !== "line") return keys;
+  const at = rd(m, 0x2E);
+  for (let i = 0; at && i < 32; i++) {
+    const c = m.mem[(at + i) & 0xFFFF];
+    if (!c) break;
+    if (c === 255) { for (let k = 129; k <= 154; k++) keys.add(k); }
+    else if ((c >= 129 && c <= 154) || (c >= 252 && c <= 254)) keys.add(c);
+  }
+  return keys;
 }
 // The line goes into the game's text buffer in lower case, then gets split
 // into words (§15, read). Returns false if the game isn't waiting for a
@@ -2140,6 +2173,7 @@ function go() {
   if (!m.halted) { flush(); game.timer = setTimeout(go, 0); return; }
   const why = m.halted.why;
   if (why === "timer") return afterTimer();
+  scriptTurn();
   if (why === "input") {
     cheatTurn();
     // a line the game's timer cut short isn't a move of yours: Undo, the
@@ -2219,10 +2253,22 @@ function afterTimer() {
   else {
     const text = cmd.value;
     cmd.value = "";
-    if (text) emitLower(m, text, STYLE.typed);
+    if (text) { emitLower(m, text, STYLE.typed); transcribe(m, text); }
     finishLine(m, text, 0);
     game.cutShort = true;
   }
+  go();
+}
+// A key the game lists as ending a line (terminators) ends it where it
+// stands, with no new line after it, and the game decides what comes
+// next. Like a line the timer cuts short, it's a move only once you
+// finish one with Enter.
+function endWith(code) {
+  const m = game.m, text = cmd.value;
+  cmd.value = "";
+  if (text) { emitLower(m, text, STYLE.typed); transcribe(m, text); }
+  finishLine(m, text, code);
+  game.cutShort = true;
   go();
 }
 // A Version 5 game that carries on a line cut short has already printed
@@ -2255,6 +2301,7 @@ function echo(text) {
   const m = game.m;
   emitLower(m, text, STYLE.typed);
   emitLower(m, "\n", 0);
+  transcribe(m, text + "\n");
   flush();
   game.mark = $("lower").children[game.shown - 1 - game.base] || null;
 }
@@ -2337,6 +2384,38 @@ function cancel() {
   else if (game.mode === "restore") finishRestore("");
 }
 
+// ---------- Transcript ----------
+// The game turns its transcript on and off (SCRIPT and UNSCRIPT in
+// Infocom's games), and the page keeps it until you download it. It's one
+// transcript for the whole visit, however often the game stops and starts
+// it, the way the Standard asks an interpreter to name a file only once
+// (§7.1.1.2). Undo doesn't take anything back out of it.
+function scriptTurn() {
+  const m = game.m, on = !!(m.mem[0x11] & 1);
+  scriptButton();
+  if (on === game.scripting) return;
+  game.scripting = on;
+  if (!on || m.waiting?.kind !== "line") return;
+  // said just above the prompt the game has printed
+  const prompt = m.lines.pop();
+  m.lines.push([{ t: "This page is keeping the transcript. Transcript, below the screen, downloads it.", s: STYLE.meta }], prompt);
+}
+function scriptButton() {
+  $("scriptBtn").hidden = !(game.scripting || game.m?.script);
+}
+$("scriptBtn").addEventListener("click", () => {
+  const m = game.m;
+  if (!m?.script) { $("note").textContent = "Nothing in the transcript yet."; return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([m.script], { type: "text/plain;charset=utf-8" }));
+  a.download = `${storySlug()}-transcript.txt`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  $("note").textContent = `Downloaded ${a.download}, ${commas(m.script.split("\n").length)} lines.`;
+});
+
 // ---------- Undo ----------
 // Back to the last time the game asked for a line, as if the move just
 // made never happened.
@@ -2359,23 +2438,35 @@ function undo() {
 }
 
 // ---------- Where you left off ----------
+// The last few moves before this one come along, so Undo still works
+// after the page is closed and opened again. Each is packed once.
+const UNDO_KEPT = 10;
 function autosave() {
   const m = game.m;
   if (!m || m.waiting?.kind !== "line") return;
-  store.set(autoKey(), { snap: packSnap(m, snapshot(m)), lines: m.lines.slice(-200), history: game.history.slice(-50) });
+  const back = game.snaps.slice(-1 - UNDO_KEPT, -1).map((x) => ({ snap: (x.packed ||= packSnap(m, x.snap)), prompt: x.prompt, room: x.room, cmd: x.cmd }));
+  store.set(autoKey(), { snap: packSnap(m, snapshot(m)), back, lines: m.lines.slice(-200), history: game.history.slice(-50), ...(m.script ? { script: m.script } : {}) });
 }
 function resume() {
   const saved = store.get(autoKey());
   if (!saved) return false;
   try {
-    const m = game.m;
-    applySnapshot(m, unpackSnap(m, saved.snap));
+    const m = game.m, snap = unpackSnap(m, saved.snap);
+    applySnapshot(m, snap);
     if (m.waiting?.kind !== "line") throw new Error("not at a prompt");
+    // unlike a restore, picking up again keeps the transcript going
+    m.mem[0x11] = (m.mem[0x11] & ~3) | (snap.mem[0x11] & 3);
+    m.script = saved.script || "";
+    game.scripting = !!(m.mem[0x11] & 1);
+    const back = [];
+    for (const b of saved.back || []) {
+      try { back.push({ snap: unpackSnap(m, b.snap), packed: b.snap, prompt: b.prompt, room: b.room, cmd: b.cmd }); } catch { /* that move is lost; Undo stops short of it */ }
+    }
     if (m.v <= 3) mapJump(whereNow(m));
     clearLower(m);
     m.lines = saved.lines.length ? saved.lines : [[]];
     game.history = saved.history || [];
-    game.snaps = [{ snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here }];
+    game.snaps = [...back, { snap: snapshot(m), prompt: structuredClone(m.lines[m.lines.length - 1]), room: map.data.here }];
     setMode("line");
     return true;
   } catch {
@@ -2416,6 +2507,7 @@ function start(buffer, meta) {
   screenColours($("machine").dataset.screen);
   game.m = makeMachine(s, pristine);
   game.cutShort = false;
+  game.scripting = false;
   game.key = storyId(s);
   game.name = meta.name;
   game.builtin = meta.builtin || "";
@@ -2446,6 +2538,7 @@ function start(buffer, meta) {
   const back = resume();
   if (back) inspectorJump("resume");
   $("loadStatus").textContent = back ? "Picked up where you left off. Restart starts the story over." : "";
+  scriptButton();
   if (back) { flush(); updateButtons(); } else go();
 }
 function openFile(f) {
@@ -2497,6 +2590,11 @@ cmd.addEventListener("keydown", (e) => {
     return;
   }
   if (e.key === "Enter") { e.preventDefault(); submit(); return; }
+  // arrows and function keys go to a game that asks for them, ahead of the history
+  if (game.mode === "line" && e.key.length > 1 && !(e.metaKey || e.ctrlKey || e.altKey)) {
+    const code = keyCode(e);
+    if (code && terminators(game.m).has(code)) { e.preventDefault(); endWith(code); return; }
+  }
   if (e.key === "Escape" && (game.mode === "save" || game.mode === "restore")) { e.preventDefault(); cancel(); return; }
   if (e.key === "Escape" && isFull()) { e.preventDefault(); setFull(false); return; }
   if (game.mode !== "line" || !(e.key === "ArrowUp" || e.key === "ArrowDown")) return;
@@ -3094,6 +3192,7 @@ function deleteSave(name) {
   (li?.querySelector("[data-act=delete]") || $("saveOpen")).focus({ preventScroll: true });
 }
 
+const storySlug = () => slug(game.builtin || game.name.replace(/\.[^.]*$/, "")) || "story";
 const slug = (t) => t.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 function downloadSave(name) {
   const x = savesNow().find((y) => y.name === name);
@@ -3106,7 +3205,7 @@ function downloadSave(name) {
   catch (err) { sayInSaves(err.message, true); return; }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([file], { type: "application/octet-stream" }));
-  a.download = `${slug(game.builtin || game.name.replace(/\.[^.]*$/, "")) || "story"}-${slug(x.name) || "save"}.qzl`;
+  a.download = `${storySlug()}-${slug(x.name) || "save"}.qzl`;
   document.body.append(a);
   a.click();
   a.remove();
