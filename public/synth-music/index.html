@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Synth Music — The Cabinet of Curios</title>
+<meta name="description" content="Hear the chords a key gives you, build a four-chord loop, then play it as drums, bass, chords, arpeggio, and lead, in synthwave, chiptune, italo disco, or ambient.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎶</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Outfit:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* a cassette insert by day: cream card, indigo ink, magenta and sunset orange */
+  --bg: #F3EEE6;
+  --panel: #FFFCF6;
+  --panel-edge: #DCD2C2;
+  --ink: #1D1830;
+  --muted: #5F5770;
+  --accent: #B8155A;
+  --accent-ink: #FFFFFF;
+  --sunset: #D9480F;
+  --btn: #FFFFFF;
+  --btn-edge: #B9AEC6;
+  --code-bg: #F0E9F3;
+  --focus: #B8155A;
+
+  /* one color per part, the same in every lane and label */
+  --c-drums: #6B6478;
+  --c-bass: #5B3FA8;
+  --c-chords: #0B7A8A;
+  --c-arp: #C2410C;
+  --c-lead: #B8155A;
+
+  --key-white: #FFFFFF;
+  --key-black: #2A2340;
+  --key-edge: #B9AEC6;
+  --dot: #0B7A8A;
+  --lit: #F2A30F;
+  --lane: #F6F1FA;
+  --grid: #E3DAEC;
+  --bar: #C9BCD9;
+  --head: #1D1830;
+
+  --legend: "Audiowide", "Eurostile", "Arial Black", system-ui, sans-serif;
+  --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "Space Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* a night drive: deep violet, neon magenta and cyan */
+    --bg: #110D1C; --panel: #1A1429; --panel-edge: #32294A; --ink: #EEE8FF; --muted: #A99EC2;
+    --accent: #FF4FA3; --accent-ink: #1A0612; --sunset: #FF9E3D; --btn: #221A36; --btn-edge: #483C66;
+    --code-bg: #201936; --focus: #FF7BBE;
+    --c-drums: #A69CB8; --c-bass: #A78BFA; --c-chords: #3FD6E6; --c-arp: #FF9E3D; --c-lead: #FF4FA3;
+    --key-white: #E6E0F2; --key-black: #0B0814; --key-edge: #483C66; --dot: #0B7A8A; --lit: #FFB020;
+    --lane: #150F22; --grid: #282038; --bar: #43385E; --head: #EEE8FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #110D1C; --panel: #1A1429; --panel-edge: #32294A; --ink: #EEE8FF; --muted: #A99EC2;
+  --accent: #FF4FA3; --accent-ink: #1A0612; --sunset: #FF9E3D; --btn: #221A36; --btn-edge: #483C66;
+  --code-bg: #201936; --focus: #FF7BBE;
+  --c-drums: #A69CB8; --c-bass: #A78BFA; --c-chords: #3FD6E6; --c-arp: #FF9E3D; --c-lead: #FF4FA3;
+  --key-white: #E6E0F2; --key-black: #0B0814; --key-edge: #483C66; --dot: #0B7A8A; --lit: #FFB020;
+  --lane: #150F22; --grid: #282038; --bar: #43385E; --head: #EEE8FF;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1, h2, .station { font-family: var(--legend); font-weight: 400; letter-spacing: .04em; }
+h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); line-height: 1.1; margin: 0; }
+/* a striped sunset under the title */
+.horizon {
+  height: 14px; width: min(15rem, 60%); margin: .55rem 0 1rem;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 3px, var(--bg) 3px 5px),
+    linear-gradient(90deg, var(--accent), var(--sunset));
+  border-radius: 2px;
+}
+h2 { font-size: 1.15rem; line-height: 1.3; margin: 0; }
+h3 { font: 700 1rem var(--sans); margin: 0; }
+.lede { font-size: 1.15rem; max-width: 62ch; margin: 0 0 .75rem; }
+.howto { color: var(--muted); max-width: 66ch; margin: 0 0 1.5rem; }
+kbd { font: 700 .78em var(--mono); padding: .05em .35em; border: 1px solid var(--btn-edge); border-radius: 4px; background: var(--btn); color: var(--ink); }
+code, .data { font-family: var(--mono); font-size: .85em; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 12px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+.panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.station { font-size: .75rem; color: var(--accent); margin: 0 0 .2rem; text-transform: uppercase; letter-spacing: .12em; }
+.panel p, .panel ul { max-width: 68ch; }
+.panel ul li { margin-bottom: .3rem; }
+.note { color: var(--muted); }
+
+button {
+  font: 600 .95rem var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: .45rem .9rem;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--ink); }
+button.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-width: 6.5rem; }
+button.go kbd { background: transparent; color: inherit; border-color: currentColor; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+button[aria-pressed="true"] kbd { background: transparent; color: inherit; border-color: currentColor; }
+button.small { min-height: 40px; padding: .3rem .7rem; font-size: .9rem; }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: .35rem; }
+.label { color: var(--muted); font-size: .92rem; margin-right: .2rem; }
+select {
+  font: 400 16px var(--sans);
+  color: var(--ink);
+  background: var(--btn);
+  border: 1px solid var(--btn-edge);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: .35rem .5rem;
+}
+.cap { color: var(--muted); font-size: .97rem; min-height: 1.5em; }
+
+/* station 1: the keyboard and the scale */
+.keyboard { display: block; width: 100%; height: auto; margin: .75rem 0 .5rem; touch-action: manipulation; }
+.keyboard .white { fill: var(--key-white); stroke: var(--key-edge); stroke-width: 1; cursor: pointer; }
+.keyboard .black { fill: var(--key-black); stroke: var(--key-black); cursor: pointer; }
+.keyboard .lit { fill: var(--lit); }
+.keyboard .dot { fill: var(--dot); pointer-events: none; }
+.keyboard .dot.home { fill: var(--accent); }
+.scale-list { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; padding: 0; margin: .25rem 0 .5rem; }
+.scale-list li { font: 700 .95rem var(--mono); padding: .2rem .55rem; border-radius: 6px; background: var(--code-bg); margin: 0; }
+.scale-list li span { color: var(--muted); font-weight: 400; margin-right: .3rem; font-size: .8rem; }
+.scale-list li.home { outline: 2px solid var(--accent); }
+
+/* a chord button: numeral, name, and (in station 2) how close to home */
+.chords { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.3rem, 1fr)); gap: .4rem; margin: .75rem 0; }
+.chord { display: grid; justify-items: center; gap: .1rem; padding: .45rem .3rem; min-height: 64px; }
+.chord .num { font: 700 1.3rem var(--sans); line-height: 1.1; }
+.chord .nm { font-size: .9rem; color: var(--muted); }
+.chord[aria-pressed="true"] .nm, .slot[aria-pressed="true"] .nm, .slot[aria-pressed="true"] .bar { color: inherit; }
+.chord .dots { font-size: .7rem; letter-spacing: .15em; color: var(--accent); line-height: 1; }
+.chord kbd { font-size: .7rem; }
+.chord.lit { border-color: var(--lit); box-shadow: inset 0 0 0 2px var(--lit); }
+
+/* station 2: the four bars */
+.slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin: .75rem 0; }
+.slot { display: grid; justify-items: center; gap: .1rem; min-height: 84px; padding: .5rem .3rem; border-width: 2px; }
+.slot .bar { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.slot .num { font: 700 1.6rem var(--sans); line-height: 1.1; }
+.slot .nm { font-size: .95rem; color: var(--muted); }
+.slot.now { box-shadow: 0 0 0 3px var(--lit); }
+
+/* stations 3 and 4: one lane per part */
+.mix { display: grid; grid-template-columns: 13rem 1fr; gap: .4rem .75rem; align-items: center; margin: .9rem 0 .5rem; }
+.mix-chords { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+.mix-chords span { font: 700 .85rem var(--mono); text-align: center; padding: .15rem 0; border-radius: 4px; background: var(--code-bg); color: var(--muted); }
+.mix-chords span.now { background: var(--lit); color: #1D1830; }
+.mix-ctl { display: flex; align-items: center; gap: .3rem; }
+.mix-name { flex: 1; font-weight: 700; display: flex; align-items: center; gap: .35rem; min-width: 0; white-space: nowrap; }
+.mix-name::before { content: ""; flex: none; width: .7rem; height: .7rem; border-radius: 3px; background: var(--part); }
+.mix-ctl button { min-height: 40px; min-width: 40px; padding: .2rem .45rem; font-size: .82rem; }
+.lane { position: relative; }
+.lane svg { display: block; width: 100%; height: 44px; border-radius: 5px; }
+.lane .bg { fill: var(--lane); }
+.lane .beat { stroke: var(--grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.lane .barline { stroke: var(--bar); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.lane .n { fill: var(--part); }
+.lane .playhead { fill: var(--head); opacity: .16; }
+.lane.off .n { opacity: .22; }
+.lane .empty { position: absolute; inset: 0; display: grid; place-items: center; font-size: .85rem; color: var(--muted); font-style: italic; }
+@media (max-width: 640px) {
+  .mix { grid-template-columns: 1fr; gap: .25rem; }
+  .mix-chords { grid-column: 1; }
+  .lane { margin-bottom: .5rem; }
+}
+/* stations 3 and 4: a chord for each bar */
+.bar-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: .5rem; margin: .25rem 0 .75rem; }
+.bar-pick label { display: grid; gap: .2rem; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.bar-pick select { width: 100%; text-transform: none; letter-spacing: 0; }
+.about { margin: .5rem 0; padding-left: 1.2rem; }
+.about li { margin-bottom: .25rem; }
+details { margin: .75rem 0 0; }
+summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.data {
+  display: block;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: .55rem .7rem;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 28rem;
+  margin: .25rem 0 .5rem;
+}
+
+.notes, .history { max-width: 68ch; margin-top: 2rem; }
+.notes li, .history li { margin-bottom: .6rem; }
+.sources { max-width: 68ch; margin-top: 2.25rem; color: var(--muted); font-size: .92rem; }
+.sources li { margin-bottom: .4rem; }
+.foot { color: var(--muted); font-size: .9rem; margin-top: 2rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+<script>
+  window.goatcounter = {
+    path: function(p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Synth Music</h1>
+  <div class="horizon" aria-hidden="true"></div>
+  <!-- md: text.md#intro -->
+  <p class="lede">A lot of synth music is built from the same few pieces: a key, a loop of four chords, and a handful of parts that each play those chords their own way. Hear the chords a key gives you, build a loop from them, then take the loop apart into its parts and play it in four styles.</p>
+  <p class="howto">Every station plays out loud, so turn your sound up. No sound on a phone? Check its volume. Each station keeps its own key and chords, so you can change any of them without touching the others. Number and letter keys shown on a button go to the station you're using, and <kbd>P</kbd> starts and stops a loop.</p>
+  <!-- /md -->
+
+  <!-- ---------- Station 1 ---------- -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 1</p>
+        <h2 id="s1-h">A key and its chords</h2>
+      </div>
+    </div>
+    <!-- md: text.md#station-1 -->
+    <p>A piano's keys climb in <b>half steps</b>, from one key to the very next, black or white. Twelve half steps make an octave, where the note names start over. A <b>key</b> picks seven of those twelve notes, and those seven are its scale. The marked keys below are the scale of the key you pick, and the first note, its <b>home</b>, has the bigger mark.</p>
+    <p>Build a chord by stacking every other note of the scale: take a note, skip one, take one, skip one, take one. Do that from each of the seven notes and you have the seven chords the key gives you. Musicians number them in Roman numerals by the note they start on. A capital numeral is a <b>major</b> chord, which sounds bright. A small one is <b>minor</b>, which sounds darker. A small circle marks a <b>diminished</b> chord, tense and unsettled.</p>
+    <!-- /md -->
+    <div id="s1-key"></div>
+    <svg class="keyboard" id="kb" role="img" aria-label="Keyboard"></svg>
+    <ol class="scale-list" id="s1-scale" aria-label="The scale"></ol>
+    <div class="row">
+      <button type="button" id="s1-scale-play" aria-keyshortcuts="S">Play the scale <kbd>S</kbd></button>
+    </div>
+    <div class="chords" role="group" aria-label="The key's seven chords" id="s1-chords"></div>
+    <p class="cap" id="s1-cap" aria-live="polite">Press a chord, or a number key from 1 to 7, to hear it.</p>
+    <!-- md: text.md#station-1-note -->
+    <p class="note">Change the key and every chord moves, but the numerals stay with their places in the scale: the first chord is always home, and VI or vi is always built on the sixth note. That's why musicians talk in numerals. A loop written as i–VI–III–VII plays in any minor key. Station 2 builds one.</p>
+    <!-- /md -->
+  </section>
+
+  <!-- ---------- Station 2 ---------- -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 2</p>
+        <h2 id="s2-h">Home and away</h2>
+      </div>
+      <button type="button" class="go" id="s2-play" aria-keyshortcuts="P">Play <kbd>P</kbd></button>
+    </div>
+    <!-- md: text.md#station-2 -->
+    <p>Some chords sound like home, and others sound like being away from it. A good rough guide is how many notes a chord shares with the home chord, shown as dots on each chord below. Chords that share two notes sit close to home. Chords that share none feel furthest away.</p>
+    <p>Press a bar to pick it, then a chord to put there, or press a number key. Each chord lasts one bar, and the loop goes round until you stop it. The presets change the key between major and minor as they need.</p>
+    <!-- /md -->
+    <div id="s2-key"></div>
+    <div id="s2-presets"></div>
+    <div class="slots" role="group" aria-label="The loop's four bars" id="s2-slots"></div>
+    <div class="chords" role="group" aria-label="Chords to put in the bar" id="s2-chords"></div>
+    <p class="cap" id="s2-cap" aria-live="polite"></p>
+    <!-- md: text.md#station-2-note -->
+    <p class="note">Play Doo-wop, then Synthwave, and listen to the last bar of each as it turns back to the first. Doo-wop ends on V, which holds the note a half step below home. That note pulls up into home so hard that V almost demands I next. In a minor key the seventh note sits a whole step below home, so VII leads back gently. Nothing in the minor loop insists on landing, so it can circle forever, which is a big part of synthwave's dreamy, driving feel. Station 3 dresses a loop like this one up.</p>
+    <!-- /md -->
+  </section>
+
+  <!-- ---------- Station 3 ---------- -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 3</p>
+        <h2 id="s3-h">The parts</h2>
+      </div>
+      <button type="button" class="go" id="s3-play" aria-keyshortcuts="P">Play <kbd>P</kbd></button>
+    </div>
+    <!-- md: text.md#station-3 -->
+    <p>Here's a four-chord loop played as synthwave by five parts at once. Pick its key and chords below, or start from a preset. Each part plays the same four chords in its own way:</p>
+    <ul>
+      <li><b>Drums</b> keep time: a kick on beats one and three, a snare on two and four, and a hi-hat on every half beat.</li>
+      <li><b>Bass</b> plays each chord's root, the note the chord is named after, low and steady. It tells your ear which chord you're on.</li>
+      <li><b>Chords</b> hold all three notes of each chord for the whole bar, a soft wash called a pad.</li>
+      <li><b>Arpeggio</b> plays the chord's notes one at a time, up and down, four to a beat.</li>
+      <li><b>Lead</b> plays a tune made from the chord's notes, over everything else.</li>
+    </ul>
+    <p>Mute a part to hear the loop without it, or solo it to hear it alone. Press a part's letter to mute it, or <kbd>Shift</kbd> and the letter to solo it. The picture shows every note in the loop: time runs left to right across the four bars, and higher notes sit higher in each row.</p>
+    <!-- /md -->
+    <div id="s3-loop"></div>
+    <div id="s3-mix"></div>
+    <p class="cap" id="s3-cap" aria-live="polite">All five parts playing.</p>
+    <!-- md: text.md#station-3-note -->
+    <p class="note">Watch the Chords row as the loop goes round. Each note of the pad moves only a step or two to reach the next chord, rather than all three jumping together, which keeps the pad smooth. Musicians call that voice leading. Then listen to the snare: it rings out, then stops dead. A little history, below, says where that sound came from. Station 4 plays a loop in other styles.</p>
+    <!-- /md -->
+    <details>
+      <summary>The loop as data</summary>
+      <code class="data" id="s3-data"></code>
+    </details>
+  </section>
+
+  <!-- ---------- Station 4 ---------- -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <div>
+        <p class="station">Station 4</p>
+        <h2 id="s4-h">Styles side by side</h2>
+      </div>
+      <button type="button" class="go" id="s4-play" aria-keyshortcuts="P">Play <kbd>P</kbd></button>
+    </div>
+    <!-- md: text.md#station-4 -->
+    <p>The same four chords could belong to many styles. What changes from one style to the next is mostly the tempo, the drums, the sounds, and what each part does with the chords. Pick a style, or press <kbd>N</kbd> for the next one, and change the loop below it as in Station 3. Tempo is counted in beats per minute, and each bar here is four beats.</p>
+    <!-- /md -->
+    <div class="row">
+      <span class="seg" role="group" aria-label="Style" id="s4-styles"></span>
+      <button type="button" class="small" id="s4-next" aria-keyshortcuts="N">Next style <kbd>N</kbd></button>
+    </div>
+    <h3 id="s4-about-h"></h3>
+    <ul class="about" id="s4-about" aria-labelledby="s4-about-h"></ul>
+    <div id="s4-loop"></div>
+    <div id="s4-mix"></div>
+    <p class="cap" id="s4-cap" aria-live="polite">All five parts playing.</p>
+    <details>
+      <summary>The loop as data</summary>
+      <code class="data" id="s4-data"></code>
+    </details>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">Things to notice</h2>
+    <!-- md: text.md#notes -->
+    <ul>
+      <li><b>The same four chords can make two different loops.</b> Am, F, C, G in A minor is i–VI–III–VII. Start on C instead and C, G, Am, F is I–V–vi–IV in C major, the Pop preset. Which chord comes first decides where home seems to be.</li>
+      <li><b>The bass names the chord.</b> Solo the bass and drums in Station 3 and you can still follow the chords. Much of what your ear needs is the root and the beat.</li>
+      <li><b>Chiptune has no pad.</b> It plays its chords one note at a time on the arpeggio, quick enough that you hear the whole chord.</li>
+      <li><b>Leaving a part out is a choice.</b> Ambient drops the drums, and chiptune drops the held chords. A part that stops playing can change a style as much as a new one.</li>
+      <li><b>Tempo moves the mood.</b> The same chords at 150 beats a minute in chiptune sound busy and bright. At 70 in ambient they sound still.</li>
+      <li><b>Every loop here is a short list of notes.</b> Open <i>The loop as data</i> to see one: its tempo, then each track's notes as a step, a note name, and how many steps the note lasts, then its instruments. The instruments are built from the same layers as <a href="../sound-bench/">Sound Bench</a>, raised or lowered to the note being played.</li>
+      <li><b>A real synth does the same jobs.</b> The <a href="../behringer-wave/">Behringer Wave Guide</a> holds down a sequenced part on one sound while you play another over it.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <section class="history" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <!-- md: text.md#history -->
+    <ul>
+      <li><b>A synthesizer bassline made a hit.</b> On Donna Summer's "I Feel Love" (1977), Giorgio Moroder's bass came from a Moog synthesizer locked to a pulse recorded on the tape, so every later part played in perfect time with it. Brian Eno said that year that the single would change the sound of club music for the next fifteen years.</li>
+      <li><b>The 1980s snare came from a stray microphone.</b> In 1979, recording Peter Gabriel's third album at London's Townhouse Studios with Phil Collins on drums, engineer Hugh Padgham opened a talkback microphone and ran it through a noise gate, which shuts a sound off once it falls quiet. The room's ring cut off short. Collins's "In the Air Tonight" made the gated sound famous.</li>
+      <li><b>The NES had three channels for notes.</b> Its sound chip has five channels: two pulse waves, a triangle, a noise channel, and one for recorded samples. With three notes at most, the chiptune style here plays its chords one note at a time instead of holding them.</li>
+      <li><b>Ambient music was named on a record sleeve.</b> Brian Eno's notes for <i>Ambient 1: Music for Airports</i>, released in February 1979, say ambient music "must be as ignorable as it is interesting."</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <!-- md: text.md#sources -->
+    <ul>
+      <li>Richard Buskin, <a href="https://www.soundonsound.com/techniques/classic-tracks-donna-summer-feel-love">"Classic Tracks: Donna Summer 'I Feel Love'"</a>, <i>Sound On Sound</i> (October 2009).</li>
+      <li>Stuart Williams, <a href="https://www.musicradar.com/features/how-genesis-peter-gabriel-and-phil-collins-stumbled-upon-the-80s-gated-reverb-drum-sound">"How Genesis's Peter Gabriel and Phil Collins stumbled upon the '80s gated-reverb drum sound"</a>, <i>MusicRadar</i> (December 31, 2020).</li>
+      <li>Wikipedia, <a href="https://en.wikipedia.org/wiki/Gated_reverb">"Gated reverb"</a>, on "In the Air Tonight".</li>
+      <li>NESdev Wiki, <a href="https://www.nesdev.org/wiki/APU">"APU"</a>, on the NES's five sound channels.</li>
+      <li>Wikipedia, <a href="https://en.wikipedia.org/wiki/Ambient_1:_Music_for_Airports">"Ambient 1: Music for Airports"</a>, quoting the album's liner notes.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <p class="foot">Each station's key, chords, and style go in the address bar, so a link to this page opens on them.</p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
+const button = (cls, html, attrs = {}) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  if (cls) b.className = cls;
+  b.innerHTML = html;
+  for (const [k, v] of Object.entries(attrs)) b.setAttribute(k, v);
+  return b;
+};
+
+// ---------- Keys and chords ----------
+// notes are midi numbers: 60 is middle C, and each step up is one half step
+const LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
+const LETTER_PC = [0, 2, 4, 5, 7, 9, 11];
+const MODES = { minor: [0, 2, 3, 5, 7, 8, 10], major: [0, 2, 4, 5, 7, 9, 11] };
+// the usual spelling of each of the twelve keys, sharps or flats
+const TONICS = {
+  major: ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"],
+  minor: ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"],
+};
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
+const QUALITY_WORD = { major: "major", minor: "minor", diminished: "diminished" };
+const pretty = (name) => name[0] + name.slice(1).replace(/#/g, "♯").replace(/b/g, "♭");
+const pcOf = (name) => (LETTER_PC[LETTERS.indexOf(name[0])] + (name[1] === "#" ? 1 : name[1] === "b" ? -1 : 0) + 12) % 12;
+
+// a key's scale and chords, worked out once per key. each scale note takes the next letter, so a
+// key never names a note twice (B♭, not A♯, in F)
+const theories = new Map();
+function theory(tonic, mode) {
+  const id = `${tonic} ${mode}`;
+  if (theories.has(id)) return theories.get(id);
+  const letter = LETTERS.indexOf(tonic[0]), tpc = pcOf(tonic), base = 48 + tpc;
+  const scale = MODES[mode].map((step, i) => {
+    const l = (letter + i) % 7, pc = (tpc + step) % 12;
+    const acc = ((pc - LETTER_PC[l]) % 12 + 18) % 12 - 6;
+    return { name: LETTERS[l] + (acc > 0 ? "#".repeat(acc) : "b".repeat(-acc)), acc, pc, midi: base + step, degree: i + 1 };
+  });
+  const spell = (pc) => scale.find((n) => n.pc === ((pc % 12) + 12) % 12);
+  const t = {
+    tonic, mode, scale, spell,
+    name: `${pretty(tonic)} ${mode}`,
+    // a note name with its octave, for the data: B♯ belongs to the octave below its key, C♭ to the one above
+    noteName(midi) {
+      const n = spell(midi);
+      return n ? n.name + (Math.floor((midi - n.acc) / 12) - 1) : `${midi}`;
+    },
+  };
+  t.chords = [1, 2, 3, 4, 5, 6, 7].map((d) => chordOn(t, d));
+  theories.set(id, t);
+  return t;
+}
+// stack every other note of the scale, starting from degree d
+function chordOn(t, d) {
+  const at = (i) => t.scale[i % 7].midi + 12 * Math.floor(i / 7);
+  const i = d - 1, notes = [at(i), at(i + 2), at(i + 4)];
+  const steps = [notes[1] - notes[0], notes[2] - notes[1]];
+  const quality = steps[0] === 4 ? "major" : steps[1] === 4 ? "minor" : "diminished";
+  const numeral = quality === "major" ? ROMAN[i] : ROMAN[i].toLowerCase() + (quality === "diminished" ? "°" : "");
+  const root = pretty(t.scale[i].name);
+  return {
+    degree: d, notes, pcs: notes.map((n) => n % 12), quality, numeral, steps,
+    name: root + (quality === "minor" ? "m" : quality === "diminished" ? "°" : ""),
+    long: `${root} ${QUALITY_WORD[quality]}`,
+    letters: notes.map((n) => pretty(t.spell(n).name)),
+  };
+}
+const sharedWithHome = (t, c) => c.pcs.filter((p) => t.chords[0].pcs.includes(p)).length;
+
+// every station keeps its own key, and each loop player its own four chords, so changing one
+// station never changes another
+const DEFAULT_LOOP = [1, 6, 3, 7];
+const st = {
+  s1: { tonic: "A", mode: "minor" },
+  s2: { tonic: "A", mode: "minor", loop: [...DEFAULT_LOOP] },
+  s3: { tonic: "A", mode: "minor", loop: [...DEFAULT_LOOP] },
+  s4: { tonic: "A", mode: "minor", loop: [...DEFAULT_LOOP], style: "synthwave" },
+};
+const keyOf = (s) => theory(s.tonic, s.mode);
+// a key spelled one way in major may be spelled the other in minor (D♭ major, C♯ minor)
+const respell = (tonic, mode) => (TONICS[mode].includes(tonic) ? tonic : TONICS[mode].find((t) => pcOf(t) === pcOf(tonic)));
+
+// ---------- Instruments ----------
+// each instrument is a sound in Sound Bench's layout, pitched at A4 (440 Hz). playing a note raises
+// or lowers every tone layer by the note's pitch over 440; noise layers play as written. an
+// instrument with sustain holds each layer at full volume until the note ends, then lets it fade
+// over the rest of its dur, so the same pad can hold a beat or a bar
+const INSTRUMENTS = {
+  "keys": { "name": "Soft keys", "use": "Station 1's chords and scale", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 440, "gain": 0.16, "attack": 0.004, "dur": 1.4 },
+    { "kind": "tone", "wave": "sine", "freq": 880, "gain": 0.04, "attack": 0.004, "dur": 0.5 }
+  ] },
+  "kick": { "name": "Kick", "use": "Synthwave's kick drum", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 160, "to": 45, "gain": 0.55, "attack": 0.002, "dur": 0.32 },
+    { "kind": "noise", "filter": "lowpass", "freq": 900, "q": 0.7, "gain": 0.25, "attack": 0.001, "dur": 0.03 }
+  ] },
+  "gated-snare": { "name": "Gated snare", "use": "Synthwave's snare: it holds, then cuts off short", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 1900, "q": 0.6, "gain": 0.4, "attack": 0.002, "hold": 0.16, "dur": 0.2 },
+    { "kind": "tone", "wave": "triangle", "freq": 200, "to": 170, "gain": 0.22, "attack": 0.002, "dur": 0.12 }
+  ] },
+  "hat": { "name": "Hi-hat", "use": "A closed hi-hat", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 7500, "q": 0.7, "gain": 0.13, "attack": 0.001, "dur": 0.045 }
+  ] },
+  "pad": { "name": "Saw pad", "use": "Synthwave's held chords: two sawtooths a little out of tune with each other, over a soft triangle", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 440, "gain": 0.02, "attack": 0.3, "dur": 1 },
+    { "kind": "tone", "wave": "sawtooth", "freq": 443.3, "gain": 0.02, "attack": 0.3, "dur": 1 },
+    { "kind": "tone", "wave": "triangle", "freq": 220, "gain": 0.05, "attack": 0.3, "dur": 1 }
+  ] },
+  "bass": { "name": "Saw bass", "use": "Synthwave's bass, short and punchy", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 440, "gain": 0.08, "attack": 0.003, "dur": 0.28 },
+    { "kind": "tone", "wave": "sine", "freq": 440, "gain": 0.2, "attack": 0.003, "dur": 0.3 }
+  ] },
+  "pluck": { "name": "Pluck", "use": "Synthwave's arpeggio", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 440, "gain": 0.06, "attack": 0.002, "dur": 0.16 },
+    { "kind": "tone", "wave": "triangle", "freq": 880, "gain": 0.04, "attack": 0.002, "dur": 0.1 }
+  ] },
+  "saw-lead": { "name": "Saw lead", "use": "Synthwave's lead", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 440, "gain": 0.045, "attack": 0.02, "dur": 0.35 },
+    { "kind": "tone", "wave": "sawtooth", "freq": 441.8, "gain": 0.035, "attack": 0.02, "dur": 0.35 },
+    { "kind": "tone", "wave": "sine", "freq": 440, "gain": 0.05, "attack": 0.02, "dur": 0.35 }
+  ] },
+  "chip-kick": { "name": "Chip kick", "use": "Chiptune's kick: a triangle falling fast", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 220, "to": 50, "gain": 0.45, "attack": 0.001, "dur": 0.1 }
+  ] },
+  "chip-snare": { "name": "Chip snare", "use": "Chiptune's snare: a burst of noise", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 3000, "q": 0.5, "gain": 0.32, "attack": 0.001, "dur": 0.09 }
+  ] },
+  "chip-hat": { "name": "Chip hat", "use": "Chiptune's hi-hat", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 8000, "q": 0.7, "gain": 0.09, "attack": 0.001, "dur": 0.025 }
+  ] },
+  "chip-bass": { "name": "Triangle bass", "use": "Chiptune's bass, on the triangle channel", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 440, "gain": 0.17, "attack": 0.002, "dur": 0.06 }
+  ] },
+  "chip-arp": { "name": "Square arpeggio", "use": "Chiptune's chords, one note at a time", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 440, "gain": 0.035, "attack": 0.001, "hold": 0.05, "dur": 0.08 }
+  ] },
+  "chip-lead": { "name": "Square lead", "use": "Chiptune's lead", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "square", "freq": 440, "gain": 0.06, "attack": 0.002, "dur": 0.08 }
+  ] },
+  "four-kick": { "name": "Disco kick", "use": "Italo's kick, on every beat", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 130, "to": 48, "gain": 0.6, "attack": 0.002, "dur": 0.25 },
+    { "kind": "noise", "filter": "lowpass", "freq": 1200, "q": 0.7, "gain": 0.2, "attack": 0.001, "dur": 0.02 }
+  ] },
+  "clap": { "name": "Clap", "use": "Italo's clap: a few bursts of noise close together", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 1300, "q": 1.3, "gain": 0.4, "attack": 0.002, "dur": 0.16, "repeat": 3, "spread": 0.025 }
+  ] },
+  "open-hat": { "name": "Open hi-hat", "use": "Italo's hi-hat, between the beats", "layers": [
+    { "kind": "noise", "filter": "highpass", "freq": 6500, "q": 0.7, "gain": 0.09, "attack": 0.002, "dur": 0.22 }
+  ] },
+  "octave-bass": { "name": "Octave bass", "use": "Italo's bass, bouncing between octaves", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 440, "gain": 0.09, "attack": 0.002, "dur": 0.13 },
+    { "kind": "tone", "wave": "sine", "freq": 440, "gain": 0.2, "attack": 0.002, "dur": 0.14 }
+  ] },
+  "strings": { "name": "String pad", "use": "Italo's chords, struck twice a bar", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 440, "gain": 0.045, "attack": 0.12, "dur": 0.7 },
+    { "kind": "tone", "wave": "triangle", "freq": 442.5, "gain": 0.045, "attack": 0.12, "dur": 0.7 },
+    { "kind": "tone", "wave": "sawtooth", "freq": 880, "gain": 0.008, "attack": 0.12, "dur": 0.7 }
+  ] },
+  "seq": { "name": "Sequence", "use": "Italo's rolling arpeggio", "layers": [
+    { "kind": "tone", "wave": "sawtooth", "freq": 440, "gain": 0.05, "attack": 0.002, "dur": 0.12 },
+    { "kind": "tone", "wave": "square", "freq": 880, "gain": 0.02, "attack": 0.002, "dur": 0.08 }
+  ] },
+  "square-lead": { "name": "Bright lead", "use": "Italo's lead", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "square", "freq": 440, "gain": 0.04, "attack": 0.01, "dur": 0.3 },
+    { "kind": "tone", "wave": "sawtooth", "freq": 880, "gain": 0.015, "attack": 0.01, "dur": 0.3 }
+  ] },
+  "swell": { "name": "Swell pad", "use": "Ambient's chords, slow to rise and slow to fade", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 440, "gain": 0.05, "attack": 1.5, "dur": 4 },
+    { "kind": "tone", "wave": "triangle", "freq": 441, "gain": 0.04, "attack": 1.8, "dur": 4 },
+    { "kind": "tone", "wave": "sine", "freq": 880, "gain": 0.015, "attack": 2, "dur": 4 }
+  ] },
+  "deep-bass": { "name": "Deep bass", "use": "Ambient's bass, one low note fading in", "sustain": true, "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 440, "gain": 0.12, "attack": 0.8, "dur": 3 }
+  ] },
+  "glass": { "name": "Glass", "use": "Ambient's arpeggio, a few high notes", "layers": [
+    { "kind": "tone", "wave": "triangle", "freq": 440, "gain": 0.06, "attack": 0.01, "dur": 1.2 }
+  ] },
+  "bell": { "name": "Bell", "use": "Ambient's lead: overtones that don't line up, like struck metal", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 440, "gain": 0.08, "attack": 0.003, "dur": 2.6 },
+    { "kind": "tone", "wave": "sine", "freq": 1214, "gain": 0.025, "attack": 0.003, "dur": 1.2 },
+    { "kind": "tone", "wave": "sine", "freq": 880, "gain": 0.02, "attack": 0.003, "dur": 1.8 }
+  ] }
+};
+const LAYER_KEYS = ["kind", "wave", "filter", "freq", "to", "q", "gain", "attack", "hold", "dur", "at", "vary", "repeat", "spread"];
+
+// ---------- The player ----------
+// the same player and output as Sound Bench and Hardpoint, plus a pitch for each note
+const noiseBufs = new WeakMap();
+function noiseBuf(ctx) {
+  if (!noiseBufs.has(ctx)) {
+    const b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), ch = b.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    noiseBufs.set(ctx, b);
+  }
+  return noiseBufs.get(ctx);
+}
+function output(ctx) {
+  // a limiter that only steps in when sounds pile up
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -4;
+  comp.knee.value = 0;
+  comp.ratio.value = 20;
+  comp.attack.value = 0.001;
+  comp.release.value = 0.1;
+  const master = ctx.createGain();
+  master.gain.value = 0.8;
+  master.connect(comp).connect(ctx.destination);
+  return master;
+}
+function env(ctx, out, t, peak, attack, dur, hold) {
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  if (hold > 0) g.gain.setValueAtTime(peak, t + attack + hold);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(out);
+  return g;
+}
+function voice(ctx, out, L, t, dur, attack, hold, v, ratio) {
+  const tone = L.kind === "tone";
+  const src = tone ? ctx.createOscillator() : ctx.createBufferSource();
+  let node = src, glide, r = 1;
+  if (tone) {
+    src.type = L.wave || "sine";
+    glide = src.frequency;
+    r = ratio;
+  } else {
+    src.buffer = noiseBuf(ctx);
+    src.loop = true;
+    node = ctx.createBiquadFilter();
+    node.type = L.filter || "bandpass";
+    node.Q.value = L.q ?? 1;
+    src.connect(node);
+    glide = node.frequency;
+  }
+  glide.setValueAtTime(L.freq * v * r, t);
+  if (L.to) glide.exponentialRampToValueAtTime(L.to * v * r, t + dur);
+  attack = Math.min(attack, dur * 0.95);
+  node.connect(env(ctx, out, t, L.gain, attack, dur, Math.min(hold, dur * 0.95 - attack)));
+  if (tone) src.start(t); else src.start(t, Math.random() * 0.8);
+  src.stop(t + dur + 0.05);
+}
+const mtof = (m) => 440 * 2 ** ((m - 69) / 12);
+// one note of an instrument: midi null plays it as written, len is how long the note lasts in seconds
+function playNote(ctx, out, inst, t, midi, len) {
+  const ratio = midi == null ? 1 : mtof(midi) / 440;
+  for (const L of inst.layers) {
+    const attack = L.attack || 0.003;
+    let hold = L.hold || 0, dur = L.dur;
+    if (inst.sustain && len) {
+      const h = Math.max(hold, len - attack);
+      dur += h - hold;
+      hold = h;
+    }
+    for (let n = 0; n < (L.repeat || 1); n++) {
+      const v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+      const late = (L.at || 0) + (L.repeat > 1 ? Math.random() * (L.spread || 0) : 0);
+      voice(ctx, out, L, t + late, dur, attack, hold, v, ratio);
+    }
+  }
+}
+
+let audio = null, audioOut = null;
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    // you pressed a button to hear it, so play even with the iPhone's silent switch on
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+    audioOut = output(audio);
+  }
+  // iOS can leave the context suspended or "interrupted" after calls and app switches
+  if (audio.state !== "running") audio.resume();
+  return audio;
+}
+// a touch pointerdown doesn't count as a gesture, so start and resume audio from the ones that do
+["pointerup", "touchend", "keydown"].forEach((t) =>
+  document.addEventListener(t, () => ac(), { capture: true, passive: true }));
+
+function playKeys(midis, at = 0) {
+  const a = ac();
+  if (!a) return;
+  for (const m of midis) playNote(a, audioOut, INSTRUMENTS.keys, a.currentTime + 0.02 + at, m, 0);
+}
+
+// ---------- Styles ----------
+// a style turns four chords into tracks of notes. every loop is four bars of sixteen steps, four
+// steps to a beat; a note is [step, midi or null, length in steps]
+const PARTS = [
+  { id: "drums", name: "Drums", key: "d" },
+  { id: "bass", name: "Bass", key: "b" },
+  { id: "chords", name: "Chords", key: "c" },
+  { id: "arp", name: "Arpeggio", key: "a" },
+  { id: "lead", name: "Lead", key: "l" },
+];
+const partById = (id) => PARTS.find((p) => p.id === id);
+
+// the bass plays each root between A1 and G♯2
+const bassRoot = (ch) => 33 + (((ch.notes[0] - 33) % 12) + 12) % 12;
+// every three-note stack of the chord that fits between lo and hi
+function closeVoicings(pcs, lo, hi) {
+  const out = [];
+  for (let m = lo; m <= hi; m++) {
+    if (!pcs.includes(m % 12)) continue;
+    const v = [m];
+    let n = m;
+    for (let k = 0; k < 2; k++) { n++; while (!pcs.includes(n % 12)) n++; v.push(n); }
+    if (v[2] <= hi) out.push(v);
+  }
+  return out;
+}
+// voice leading: each chord takes the stack whose notes move least from the one before
+function voiceLead(bars, lo = 55, hi = 76) {
+  let prev = null;
+  return bars.map((ch) => {
+    const score = (v) => prev ? v.reduce((s, n, i) => s + Math.abs(n - prev[i]), 0) : Math.abs(v[1] - 64);
+    prev = closeVoicings(ch.pcs, lo, hi).reduce((best, v) => (score(v) < score(best) ? v : best));
+    return prev;
+  });
+}
+// the chord's notes from lo upward, for tunes to pick from
+const tonesFrom = (ch, lo) => Array.from({ length: 36 }, (_, i) => lo + i).filter((m) => ch.pcs.includes(m % 12));
+
+function tracker() {
+  const list = [];
+  return {
+    list,
+    track(part, instrument) { const tr = { part, instrument, notes: [] }; list.push(tr); return tr; },
+  };
+}
+const add = (tr, step, midi = null, len = 1) => tr.notes.push([step, midi, len]);
+// the same drum steps in every bar
+const everyBar = (tr, steps) => { for (let b = 0; b < 4; b++) for (const s of steps) add(tr, b * 16 + s); };
+// a tune written as [step, length, which chord note] per bar, the chord notes counted up from lo
+function melody(tr, bars, bars4, lo) {
+  bars.forEach((ch, b) => {
+    const tones = tonesFrom(ch, lo);
+    for (const [s, len, i] of bars4[b]) add(tr, b * 16 + s, tones[i], len);
+  });
+}
+
+const STYLES = {
+  plain: {
+    name: "Plain", tempo: 100,
+    build(bars) {
+      const t = tracker(), pads = voiceLead(bars);
+      const bass = t.track("bass", "bass"), pad = t.track("chords", "pad");
+      bars.forEach((ch, b) => {
+        add(bass, b * 16, bassRoot(ch), 8);
+        add(bass, b * 16 + 8, bassRoot(ch), 8);
+        for (const m of pads[b]) add(pad, b * 16, m, 16);
+      });
+      return t.list;
+    },
+  },
+  synthwave: {
+    name: "Synthwave", tempo: 100,
+    about: [
+      ["Drums", "a kick on beats one and three, a gated snare on two and four, and a hi-hat on every half beat."],
+      ["Bass", "the root on every half beat, low and steady."],
+      ["Chords", "a held pad of two sawtooth waves a little out of tune with each other, which makes them shimmer."],
+      ["Arpeggio", "up and down the chord, four notes a beat."],
+      ["Lead", "a slow tune of long notes."],
+    ],
+    build(bars) {
+      const t = tracker(), pads = voiceLead(bars);
+      everyBar(t.track("drums", "kick"), [0, 8]);
+      const snare = t.track("drums", "gated-snare");
+      everyBar(snare, [4, 12]);
+      add(snare, 48 + 14); add(snare, 48 + 15);
+      everyBar(t.track("drums", "hat"), [0, 2, 4, 6, 8, 10, 12, 14]);
+      const bass = t.track("bass", "bass"), pad = t.track("chords", "pad"), arp = t.track("arp", "pluck");
+      bars.forEach((ch, b) => {
+        for (let s = 0; s < 16; s += 2) add(bass, b * 16 + s, bassRoot(ch), 2);
+        for (const m of pads[b]) add(pad, b * 16, m, 16);
+        const up = [...pads[b], ...pads[b].map((m) => m + 12)];
+        [0, 1, 2, 3, 4, 3, 2, 1].forEach((i, k) => { add(arp, b * 16 + k, up[i]); add(arp, b * 16 + 8 + k, up[i]); });
+      });
+      melody(t.track("lead", "saw-lead"), bars, [
+        [[0, 6, 2], [6, 2, 3], [8, 6, 2], [14, 2, 1]],
+        [[0, 6, 2], [6, 2, 1], [8, 8, 2]],
+        [[0, 4, 3], [4, 4, 4], [8, 6, 3], [14, 2, 2]],
+        [[0, 6, 2], [6, 2, 3], [8, 8, 1]],
+      ], 64);
+      return t.list;
+    },
+  },
+  chiptune: {
+    name: "Chiptune", tempo: 150,
+    about: [
+      ["Drums", "short bursts of noise, and a triangle wave falling fast for the kick."],
+      ["Bass", "a triangle wave hopping between the root, the chord's top note, and the root an octave up."],
+      ["Chords", "none. An old game console had three channels for notes, so its chords became arpeggios."],
+      ["Arpeggio", "the chord's three notes, one per step, round and round so fast they blur into a chord."],
+      ["Lead", "a square wave playing quick, bouncy notes."],
+    ],
+    build(bars) {
+      const t = tracker(), pads = voiceLead(bars);
+      everyBar(t.track("drums", "chip-kick"), [0, 8]);
+      const snare = t.track("drums", "chip-snare");
+      everyBar(snare, [4, 12]);
+      add(snare, 48 + 14); add(snare, 48 + 15);
+      everyBar(t.track("drums", "chip-hat"), [2, 6, 10, 14]);
+      const bass = t.track("bass", "chip-bass"), arp = t.track("arp", "chip-arp");
+      bars.forEach((ch, b) => {
+        const r = bassRoot(ch), top = r + (ch.notes[2] - ch.notes[0]), o = b * 16;
+        [[0, r, 3], [3, r, 1], [4, top, 2], [6, r + 12, 2], [8, r, 3], [11, r, 1], [12, top, 2], [14, r + 12, 2]]
+          .forEach(([s, m, len]) => add(bass, o + s, m, len));
+        for (let s = 0; s < 16; s++) add(arp, o + s, pads[b][s % 3] + 12);
+      });
+      melody(t.track("lead", "chip-lead"), bars, [
+        [[0, 3, 2], [3, 3, 1], [6, 2, 2], [8, 2, 3], [10, 2, 2], [12, 4, 1]],
+        [[0, 3, 1], [3, 3, 2], [6, 2, 3], [8, 4, 4], [12, 4, 3]],
+        [[0, 3, 2], [3, 3, 3], [6, 2, 4], [8, 2, 3], [10, 2, 2], [12, 4, 3]],
+        [[0, 2, 4], [2, 2, 3], [4, 2, 2], [6, 2, 1], [8, 8, 0]],
+      ], 69);
+      return t.list;
+    },
+  },
+  italo: {
+    name: "Italo disco", tempo: 120,
+    about: [
+      ["Drums", "a kick on every beat, a clap on two and four, and an open hi-hat between the beats."],
+      ["Bass", "the root, jumping up an octave and back on every half beat."],
+      ["Chords", "strings, struck at the start and middle of each bar."],
+      ["Arpeggio", "a rolling sequence, four notes a beat, that never stops."],
+      ["Lead", "a catchy line that comes back each bar with small changes."],
+    ],
+    build(bars) {
+      const t = tracker(), pads = voiceLead(bars);
+      everyBar(t.track("drums", "four-kick"), [0, 4, 8, 12]);
+      everyBar(t.track("drums", "clap"), [4, 12]);
+      everyBar(t.track("drums", "open-hat"), [2, 6, 10, 14]);
+      const bass = t.track("bass", "octave-bass"), pad = t.track("chords", "strings"), arp = t.track("arp", "seq");
+      bars.forEach((ch, b) => {
+        const r = bassRoot(ch), o = b * 16;
+        for (let s = 0; s < 16; s += 2) add(bass, o + s, s % 4 ? r + 12 : r, 2);
+        for (const m of pads[b]) { add(pad, o, m, 8); add(pad, o + 8, m, 8); }
+        const up = [...pads[b], ...pads[b].map((m) => m + 12)];
+        [0, 2, 1, 3, 2, 4, 3, 5, 4, 3, 2, 4, 1, 3, 0, 2].forEach((i, s) => add(arp, o + s, up[i]));
+      });
+      melody(t.track("lead", "square-lead"), bars, [
+        [[0, 3, 2], [3, 3, 2], [6, 2, 3], [8, 4, 2], [12, 4, 1]],
+        [[0, 3, 2], [3, 3, 2], [6, 2, 3], [8, 8, 4]],
+        [[0, 3, 3], [3, 3, 3], [6, 2, 2], [8, 4, 1], [12, 4, 2]],
+        [[0, 3, 1], [3, 3, 2], [6, 10, 0]],
+      ], 67);
+      return t.list;
+    },
+  },
+  ambient: {
+    name: "Ambient", tempo: 70,
+    about: [
+      ["Drums", "none. Nothing marks the beat, so time seems to float."],
+      ["Bass", "one low note a bar, fading in."],
+      ["Chords", "soft sine waves that swell in slowly and take seconds to fade."],
+      ["Arpeggio", "three high notes a bar, far apart."],
+      ["Lead", "a bell now and then, ringing on long after it's struck."],
+    ],
+    build(bars) {
+      const t = tracker(), pads = voiceLead(bars);
+      const bass = t.track("bass", "deep-bass"), pad = t.track("chords", "swell"), arp = t.track("arp", "glass");
+      bars.forEach((ch, b) => {
+        const o = b * 16;
+        add(bass, o, bassRoot(ch), 16);
+        for (const m of pads[b]) add(pad, o, m, 16);
+        [[0, 0], [6, 1], [10, 2]].forEach(([s, i]) => add(arp, o + s, pads[b][i] + 12, 4));
+      });
+      melody(t.track("lead", "bell"), bars, [
+        [[4, 8, 2]],
+        [[2, 4, 3], [10, 6, 2]],
+        [[6, 10, 4]],
+        [[0, 6, 3], [8, 8, 1]],
+      ], 72);
+      return t.list;
+    },
+  },
+};
+const STYLE_ORDER = ["synthwave", "chiptune", "italo", "ambient"];
+
+// a whole loop, written down: the data the player reads, and what "The loop as data" shows
+function songFor(styleId, s) {
+  const style = STYLES[styleId], t = keyOf(s), bars = s.loop.map((d) => t.chords[d - 1]);
+  const tracks = style.build(bars).filter((tr) => tr.notes.length);
+  const at = new Map();
+  for (const tr of tracks) for (const [step, midi, len] of tr.notes) {
+    if (!at.has(step)) at.set(step, []);
+    at.get(step).push({ part: tr.part, inst: INSTRUMENTS[tr.instrument], midi, len });
+  }
+  return { name: style.name, tempo: style.tempo, theory: t, key: t.name, chords: bars.map((c) => c.name), tracks, at };
+}
+
+// ---------- Writing loops down ----------
+// one bar of notes per line and one layer per line, like the sounds in the other curios' pages
+const ascii = (s) => s.replace(/♭/g, "b").replace(/♯/g, "#");
+function noteText([step, midi, len], t) {
+  const parts = [step];
+  if (midi != null || len !== 1) parts.push(midi == null ? "null" : `"${t.noteName(midi)}"`);
+  if (len !== 1) parts.push(len);
+  return `[${parts.join(", ")}]`;
+}
+function layerText(L) {
+  return "{ " + LAYER_KEYS.filter((k) => k in L).map((k) => `"${k}": ${JSON.stringify(L[k])}`).join(", ") + " }";
+}
+function songText(song) {
+  const out = ["{"];
+  out.push(`  "name": ${JSON.stringify(song.name)}, "tempo": ${song.tempo}, "steps": 16, "bars": 4, "key": ${JSON.stringify(ascii(song.key))},`);
+  out.push(`  "chords": [${song.chords.map((c) => JSON.stringify(ascii(c))).join(", ")}],`);
+  out.push(`  "tracks": [`);
+  song.tracks.forEach((tr, i) => {
+    out.push(`    { "part": "${tr.part}", "instrument": "${tr.instrument}", "notes": [`);
+    const lines = [0, 1, 2, 3].map((b) => tr.notes.filter((n) => Math.floor(n[0] / 16) === b).map((n) => noteText(n, song.theory)).join(", ")).filter(Boolean);
+    lines.forEach((l, j) => out.push(`      ${l}${j < lines.length - 1 ? "," : ""}`));
+    out.push(`    ] }${i < song.tracks.length - 1 ? "," : ""}`);
+  });
+  out.push("  ],");
+  out.push(`  "instruments": {`);
+  const ids = [...new Set(song.tracks.map((tr) => tr.instrument))];
+  ids.forEach((id, i) => {
+    const s = INSTRUMENTS[id];
+    out.push(`    "${id}": { "name": ${JSON.stringify(s.name)}, "use": ${JSON.stringify(s.use)}, ${s.sustain ? `"sustain": true, ` : ""}"layers": [`);
+    s.layers.forEach((L, j) => out.push(`      ${layerText(L)}${j < s.layers.length - 1 ? "," : ""}`));
+    out.push(`    ] }${i < ids.length - 1 ? "," : ""}`);
+  });
+  out.push("  }");
+  out.push("}");
+  return out.join("\n");
+}
+
+// ---------- Transport ----------
+// one loop plays at a time. a timer looks a little ahead and books each step's notes on the audio
+// clock, which keeps time far better than the timer could on its own
+const T = { owner: null, step: 0, next: 0, timer: 0, queue: [] };
+const LOOKAHEAD = 0.12;
+function start(owner) {
+  stop();
+  const a = ac();
+  if (!a) return;
+  T.owner = owner;
+  T.step = 0;
+  T.next = a.currentTime + 0.08;
+  T.queue = [];
+  T.timer = setInterval(tick, 25);
+  tick();
+  requestAnimationFrame(follow);
+  owner.onPlay(true);
+}
+function stop() {
+  if (!T.owner) return;
+  clearInterval(T.timer);
+  const was = T.owner;
+  T.owner = null;
+  was.onPlay(false);
+  was.onStep(-1);
+}
+const toggle = (owner) => (T.owner === owner ? stop() : start(owner));
+function tick() {
+  if (!T.owner) return;
+  const a = audio, song = T.owner.song(), stepDur = 60 / song.tempo / 4;
+  // a hidden tab slows the timer down; skip ahead rather than play a pile of late notes at once
+  if (T.next < a.currentTime - 0.05) T.next = a.currentTime + 0.05;
+  while (T.next < a.currentTime + LOOKAHEAD) {
+    for (const n of song.at.get(T.step) || []) {
+      if (T.owner.silent(n.part)) continue;
+      playNote(a, audioOut, n.inst, T.next, n.midi, n.len * stepDur);
+    }
+    T.queue.push([T.step, T.next]);
+    T.next += stepDur;
+    T.step = (T.step + 1) % 64;
+  }
+}
+// move the pictures along as each booked step is heard
+function follow() {
+  if (!T.owner) return;
+  let shown = null;
+  while (T.queue.length && T.queue[0][1] <= audio.currentTime) shown = T.queue.shift()[0];
+  if (shown != null) T.owner.onStep(shown);
+  requestAnimationFrame(follow);
+}
+
+// ---------- Key pickers ----------
+// a tonic and major or minor for one station. it changes only that station's state
+function keyPicker(host, s, onChange) {
+  const id = `${host.id}-tonic`;
+  host.classList.add("row");
+  host.innerHTML = `<label class="label" for="${id}">Key</label><select id="${id}"></select><span class="seg" role="group" aria-label="Major or minor"></span>`;
+  const sel = host.querySelector("select"), seg = host.querySelector(".seg");
+  const modes = [["minor", "Minor"], ["major", "Major"]].map(([m, label]) => {
+    const b = button("small", label);
+    b.addEventListener("click", () => {
+      if (s.mode === m) return;
+      s.tonic = respell(s.tonic, m);
+      s.mode = m;
+      paint();
+      onChange();
+    });
+    seg.append(b);
+    return [m, b];
+  });
+  sel.addEventListener("change", () => { s.tonic = sel.value; onChange(); });
+  function paint() {
+    sel.innerHTML = TONICS[s.mode].map((t) => `<option value="${t}"${t === s.tonic ? " selected" : ""}>${pretty(t)}</option>`).join("");
+    modes.forEach(([m, b]) => b.setAttribute("aria-pressed", s.mode === m));
+  }
+  paint();
+  return paint;
+}
+const PRESETS = [
+  ["Synthwave", "minor", [1, 6, 3, 7]],
+  ["Night drive", "minor", [1, 7, 6, 7]],
+  ["Brooding", "minor", [1, 4, 6, 5]],
+  ["Pop", "major", [1, 5, 6, 4]],
+  ["Doo-wop", "major", [1, 6, 4, 5]],
+];
+// a row of preset loops; each sets the loop and the key's mode it needs
+function presetRow(host, s, repaintKey, onChange) {
+  host.className = "row";
+  host.setAttribute("role", "group");
+  host.setAttribute("aria-label", "Presets");
+  host.innerHTML = `<span class="label">Try:</span>`;
+  for (const [label, mode, prog] of PRESETS) {
+    const b = button("small", label);
+    b.addEventListener("click", () => {
+      s.loop = [...prog];
+      s.tonic = respell(s.tonic, mode);
+      s.mode = mode;
+      repaintKey();
+      onChange(true);
+    });
+    host.append(b);
+  }
+}
+
+// ---------- Station 1: a key and its chords ----------
+const KB_LO = 48, KB_HI = 79, WW = 24, WH = 112, BW = 15, BH = 70;
+const isBlack = (m) => [1, 3, 6, 8, 10].includes(m % 12);
+const kbKeys = new Map();
+function buildKeyboard() {
+  const svg = $("kb");
+  const whites = [];
+  for (let m = KB_LO; m <= KB_HI; m++) if (!isBlack(m)) whites.push(m);
+  svg.setAttribute("viewBox", `0 0 ${whites.length * WW} ${WH}`);
+  const blacks = [];
+  let x = 0;
+  for (let m = KB_LO; m <= KB_HI; m++) {
+    if (isBlack(m)) { blacks.push([m, x - BW / 2]); continue; }
+    const r = svgEl("rect", { x: x + 0.5, y: 0.5, width: WW - 1, height: WH - 1, rx: 3, class: "white", "data-midi": m });
+    svg.append(r);
+    kbKeys.set(m, { el: r, cx: x + WW / 2, cy: WH - 13 });
+    x += WW;
+  }
+  // black keys go on top, so they're drawn last
+  for (const [m, bx] of blacks) {
+    const r = svgEl("rect", { x: bx, y: 0, width: BW, height: BH, rx: 2, class: "black", "data-midi": m });
+    svg.append(r);
+    kbKeys.set(m, { el: r, cx: bx + BW / 2, cy: BH - 11 });
+  }
+  svg.addEventListener("click", (e) => {
+    const m = +e.target.getAttribute("data-midi");
+    if (!m) return;
+    playKeys([m]);
+    lightKeys([m]);
+    const t = keyOf(st.s1), n = t.spell(m);
+    $("s1-cap").textContent = n
+      ? `${pretty(n.name)}, note ${n.degree} of the scale.`
+      : `That note isn't in ${t.name}.`;
+  });
+}
+let dots = [];
+function paintKeyboard() {
+  const t = keyOf(st.s1), svg = $("kb");
+  for (const d of dots) d.remove();
+  dots = [];
+  for (const [m, k] of kbKeys) {
+    const n = t.spell(m);
+    if (!n) continue;
+    const dot = svgEl("circle", { cx: k.cx, cy: k.cy, r: n.degree === 1 ? 6.5 : 4.5, class: n.degree === 1 ? "dot home" : "dot" });
+    svg.append(dot);
+    dots.push(dot);
+  }
+  svg.setAttribute("aria-label", `A keyboard from C3 to G5 with the ${t.name} scale marked`);
+}
+function lightKeys(midis) {
+  for (const [m, k] of kbKeys) k.el.classList.toggle("lit", midis.includes(m));
+}
+
+function buildChordButtons(host, onPick, label) {
+  return [1, 2, 3, 4, 5, 6, 7].map((d) => {
+    const b = button("chord", "", { "aria-keyshortcuts": String(d) });
+    b.addEventListener("click", () => onPick(d));
+    host.append(b);
+    b.label = label;
+    return b;
+  });
+}
+function paintChordButton(b, t, c, withDots) {
+  const n = sharedWithHome(t, c);
+  b.innerHTML = `<span class="num">${c.numeral}</span><span class="nm">${c.name}</span>` +
+    (withDots ? `<span class="dots" aria-hidden="true">${"●".repeat(n)}${"○".repeat(3 - n)}</span>` : "") +
+    `<kbd>${c.degree}</kbd>`;
+  b.setAttribute("aria-label", b.label(c, n));
+}
+let s1Chords = [];
+function playChord1(d) {
+  const c = keyOf(st.s1).chords[d - 1];
+  playKeys(c.notes);
+  lightKeys(c.notes);
+  s1Chords.forEach((b, i) => b.classList.toggle("lit", i === d - 1));
+  const how = { major: "Four then three makes a major chord.", minor: "Three then four makes a minor chord.", diminished: "Three and three makes a diminished chord." }[c.quality];
+  $("s1-cap").textContent = `${c.numeral}, ${c.long}: ${c.letters.join(", ")}. From ${c.letters[0]} it's ${c.steps[0]} half steps up to ${c.letters[1]}, then ${c.steps[1]} more to ${c.letters[2]}. ${how}`;
+}
+let scaleTimers = [];
+function playScale() {
+  const t = keyOf(st.s1);
+  scaleTimers.forEach(clearTimeout);
+  const notes = [...t.scale.map((n) => n.midi), t.scale[0].midi + 12];
+  notes.forEach((m, i) => {
+    playKeys([m], i * 0.28);
+    scaleTimers.push(setTimeout(() => lightKeys([m]), i * 280 + 20));
+  });
+  scaleTimers.push(setTimeout(() => lightKeys([]), notes.length * 280 + 200));
+  s1Chords.forEach((b) => b.classList.remove("lit"));
+  $("s1-cap").textContent = `The ${t.name} scale: ${t.scale.map((n) => pretty(n.name)).join(", ")}, and home again.`;
+}
+function paint1() {
+  const t = keyOf(st.s1);
+  $("s1-scale").innerHTML = t.scale.map((n) => `<li${n.degree === 1 ? ' class="home"' : ""}><span>${n.degree}</span>${pretty(n.name)}</li>`).join("");
+  s1Chords.forEach((b, i) => paintChordButton(b, t, t.chords[i], false));
+  paintKeyboard();
+  lightKeys([]);
+  s1Chords.forEach((b) => b.classList.remove("lit"));
+}
+function buildStation1() {
+  buildKeyboard();
+  s1Chords = buildChordButtons($("s1-chords"), playChord1, (c) => `${c.numeral}, ${c.long}`);
+  $("s1-scale-play").addEventListener("click", playScale);
+  keyPicker($("s1-key"), st.s1, () => { paint1(); writeHash(); });
+  paint1();
+}
+
+// ---------- Station 2: home and away ----------
+let slot = 0, nowBar = -1;
+const slots = [];
+let s2Chords = [];
+function buildStation2() {
+  const repaintKey = keyPicker($("s2-key"), st.s2, changed2);
+  presetRow($("s2-presets"), st.s2, repaintKey, (fromPreset) => {
+    slot = 0;
+    changed2();
+    // a preset plays at once, unless another station's loop is playing
+    if (fromPreset && !T.owner) start(owners.s2);
+  });
+  for (let i = 0; i < 4; i++) {
+    const b = button("slot", "");
+    b.addEventListener("click", () => { slot = i; paint2(); });
+    $("s2-slots").append(b);
+    slots.push(b);
+  }
+  s2Chords = buildChordButtons($("s2-chords"), putChord, (c, n) => `${c.numeral}, ${c.long}, shares ${n} of its notes with home. Put it in bar ${slot + 1}.`);
+  paint2();
+}
+function putChord(d) {
+  st.s2.loop[slot] = d;
+  // with nothing playing, let the new chord be heard
+  if (!T.owner) playKeys(keyOf(st.s2).chords[d - 1].notes);
+  slot = (slot + 1) % 4;
+  changed2();
+}
+function changed2() {
+  paint2();
+  owners.s2.rebuild();
+  writeHash();
+}
+function paint2() {
+  const t = keyOf(st.s2), cs = st.s2.loop.map((d) => t.chords[d - 1]);
+  slots.forEach((b, i) => {
+    const c = cs[i];
+    b.innerHTML = `<span class="bar">Bar ${i + 1}</span><span class="num">${c.numeral}</span><span class="nm">${c.name}</span>`;
+    b.setAttribute("aria-pressed", i === slot);
+    b.setAttribute("aria-label", `Bar ${i + 1}: ${c.numeral}, ${c.long}`);
+    b.classList.toggle("now", i === nowBar);
+  });
+  s2Chords.forEach((b, i) => paintChordButton(b, t, t.chords[i], true));
+  $("s2-cap").textContent = `${cs.map((c) => c.name).join(", ")}: ${cs.map((c) => c.numeral).join("–")} in ${t.name}. The next chord you pick goes in bar ${slot + 1}.`;
+}
+
+// ---------- Stations 3 and 4: the parts ----------
+// each loop player keeps its own song, and its own muted and soloed parts
+function makeOwner(id, songFn, playBtn, view, dataEl) {
+  return {
+    id, mute: new Set(), solo: new Set(), cur: null, view,
+    song() { return this.cur; },
+    rebuild() {
+      this.cur = songFn();
+      this.view?.paint(this.cur);
+      if (dataEl) dataEl.textContent = songText(this.cur);
+    },
+    silent(part) { return this.solo.size ? !this.solo.has(part) : this.mute.has(part); },
+    onPlay(on) { playBtn.innerHTML = `${on ? "Stop" : "Play"} <kbd>P</kbd>`; },
+    onStep(step) { this.view?.step(step); },
+  };
+}
+
+// a station's own loop: its key, a preset to start from, and a chord for each bar
+function loopPicker(host, s, owner) {
+  const keyRow = document.createElement("div"), presets = document.createElement("div"), bars = document.createElement("div");
+  keyRow.id = `${host.id}-key`;
+  bars.className = "bar-pick";
+  host.append(keyRow, presets, bars);
+  const changed = (fromPreset) => {
+    paintBars();
+    owner.rebuild();
+    writeHash();
+    if (fromPreset && !T.owner) start(owner);
+  };
+  const repaintKey = keyPicker(keyRow, s, changed);
+  presetRow(presets, s, repaintKey, changed);
+  const sels = [0, 1, 2, 3].map((i) => {
+    const lab = document.createElement("label");
+    lab.innerHTML = `<span>Bar ${i + 1}</span><select></select>`;
+    bars.append(lab);
+    const sel = lab.querySelector("select");
+    sel.addEventListener("change", () => { s.loop[i] = +sel.value; changed(); });
+    return sel;
+  });
+  function paintBars() {
+    const t = keyOf(s);
+    sels.forEach((sel, i) => {
+      sel.innerHTML = t.chords.map((c) => `<option value="${c.degree}"${c.degree === s.loop[i] ? " selected" : ""}>${c.numeral} · ${c.name}</option>`).join("");
+    });
+  }
+  paintBars();
+}
+
+// a lane per part: every note in the loop, time left to right, higher notes higher
+const LANE_W = 640, LANE_H = 44;
+function mixer(host, cap) {
+  host.className = "mix";
+  const chordRow = document.createElement("div");
+  chordRow.className = "mix-chords";
+  chordRow.setAttribute("aria-hidden", "true");
+  host.append(chordRow);
+  const rows = PARTS.map((p) => {
+    const ctl = document.createElement("div");
+    ctl.className = "mix-ctl";
+    ctl.style.setProperty("--part", `var(--c-${p.id})`);
+    ctl.innerHTML = `<span class="mix-name">${p.name} <kbd>${p.key.toUpperCase()}</kbd></span>`;
+    const mute = button("", "Mute", { "aria-pressed": "false", "aria-label": `Mute ${p.name.toLowerCase()}`, "aria-keyshortcuts": p.key.toUpperCase() });
+    const solo = button("", "Solo", { "aria-pressed": "false", "aria-label": `Solo ${p.name.toLowerCase()}`, "aria-keyshortcuts": `Shift+${p.key.toUpperCase()}` });
+    ctl.append(mute, solo);
+    const lane = document.createElement("div");
+    lane.className = "lane";
+    lane.style.setProperty("--part", `var(--c-${p.id})`);
+    const svg = svgEl("svg", { viewBox: `0 0 ${LANE_W} ${LANE_H}`, preserveAspectRatio: "none", role: "img" });
+    lane.append(svg);
+    host.append(ctl, lane);
+    return { p, mute, solo, lane, svg, head: null };
+  });
+  const view = {
+    owner: null,
+    paint(song) {
+      chordRow.innerHTML = song.chords.map((c) => `<span>${c}</span>`).join("");
+      for (const r of rows) drawLane(r, song);
+      view.sync();
+    },
+    step(step) {
+      const bar = step < 0 ? -1 : Math.floor(step / 16);
+      [...chordRow.children].forEach((el, i) => el.classList.toggle("now", i === bar));
+      for (const r of rows) {
+        r.head.setAttribute("x", step * (LANE_W / 64));
+        r.head.style.display = step < 0 ? "none" : "";
+      }
+    },
+    sync() {
+      const o = view.owner;
+      for (const r of rows) {
+        r.mute.setAttribute("aria-pressed", o.mute.has(r.p.id));
+        r.solo.setAttribute("aria-pressed", o.solo.has(r.p.id));
+        r.lane.classList.toggle("off", o.silent(r.p.id));
+      }
+      const names = (set) => PARTS.filter((p) => set.has(p.id)).map((p) => p.name.toLowerCase()).join(" and ");
+      cap.textContent = o.solo.size ? `Soloing ${names(o.solo)}.` : o.mute.size ? `Muted: ${names(o.mute)}.` : "All five parts playing.";
+    },
+    toggle(partId, solo) {
+      const set = solo ? view.owner.solo : view.owner.mute;
+      set.has(partId) ? set.delete(partId) : set.add(partId);
+      view.sync();
+    },
+  };
+  for (const r of rows) {
+    r.mute.addEventListener("click", () => view.toggle(r.p.id, false));
+    r.solo.addEventListener("click", () => view.toggle(r.p.id, true));
+  }
+  return view;
+}
+function drawLane(r, song) {
+  const { svg, p, lane } = r, sw = LANE_W / 64;
+  svg.replaceChildren(svgEl("rect", { x: 0, y: 0, width: LANE_W, height: LANE_H, class: "bg" }));
+  for (let s = 4; s < 64; s += 4) {
+    svg.append(svgEl("line", { x1: s * sw, x2: s * sw, y1: 0, y2: LANE_H, class: s % 16 ? "beat" : "barline" }));
+  }
+  const tracks = song.tracks.filter((tr) => tr.part === p.id);
+  lane.querySelector(".empty")?.remove();
+  if (!tracks.length) {
+    const e = document.createElement("span");
+    e.className = "empty";
+    e.textContent = "Not in this style";
+    lane.append(e);
+  }
+  let count = 0;
+  if (p.id === "drums") {
+    // one row per drum, the kick at the bottom
+    const h = (LANE_H - 8) / tracks.length;
+    tracks.forEach((tr, i) => {
+      const y = LANE_H - 4 - (i + 1) * h + 1;
+      for (const [s] of tr.notes) { svg.append(svgEl("rect", { x: s * sw + 1, y, width: sw - 2, height: h - 2, rx: 1.5, class: "n" })); count++; }
+    });
+  } else {
+    const notes = tracks.flatMap((tr) => tr.notes);
+    const ms = notes.map((n) => n[1]), lo = Math.min(...ms), hi = Math.max(...ms), span = hi - lo || 1, nh = 5;
+    for (const [s, m, len] of notes) {
+      const y = 4 + (hi === lo ? 0.5 : 1 - (m - lo) / span) * (LANE_H - 8 - nh);
+      svg.append(svgEl("rect", { x: s * sw + 0.5, y, width: Math.max(1, len * sw - 1), height: nh, rx: 1.5, class: "n" }));
+      count++;
+    }
+  }
+  r.head = svgEl("rect", { x: 0, y: 0, width: sw, height: LANE_H, class: "playhead", style: "display:none" });
+  svg.append(r.head);
+  svg.setAttribute("aria-label", count ? `${p.name}: ${count} notes across four bars` : `${p.name}: nothing in this style`);
+}
+
+const owners = {};
+function buildPlayers() {
+  owners.s2 = makeOwner("s2", () => songFor("plain", st.s2), $("s2-play"), {
+    paint() {},
+    step(step) {
+      nowBar = step < 0 ? -1 : Math.floor(step / 16);
+      slots.forEach((b, i) => b.classList.toggle("now", i === nowBar));
+    },
+  });
+  const v3 = mixer($("s3-mix"), $("s3-cap"));
+  owners.s3 = makeOwner("s3", () => songFor("synthwave", st.s3), $("s3-play"), v3, $("s3-data"));
+  v3.owner = owners.s3;
+  const v4 = mixer($("s4-mix"), $("s4-cap"));
+  owners.s4 = makeOwner("s4", () => songFor(st.s4.style, st.s4), $("s4-play"), v4, $("s4-data"));
+  v4.owner = owners.s4;
+  for (const id of ["s2", "s3", "s4"]) $(`${id}-play`).addEventListener("click", () => toggle(owners[id]));
+  loopPicker($("s3-loop"), st.s3, owners.s3);
+  loopPicker($("s4-loop"), st.s4, owners.s4);
+}
+
+let syncStyles = () => {};
+function setStyle(id) {
+  st.s4.style = id;
+  syncStyles();
+  const s = STYLES[id];
+  $("s4-about-h").textContent = `What makes it ${s.name.toLowerCase()}`;
+  $("s4-about").innerHTML = `<li><b>Tempo:</b> ${s.tempo} beats a minute.</li>` + s.about.map(([k, v]) => `<li><b>${k}:</b> ${v}</li>`).join("");
+  owners.s4.rebuild();
+  writeHash();
+}
+const nextStyle = () => setStyle(STYLE_ORDER[(STYLE_ORDER.indexOf(st.s4.style) + 1) % STYLE_ORDER.length]);
+function buildStyles() {
+  const btns = STYLE_ORDER.map((id) => {
+    const b = button("small", STYLES[id].name);
+    b.addEventListener("click", () => setStyle(id));
+    $("s4-styles").append(b);
+    return [id, b];
+  });
+  syncStyles = () => btns.forEach(([id, b]) => b.setAttribute("aria-pressed", st.s4.style === id));
+  $("s4-next").addEventListener("click", nextStyle);
+}
+
+// ---------- Keyboard ----------
+// number and letter keys go to the station holding focus or, with nothing focused, the one most in view
+const partKeys = (owner) => (k, shift) => {
+  if (k === "p") { toggle(owner); return true; }
+  const p = PARTS.find((q) => q.key === k);
+  if (!p) return false;
+  owner.view.toggle(p.id, shift);
+  return true;
+};
+let STATION_KEYS = [];
+function stationInView() {
+  let best = null, most = 0;
+  for (const entry of STATION_KEYS) {
+    const r = entry[0].getBoundingClientRect();
+    const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+    if (seen > most) { most = seen; best = entry; }
+  }
+  return best;
+}
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  // Shift turns 1 into ! on most keyboards, so read the digit from the key itself
+  const k = /^Digit[1-7]$/.test(e.code) ? e.code.slice(5) : e.key.toLowerCase();
+  const inPanel = e.target.closest?.(".panel");
+  const entry = inPanel ? STATION_KEYS.find(([panel]) => panel === inPanel) : stationInView();
+  if (entry && entry[1](k, e.shiftKey)) e.preventDefault();
+});
+
+// ---------- Sharing ----------
+// each station's key, loop, and style, as A-minor-1637-synthwave
+let ready = false;
+const encode = (s) => [s.tonic, s.mode, ...(s.loop ? [s.loop.join("")] : []), ...(s.style ? [s.style] : [])].join("-");
+function writeHash() {
+  if (!ready) return;
+  const p = new URLSearchParams();
+  for (const id of Object.keys(st)) p.set(id, encode(st[id]));
+  history.replaceState(null, "", "#" + p.toString());
+}
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  for (const [id, s] of Object.entries(st)) {
+    const [tonic, mode, loop, style] = (p.get(id) || "").split("-");
+    if (!MODES[mode] || !TONICS[mode].includes(tonic)) continue;
+    s.tonic = tonic;
+    s.mode = mode;
+    if (s.loop && /^[1-7]{4}$/.test(loop || "")) s.loop = [...loop].map(Number);
+    if (s.style && STYLE_ORDER.includes(style)) s.style = style;
+  }
+}
+
+// ---------- Start ----------
+readHash();
+buildPlayers();
+buildStation1();
+buildStation2();
+buildStyles();
+owners.s2.rebuild();
+owners.s3.rebuild();
+setStyle(st.s4.style);
+STATION_KEYS = [
+  [$("s1-h"), (k) => {
+    if (/^[1-7]$/.test(k)) { playChord1(+k); return true; }
+    if (k === "s") { playScale(); return true; }
+    return false;
+  }],
+  [$("s2-h"), (k) => {
+    if (/^[1-7]$/.test(k)) { putChord(+k); return true; }
+    if (k === "p") { toggle(owners.s2); return true; }
+    return false;
+  }],
+  [$("s3-h"), partKeys(owners.s3)],
+  [$("s4-h"), (k, shift) => {
+    if (k === "n") { nextStyle(); return true; }
+    return partKeys(owners.s4)(k, shift);
+  }],
+].map(([h, fn]) => [h.closest(".panel"), fn]);
+ready = true;
+writeHash();
+</script>
+</body>
+</html>
