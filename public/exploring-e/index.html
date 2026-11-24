@@ -65,7 +65,8 @@ body {
   font: 400 1.0625rem/1.55 var(--sans);
   -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+/* up to 1240px on a wide screen, so the boards can grow; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
 a { color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 kbd { font: 500 .85em var(--mono); }
@@ -107,12 +108,13 @@ h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 430px) minmax(0, 1fr);
+  /* the board's column grows with the window, from 430px up to 600px */
+  grid-template-columns: minmax(0, clamp(430px, 52%, 600px)) minmax(0, 1fr);
   gap: 1rem 1.5rem;
   margin-top: 1rem;
   align-items: start;
 }
-.split.tall { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
+.split.tall { grid-template-columns: minmax(0, clamp(520px, 62%, 720px)) minmax(0, 1fr); }
 @media (max-width: 800px) { .split, .split.tall { grid-template-columns: minmax(0, 1fr); } }
 .side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .9rem; align-content: start; min-width: 0; }
 
@@ -125,7 +127,7 @@ h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .plane {
   display: block;
   width: 100%;
-  max-width: 430px;
+  max-width: 600px;
   height: auto;
   aspect-ratio: 1 / 1;
   margin: 0 auto;
@@ -138,7 +140,7 @@ h2 { font: 400 1.6rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .line {
   display: block;
   width: 100%;
-  max-width: 520px;
+  max-width: 720px;
   height: auto;
   aspect-ratio: 520 / 220;
   margin: 0 auto;
@@ -323,7 +325,7 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
 .line .off { fill: var(--zw); font: 500 14px var(--mono); dominant-baseline: central; }
 
 /* ---------- Bigger boards ---------- */
-/* the board and, on a wide screen, a button under it that hides the controls and gives the board the whole panel */
+/* the board and, on a wide screen, a button under it that spreads the station across the window */
 .board-box { display: grid; gap: .4rem; min-width: 0; }
 .grow { display: none; }
 @media (min-width: 801px) {
@@ -345,10 +347,12 @@ table.polar { width: 100%; border-collapse: collapse; font: 500 .95rem var(--mon
   .grow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .grow .in, .grow[aria-pressed="true"] .out { display: none; }
   .grow[aria-pressed="true"] .in { display: inline; }
-  .split.big { grid-template-columns: minmax(0, 1fr); }
-  .split.big > .side { display: none; }
-  /* as wide as the panel, but short enough that the board and its button fit in the window */
-  .split.big .board-box { width: min(100%, calc((100dvh - 5.5rem) * var(--ar))); justify-self: center; }
+  /* the board stays in view while the controls and readouts beside it scroll past */
+  .split > .board-box { position: sticky; top: 1rem; }
+  /* enlarged, the station spreads past the page's column to nearly the whole window */
+  .panel:has(> .split.big) { --bw: min(1640px, 100vw - 2rem); width: var(--bw); margin-left: calc((100% - var(--bw)) / 2); }
+  /* the board is as tall as the window allows, and the controls and readouts keep their place beside it */
+  .split.big { grid-template-columns: minmax(0, calc((100dvh - 5.5rem) * var(--ar))) minmax(18rem, 26rem); justify-content: center; }
   .split.big .board-box > svg { max-width: none; }
 }
 
@@ -1622,7 +1626,7 @@ $("b-n").addEventListener("input", (e) => { Bs.ni = +e.target.value; drawB(); })
 
 // ---------- Bigger boards ----------
 
-// a button under each board that hides the controls beside it and lets the board fill the panel
+// a button under each board that spreads the station across the window, with the board as tall as it fits
 const GROW_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="out" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="in" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>`;
 document.querySelectorAll(".split").forEach((split) => {
   const board = split.querySelector(":scope > svg");
@@ -1635,12 +1639,12 @@ document.querySelectorAll(".split").forEach((split) => {
   b.className = "grow";
   b.innerHTML = GROW_ICON;
   b.title = "Enlarge the board";
-  b.setAttribute("aria-label", "Enlarge the board and hide the controls");
+  b.setAttribute("aria-label", "Enlarge the board");
   b.setAttribute("aria-pressed", "false");
   b.addEventListener("click", () => {
-    // the box takes the board's shape, so the button stays at the board's corner
+    // the board's column takes the board's shape, so the board fits the window and the button stays at its corner
     const { width, height } = board.viewBox.baseVal;
-    box.style.setProperty("--ar", width / height);
+    split.style.setProperty("--ar", width / height);
     const on = split.classList.toggle("big");
     b.setAttribute("aria-pressed", on);
     if (on) box.scrollIntoView({ block: "nearest", behavior: motionOK() ? "smooth" : "auto" });
