@@ -317,6 +317,28 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
 .sources h2 { color: var(--ink); }
 .sources li { margin-bottom: .5rem; }
 
+/* ---------- Station 5's six circles ---------- */
+/* under the board, two rows of three: each column is one of the three triangles */
+.split.has-minis { grid-template-areas: "board side" "minis side"; grid-template-rows: auto 1fr; }
+.split.has-minis > .board-box, .split.has-minis > #board5 { grid-area: board; }
+/* the six circles share the board's column, so the board stays put rather than sticking and sliding over them */
+.split.has-minis > .board-box { position: static; }
+.split.has-minis > .side { grid-area: side; }
+.split.has-minis > .minis { grid-area: minis; }
+/* on a phone the controls come first, right under the board, and the six circles after them */
+@media (max-width: 820px) { .split.has-minis { grid-template-areas: "board" "side" "minis"; grid-template-rows: none; } }
+.minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.mini { margin: 0; min-width: 0; transition: opacity .2s; }
+.mini .board { aspect-ratio: 1 / 1; }
+.mini figcaption { margin-top: .25rem; text-align: center; font: 500 .9rem/1.35 var(--mono); }
+/* one line each for the name and the value, so a longer number never adds a line */
+.mini figcaption > span { display: block; white-space: nowrap; }
+.mini figcaption small { display: block; font: 400 .85rem/1.3 var(--text); color: var(--muted); }
+@media (max-width: 480px) { .mini figcaption { font-size: .8rem; } .mini figcaption small { font-size: .78rem; } }
+/* when a line or triangle is picked, its circles light up and the rest step back */
+.mini.hot .board { border-color: var(--walk); box-shadow: 0 0 0 2px color-mix(in srgb, var(--walk) 55%, transparent); }
+.mini.faded { opacity: .45; }
+
 /* ---------- Bigger boards ---------- */
 /* the board and, on a wide screen, a button under it that hides the controls and gives the board the whole panel */
 .board-box { display: grid; gap: .4rem; min-width: 0; }
@@ -355,7 +377,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
   .pair > div { grid-template-columns: 4.6rem minmax(0, 1fr); gap: .5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .handle .halo, .board .fn { transition: none; }
+  .handle .halo, .board .fn, .mini { transition: none; }
 }
 </style>
 <script>
@@ -455,8 +477,9 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
       <h2 id="s5-h">The other three</h2>
       <p>Station 3's tangent line stood upright at <span class="v">x</span> = 1. Add a second one lying flat along the top of the circle, at <span class="v">y</span> = 1, and carry the line through <span class="v">O</span> and <span class="v">P</span> on until it meets both: the upright line at a point <span class="v">T</span> and the flat one at a point <span class="v">C</span>. That one picture holds six functions. tan <span class="v">θ</span> is the height of <span class="v">T</span>, as in Station 3, and the <b>cotangent</b>, cot <span class="v">θ</span>, is how far along the flat line <span class="v">C</span> is. The <b>secant</b>, sec <span class="v">θ</span>, is the distance from <span class="v">O</span> out to <span class="v">T</span>, and the <b>cosecant</b>, csc <span class="v">θ</span>, the distance from <span class="v">O</span> out to <span class="v">C</span>. Each new one is a ratio of the first three: <b>sec <span class="v">θ</span> = 1 ÷ cos <span class="v">θ</span>, csc <span class="v">θ</span> = 1 ÷ sin <span class="v">θ</span>, and cot <span class="v">θ</span> = cos <span class="v">θ</span> ÷ sin <span class="v">θ</span></b>.</p>
       <p>They come as three right triangles, each with a side of 1: sin and cos with the radius, tan and sec with the x-axis from <span class="v">O</span> to 1, and cot and csc with the y-axis from <span class="v">O</span> to 1. Pick a triangle, or a single line, to pick it out, and press <b>P's quarter</b> to zoom in on the quarter of the circle <span class="v">P</span> is in. Then take <span class="v">P</span> all the way round. There's a tangent line on every side of the circle, and the line through <span class="v">O</span> and <span class="v">P</span> always meets the two on <span class="v">P</span>'s side. On the left the run from <span class="v">O</span> to the upright line is −1, and below the x-axis the rise to the flat line is −1, so the signs work the way Station 4's did: sec <span class="v">θ</span> takes the sign of cos <span class="v">θ</span>, csc <span class="v">θ</span> the sign of sin <span class="v">θ</span>, and tan <span class="v">θ</span> and cot <span class="v">θ</span>, a rise over a run, are negative when exactly one of the two is.</p>
+      <p>Under the board, each of the six lines has a circle of its own, with its triangle shaded and its partner drawn faintly. <span class="v">P</span> turns on all seven at once, so you can drag it on any of them.</p>
     </div>
-    <div class="split">
+    <div class="split has-minis">
       <svg class="board" id="board5" role="group" aria-label="A whole circle with upright tangent lines at x equals 1 and minus 1 and flat ones at y equals 1 and minus 1. The line through O and P, carried on past P, meets the two on P's side, marking out sine, cosine, tangent, secant, cosecant, and cotangent"></svg>
       <div class="side">
         <div class="row">
@@ -470,6 +493,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
         <div class="work" id="s5-work"></div>
         <p class="note" id="s5-note" aria-live="polite"></p>
       </div>
+      <div class="minis" id="s5-minis" role="group" aria-label="Each of the six lines on a circle of its own"></div>
     </div>
   </section>
 
@@ -1080,6 +1104,17 @@ function view5() {
     lab(ox, oy, "O", "var cink", ox < b5.X(0) ? "end" : "start"),
   );
   b5.svg.setAttribute("aria-label", q ? `${LABEL5}, zoomed in on the quarter P is in` : LABEL5);
+  // the six small circles show the same view, scaled down
+  for (const m of MINIS5) {
+    const B = m.b;
+    B.resize({ W: MINI5, H: MINI5, cx: at.cx * K5, cy: at.cy * K5, R: at.R * K5 });
+    B.base.replaceChildren(
+      ...B.grid(-e, e, -e, e, 0.5),
+      B.seg(-e - 0.05, 0, e + 0.05, 0, "axis"),
+      B.seg(0, -e - 0.05, 0, e + 0.05, "axis"),
+      B.arc(1, 0, 360, "circle"),
+    );
+  }
 }
 function step5() {
   if (!glide5.from) return;
@@ -1100,6 +1135,89 @@ const h5 = angleHandle(b5, S5, {
 });
 // a drag rarely lands on 90° or 180° exactly, so these are the easy way to see the lines that have no value there
 const ANGLES5 = [30, 45, 60, 90, 135, 180, 210, 300];
+
+// ---- six small circles, one per line, under the board. they show the board's view at a smaller scale,
+// so strokes stay a readable width, and P can be dragged on any of them. the keyboard uses the board's P
+const MINI5 = 200, K5 = MINI5 / 460;
+const PAIR5 = { sin: "sincos", cos: "sincos", tan: "tansec", sec: "tansec", cot: "cotcsc", csc: "cotcsc" };
+const PARTNER5 = { sin: "cos", cos: "sin", tan: "sec", sec: "tan", cot: "csc", csc: "cot" };
+const SHORT5 = { sin: "the height of P", cos: "the width of P", tan: "sin ÷ cos", sec: "1 ÷ cos", csc: "1 ÷ sin", cot: "cos ÷ sin" };
+// in reading order: the top row is sin, tan, cot and the bottom row their partners, so each column is a triangle
+const MINIS5 = ["sin", "tan", "cot", "cos", "sec", "csc"].map((n) => {
+  const fig = document.createElement("figure"), cap = document.createElement("figcaption");
+  fig.className = "mini";
+  const svg = svgEl("svg", { class: "board", id: `s5-mini-${n}`, role: "img", "aria-label": `${n} θ on a circle of its own` });
+  fig.append(svg, cap);
+  $("s5-minis").appendChild(fig);
+  const b = new Board(svg, { W: MINI5, H: MINI5, cx: 100, cy: 100, R: 110 * K5 });
+  b.clip(0, 0, MINI5, MINI5);
+  return { n, fig, cap, b, knob: miniKnob(b) };
+});
+// P on a small circle: drag it to turn all seven
+function miniKnob(b) {
+  const g = svgEl("g", { class: "handle", "aria-hidden": "true" });
+  g.append(svgEl("circle", { class: "hit", r: 22 }), svgEl("circle", { class: "halo", r: 10 }), svgEl("circle", { class: "knob", r: 5.5 }));
+  b.top.appendChild(g);
+  let on = false;
+  const turn = (e) => {
+    const [x, y] = b.toXY(e);
+    let d = Math.atan2(y, x) / RAD;
+    if (d < 0) d += 360;
+    h5.set(Math.round(d * 10) / 10);
+  };
+  g.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    on = true;
+    S5.dragging = true;
+    g.setPointerCapture(e.pointerId);
+    g.classList.add("drag");
+    turn(e);
+  });
+  g.addEventListener("pointermove", (e) => { if (on) turn(e); });
+  const end = () => {
+    if (!on) return;
+    on = false;
+    g.classList.remove("drag");
+    S5.dragging = false;
+    draw5();
+  };
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => g.addEventListener(t, end));
+  // keep a finger on P from scrolling the page
+  g.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  return g;
+}
+function paintMinis5({ c, s, gx, gy, segs, vals, mark, picked }) {
+  for (const m of MINIS5) {
+    const { n, b: B } = m, pair = PAIR5[n], partner = PARTNER5[n], items = [];
+    const poly = (pts) => svgEl("polygon", { class: "qfill", points: pts.map(([x, y]) => `${B.X(x)},${B.Y(y)}`).join(" ") });
+    // the triangle this line belongs to, shaded
+    if (pair === "sincos") items.push(poly([[0, 0], [c, 0], [c, s]]));
+    if (pair === "tansec" && segs.tan) items.push(poly([[0, 0], [gx, 0], segs.tan.end, segs.sec.end]));
+    if (pair === "cotcsc" && segs.cot) items.push(poly([[0, 0], [0, gy], segs.cot.end, segs.csc.end]));
+    items.push(B.seg(-3 * c, -3 * s, 3 * c, 3 * s, "ext"));
+    // the tangent line on P's side that this pair is measured on
+    if (pair === "tansec" && segs.tan) items.push(B.seg(gx, -2.3, gx, 2.3, "tline ctan"));
+    if (pair === "cotcsc" && segs.cot) items.push(B.seg(-2.3, gy, 2.3, gy, "tline ccot"));
+    const line = (k, cls, head) => {
+      const g = segs[k];
+      if (!g) return [];
+      const { a: [x1, y1], end: [x2, y2] } = g, out = [B.seg(x1, y1, x2, y2, cls)];
+      if (head && g.cut) {
+        const dx = x2 - x1, dy = y1 - y2, len = Math.hypot(dx, dy);
+        out.push(arrowAt(B.X(x2) + (dx / len) * 6, B.Y(y2) + (dy / len) * 6, dx / len, dy / len, `c${k}`));
+      }
+      return out;
+    };
+    // its partner faintly, the radius, then the line itself on top
+    items.push(...line(partner, `side faint c${partner}`), B.seg(0, 0, c, s, "side rad"), ...line(n, `side c${n}`, true));
+    B.scene.replaceChildren(...items);
+    m.knob.setAttribute("transform", `translate(${B.X(c)} ${B.Y(s)})`);
+    const v = vals[n];
+    m.cap.innerHTML = `<span class="c${n}">${n} ${TH}</span><span>${v == null ? "no value" : fix(v)}</span><small>${SHORT5[n].replace("P", '<span class="v">P</span>')}</small>`;
+    m.fig.className = `mini ${mark(picked.includes(n))}`.trim();
+  }
+}
 const FNS = ["sin", "cos", "tan", "sec", "csc", "cot"];
 // the three right triangles, each with a side of 1
 const PAIRS = { sincos: ["sin", "cos"], tansec: ["tan", "sec"], cotcsc: ["cot", "csc"] };
@@ -1114,7 +1232,6 @@ function draw5() {
   const t = noT ? null : s / c, sec = noT ? null : 1 / c, csc = noC ? null : 1 / s, cot = noC ? null : c / s;
   const vals = { sin: s, cos: c, tan: t, sec, csc, cot };
   const picked = PAIRS[S5.pick] || (S5.pick === "all" ? [] : [S5.pick]);
-  const O_ = '<span class="v">O</span>', P_ = '<span class="v">P</span>', T_ = '<span class="v">T</span>', C_ = '<span class="v">C</span>';
 
   // a line from a toward b, cut off at the edge of the board
   const clipTo = (a, b) => {
@@ -1290,7 +1407,31 @@ function draw5() {
   const say = (v) => (v == null ? "no value" : fix(v));
   h5.h.place(c, s, { ...pl, now: d, min: 0, max: 360, valueText: `θ ${dg(d)}: ` + FNS.map((n) => `${n} ${say(vals[n])}`).join(", ") });
 
-  // ---- readouts
+  // ---- readouts and caption
+  paintMinis5({ c, s, gx, gy, segs, vals, mark: mark5, picked });
+  const w = words5(d);
+  $("s5-out").innerHTML = w.out;
+  $("s5-work").innerHTML = w.work;
+  $("s5-note").innerHTML = w.note;
+  // each readout keeps the height of its tallest version, so nothing under it moves (see holdHeight5)
+  [...$("s5-out").children].forEach((r, j) => { r.style.minHeight = rows5[j] || ""; });
+  pressChips($("s5-view"), (j) => (j === 1) === S5.zoom);
+  pressChips($("s5-pairs"), (j) => PICKS[j] === S5.pick);
+  pressChips($("s5-pick"), (j) => FNS[j] === S5.pick);
+  pressChips($("s5-presets"), (j) => ANGLES5[j] === d);
+}
+
+// the readouts and the caption for angle d, as HTML. kept apart from the drawing so the column can be measured at any angle
+const mark5 = (on) => (S5.pick === "all" ? "" : on ? "hot" : "faded");
+function words5(d) {
+  const c = cosD(d), s = sinD(d), noT = Math.abs(c) < 1e-9, noC = Math.abs(s) < 1e-9;
+  const t = noT ? null : s / c, sec = noT ? null : 1 / c, csc = noC ? null : 1 / s, cot = noC ? null : c / s;
+  const vals = { sin: s, cos: c, tan: t, sec, csc, cot };
+  const picked = PAIRS[S5.pick] || (S5.pick === "all" ? [] : [S5.pick]);
+  const O_ = '<span class="v">O</span>', P_ = '<span class="v">P</span>', T_ = '<span class="v">T</span>', C_ = '<span class="v">C</span>';
+  const say = (v) => (v == null ? "no value" : fix(v));
+  // T and C run off the board once they're more than 2 out
+  const cut = (!noT && Math.abs(t) > MAX5) || (!noC && Math.abs(cot) > MAX5);
   const how = {
     sin: `the height of ${P_}`,
     cos: `the width of ${P_}`,
@@ -1300,17 +1441,16 @@ function draw5() {
     cot: s < 0 ? `cos ÷ sin: how far along the bottom tangent line ${C_} is, ÷ −1` : `cos ÷ sin: how far along the top tangent line ${C_} is`,
   };
   // what's picked, and the readouts and identity that go with it
-  const mark = (on) => (S5.pick === "all" ? "" : on ? "hot" : "faded");
-  $("s5-out").innerHTML = row("Angle", `${TH} = ${dg(d)}`) + FNS.map((n) => row(`${n} ${TH}`, say(vals[n]), how[n], `c${n}`).replace("<div>", `<div class="${mark(picked.includes(n))}">`)).join("");
+  const mark = mark5;
+  const out = row("Angle", `${TH} = ${dg(d)}`) + FNS.map((n) => row(`${n} ${TH}`, say(vals[n]), how[n], `c${n}`).replace("<div>", `<div class="${mark(picked.includes(n))}">`)).join("");
   const ids = [
     [["sin", "cos"], `sin² ${TH} + cos² ${TH} = 1`, `${fix(s * s)} + ${fix(c * c)} = ${fix(s * s + c * c)}`],
     [["tan", "sec"], `1 + tan² ${TH} = sec² ${TH}`, noT ? `no value at ${dg(d)}` : `1 + ${fix(t * t)} = ${fix(sec * sec)}`],
     [["cot", "csc"], `1 + cot² ${TH} = csc² ${TH}`, noC ? `no value at ${dg(d)}` : `1 + ${fix(cot * cot)} = ${fix(csc * csc)}`],
   ];
-  $("s5-work").innerHTML = ids.map(([fns, a, b]) => `<div class="id ${mark(fns.some((n) => picked.includes(n)))}"><div>${a}</div><div>${b}</div></div>`).join("");
+  const work = ids.map(([fns, a, b]) => `<div class="id ${mark(fns.some((n) => picked.includes(n)))}"><div>${a}</div><div>${b}</div></div>`).join("");
 
   // ---- the caption
-  const other = 90 - d;
   const never = (which) => which === "T"
     ? `The line through ${O_} and ${P_} runs straight up and down, alongside the upright tangent lines, and never meets them, so tan ${TH} and sec ${TH} have no value at ${dg(d)}.`
     : `The line through ${O_} and ${P_} lies along the x-axis, alongside the flat tangent lines, and never meets them, so cot ${TH} and csc ${TH} have no value at ${dg(d)}.`;
@@ -1338,13 +1478,56 @@ function draw5() {
     else if (c < 0) signs.push(`${C_} is left of the y-axis, so cot ${TH}, how far along it is, is negative.`);
   }
   if (signs.length) note += " " + signs.join(" ");
-  if (Object.values(segs).some((g) => g.cut)) note += ` Some lines run off the board here: the closer ${TH} gets to ${dg(Math.round(d / 90) * 90)}, the longer they get, without end.`;
-  $("s5-note").innerHTML = note;
-  pressChips($("s5-view"), (j) => (j === 1) === S5.zoom);
-  pressChips($("s5-pairs"), (j) => PICKS[j] === S5.pick);
-  pressChips($("s5-pick"), (j) => FNS[j] === S5.pick);
-  pressChips($("s5-presets"), (j) => ANGLES5[j] === d);
+  if (cut) note += ` Some lines run off the board here: the closer ${TH} gets to ${dg(Math.round(d / 90) * 90)}, the longer they get, without end.`;
+  return { out, work, note };
 }
+
+// the caption and readouts change length as P turns, which would shove the six circles and the text below
+// about mid-drag. so each readout, the identities, and the column as a whole hold the height of their tallest
+// version over a whole turn, measured on a hidden copy. measured again when the pick or the column's width changes
+const side5 = $("s5-note").closest(".side");
+let held5 = { width: 0, pick: "" }, rows5 = [];
+function holdHeight5(force) {
+  const width = side5.getBoundingClientRect().width;
+  if (!force && width === held5.width && S5.pick === held5.pick) return;
+  held5 = { width, pick: S5.pick };
+  const probe = side5.cloneNode(true), out = probe.querySelector("#s5-out"), work = probe.querySelector("#s5-work"), note = probe.querySelector("#s5-note");
+  probe.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  probe.querySelectorAll("[aria-live]").forEach((e) => e.removeAttribute("aria-live"));
+  probe.setAttribute("aria-hidden", "true");
+  work.style.minHeight = "";
+  probe.style.cssText = `position: absolute; left: 0; top: 0; visibility: hidden; width: ${width}px; min-height: 0`;
+  side5.parentElement.appendChild(probe);
+  let noteMost = 0, workMost = 0;
+  const rowMost = [];
+  // every 5° and just past each, for the extra digits a drag brings, and close in on each axis, where tan and
+  // the rest run to long numbers
+  const angles = [];
+  for (let k = 0; k <= 72; k++) angles.push(k * 5, k * 5 + 2.7);
+  for (const a of [0, 90, 180, 270, 360]) angles.push(a - 0.1, a + 0.1, a - 0.4, a + 0.4, a - 1.3, a + 1.3);
+  for (const d of angles) {
+    if (d < 0 || d > 360) continue;
+    const w = words5(d);
+    out.innerHTML = w.out;
+    work.innerHTML = w.work;
+    note.innerHTML = w.note;
+    noteMost = Math.max(noteMost, note.getBoundingClientRect().height);
+    workMost = Math.max(workMost, work.getBoundingClientRect().height);
+    [...out.children].forEach((r, j) => { rowMost[j] = Math.max(rowMost[j] || 0, r.getBoundingClientRect().height); });
+  }
+  probe.remove();
+  rows5 = rowMost.map((h) => `${Math.ceil(h)}px`);
+  [...$("s5-out").children].forEach((r, j) => { r.style.minHeight = rows5[j] || ""; });
+  $("s5-work").style.minHeight = `${Math.ceil(workMost)}px`;
+  // with the readouts held, only the caption at the bottom still varies, so the column is its height now
+  // with the caption swapped for its tallest version
+  side5.style.minHeight = "";
+  const now = side5.getBoundingClientRect().height - $("s5-note").getBoundingClientRect().height;
+  side5.style.minHeight = `${Math.ceil(now + noteMost)}px`;
+}
+// a frame later, so setting the height isn't itself a resize inside the observer's own callback
+new ResizeObserver(() => requestAnimationFrame(() => holdHeight5())).observe(side5);
+document.fonts?.ready.then(() => holdHeight5(true));
 chipRow($("s5-view"), [["Whole circle", ""], ["<i>P</i>'s quarter", "P's quarter"]], (j) => {
   S5.zoom = j === 1;
   spots5 = {};
@@ -1354,11 +1537,13 @@ chipRow($("s5-pairs"), [["All six", "Show all six"], ["sin &amp; cos", "The tria
   S5.pick = PICKS[j];
   spots5 = {};
   draw5();
+  holdHeight5();
 });
 chipRow($("s5-pick"), FNS.map((n) => [`${n} <span class="th">θ</span>`, `Pick out ${n}`]), (j) => {
   S5.pick = FNS[j];
   spots5 = {};
   draw5();
+  holdHeight5();
 });
 [...$("s5-pick").children].forEach((b, j) => b.classList.add(`c${FNS[j]}`));
 angleChips($("s5-presets"), ANGLES5, h5.set);
