@@ -61,7 +61,8 @@ body {
   font: 400 1.0625rem/1.55 var(--sans);
   -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+/* up to 1240px on a wide screen, so the grid and the scenes can grow; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
@@ -500,7 +501,7 @@ const grid = $("grid"), gx = grid.getContext("2d");
 let cell = 20;
 function drawGrid() {
   const { w, h } = art, cols = w + MARGIN;
-  cell = clamp(Math.floor(($("board").clientWidth - 2) / cols), 6, 30);
+  cell = clamp(Math.floor(($("board").clientWidth - 2) / cols), 6, 40);
   const cw = cols * cell + 1, ch = h * cell + 1, dpr = window.devicePixelRatio || 1;
   if (grid.width !== Math.round(cw * dpr) || grid.height !== Math.round(ch * dpr)) {
     grid.width = Math.round(cw * dpr); grid.height = Math.round(ch * dpr);
