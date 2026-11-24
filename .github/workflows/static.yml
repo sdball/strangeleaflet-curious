@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Check every page has GoatCounter
         run: |
           missing=$(grep -rL --include='*.html' 'data-goatcounter="https://sdball.goatcounter.com/count"' public || true)
@@ -40,9 +40,9 @@ jobs:
             exit 1
           fi
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           # Upload entire repository
           path: './public'
