@@ -339,10 +339,13 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
   .grow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .grow .in, .grow[aria-pressed="true"] .out { display: none; }
   .grow[aria-pressed="true"] .in { display: inline; }
-  .split.big { grid-template-columns: minmax(0, 1fr); }
-  .split.big > .side { display: none; }
-  /* as wide as the panel, but short enough that the board and its button fit in the window */
-  .split.big .board-box, .split.big .board-box:has(> #board3) { width: min(100%, calc((100dvh - 5.5rem) * var(--ar))); max-width: none; justify-self: center; }
+  /* the board stays in view while the controls and readouts beside it scroll past */
+  .split > .board-box { position: sticky; top: 1rem; }
+  /* enlarged, the station spreads past the page's column to nearly the whole window */
+  .panel:has(> .split.big) { --bw: min(1640px, 100vw - 2rem); width: var(--bw); margin-left: calc((100% - var(--bw)) / 2); }
+  /* the board is as tall as the window allows, and the controls and readouts keep their place beside it */
+  .split.big { grid-template-columns: minmax(0, calc((100dvh - 5.5rem) * var(--ar))) minmax(18rem, 26rem); justify-content: center; }
+  .split.big .board-box, .split.big .board-box:has(> #board3) { width: 100%; max-width: none; }
 }
 
 @media (max-width: 480px) {
@@ -366,7 +369,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Circles and Triangles</h1>
   <p class="lede">Draw a circle with a radius of 1 and fit a right triangle inside it, with its long side along the radius. Turn the radius and the other two sides change length. Those lengths are the sine and the cosine, and the same circle gives four more: tangent, secant, cosecant, and cotangent. Turn all the way round and the triangle unrolls into a wave.</p>
-  <p class="howto">Drag the point <span class="v">P</span> round each circle, or Tab to it and use the arrow keys: each press turns 1°, and <kbd>Shift</kbd> turns 15°. Every button and slider works from the keyboard too. On a wide screen, the button under each board hides the controls and enlarges the board.</p>
+  <p class="howto">Drag the point <span class="v">P</span> round each circle, or Tab to it and use the arrow keys: each press turns 1°, and <kbd>Shift</kbd> turns 15°. Every button and slider works from the keyboard too. On a wide screen, the button under each board spreads the station across the window and enlarges the board.</p>
 
   <!-- 1. A triangle in a circle -->
   <section class="panel" aria-labelledby="s1-h">
@@ -560,6 +563,7 @@ const sinD = (d) => Math.sin(d * RAD);
 const cosD = (d) => Math.cos(d * RAD);
 // tan has no value where the width is 0
 const tanD = (d) => (Math.abs((((d % 180) + 180) % 180) - 90) < 1e-9 ? null : Math.tan(d * RAD));
+
 // snap to a multiple of 15° when close, otherwise to a whole degree
 function snap(d) {
   const s = Math.round(d / 15) * 15;
@@ -726,8 +730,9 @@ function handle(board, { name, label, onPoint, onKey, onDrag }) {
   };
 }
 
-// P on the circle at S.deg. Without wrap the angle stays between lo and hi; with it, it runs 0 to 360 and round again
-function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, draw, before, onDrag }) {
+// P on the circle at S.deg. Without wrap the angle stays between lo and hi; with it, it runs 0 to 360 and round again.
+// a free handle follows the pointer to a tenth of a degree instead of snapping
+function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, free = false, draw, before, onDrag }) {
   const set = (d) => {
     if (before) before();
     if (wrap) {
@@ -745,7 +750,7 @@ function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, draw, before, o
       if (d < 0) d += 360;
       // past the end of the range, stick to whichever end is nearer
       if (!wrap && d > hi) d = d < (hi + lo + 360) / 2 ? hi : lo;
-      set(snap(d));
+      set(free ? Math.round(d * 10) / 10 : snap(d));
     },
     onKey: (step) => set(Math.round(S.deg) + step),
     onDrag,
@@ -1034,25 +1039,42 @@ const S5 = { deg: 50, pick: "all", zoom: false, quarter: null, dragging: false }
 const MAX5 = 2;
 const b5 = new Board($("board5"), { W: 460, H: 460, cx: 230, cy: 230, R: 110 });
 const LABEL5 = b5.svg.getAttribute("aria-label");
-let shown5;
+b5.clip(0, 0, 460, 460);
+// where O sits and how big 1 is, for the whole circle or one quarter
+const at5 = (q) => {
+  if (!q) return { cx: 230, cy: 230, R: 110 };
+  const R = 460 / 2.4;
+  return { cx: (q[0] > 0 ? 0.3 : 2.1) * R, cy: (q[1] > 0 ? 2.1 : 0.3) * R, R };
+};
+let key5, glide5 = null, drawn5;
+// the spot each label took last time, by name, cleared when what's on show changes
+let spots5 = {};
 // zoomed in, the board runs from just behind O out past 2, so there's room to spread the labels out.
-// mid-drag it holds still, so the board doesn't jump out from under the finger, and follows P when you let go
+// mid-drag it holds still, so the board doesn't jump out from under the finger, and glides after P when you let go
 function view5() {
   const c = cosD(S5.deg), s = sinD(S5.deg);
   if (!S5.dragging) S5.quarter = S5.zoom ? [c < 0 ? -1 : 1, s < 0 ? -1 : 1] : null;
-  const key = String(S5.quarter);
-  if (key === shown5) return;
-  shown5 = key;
-  const q = S5.quarter;
-  if (q) {
-    const R = 460 / 2.4;
-    b5.resize({ W: 460, H: 460, cx: (q[0] > 0 ? 0.3 : 2.1) * R, cy: (q[1] > 0 ? 2.1 : 0.3) * R, R });
-    b5.clip(0, 0, 460, 460);
-  } else {
-    b5.resize({ W: 460, H: 460, cx: 230, cy: 230, R: 110 });
-    b5.clip(b5.X(-2.08), b5.Y(2.08), 4.16 * b5.R, 4.16 * b5.R);
+  const q = S5.quarter, key = String(q);
+  if (key !== key5) {
+    // from wherever the board is now, even halfway through another glide
+    const from = key5 === undefined || reduceMotion.matches ? null : { cx: b5.cx, cy: b5.cy, R: b5.R };
+    glide5 = { from, to: at5(q), t0: performance.now() };
+    key5 = key;
+    if (from) requestAnimationFrame(step5);
   }
-  const e = q ? 2.25 : 2, [ox, oy] = O5();
+  let k = 1;
+  if (glide5.from) {
+    k = clamp((performance.now() - glide5.t0) / 320, 0, 1);
+    if (k === 1) glide5.from = null;
+  }
+  // ease out
+  const e3 = 1 - (1 - k) ** 3, at = {};
+  for (const n of ["cx", "cy", "R"]) at[n] = glide5.from ? glide5.from[n] + (glide5.to[n] - glide5.from[n]) * e3 : glide5.to[n];
+  const sig = `${key} ${at.cx} ${at.cy} ${at.R}`;
+  if (sig === drawn5) return;
+  drawn5 = sig;
+  b5.resize({ W: 460, H: 460, ...at });
+  const e = q || k < 1 ? 2.25 : 2, [ox, oy] = O5();
   b5.base.replaceChildren(
     ...b5.grid(-e, e, -e, e, 0.25),
     b5.seg(-e - 0.05, 0, e + 0.05, 0, "axis"),
@@ -1062,19 +1084,25 @@ function view5() {
   );
   b5.svg.setAttribute("aria-label", q ? `${LABEL5}, zoomed in on the quarter P is in` : LABEL5);
 }
+function step5() {
+  if (!glide5.from) return;
+  draw5();
+  requestAnimationFrame(step5);
+}
 // O's label sits across O from the quarter on show, below and left for the whole circle
 const O5 = () => {
   const [gx, gy] = S5.quarter || [1, 1];
   return [b5.X(0) - gx * 10, b5.Y(0) + gy * 14];
 };
 const h5 = angleHandle(b5, S5, {
-  wrap: true, draw: draw5,
+  wrap: true, free: true, draw: draw5,
   onDrag(on) {
     S5.dragging = on;
     if (!on) draw5();
   },
 });
-const ANGLES5 = [30, 45, 60, 135, 210, 300];
+// with no snapping, 90° and 180° are the easy way to see the lines that have no value there
+const ANGLES5 = [30, 45, 60, 90, 135, 180, 210, 300];
 const FNS = ["sin", "cos", "tan", "sec", "csc", "cot"];
 // the three right triangles, each with a side of 1
 const PAIRS = { sincos: ["sin", "cos"], tansec: ["tan", "sec"], cotcsc: ["cot", "csc"] };
@@ -1146,38 +1174,42 @@ function draw5() {
     const m = (lenOf(shorter) + lenOf(longer)) / 2 / lenOf(longer);
     return [m, (m + 1) / 2, m - 0.04].filter((f) => f > 0.05 && f < 0.97);
   };
-  const named = (n) => (segs[n].cut ? `${n} θ = ${fix(vals[n], 2)}` : `${n} θ`);
-  // a cut-off line's label carries its value; if that won't fit anywhere, the plain name may
-  const beside = (n, force) => {
-    const texts = segs[n].cut ? [named(n), `${n} θ`] : [named(n)];
-    let first;
-    for (const text of texts) {
-      const hit = besideAs(n, text);
-      if (hit.label) return [hit.label];
-      first = first || hit.first;
-    }
-    return force && first ? [lab(first[0], first[1], first[2], "")] : [];
+  // each label tries the spot it had last time first, then the spots nearest where it was, so labels stay put
+  // as P moves, and when one has to move it moves as little as it can
+  const sticky = (name, xy) => {
+    const order = [...xy.keys()], last = spots5[name];
+    if (!last) return order;
+    const far = (j) => Math.hypot(xy[j][0] - last.x, xy[j][1] - last.y);
+    return order.sort((i, k) => (i === last.j ? -1 : k === last.j ? 1 : far(i) - far(k)));
   };
-  const besideAs = (n, text) => {
+  const took = (name, j, [x, y]) => { spots5[name] = { j, x, y }; };
+  // the values are in the readouts, so the board names the lines and no more
+  const beside = (n, force) => {
+    const text = `${n} θ`;
     const [[x1, y1], [x2, y2]] = [segs[n].a, segs[n].end].map(scr), len = Math.hypot(x2 - x1, y2 - y1) || 1;
     const w = [...text].length * 10.5 + 6, h = 22, nx = (y1 - y2) / len, ny = (x2 - x1) / len;
     const away = Math.abs(nx) * (w / 2) + Math.abs(ny) * (h / 2) + 5;
-    let first;
+    const spots = [];
     for (const [sd, gap] of [[1, 0], [-1, 0], [1, 14], [-1, 14]]) {
       for (const f of fracs(n)) {
         const x = x1 + (x2 - x1) * f + nx * (away + gap) * sd, y = y1 + (y2 - y1) * f + ny * (away + gap) * sd;
-        const b = [x - w / 2, y - h / 2, x + w / 2, y + h / 2];
-        // a forced label falls back to the first spot that's at least on the board
-        if (!first && b[0] >= 2 && b[2] <= b5.W - 2 && b[1] >= 2 && b[3] <= b5.H - 2) first = [x, y, text];
-        if (clear(b)) { boxes.push(b); return { label: lab(x, y, text, "") }; }
+        spots.push([x, y, [x - w / 2, y - h / 2, x + w / 2, y + h / 2]]);
       }
     }
-    return { first };
+    let first;
+    for (const j of sticky(n, spots)) {
+      const [x, y, b] = spots[j];
+      // a forced label falls back to the first spot that's at least on the board
+      if (first == null && b[0] >= 2 && b[2] <= b5.W - 2 && b[1] >= 2 && b[3] <= b5.H - 2) first = j;
+      if (clear(b)) { boxes.push(b); took(n, j, spots[j]); return [lab(x, y, text, "")]; }
+    }
+    return force && first != null ? [lab(spots[first][0], spots[first][1], text, "")] : [];
   };
   const point = (spots) => {
-    for (const [x, y, text, anchor] of spots) {
-      const x0 = anchor === "start" ? x : x - 18, b = [x0, y - 11, x0 + 18, y + 11];
-      if (clear(b)) { boxes.push(b); return [lab(x, y, text, "var cink", anchor)]; }
+    const text = spots[0][2];
+    for (const j of sticky(text, spots)) {
+      const [x, y, , anchor] = spots[j], x0 = anchor === "start" ? x : x - 18, b = [x0, y - 11, x0 + 18, y + 11];
+      if (clear(b)) { boxes.push(b); took(text, j, spots[j]); return [lab(x, y, text, "var cink", anchor)]; }
     }
     return [];
   };
@@ -1206,12 +1238,16 @@ function draw5() {
   }
   // P's own label gives way to T and C, taking the first free spot around it
   const o = outward(d);
-  const pl = [o, { lx: 14, ly: 18 }, { lx: -14, ly: -18 }, { lx: 14, ly: -18 }, { lx: -14, ly: 18 }].find(({ lx, ly }) => {
-    const x = b5.X(c) + lx, y = b5.Y(s) + ly, x0 = Math.abs(lx) < 4 ? x - 9 : lx < 0 ? x - 18 : x, b = [x0, y - 12, x0 + 18, y + 12];
+  const pspots = [o, { lx: 14, ly: 18 }, { lx: -14, ly: -18 }, { lx: 14, ly: -18 }, { lx: -14, ly: 18 }];
+  const pxy = pspots.map(({ lx, ly }) => [b5.X(c) + lx, b5.Y(s) + ly]);
+  const pj = sticky("P", pxy).find((j) => {
+    const { lx } = pspots[j], [x, y] = pxy[j], x0 = Math.abs(lx) < 4 ? x - 9 : lx < 0 ? x - 18 : x, b = [x0, y - 12, x0 + 18, y + 12];
     if (!clear(b)) return false;
     boxes.push(b);
     return true;
-  }) || o;
+  });
+  if (pj != null) took("P", pj, pxy[pj]);
+  const pl = pj == null ? o : pspots[pj];
   shown.filter((n) => !first.includes(n)).forEach((n) => { labels[n] = beside(n); });
 
   // ---- the picture
@@ -1239,7 +1275,7 @@ function draw5() {
   items.push(b5.seg(-3 * c, -3 * s, 3 * c, 3 * s, "ext"));
   if (Math.abs(s) > 0.05 && Math.abs(c) > 0.05) items.push(b5.corner(c, 0, [-Math.sign(c), 0], [0, Math.sign(s)]));
   // the two tangent lines on P's side, square to the axes where they touch the circle
-  const te = S5.quarter ? 2.3 : 2.05;
+  const te = 2.3;
   if (T) items.push(b5.seg(gx, -te, gx, te, "tline ctan"));
   if (C) items.push(b5.seg(-te, gy, te, gy, "tline ccot"));
   if (segs.tan && Math.abs(t) > 0.05) items.push(b5.corner(gx, 0, [-gx, 0], [0, gy]));
@@ -1314,14 +1350,17 @@ function draw5() {
 }
 chipRow($("s5-view"), [["Whole circle", ""], ["<i>P</i>'s quarter", "P's quarter"]], (j) => {
   S5.zoom = j === 1;
+  spots5 = {};
   draw5();
 });
 chipRow($("s5-pairs"), [["All six", "Show all six"], ["sin &amp; cos", "The triangle of sin and cos"], ["tan &amp; sec", "The triangle of tan and sec"], ["cot &amp; csc", "The triangle of cot and csc"]], (j) => {
   S5.pick = PICKS[j];
+  spots5 = {};
   draw5();
 });
 chipRow($("s5-pick"), FNS.map((n) => [`${n} <span class="th">θ</span>`, `Pick out ${n}`]), (j) => {
   S5.pick = FNS[j];
+  spots5 = {};
   draw5();
 });
 [...$("s5-pick").children].forEach((b, j) => b.classList.add(`c${FNS[j]}`));
@@ -1550,7 +1589,7 @@ wide6.addEventListener("change", () => { layout6(); draw6(); });
 
 // ---------- Bigger boards ----------
 
-// a button under each board that hides the controls beside it and lets the board fill the panel
+// a button under each board that spreads the station across the window, with the board as tall as it fits
 const GROW_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="out" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="in" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>`;
 document.querySelectorAll(".split").forEach((split) => {
   const board = split.querySelector(".board");
@@ -1563,7 +1602,7 @@ document.querySelectorAll(".split").forEach((split) => {
   b.className = "grow";
   b.innerHTML = GROW_ICON;
   b.title = "Enlarge the board";
-  b.setAttribute("aria-label", "Enlarge the board and hide the controls");
+  b.setAttribute("aria-label", "Enlarge the board");
   b.setAttribute("aria-pressed", "false");
   b.addEventListener("click", () => {
     const on = split.classList.toggle("big");
