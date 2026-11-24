@@ -78,7 +78,8 @@ body {
   font: 400 1.0625rem/1.65 var(--text);
   -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+/* up to 1240px on a wide screen, so the boards can grow; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 kbd { font: 500 .82em var(--mono); border: 1px solid var(--edge); border-bottom-width: 2px; border-radius: 4px; padding: 0 .3em; background: var(--paper); }
@@ -119,7 +120,8 @@ h2 { font: 800 1.55rem/1.25 var(--head); margin: 0 0 .75rem; }
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  /* the board's column grows with the window, from 440px up to 600px */
+  grid-template-columns: minmax(0, clamp(440px, 52%, 600px)) minmax(0, 1fr);
   gap: 1rem 1.5rem;
   margin-top: 1rem;
   align-items: start;
@@ -131,7 +133,7 @@ h2 { font: 800 1.55rem/1.25 var(--head); margin: 0 0 .75rem; }
 .goban {
   display: block;
   width: 100%;
-  max-width: 440px;
+  max-width: 600px;
   height: auto;
   margin: 0 auto;
   border-radius: 10px;
@@ -362,6 +364,37 @@ details.contrast p { max-width: 68ch; }
 .sources li { margin-bottom: .45rem; font-size: .95rem; }
 footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 68ch; }
 
+/* ---------- Bigger boards ---------- */
+/* the board and, on a wide screen, a button under it that spreads the station across the window */
+.board-box { display: grid; gap: .4rem; min-width: 0; }
+.grow { display: none; }
+@media (min-width: 821px) {
+  .grow {
+    display: grid;
+    place-items: center;
+    justify-self: end;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--muted);
+    background: var(--paper);
+    border: 1px solid var(--edge);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .grow:hover { color: var(--ink); border-color: var(--muted); }
+  .grow[aria-pressed="true"] { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+  .grow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .grow .in, .grow[aria-pressed="true"] .out { display: none; }
+  .grow[aria-pressed="true"] .in { display: inline; }
+  /* the board stays in view while the controls beside it scroll past */
+  .split > .board-box { position: sticky; top: 1rem; }
+  /* enlarged, the station spreads past the page's column to nearly the whole window */
+  .panel:has(> .split.big) { --bw: min(1640px, 100vw - 2rem); width: var(--bw); margin-left: calc((100% - var(--bw)) / 2); }
+  /* the board is as tall as the window allows, and the controls keep their place beside it */
+  .split.big { grid-template-columns: minmax(0, calc((100dvh - 5.5rem) * var(--ar))) minmax(18rem, 26rem); justify-content: center; }
+  .split.big .board-box > svg, .split.big .board-box > div > svg { max-width: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
@@ -379,7 +412,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .92rem; max-width: 
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Conway's Game of Life</h1>
   <p class="lede">Put stones on a board. Each turn, every stone counts the stones around it. With too few it dies alone, with too many it's crowded out, and an empty point with exactly three stones around it gets a new stone. From four rules like these come blinkers, gliders that crawl across the board, and guns that fire them forever.</p>
-  <p class="howto">Tap a point to place or take away a stone. Every board also works from the keyboard: Tab to it, move with the arrow keys (<kbd>Shift</kbd> moves further), and press <kbd>Space</kbd> to place or take away a stone. In whichever station you're using, <kbd>N</kbd> steps forward and <kbd>B</kbd> steps back, and on the big board <kbd>P</kbd> plays and pauses.</p>
+  <p class="howto">Tap a point to place or take away a stone. Every board also works from the keyboard: Tab to it, move with the arrow keys (<kbd>Shift</kbd> moves further), and press <kbd>Space</kbd> to place or take away a stone. In whichever station you're using, <kbd>N</kbd> steps forward and <kbd>B</kbd> steps back, and on the big board <kbd>P</kbd> plays and pauses. On a wide screen, the button under a board spreads its station across the window and enlarges the board.</p>
 
   <!-- 1. The rules -->
   <section class="panel" aria-labelledby="s1-h">
@@ -1954,6 +1987,38 @@ function readHash() {
   }
   return false;
 }
+
+// ---------- Bigger boards ----------
+
+// a button under each board that spreads the station across the window, with the board as tall as it fits
+const GROW_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="out" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="in" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>`;
+document.querySelectorAll(".split").forEach((split) => {
+  // the board is the split's first child, or the drawing inside it
+  const first = split.firstElementChild, board = first && (first.matches("svg") ? first : first.querySelector(":scope > svg"));
+  if (!board || !split.querySelector(":scope > .side")) return;
+  const box = document.createElement("div");
+  box.className = "board-box";
+  first.before(box);
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "grow";
+  b.innerHTML = GROW_ICON;
+  b.title = "Enlarge the board";
+  b.setAttribute("aria-label", "Enlarge the board");
+  b.setAttribute("aria-pressed", "false");
+  b.addEventListener("click", () => {
+    // the board's column takes the board's shape, so the board fits the window and the button stays at its corner
+    if (!split.classList.contains("big")) {
+      const r = first.getBoundingClientRect();
+      split.style.setProperty("--ar", r.width / r.height);
+    }
+    const on = split.classList.toggle("big");
+    b.setAttribute("aria-pressed", on);
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (on) box.scrollIntoView({ block: "nearest", behavior: still ? "auto" : "smooth" });
+  });
+  box.append(first, b);
+});
 
 // ---------- Start ----------
 
