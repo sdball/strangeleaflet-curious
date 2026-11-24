@@ -22,11 +22,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # check the pages and upload public/; deploying is a separate job, so the upload has
+  # settled by the time the deploy looks for it
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,8 +42,15 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          # Upload entire repository
           path: './public'
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
