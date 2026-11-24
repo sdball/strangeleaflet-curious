@@ -101,7 +101,8 @@ body {
   font: 400 1.0625rem/1.6 var(--sans);
   -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+/* up to 1240px on a wide screen, so the computer has room for a wider screen and its pad beside it */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
 a { color: var(--link); text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 code, kbd { font-family: var(--mono); font-size: .85em; }
@@ -455,7 +456,9 @@ h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.2; margin: 0 0 .6rem; }
 @container (min-width: 720px) {
   .deck { flex-direction: row; }
   .deck .screen { flex: 1; min-width: 0; }
-  .pad { flex: 0 0 clamp(15rem, 34%, 22rem); height: auto; }
+  /* beside the screen a pad is exactly as tall as the screen. contain: size keeps what's inside it,
+     a long notepad or a map sized from its own drawing, from stretching the row and the pad with it */
+  .pad { flex: 0 0 clamp(15rem, 34%, 26rem); height: auto; contain: size; }
 }
 
 .controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .75rem; }
