@@ -154,7 +154,7 @@ stories/check-saves game.z5 commands.txt  # any story file and commands of your 
    </div>
    ```
 
-   `.wrap` is `max-width: 960px; margin: 0 auto;` with about 1.25rem side padding.
+   `.wrap` is `max-width: 960px; margin: 0 auto;` with about 1.25rem side padding. A curio built around boards or canvases that can use the room runs to 1240px instead (see **Wide screens** under Exhibit structure).
 
    Guides use the two-column frame described under **Guide structure** instead.
 4. Register it in the `CURIOS` array in `public/index.html`, at the end unless asked otherwise:
@@ -184,6 +184,15 @@ The newer exhibits (`complex-numbers`, `exploring-e`, `morse-code`, `odometers`,
 - Optionally **A little history**, same format.
 - `<section class="sources">` listing every source the history leans on, in citation form, linked where a stable URL exists. Don't add a historical claim without a source for it.
 - Every section uses `aria-labelledby` pointing at its `h2` id.
+
+### Wide screens
+
+Exhibits built around boards (`circles-and-triangles`, `complex-numbers`, `exploring-e`, `conway-life`, `go-and-move-37`, `lucas-sequences`) use a wide screen without changing the phone layout. `circles-and-triangles` is the model.
+
+- `.wrap` runs to 1240px. Prose keeps its own `max-width` in `ch`, so lines stay readable as the page widens.
+- A station's board sits in a `.split` beside a `.side` column of controls and readouts. The board's column grows with the window: `minmax(0, clamp(420px, 52%, 600px)) minmax(0, 1fr)`, or up to 720px for wide boards. Below about 820px the split stacks, as before.
+- On a wide screen the board is `position: sticky`, so it stays in view while the column beside it scrolls.
+- A button under each board (`.grow`, `aria-pressed`, hidden below the stacking width) spreads the station across nearly the whole window, with the board as tall as the window allows and the controls still beside it. The script wraps the board in a `.board-box` and sets `--ar` on the split from the board's shape.
 
 ## Guide structure
 
