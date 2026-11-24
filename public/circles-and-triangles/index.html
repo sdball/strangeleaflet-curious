@@ -83,7 +83,8 @@ body {
   font: 400 1.0625rem/1.6 var(--text);
   -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+/* up to 1240px on a wide screen, so the boards can grow; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 kbd { font: 500 .85em var(--mono); border: 1px solid var(--edge); border-radius: 4px; padding: 0 .3em; background: var(--paper); }
@@ -125,12 +126,13 @@ h2 { font: 400 1.75rem/1.2 var(--serif); margin: 0 0 .75rem; }
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  /* the board's column grows with the window, from 420px up to 600px */
+  grid-template-columns: minmax(0, clamp(420px, 52%, 600px)) minmax(0, 1fr);
   gap: 1rem 1.5rem;
   margin-top: 1rem;
   align-items: start;
 }
-.split.wide { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); }
+.split.wide { grid-template-columns: minmax(0, clamp(560px, 62%, 720px)) minmax(0, 1fr); }
 @media (max-width: 820px) { .split, .split.wide { grid-template-columns: minmax(0, 1fr); } }
 .side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .9rem; align-content: start; min-width: 0; }
 .full { margin-top: 1rem; }
@@ -318,7 +320,7 @@ table.signs { border-collapse: collapse; font: 400 .92rem var(--mono); width: 10
 /* ---------- Bigger boards ---------- */
 /* the board and, on a wide screen, a button under it that hides the controls and gives the board the whole panel */
 .board-box { display: grid; gap: .4rem; min-width: 0; }
-.board-box:has(> #board3) { width: 100%; max-width: 360px; justify-self: center; }
+.board-box:has(> #board3) { width: 100%; max-width: 460px; justify-self: center; }
 .grow { display: none; }
 @media (min-width: 821px) {
   .grow {
