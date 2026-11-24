@@ -74,7 +74,8 @@ body {
   font: 400 1.0625rem/1.55 var(--sans);
   -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+/* up to 1240px on a wide screen, so the map and the close-up can grow; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 code { font: 400 .9em var(--mono); }
@@ -234,7 +235,7 @@ h2 { font: 400 1.65rem/1.2 var(--serif); margin: 0 0 .75rem; }
 .c-pay { --c: var(--pay); }
 
 /* ---------- Station 1: the map ---------- */
-.mapbox { position: relative; width: 100%; max-width: 540px; }
+.mapbox { position: relative; width: 100%; max-width: 600px; }
 .mapbox canvas {
   display: block;
   width: 100%;
