@@ -564,12 +564,6 @@ const cosD = (d) => Math.cos(d * RAD);
 // tan has no value where the width is 0
 const tanD = (d) => (Math.abs((((d % 180) + 180) % 180) - 90) < 1e-9 ? null : Math.tan(d * RAD));
 
-// snap to a multiple of 15° when close, otherwise to a whole degree
-function snap(d) {
-  const s = Math.round(d / 15) * 15;
-  return Math.abs(d - s) < 3 ? s : Math.round(d);
-}
-
 // ---------- Drawing ----------
 
 const NS = "http://www.w3.org/2000/svg";
@@ -731,8 +725,8 @@ function handle(board, { name, label, onPoint, onKey, onDrag }) {
 }
 
 // P on the circle at S.deg. Without wrap the angle stays between lo and hi; with it, it runs 0 to 360 and round again.
-// a free handle follows the pointer to a tenth of a degree instead of snapping
-function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, free = false, draw, before, onDrag }) {
+// a drag follows the pointer to a tenth of a degree, with no snapping, so P glides; the buttons and keys land on exact angles
+function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, draw, before, onDrag }) {
   const set = (d) => {
     if (before) before();
     if (wrap) {
@@ -750,7 +744,7 @@ function angleHandle(board, S, { lo = 0, hi = 360, wrap = false, free = false, d
       if (d < 0) d += 360;
       // past the end of the range, stick to whichever end is nearer
       if (!wrap && d > hi) d = d < (hi + lo + 360) / 2 ? hi : lo;
-      set(free ? Math.round(d * 10) / 10 : snap(d));
+      set(Math.round(d * 10) / 10);
     },
     onKey: (step) => set(Math.round(S.deg) + step),
     onDrag,
@@ -858,7 +852,7 @@ const h2 = handle(b2, {
   name: "The foot of the ladder", label: "",
   onPoint(x) {
     const out = clamp(-x, 0, S2.L);
-    set2(Math.round(Math.acos(out / S2.L) / RAD));
+    set2(Math.round((Math.acos(out / S2.L) / RAD) * 10) / 10);
   },
   onKey: (step) => set2(Math.round(S2.deg) + step),
 });
@@ -982,7 +976,8 @@ b4.base.append(
   ...["I", "II", "III", "IV"].map((n, j) => svgEl("text", { class: "quad", x: b4.X(1.3 * Math.sign(cosD(45 + 90 * j))), y: b4.Y(1.3 * Math.sign(sinD(45 + 90 * j))) }, n)),
 );
 const h4 = angleHandle(b4, S4, { wrap: true, draw: draw4 });
-const ANGLES4 = [30, 150, 210, 330];
+// the axes too, since a drag rarely lands on one exactly
+const ANGLES4 = [30, 90, 150, 180, 210, 270, 330];
 // which quarter, 1 to 4, or 0 on an axis
 const quarterOf = (d) => (d % 90 === 0 ? 0 : Math.floor((d % 360) / 90) + 1);
 
@@ -1095,13 +1090,13 @@ const O5 = () => {
   return [b5.X(0) - gx * 10, b5.Y(0) + gy * 14];
 };
 const h5 = angleHandle(b5, S5, {
-  wrap: true, free: true, draw: draw5,
+  wrap: true, draw: draw5,
   onDrag(on) {
     S5.dragging = on;
     if (!on) draw5();
   },
 });
-// with no snapping, 90° and 180° are the easy way to see the lines that have no value there
+// a drag rarely lands on 90° or 180° exactly, so these are the easy way to see the lines that have no value there
 const ANGLES5 = [30, 45, 60, 90, 135, 180, 210, 300];
 const FNS = ["sin", "cos", "tan", "sec", "csc", "cot"];
 // the three right triangles, each with a side of 1
