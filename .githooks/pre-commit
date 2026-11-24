@@ -1,17 +1,19 @@
 #!/bin/sh
-# Refuse commits that add or change a public page without the GoatCounter snippet.
+# Refuse commits that add or change a public page without the GoatCounter snippet,
+# including no_onload, so the page counts only once someone interacts with it.
 # Checks the staged version of each file, not the working copy.
 
 marker='data-goatcounter="https://sdball.goatcounter.com/count"'
 missing=""
 
 for f in $(git diff --cached --name-only --diff-filter=ACMR -- 'public/*.html'); do
-  git show ":$f" | grep -qF "$marker" || missing="$missing  $f
+  page=$(git show ":$f")
+  { printf "%s" "$page" | grep -qF "$marker" && printf "%s" "$page" | grep -qF 'no_onload: true'; } || missing="$missing  $f
 "
 done
 
 if [ -n "$missing" ]; then
-  echo "These pages are missing the GoatCounter snippet:" >&2
+  echo "These pages are missing the GoatCounter snippet, or its no_onload:" >&2
   printf "%s" "$missing" >&2
   echo "Add it before </head>, or commit with --no-verify to skip this check." >&2
   exit 1

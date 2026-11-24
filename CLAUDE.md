@@ -100,13 +100,28 @@ stories/check-saves game.z5 commands.txt  # any story file and commands of your 
 
 ## Rules for every page
 
-- **GoatCounter goes just before `</head>`**, exactly this. The hook and the deploy both grep for the `data-goatcounter` URL, and the deploy fails without it.
+- **GoatCounter goes just before `</head>`**, exactly this. The hook and the deploy both grep for the `data-goatcounter` URL and for `no_onload: true`, and the deploy fails without them. It counts the page only once someone moves a pointer, touches, wheels, or types, which leaves out the scrapers that run pages in a real Chrome.
 
   ```html
   <script>
+    // Count the page once someone moves a pointer, touches, wheels, or types.
+    // Scrapers run pages in a real Chrome, so GoatCounter can't tell them from
+    // people, but they load a page and leave without doing any of that.
+    // Not scroll, since a page can scroll itself.
     window.goatcounter = {
+      no_onload: true,
       path: function(p) { return location.host + p }
     }
+    ;(function() {
+      var events = ["pointermove", "pointerdown", "touchstart", "wheel", "keydown"]
+      function count() { if (window.goatcounter.count) window.goatcounter.count() }
+      function human() {
+        events.forEach(function(type) { removeEventListener(type, human, true) })
+        if (window.goatcounter.count || document.readyState === "complete") count()
+        else addEventListener("load", count, { once: true })
+      }
+      events.forEach(function(type) { addEventListener(type, human, { capture: true, passive: true }) })
+    })()
   </script>
   <script data-goatcounter="https://sdball.goatcounter.com/count"
           async src="//gc.zgo.at/count.js"></script>
@@ -268,6 +283,6 @@ Cozy Submarine's own sub is not in that set. Players draw their own in `custom-s
 - Confirm the browser console is clean.
 - If the page has Markdown regions, `scripts/render --check` should print nothing (the hook checks this too).
 - `tic-check public/<slug>/index.html` should print nothing (the hook runs it too).
-- `grep -L 'data-goatcounter="https://sdball.goatcounter.com/count"' public/*.html public/*/*.html` should print nothing.
+- `grep -L 'data-goatcounter="https://sdball.goatcounter.com/count"' public/*.html public/*/*.html` and `grep -L 'no_onload: true' public/*.html public/*/*.html` should print nothing.
 
 Commit messages are imperative, sentence case, and name the curio: "Add a Morse code exhibit", "Let m reach the end of the line in complex numbers' station 1". For anything bigger than a small fix, add a body that explains what changed for the visitor and why. Keep one curio per commit where possible.
