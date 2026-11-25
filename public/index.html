@@ -17,6 +17,7 @@
   --brass: #9A6F1E;
   --string: #8C7A5B;
   --line: #B9C4B8;
+  --hover: #EDE3C2;      /* a lamp over the room you point at */
   --serif: "Young Serif", Georgia, "Times New Roman", serif;
   --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
   box-sizing: border-box;
@@ -28,18 +29,23 @@
   :root:not([data-theme="light"]) {
     --bg: #14222B; --ink: #E8E2CC; --muted: #A6AE9F; --tag: #1E3240;
     --brass: #D6A84A; --string: #7E7158; --line: #2C4352;
+    --hover: #2A3B3A;
   }
 }
 
 :root[data-theme="dark"] {
   --bg: #14222B; --ink: #E8E2CC; --muted: #A6AE9F; --tag: #1E3240;
   --brass: #D6A84A; --string: #7E7158; --line: #2C4352;
+  --hover: #2A3B3A;
 }
 
 *, *::before, *::after { box-sizing: inherit; }
 
 html {
   scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }
 
 body {
@@ -79,28 +85,158 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
-/* Filters */
-.filters {
+/* Map: a visitor's floor plan. The walls are the ink showing through the
+   gaps between rooms, and a doorway is a notch of floor laid over a wall. */
+.map {
+  --wall: 5px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(9rem, auto) minmax(6rem, auto) minmax(6rem, auto);
+  grid-template-areas:
+    "mathematics     computer-science games"
+    "sound-and-music hall             workshop"
+    "sound-and-music hall             current-events";
+  gap: var(--wall);
+  padding: var(--wall);
+  margin: 0 0 3.5rem;
+  background: var(--ink);
+  border-radius: 3px;
+}
+
+.room {
+  --floor: var(--tag);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: .75rem .9rem .9rem;
+  background: var(--floor);
+  color: inherit;
+  text-decoration: none;
+}
+a.room:hover { --floor: var(--hover); }
+a.room:focus-visible { outline-offset: -7px; }
+
+.room .no {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--muted);
+}
+.room .name {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+/* one display case per curio, numbered like the tags */
+.cases {
   display: flex;
   flex-wrap: wrap;
-  gap: .5rem;
-  margin-bottom: 1.25rem;
+  gap: .3rem;
+  margin-top: auto;
+  padding-top: .6rem;
+}
+.case {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
   font-family: var(--mono);
+  font-size: .75rem;
 }
-.filters button {
-  font: inherit;
+a.room:hover .case {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+
+.hall {
+  --floor: var(--bg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.hall .here {
+  font-family: var(--mono);
+  font-size: .85rem;
+  color: var(--brass);
+}
+.hall .here::before { /* the "you are here" pin */
+  content: "";
+  display: inline-block;
+  width: .7rem;
+  height: .7rem;
+  margin-right: .4rem;
+  border-radius: 50%;
+  background: var(--brass);
+  vertical-align: -.05rem;
+}
+
+.room::after {
+  content: "";
+  position: absolute;
+  background: var(--floor);
+}
+@media (min-width: 641px) {
+  .room[data-door="b"]::after { left: calc(50% - 1.4rem); bottom: calc(-1 * var(--wall)); width: 2.8rem; height: var(--wall); }
+  .room[data-door="r"]::after { top: calc(50% - 1.4rem); right: calc(-1 * var(--wall)); width: var(--wall); height: 2.8rem; }
+  .room[data-door="l"]::after { top: calc(50% - 1.4rem); left: calc(-1 * var(--wall)); width: var(--wall); height: 2.8rem; }
+}
+
+/* on a phone the plan folds into two columns with the hall along the bottom */
+@media (max-width: 640px) {
+  .map {
+    --wall: 4px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: minmax(7rem, auto);
+    grid-template-areas:
+      "mathematics     computer-science"
+      "games           sound-and-music"
+      "workshop        current-events"
+      "hall            hall";
+  }
+  .hall { min-height: 5rem; }
+  .room[data-door-sm="b"]::after { left: calc(50% - 1.2rem); bottom: calc(-1 * var(--wall)); width: 2.4rem; height: var(--wall); }
+  .room[data-door-sm="r"]::after { top: calc(50% - 1.2rem); right: calc(-1 * var(--wall)); width: var(--wall); height: 2.4rem; }
+}
+
+/* Galleries */
+.gallery { margin-top: 3.5rem; }
+.gallery-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: .25rem 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: .75rem;
+  border-bottom: 1.5px solid var(--line);
+}
+.gallery-head .no {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: .85rem;
+  color: var(--muted);
+}
+.gallery-head h2 {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 5vw, 2.1rem);
+  line-height: 1.15;
+}
+.gallery-head .note {
+  margin: .3rem 0 0;
+  color: var(--muted);
+  max-width: 60ch;
+}
+.to-map {
+  display: inline-flex;
+  align-items: center;
   min-height: 40px;
-  padding: 0 .9rem;
-  border-radius: 999px;
-  cursor: pointer;
-  border: 1.5px solid var(--line);
-  background: transparent;
-  color: var(--ink);
-}
-.filters button[aria-pressed="true"] {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--bg);
+  font-family: var(--mono);
+  font-size: .9rem;
+  color: var(--muted);
 }
 
 /* Curio tags */
@@ -160,7 +296,7 @@ a:focus-visible {
   display: flex;
   justify-content: space-between;
 }
-.tag h2 {
+.tag h3 {
   font-weight: 400;
   font-size: 1.35rem;
   line-height: 1.2;
@@ -228,106 +364,145 @@ footer {
     <p class="sub">Exhibits, toys, guides, gadgets, and weird things! From <a href="https://strangeleaflet.com">Strange Leaflet</a> by Stephen Ball (and Claude)</p>
   </header>
 
-  <nav class="filters" aria-label="Filter">
-    <button data-kind="all" aria-pressed="true">All</button>
-    <button data-kind="exhibit" aria-pressed="false">Exhibits</button>
-    <button data-kind="toy" aria-pressed="false">Toys</button>
-    <button data-kind="guide" aria-pressed="false">Guides</button>
-    <button data-kind="gadget" aria-pressed="false">Gadgets</button>
-  </nav>
+  <nav class="map" id="map" aria-label="Museum map"></nav>
 
-  <ul class="shelf" id="shelf"></ul>
+  <div id="galleries"></div>
 </div>
 
 <script>
+// The galleries, in visiting order. Each curio names its room. Doors say which
+// wall a room's doorway is in on the wide plan and on a phone's.
+const ROOMS = [
+  { id: "mathematics", name: "Mathematics", doors: ["r", "r"],
+    note: "Bases, codes, turns, and sequences to drag, count, and spin." },
+  { id: "computer-science", name: "Computer Science", doors: ["b", "b"],
+    note: "How a computer keeps numbers, text, and whole games in bits." },
+  { id: "games", name: "Games", doors: ["l", "b"],
+    note: "Pilot a mech or a submarine, climb a word ladder, or play out a game of Go." },
+  { id: "sound-and-music", name: "Sound and Music", doors: ["r", "b"],
+    note: "Synths, sound effects, and Morse to play and take apart." },
+  { id: "workshop", name: "The Workshop", doors: ["l", "b"],
+    note: "Draw pixel art and arrange a little world of your own." },
+  { id: "current-events", name: "Current Events", doors: ["l", "b"],
+    note: "Live feeds from newsrooms and cockpits, typed out as they arrive." },
+];
+
 const CURIOS = [
-  { id: "wave", name: "Behringer Wave Guide", kind: "guide", href: "behringer-wave/",
+  { id: "wave", name: "Behringer Wave Guide", kind: "guide", room: "sound-and-music", href: "behringer-wave/",
     blurb: "A practical walkthrough of the Wave's wavetable engine, with patch notes." },
-  { id: "bits", name: "Bitfield Explorer", kind: "exhibit", href: "bitfield-explorer/",
+  { id: "bits", name: "Bitfield Explorer", kind: "exhibit", room: "computer-science", href: "bitfield-explorer/",
     blurb: "Flip switches and read the bits as numbers, text, floats, colors, and dates." },
-  { id: "minifloat", name: "Minifloat Ruler", kind: "exhibit", href: "minifloat-ruler/",
+  { id: "minifloat", name: "Minifloat Ruler", kind: "exhibit", room: "computer-science", href: "minifloat-ruler/",
     blurb: "Every number an 8-bit float can hold, on one ruler. Watch the gaps double." },
-  { id: "pocket-places", name: "Pocket Places", kind: "toy", href: "pocket-places/",
+  { id: "pocket-places", name: "Pocket Places", kind: "toy", room: "workshop", href: "pocket-places/",
     blurb: "A chill animated pixel art diorama with custom decorations." },
-  { id: "lehmer", name: "Lehmer Codes", kind: "exhibit", href: "lehmer-codes/",
+  { id: "lehmer", name: "Lehmer Codes", kind: "exhibit", room: "mathematics", href: "lehmer-codes/",
     blurb: "Turn any order of up to five cards into a short code, then turn the code back into the order." },
-  { id: "odometers", name: "Odometers", kind: "exhibit", href: "odometers/",
+  { id: "odometers", name: "Odometers", kind: "exhibit", room: "mathematics", href: "odometers/",
     blurb: "Explore how number bases work: base-10, base-2, clock, and factorial base." },
-  { id: "morse", name: "Morse Code", kind: "exhibit", href: "morse-code/",
+  { id: "morse", name: "Morse Code", kind: "exhibit", room: "sound-and-music", href: "morse-code/",
     blurb: "Type a message and hear it in Morse, or tap the key and watch your dots and dashes become letters." },
-  { id: "complex", name: "Complex Numbers", kind: "exhibit", href: "complex-numbers/",
+  { id: "complex", name: "Complex Numbers", kind: "exhibit", room: "mathematics", href: "complex-numbers/",
     blurb: "Multiply by i and the plane turns a quarter turn. Drag points to watch lengths multiply, angles add, and axes rotate." },
-  { id: "exploring-e", name: "Exploring e", kind: "exhibit", href: "exploring-e/",
+  { id: "exploring-e", name: "Exploring e", kind: "exhibit", room: "mathematics", href: "exploring-e/",
     blurb: "Grow 1 in smaller and smaller pieces and it settles on 2.71828…. Push sideways and it walks round a circle." },
-  { id: "lucas", name: "Fibonacci and Lucas Sequences", kind: "exhibit", href: "lucas-sequences/",
+  { id: "lucas", name: "Fibonacci and Lucas Sequences", kind: "exhibit", room: "mathematics", href: "lucas-sequences/",
     blurb: "Add the last two numbers to get the next and watch the ratio settle on φ. Turn two dials to find Pell, Mersenne, and sequences that go in circles." },
-  { id: "circles", name: "Circles and Triangles", kind: "exhibit", href: "circles-and-triangles/",
+  { id: "circles", name: "Circles and Triangles", kind: "exhibit", room: "mathematics", href: "circles-and-triangles/",
     blurb: "Turn a triangle inside a circle and watch sine, cosine, and tangent grow and shrink, then unroll the circle into a wave." },
-  { id: "chyron-wire", name: "Chyron Wire", kind: "gadget", href: "chyron-wire/",
+  { id: "chyron-wire", name: "Chyron Wire", kind: "gadget", room: "current-events", href: "chyron-wire/",
     blurb: "TV news chyrons from CNN, Fox News, MS NOW and BBC News type themselves out a few minutes after they air." },
-  { id: "hardpoint", name: "Hardpoint", kind: "toy", href: "hardpoint/",
+  { id: "hardpoint", name: "Hardpoint", kind: "toy", room: "games", href: "hardpoint/",
     blurb: "Pilot one mech against a squad of hostiles on a random hex battlefield. Take cover, watch your heat, and brace for the big hits." },
-  { id: "sound-bench", name: "Sound Bench", kind: "exhibit", href: "sound-bench/",
+  { id: "sound-bench", name: "Sound Bench", kind: "exhibit", room: "sound-and-music", href: "sound-bench/",
     blurb: "Build game sound effects out of tones and noise, then retune the ones in Hardpoint or make your own." },
-  { id: "conway-life", name: "Conway's Game of Life", kind: "exhibit", href: "conway-life/",
+  { id: "conway-life", name: "Conway's Game of Life", kind: "exhibit", room: "games", href: "conway-life/",
     blurb: "Place stones on a Go board and watch four rules decide which live, die, and are born. Then set gliders and guns loose." },
-  { id: "go-move-37", name: "Go and Move 37", kind: "exhibit", href: "go-and-move-37/",
+  { id: "go-move-37", name: "Go and Move 37", kind: "exhibit", room: "games", href: "go-and-move-37/",
     blurb: "Capture stones, fight a ko, and count a finished game of Go. Then replay the AlphaGo move that stunned the world's best players." },
-  { id: "claude-verbs", name: "Claude Verbs", kind: "gadget", href: "claude-verbs/",
+  { id: "claude-verbs", name: "Claude Verbs", kind: "gadget", room: "computer-science", href: "claude-verbs/",
     blurb: "Pick playlists of themed spinner verbs for Claude Code, preview them in a mock spinner, and copy one command that writes them in." },
-  { id: "cozy-submarine", name: "Cozy Submarine", kind: "toy", href: "cozy-submarine/",
+  { id: "cozy-submarine", name: "Cozy Submarine", kind: "toy", room: "games", href: "cozy-submarine/",
     blurb: "Pilot a little submarine from sunny shallows down to the black smokers, and see what swims by." },
-  { id: "custom-submarine", name: "Custom Submarine", kind: "toy", href: "custom-submarine/",
+  { id: "custom-submarine", name: "Custom Submarine", kind: "gadget", room: "workshop", href: "custom-submarine/",
     blurb: "Draw your own submarine a pixel at a time, then sail it in Cozy Submarine." },
-  { id: "pixel-bench", name: "Pixel Bench", kind: "exhibit", href: "pixel-bench/",
+  { id: "pixel-bench", name: "Pixel Bench", kind: "exhibit", room: "workshop", href: "pixel-bench/",
     blurb: "See how a few dozen pixels become a dolphin or a glowing anglerfish, then redraw the ones in Cozy Submarine and Pocket Places or draw your own." },
-  { id: "z-machine", name: "Z-Machine", kind: "exhibit", href: "z-machine/",
+  { id: "z-machine", name: "Z-Machine", kind: "exhibit", room: "computer-science", href: "z-machine/",
     blurb: "Open an Infocom-style story file and see how its rooms, words, and packed text are laid out." },
-  { id: "z-machine-interpreter", name: "Z-Machine Interpreter", kind: "gadget", href: "z-machine-interpreter/",
+  { id: "z-machine-interpreter", name: "Z-Machine Interpreter", kind: "gadget", room: "computer-science", href: "z-machine-interpreter/",
     blurb: "Play Infocom-style story files: a small game written for the cabinet, Zork I to III, or one of your own." },
-  { id: "not-a-number", name: "Not a Number", kind: "exhibit", href: "not-a-number/",
+  { id: "not-a-number", name: "Not a Number", kind: "exhibit", room: "computer-science", href: "not-a-number/",
     blurb: "NaN isn't one value. Map all 2,046 of the 16-bit ones, then take one apart bit by bit." },
-  { id: "air-to-ground", name: "Air to Ground", kind: "gadget", href: "air-to-ground/",
+  { id: "air-to-ground", name: "Air to Ground", kind: "gadget", room: "current-events", href: "air-to-ground/",
     blurb: "Airline crews and their dispatchers trade messages over ACARS, typed out on an air traffic console as ACARS Drama posts them." },
-  { id: "synth-music", name: "Synth Music", kind: "exhibit", href: "synth-music/",
+  { id: "synth-music", name: "Synth Music", kind: "exhibit", room: "sound-and-music", href: "synth-music/",
     blurb: "Build a four-chord loop, take it apart into drums, bass, chords, arpeggio, and lead, then play it as synthwave, chiptune, italo, or ambient." },
-  { id: "departures", name: "Departures", kind: "toy", href: "departures/",
+  { id: "departures", name: "Departures", kind: "toy", room: "games", href: "departures/",
     blurb: "Turn one flap at a time to get from word to word on a railway departure board. Every stop has to be a word." },
 ];
 
 const $ = (id) => document.getElementById(id);
-const shelf = $("shelf");
 
-// ---------- Shelf ----------
+// ---------- Map and galleries ----------
 
-function renderShelf(kind = "all") {
-  shelf.innerHTML = "";
-  CURIOS.forEach((c, i) => {
-    if (kind !== "all" && c.kind !== kind) return;
-    const tilt = [-1.6, 1.2, -0.8, 1.8][i % 4];
-    const li = document.createElement("li");
-    li.className = "slot";
-    li.innerHTML = `
-      <a class="tag" href="${c.href}" data-id="${c.id}" style="--tilt:${tilt}deg">
-        <span class="meta">
-          <span>No. ${i + 1}</span>
-          <span>${c.kind}</span>
-        </span>
-        <h2>${c.name}</h2>
-        <p>${c.blurb}</p>
+// tags are numbered gallery by gallery, so the numbers on the map's cases
+// match the tags below
+const numbered = ROOMS.flatMap((room) => CURIOS.filter((c) => c.room === room.id));
+const no = new Map(numbered.map((c, i) => [c, i + 1]));
+
+function renderMap() {
+  const rooms = ROOMS.map((room, i) => {
+    const here = CURIOS.filter((c) => c.room === room.id);
+    return `
+      <a class="room" href="#${room.id}" style="grid-area: ${room.id}"
+         data-door="${room.doors[0]}" data-door-sm="${room.doors[1]}"
+         aria-label="Gallery ${i + 1}, ${room.name}: ${here.length} curios">
+        <span class="no">Gallery ${i + 1}</span>
+        <span class="name">${room.name}</span>
+        <span class="cases" aria-hidden="true">${here.map((c) => `<span class="case">${no.get(c)}</span>`).join("")}</span>
       </a>`;
-    shelf.appendChild(li);
   });
+  $("map").innerHTML = rooms.join("") + `
+    <div class="room hall" style="grid-area: hall" data-door="b" data-door-sm="b">
+      <span class="name">Great Hall</span>
+      <span class="here">You are here</span>
+    </div>`;
 }
 
-document.querySelectorAll(".filters button").forEach((b) => {
-  b.addEventListener("click", () => {
-    document.querySelectorAll(".filters button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-    renderShelf(b.dataset.kind);
-  });
-});
+function renderGalleries() {
+  $("galleries").innerHTML = ROOMS.map((room, i) => `
+    <section class="gallery" id="${room.id}" aria-labelledby="g-${room.id}">
+      <div class="gallery-head">
+        <div>
+          <p class="no">Gallery ${i + 1}</p>
+          <h2 id="g-${room.id}">${room.name}</h2>
+          <p class="note">${room.note}</p>
+        </div>
+        <a class="to-map" href="#map">Back to the map</a>
+      </div>
+      <ul class="shelf">${CURIOS.filter((c) => c.room === room.id).map(tag).join("")}</ul>
+    </section>`).join("");
+}
 
-renderShelf();
+function tag(c) {
+  const n = no.get(c);
+  const tilt = [-1.6, 1.2, -0.8, 1.8][n % 4];
+  return `
+    <li class="slot">
+      <a class="tag" href="${c.href}" style="--tilt:${tilt}deg">
+        <span class="meta">
+          <span>No. ${n}</span>
+          <span>${c.kind}</span>
+        </span>
+        <h3>${c.name}</h3>
+        <p>${c.blurb}</p>
+      </a>
+    </li>`;
+}
+
+renderMap();
+renderGalleries();
 </script>
 </body>
 </html>

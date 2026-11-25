@@ -5,7 +5,7 @@ Static site served at curious.strangeleaflet.com: interactive exhibits, toys, gu
 ## Layout
 
 ```
-public/index.html          the hub: the shelf of curio tags
+public/index.html          the hub: a museum map of the galleries, then each gallery's curio tags
 public/<slug>/index.html   one curio per directory, served at /<slug>/
 public/<slug>/*.md         prose that scripts/render copies into the page, if the page has any
 scripts/serve              serves public/ locally (python3 http.server)
@@ -175,12 +175,14 @@ stories/check-saves game.z5 commands.txt  # any story file and commands of your 
 4. Register it in the `CURIOS` array in `public/index.html`, at the end unless asked otherwise:
 
    ```js
-   { id: "odometers", name: "Odometers", kind: "exhibit", href: "odometers/",
+   { id: "odometers", name: "Odometers", kind: "exhibit", room: "mathematics", href: "odometers/",
      blurb: "Explore how number bases work: base-10, base-2, clock, and factorial base." },
    ```
 
-   - `kind` is `exhibit` (learn something by playing with it), `toy` (just for fun), `guide` (a walkthrough), or `gadget` (a working instrument, often fed by outside data, like `chyron-wire`). These drive the hub's filter buttons.
-   - The tag's "No. N" comes from array position, so reordering renumbers every tag.
+   - `kind` is `exhibit` (learn something by playing with it), `toy` (just for fun), `guide` (a walkthrough), or `gadget` (a working instrument, often fed by outside data, like `chyron-wire`). It shows on the tag.
+   - `room` is the gallery it hangs in, one of the `ROOMS` ids: `mathematics`, `computer-science`, `games`, `sound-and-music`, `workshop`, or `current-events`. Each curio goes in one room. The hub's map draws a numbered case in that room for it.
+   - The tag's "No. N" counts gallery by gallery in `ROOMS` order, then by array position within a gallery, so the numbers on the map's cases match the tags. Adding a curio renumbers the ones after its gallery.
+   - A new gallery needs an entry in `ROOMS` (its `note` line and which wall its doorway is in, wide and on a phone) and a place in the map's `grid-template-areas`, both the wide plan and the phone's two-column one.
    - `href` is relative with a trailing slash.
    - The blurb sits on a small paper tag. Keep it to about one sentence that says what you do there.
 5. Cross-link related curios with relative links (`<a href="../lehmer-codes/">`) where one explains the other.
