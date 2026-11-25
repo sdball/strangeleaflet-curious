@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slide Rules — The Cabinet of Curios</title>
+<meta name="description" content="Slide one ruler along another to add, then space the numbers by their logarithms and the same slide multiplies. Work problems on a C and D rule, read squares, cubes, logs, and sines off the other scales, and turn a circular rule.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Bitter:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: a drafting table with an ivory celluloid rule in a bamboo frame */
+  --bg: #ECE6D8;
+  --paper: #F7F3E8;
+  --sheet: #FFFDF6;
+  --ink: #1E1B16;
+  --muted: #5E574B;
+  --edge: #CFC5B0;
+  --focus: #1F6FB2;
+  --accent: #8E2A1C;  /* station labels, pressed buttons: an oxblood stamp */
+
+  /* The rule */
+  --stock: #FBF5E2;
+  --slide: #FFFBEE;
+  --rim: #A27E4B;
+  --slot: #6E5430;
+  --tick: #15130F;
+  --red: #B3261E;
+  --glass: rgba(170, 205, 225, .22);
+  --glass-edge: #6F8C9C;
+  --hair: #C8261B;
+
+  /* The two lengths that add, the same colour in every station */
+  --a: #1D6FA5;
+  --b: #BE6F0A;
+
+  --head: "Bitter", "Rockwell", Georgia, serif;
+  --text: "PT Serif", Georgia, "Times New Roman", serif;
+  --num: "Barlow Semi Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15130F; --paper: #1D1A15; --sheet: #231F19; --ink: #EDE6D6; --muted: #A99F8C; --edge: #3B352B;
+    --focus: #72B6F2; --accent: #E8907A;
+    --stock: #2A261E; --slide: #322D24; --rim: #6B5434; --slot: #0C0B09; --tick: #EDE6D6; --red: #FF7F70;
+    --glass: rgba(150, 195, 225, .12); --glass-edge: #8FAAB9; --hair: #FF6B5E;
+    --a: #6DB6EA; --b: #F2B44E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15130F; --paper: #1D1A15; --sheet: #231F19; --ink: #EDE6D6; --muted: #A99F8C; --edge: #3B352B;
+  --focus: #72B6F2; --accent: #E8907A;
+  --stock: #2A261E; --slide: #322D24; --rim: #6B5434; --slot: #0C0B09; --tick: #EDE6D6; --red: #FF7F70;
+  --glass: rgba(150, 195, 225, .12); --glass-edge: #8FAAB9; --hair: #FF6B5E;
+  --a: #6DB6EA; --b: #F2B44E;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+/* up to 1240px on a wide screen, so the rules can run long; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 500 .85em var(--mono); border: 1px solid var(--edge); border-radius: 4px; padding: 0 .3em; background: var(--paper); }
+.v { font-style: italic; }
+sub, sup { line-height: 0; }
+
+.back { display: inline-block; color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
+h1 { font: 600 clamp(2.3rem, 7.5vw, 3.6rem)/1.05 var(--head); margin: 0 0 .6rem; letter-spacing: -.01em; }
+.lede { margin: 0 0 .6rem; max-width: 66ch; }
+.howto { margin: 0 0 1.6rem; color: var(--muted); font-size: .95rem; max-width: 66ch; }
+h2 { font: 600 1.55rem/1.2 var(--head); margin: 0 0 .75rem; }
+.ca { color: var(--a); }
+.cb { color: var(--b); }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-left: 5px solid var(--rim);
+  border-radius: 6px;
+  padding: 1.1rem 1.2rem 1.25rem;
+  margin-bottom: 1.6rem;
+  box-shadow: 0 16px 30px -26px rgba(60, 40, 10, .6);
+}
+.station { font: 500 .78rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 .1rem; }
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .35rem 0 0; max-width: 70ch; }
+
+/* ---------- The rule ---------- */
+.rule-box { margin-top: 1rem; min-width: 0; }
+.rule {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+.rule .stock { fill: var(--stock); stroke: var(--rim); stroke-width: 1.5; }
+.rule .slide-body { fill: var(--slide); stroke: var(--rim); stroke-width: 1.5; }
+.rule .slot { fill: var(--slot); opacity: .35; }
+.rule .tick { stroke: var(--tick); stroke-width: .9; fill: none; }
+.rule .tick.major { stroke-width: 1.3; }
+.rule .red .tick, .rule .tick.red { stroke: var(--red); }
+.rule .num { fill: var(--tick); font: 500 12.5px var(--num); text-anchor: middle; }
+.rule .num.small { font-size: 10.5px; font-weight: 400; }
+.rule .red .num, .rule .num.red { fill: var(--red); }
+.rule .name { fill: var(--muted); font: 600 13px var(--num); text-anchor: end; dominant-baseline: central; }
+.rule .name.red { fill: var(--red); }
+.rule .slide { cursor: grab; outline: none; }
+.rule .slide.drag { cursor: grabbing; }
+.rule .slide .ring { fill: none; stroke: var(--focus); stroke-width: 2.5; opacity: 0; }
+.rule .slide:focus-visible .ring { opacity: 1; }
+.rule .cursor { cursor: ew-resize; outline: none; }
+.rule .cursor .glass { fill: var(--glass); stroke: var(--glass-edge); stroke-width: 1.25; }
+.rule .cursor .hit { fill: transparent; }
+.rule .cursor .hair { stroke: var(--hair); stroke-width: 1.4; }
+.rule .cursor .ring { fill: none; stroke: var(--focus); stroke-width: 2.5; opacity: 0; }
+.rule .cursor:focus-visible .ring, .rule .cursor.drag .ring { opacity: 1; }
+.rule .bar { stroke: none; }
+.rule .bar.a { fill: var(--a); }
+.rule .bar.b { fill: var(--b); }
+.rule .bar-lab { font: 500 12px var(--mono); text-anchor: middle; }
+.rule .bar-lab.a { fill: var(--a); }
+.rule .bar-lab.b { fill: var(--b); }
+.rule .bar-lab.t { fill: var(--ink); }
+.rule .brace { fill: none; stroke: var(--ink); stroke-width: 1.25; }
+
+/* ---------- The dial ---------- */
+.dial { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
+.dial .ring-body { fill: var(--stock); stroke: var(--rim); stroke-width: 2; }
+.dial .disc-body { fill: var(--slide); stroke: var(--rim); stroke-width: 1.5; }
+.dial .disc { cursor: grab; outline: none; }
+.dial .disc.drag { cursor: grabbing; }
+.dial .arm { cursor: grab; outline: none; }
+.dial .arm .glass { fill: var(--glass); stroke: var(--glass-edge); stroke-width: 1.25; }
+.dial .arm .hair { stroke: var(--hair); stroke-width: 1.5; }
+.dial .arm .knob { fill: var(--glass-edge); }
+.dial .ring { fill: none; stroke: var(--focus); stroke-width: 3; opacity: 0; }
+.dial .disc:focus-visible .ring, .dial .arm:focus-visible .ring { opacity: 1; }
+.dial .tick { stroke: var(--tick); stroke-width: .9; }
+.dial .tick.major { stroke-width: 1.4; }
+.dial .num { fill: var(--tick); font: 500 13px var(--num); text-anchor: middle; dominant-baseline: central; }
+.dial .num.small { font-size: 10.5px; font-weight: 400; }
+.dial .pin { fill: var(--rim); }
+
+/* ---------- Under the rule ---------- */
+.under { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem 1.75rem; margin-top: 1rem; align-items: start; }
+@media (max-width: 820px) { .under { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: .8rem; align-content: start; min-width: 0; }
+.split { display: grid; grid-template-columns: minmax(0, clamp(320px, 44%, 480px)) minmax(0, 1fr); gap: 1rem 1.75rem; margin-top: 1rem; align-items: start; }
+@media (max-width: 820px) { .split { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 821px) { .split > .dial { position: sticky; top: 1rem; } }
+
+/* ---------- Controls ---------- */
+.btn {
+  font: 700 1rem var(--text);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  padding: .35rem .9rem;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.go { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn kbd { margin-left: .45rem; font-size: .75rem; color: var(--ink); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .6rem; }
+.row > .lbl { font-size: .95rem; color: var(--muted); }
+
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chips button {
+  font: 500 .95rem var(--mono);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: 0 .85rem;
+  min-height: 40px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.chips button:hover { border-color: var(--accent); }
+.chips button[aria-pressed="true"] { color: var(--paper); background: var(--accent); border-color: var(--accent); }
+
+.problem { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.problem input, .problem select {
+  font: 500 1rem var(--mono);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  min-height: 44px;
+}
+.problem input { width: 7.5rem; padding: 0 .6rem; }
+.problem select { padding: 0 .5rem; font-size: 1.1rem; }
+
+/* ---------- Readouts ---------- */
+.pair { margin: 0; display: grid; gap: .45rem; }
+.pair > div { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); align-items: baseline; gap: .7rem; }
+.pair dt { font: 400 .92rem var(--text); color: var(--muted); text-align: right; }
+.pair dd { margin: 0; font: 500 1rem var(--mono); overflow-wrap: anywhere; }
+.pair dd small { display: block; font: 400 .9rem var(--text); color: var(--muted); }
+@media (max-width: 480px) { .pair > div { grid-template-columns: 7.5rem minmax(0, 1fr); gap: .5rem; } }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--edge); border-radius: 8px; background: var(--sheet); }
+table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
+.reads th, .reads td { padding: .3rem .65rem; border-bottom: 1px solid var(--edge); text-align: left; white-space: nowrap; }
+.reads tr:last-child th, .reads tr:last-child td { border-bottom: 0; }
+.reads th { font: 600 .95rem var(--num); width: 3rem; }
+.reads th.red { color: var(--red); }
+.reads td.val { font: 500 1rem var(--mono); width: 7rem; }
+.reads td.what { color: var(--muted); white-space: normal; }
+
+.steps { margin: 0; padding-left: 1.4rem; display: grid; gap: .4rem; }
+.steps li { padding: .2rem .45rem; border-radius: 6px; }
+.steps li[aria-current="step"] { background: color-mix(in srgb, var(--rim) 20%, transparent); }
+.steps:empty { display: none; }
+
+.note { margin: 0; font-size: .97rem; max-width: 70ch; }
+.panel > .note { margin-top: 1rem; }
+.small-note { margin: 0; font-size: .9rem; color: var(--muted); }
+.sum { font: 500 1rem var(--mono); }
+
+/* ---------- Prose ---------- */
+.notes { max-width: 68ch; margin-top: 2.4rem; }
+.notes li { margin-bottom: .7rem; }
+.sources { max-width: 68ch; margin-top: 2.4rem; color: var(--muted); font-size: .93rem; }
+.sources h2 { color: var(--ink); }
+.sources li { margin-bottom: .5rem; }
+
+@media (max-width: 480px) {
+  .panel { padding: 1rem .85rem 1.1rem; border-left-width: 4px; }
+}
+</style>
+<script>
+  // Count the page once someone moves a pointer, touches, wheels, or types.
+  // Scrapers run pages in a real Chrome, so GoatCounter can't tell them from
+  // people, but they load a page and leave without doing any of that.
+  // Not scroll, since a page can scroll itself.
+  window.goatcounter = {
+    no_onload: true,
+    path: function(p) { return location.host + p }
+  }
+  ;(function() {
+    var events = ["pointermove", "pointerdown", "touchstart", "wheel", "keydown"]
+    function count() { if (window.goatcounter.count) window.goatcounter.count() }
+    function human() {
+      events.forEach(function(type) { removeEventListener(type, human, true) })
+      if (window.goatcounter.count || document.readyState === "complete") count()
+      else addEventListener("load", count, { once: true })
+    }
+    events.forEach(function(type) { addEventListener(type, human, { capture: true, passive: true }) })
+  })()
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Slide Rules</h1>
+  <!-- md: text.md#intro -->
+  <p class="lede">Before pocket calculators, engineers multiplied with a ruler that slides. Line up two numbers on two scales and the answer sits under a hairline, ready to read to about three figures. Start with two plain rulers that add, then space the numbers differently and watch the same slide multiply.</p>
+  <p class="howto">Drag the slide, or the cursor (the clear window with a line down its middle), or tap the rule to send the cursor there. With the keyboard, Tab to the slide or the cursor and use the arrow keys: <kbd>Shift</kbd> moves further.</p>
+  <!-- /md -->
+
+  <!-- 1. Adding with two rulers -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="s1-h">Two rulers that add</h2>
+      <!-- md: text.md#station-1 -->
+      <p>Lay one ruler along another. Slide the top one until its 0 sits over 3 on the bottom one. Now every number on the top ruler sits over itself plus 3: the cursor on 4 above finds 7 below. <b>Sliding adds lengths, and on these rulers the lengths are the numbers.</b> The bars under the rulers show the two lengths laid end to end.</p>
+      <!-- /md -->
+    </div>
+    <div class="rule-box">
+      <svg class="rule" id="rule1" role="group" aria-label="Two plain rulers: a top ruler from 0 to 10 that slides along a bottom ruler from 0 to 20, with a cursor across both"></svg>
+    </div>
+    <div class="under">
+      <div class="col">
+        <div class="chips" id="s1-presets" role="group" aria-label="Set up a sum"></div>
+        <p class="note" id="s1-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s1-out"></dl>
+    </div>
+    <!-- md: text.md#station-1-note -->
+    <p class="note">Run it backwards to subtract. Put the cursor on 9 on the bottom ruler, slide the top ruler until its 4 is under the hairline, and its 0 points at 9 − 4 = 5. Station 2 keeps the slide and changes where the numbers go.</p>
+    <!-- /md -->
+  </section>
+
+  <!-- 2. Log spacing -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="s2-h">Spacing that multiplies</h2>
+      <!-- md: text.md#station-2 -->
+      <p>Now space the numbers differently. Put 1 at the left end and 10 at the right end of the top ruler, and every number in between at its <b>logarithm</b>: the power you raise 10 to to get it. 10<sup>0.301</sup> = 2, so log 2 = 0.301, and 2 sits 0.301 of the way along. log 3 = 0.477 puts 3 a little short of halfway. The bottom ruler carries on past 10 to 100, spaced the same way.</p>
+      <p>Slide exactly as before. The top ruler's 1 over 2, the cursor on 3, and below it you read 6. The lengths still add: 0.301 + 0.477 = 0.778, and 6 sits at 0.778. <b>Adding the logs of two numbers gives the log of their product</b>, so the slide that added in Station 1 multiplies here.</p>
+      <!-- /md -->
+    </div>
+    <div class="rule-box">
+      <svg class="rule" id="rule2" role="group" aria-label="Two rulers spaced by logarithms: a top ruler from 1 to 10 that slides along a bottom ruler from 1 to 100, with a cursor across both"></svg>
+    </div>
+    <div class="under">
+      <div class="col">
+        <div class="chips" id="s2-presets" role="group" aria-label="Set up a product"></div>
+        <p class="note" id="s2-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s2-out"></dl>
+    </div>
+    <!-- md: text.md#station-2-note -->
+    <p class="note">Look at where 2, 4, and 8 fall on the bottom ruler: equal steps apart, and so are 25, 50, and 100. Doubling is the same length wherever you start, so the numbers crowd together toward the right.</p>
+    <!-- /md -->
+  </section>
+
+  <!-- 3. C and D -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s3-h">The C and D scales</h2>
+      <!-- md: text.md#station-3 -->
+      <p>A real slide rule keeps Station 2's spacing but makes both scales the same length. The scale on the slide is called <b>C</b>, and the one under it on the fixed body, the <b>stock</b>, is called <b>D</b>. Both run from 1 to 10, and the 1 at each end of C is called an <b>index</b>. To multiply, put C's left index over the first number on D, move the cursor to the second number on C, and read the answer on D under the hairline.</p>
+      <p>With D only running to 10, 3 × 4 falls off the end. So use the other index: put C's <b>right</b> index over 3 and the cursor on 4 finds 1.2 on D. <b>The rule only shows the digits</b>, so 1.2 could mean 12, 0.12, or 1,200, and you keep track of the decimal point yourself with a rough sum in your head. Division runs multiplication backwards. Type a problem, or pick one, then step through it.</p>
+      <!-- /md -->
+    </div>
+    <div class="rule-box">
+      <svg class="rule" id="rule3" role="group" aria-label="A slide rule with the C scale on the slide and the D scale on the stock below it, both from 1 to 10, with a cursor across both"></svg>
+    </div>
+    <div class="under">
+      <div class="col">
+        <form class="problem" id="s3-form">
+          <label class="small-note" for="s3-a">Work out</label>
+          <input id="s3-a" inputmode="decimal" autocomplete="off" spellcheck="false" value="23" aria-label="First number">
+          <select id="s3-op" aria-label="Operation"><option value="×">×</option><option value="÷">÷</option></select>
+          <input id="s3-b" inputmode="decimal" autocomplete="off" spellcheck="false" value="470" aria-label="Second number">
+          <button type="submit" class="btn">Set it up</button>
+        </form>
+        <div class="chips" id="s3-presets" role="group" aria-label="Pick a problem"></div>
+        <ol class="steps" id="s3-steps" aria-live="polite"></ol>
+        <div class="row">
+          <button type="button" class="btn" id="s3-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s3-next" aria-keyshortcuts="N">Next step<kbd>N</kbd></button>
+        </div>
+        <p class="small-note" id="s3-msg" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s3-out"></dl>
+    </div>
+  </section>
+
+  <!-- 4. More scales -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="s4-h">Squares, cubes, logs, and angles</h2>
+      <!-- md: text.md#station-4 -->
+      <p>Every other scale is a way of relabeling D, read through the cursor. <b>A</b> squeezes two copies of C's spacing into the same length, so 3 on D sits under 9 on A, its square. <b>K</b> squeezes in three copies, for cubes. <b>CI</b> is C running backwards, so it reads 1 ÷ C. <b>L</b> is evenly spaced and reads the logarithm of D: the distance Station 2 measured. <b>S</b> and <b>T</b> mark angles where 10 × their sine and 10 × their tangent fall on D. Move the cursor and every scale gives its reading at once. Turn scales off to see fewer.</p>
+      <!-- /md -->
+    </div>
+    <div class="rule-box">
+      <svg class="rule" id="rule4" role="group" aria-label="A full slide rule. On the upper stock, K for cubes and A for squares. On the slide, B, CI running backwards, and C. On the lower stock, D, then L for logarithms, S for sines, and T for tangents. A cursor runs across them all"></svg>
+    </div>
+    <div class="under">
+      <div class="col">
+        <div class="row">
+          <span class="lbl">Show</span>
+          <div class="chips" id="s4-show" role="group" aria-label="Show scales"></div>
+        </div>
+        <div class="chips" id="s4-presets" role="group" aria-label="Read"></div>
+        <p class="note" id="s4-note" aria-live="polite"></p>
+      </div>
+      <div class="table-wrap"><table class="reads" id="s4-out"></table></div>
+    </div>
+    <!-- md: text.md#station-4-note -->
+    <p class="note">Reading backwards works too. Put the cursor on a number on A and read its square root on D, or on K for a cube root. A has two halves, 1 to 10 and 10 to 100: count the digits in front of the decimal point and use the left half when there's an odd number of them, so √2 comes from the left half and √20 from the right.</p>
+    <!-- /md -->
+  </section>
+
+  <!-- 5. Circular -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
+      <h2 id="s5-h">Round the circle</h2>
+      <!-- md: text.md#station-5 -->
+      <p>Bend D into a ring and its two ends meet, with 10 landing on 1. On a <b>circular slide rule</b>, C is a disc that turns inside that ring, so nothing can run off the end. Turn the disc to put its 1 at 3 on D, swing the cursor arm to 4 on the disc, and the arm points at 1.2 on D, with no index to swap. The answer still comes out as digits, and the decimal point is still yours to place.</p>
+      <!-- /md -->
+    </div>
+    <div class="split">
+      <svg class="dial" id="dial5" role="group" aria-label="A circular slide rule: a disc carrying the C scale turns inside a fixed ring carrying D, with a cursor arm from the center across both"></svg>
+      <div class="col">
+        <div class="chips" id="s5-presets" role="group" aria-label="Set up a product"></div>
+        <dl class="pair" id="s5-out"></dl>
+        <p class="note" id="s5-note" aria-live="polite"></p>
+        <p class="small-note">Drag the disc to turn it and the arm to swing it, or Tab to either and use the arrow keys.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <!-- md: text.md#notes -->
+    <ul>
+      <li><b>Three figures is the usual limit.</b> Between 1 and 2 on D the ticks run every 0.01, so you can read 1.23 and guess at 1.234. Past 4 they run every 0.05, and three figures is about all you get. That's close enough for most engineering, where the measurements going in rarely have more.</li>
+      <li><b>The error is a share, not an amount.</b> Misreading by the width of a hairline is the same fraction of the number anywhere on the rule, about a tenth of a percent on a 25 cm rule. A calculator's error works the other way: it's tiny everywhere.</li>
+      <li><b>Set a ratio once and read a whole table.</b> Put C's left index over 1.609 on D and each number on C sits over its value in kilometers: 5 miles over 8.05, 26.2 over 42.2, until C runs past the end of D and you swap to the right index. Dividing or converting a column of numbers by the same amount takes one setting.</li>
+      <li><b>A slide rule can't add.</b> It only multiplies and divides, because sliding adds logs. Engineers did their adding on paper.</li>
+      <li><b>The trig scales borrow D's digits.</b> sin 30° is 0.5, but S puts 30° over 5 on D, so you place the decimal point there too. Angles under about 5.7° have sines under 0.1 and fall off the left end. For small angles the sine is nearly the angle in radians, as <a href="../circles-and-triangles/">Circles and Triangles</a> shows.</li>
+      <li><b>Floats space themselves the same way.</b> A computer's floating-point numbers sit closer together near 0 and farther apart as they grow, the gaps doubling with each power of 2, much like the crowding toward the right of C and D. The <a href="../minifloat-ruler/">Minifloat Ruler</a> lays every value of an 8-bit float along one line.</li>
+      <li><b>Base 10 is a choice.</b> Logs in any base turn multiplying into adding. Base 10 makes the scale repeat for each power of 10, which is why the rule only shows digits. The natural log uses <span class="v">e</span> instead, the number <a href="../exploring-e/">Exploring <span class="v">e</span></a> builds.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <section class="notes" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <!-- md: text.md#history -->
+    <ul>
+      <li><b>Logarithms.</b> John Napier published <i>Mirifici logarithmorum canonis descriptio</i> in 1614. Its preface says nothing is "so troublesome to mathematical practice" as multiplying and dividing large numbers, and logarithms turn those into adding and subtracting. Napier's logarithms weren't in base 10.</li>
+      <li><b>Base 10.</b> Henry Briggs suggested base 10 to Napier, and when the two met in 1615 Napier proposed that the log of 1 should be 0. Briggs published a table of base-10 logarithms, <i>Logarithmorum chilias prima</i>, in 1617.</li>
+      <li><b>One scale and a pair of dividers.</b> Edmund Gunter marked a logarithmic scale along a single ruler about two feet long. To multiply, you opened a pair of dividers to one length and stepped it off from the other, adding the lengths as Station 2 does. Gunter described it in print in 1623, and sailors called the ruler "the gunter."</li>
+      <li><b>Two scales and no dividers.</b> William Oughtred put two of Gunter's scales against each other and slid one along the other, so the dividers were no longer needed. He invented a circular version in 1630, described in <i>The Circles of Proportion</i>, which his pupil William Forster translated from Oughtred's Latin and published in 1632. Richard Delamain published his own circular rule in <i>Grammelogia</i> in 1630, and the two quarreled bitterly over who was first. They may have arrived at it separately.</li>
+      <li><b>The modern layout.</b> The straight slide rule's familiar form was designed in 1850 by Amédée Mannheim, a French army officer.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <!-- md: text.md#sources -->
+    <ul>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Napier/">"John Napier"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Briggs/">"Henry Briggs"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Gunter/">"Edmund Gunter"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Oughtred/">"William Oughtred"</a>, MacTutor History of Mathematics, for Oughtred's straight and circular rules, Delamain, Forster, and Mannheim.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const L10 = Math.log10;
+const RAD = Math.PI / 180;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+// ---------- Formatting ----------
+
+const MINUS = "−";
+const isInt = (x) => Math.abs(x - Math.round(x)) < 1e-6;
+const f1 = (v) => Math.round(v * 10) / 10;
+// up to n significant figures, with thousands commas and no trailing zeros
+const sig = (v, n = 6) => v.toLocaleString("en-US", { maximumSignificantDigits: n }).replace("-", MINUS);
+// how much a rule lets you read: four figures between 1 and 2, three past that
+const rd = (v) => sig(v, mant(v)[0] < 2 ? 4 : 3);
+const fixed = (v, d) => v.toFixed(d).replace("-", MINUS);
+const show = (v) => (v === Math.PI ? "π" : sig(v));
+
+// a number split into its digits, 1 to 10, and a power of 10
+function mant(v) {
+  let e = Math.floor(L10(v));
+  let m = v / 10 ** e;
+  if (m >= 10 - 1e-9) { m /= 10; e += 1; }
+  if (m < 1 - 1e-12) { m *= 10; e -= 1; }
+  return [m, e];
+}
+// one significant figure, for the rough sum that places the decimal point
+const rough = (v) => Number(v.toPrecision(1));
+
+// ---------- Drawing ----------
+
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+// ---------- Scales ----------
+
+// a scale places values along the rule: pos(v) is how far along, in rule lengths, and val(p) goes back.
+// majors are the labelled ticks; between two of them the finest steps that still fit are filled in.
+const decades = (n) => {
+  const out = [1];
+  for (let k = 0; k < n; k++) for (let d = 2; d <= 10; d++) out.push(d * 10 ** k);
+  return out;
+};
+const steps = (a, b, st) => {
+  const out = [];
+  for (let k = 0; a + k * st <= b + 1e-9; k++) out.push(+(a + k * st).toFixed(6));
+  return out;
+};
+// 1, 2, 5, and 10 matter most when labels must give way
+const logPrio = (v) => {
+  const m = mant(v)[0];
+  return Math.abs(m - 1) < 1e-9 ? 0 : Math.abs(m - 2) < 1e-9 || Math.abs(m - 5) < 1e-9 ? 1 : 2;
+};
+// a real rule marks both ends of C and D with 1
+const idxLabel = (v) => (v === 10 ? "1" : String(v));
+// and labels the tenths between 1 and 2 with one small digit
+const tenthDigit = (v) => (v > 1 && v < 2 ? String(Math.round((v - 1) * 10)) : null);
+
+function logScale(id, n, extra = {}) {
+  return {
+    id, name: id, lo: 1, hi: 10 ** n, majors: decades(n),
+    pos: (v) => L10(v) / n, val: (p) => 10 ** (p * n),
+    label: String, prio: logPrio, minor: null, ...extra,
+  };
+}
+const sinD = (d) => Math.sin(d * RAD);
+const tanD = (d) => Math.tan(d * RAD);
+const PI_MARK = [[Math.PI, "π"]];
+
+const SC = {
+  C: logScale("C", 1, { label: idxLabel, minor: tenthDigit, marks: PI_MARK }),
+  D: logScale("D", 1, { label: idxLabel, minor: tenthDigit, marks: PI_MARK }),
+  CI: {
+    id: "CI", name: "CI", red: true, lo: 1, hi: 10, majors: decades(1),
+    pos: (v) => 1 - L10(v), val: (p) => 10 ** (1 - p),
+    label: idxLabel, prio: logPrio, minor: tenthDigit,
+  },
+  A: logScale("A", 2),
+  B: logScale("B", 2),
+  K: logScale("K", 3),
+  L: {
+    id: "L", name: "L", lo: 0, hi: 1, majors: steps(0, 1, 0.1),
+    pos: (v) => v, val: (p) => p,
+    label: (v) => (v === 0 ? "0" : v === 1 ? "1" : "." + Math.round(v * 10)),
+    prio: (v) => (v === 0 || v === 1 ? 0 : isInt(v * 2) ? 1 : 2), minor: null,
+  },
+  S: {
+    id: "S", name: "S", lo: Math.asin(0.1) / RAD, hi: 90,
+    majors: [5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90],
+    pos: (d) => L10(10 * sinD(d)), val: (p) => Math.asin(10 ** p / 10) / RAD,
+    label: String, prio: (d) => (d === 10 || d === 30 || d === 90 ? 0 : d % 10 === 0 ? 1 : 2), minor: null,
+  },
+  T: {
+    id: "T", name: "T", lo: Math.atan(0.1) / RAD, hi: 45,
+    majors: [5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45],
+    pos: (d) => L10(10 * tanD(d)), val: (p) => Math.atan(10 ** p / 10) / RAD,
+    label: String, prio: (d) => (d === 10 || d === 45 ? 0 : d % 10 === 0 ? 1 : 2), minor: null,
+  },
+};
+
+// the ticks worth drawing at this many pixels per rule length
+function ticksFor(sc, ppu, minGap = 4.5) {
+  const out = [];
+  const P = sc.pos;
+  const inside = (v) => v >= sc.lo - 1e-9 && v <= sc.hi + 1e-9;
+  for (const v of sc.majors) if (inside(v)) out.push({ v, level: 1 });
+  for (let i = 0; i + 1 < sc.majors.length; i++) {
+    const a = sc.majors[i], b = sc.majors[i + 1], w = b - a;
+    let f = null;
+    for (const c of [0.01, 0.02, 0.05, 0.1, 0.2, 0.5]) {
+      const st = w * c;
+      // the crowded end of the interval decides
+      const gap = Math.min(Math.abs(P(a + st) - P(a)), Math.abs(P(b) - P(b - st))) * ppu;
+      if (gap >= minGap) { f = c; break; }
+    }
+    if (!f) continue;
+    const n = Math.round(1 / f);
+    for (let k = 1; k < n; k++) {
+      const r = k / n, v = a + w * r;
+      if (!inside(v)) continue;
+      out.push({ v, level: isInt(r * 2) ? 2 : isInt(r * 10) ? 3 : isInt(r * 20) ? 4 : 5 });
+    }
+  }
+  return out;
+}
+
+// labels that fit, the most important first, so 1, 2, and 5 survive on a phone
+function labelsFor(sc, ticks, ppu, wrap = false) {
+  const cands = [];
+  for (const t of ticks) {
+    if (t.level === 1) cands.push({ v: t.v, level: 1, text: sc.label(t.v), prio: sc.prio(t.v) });
+    else if (sc.minor && t.level <= 3) {
+      const text = sc.minor(t.v);
+      if (text) cands.push({ v: t.v, level: t.level, text, prio: 5, small: true });
+    }
+  }
+  for (const [v, text] of sc.marks || []) cands.push({ v, level: 1, text, prio: 3, mark: true });
+  cands.sort((a, b) => a.prio - b.prio || a.v - b.v);
+  const placed = [];
+  for (const c of cands) {
+    const x = sc.pos(c.v) * ppu, half = (c.text.length * (c.small ? 10.5 : 12.5) * 0.56) / 2 + 3;
+    const span = ppu;
+    const clash = placed.some((p) => {
+      let d = Math.abs(p.x - x);
+      if (wrap) d = Math.min(d, span - d);
+      return d < p.half + half;
+    });
+    if (clash) continue;
+    placed.push({ ...c, x, half });
+  }
+  return placed;
+}
+
+// ---------- A straight rule ----------
+
+// tick lengths by level, and the gap from a tick's end to its label
+const TICK = [0, 13, 10, 8, 6, 4.5];
+
+class Rule {
+  // o: { scales, top, slide, bottom (scale ids, top to bottom), span (the stock's length in rule lengths),
+  //      slideLen, s, u, sMin, sMax, uMin, uMax, fine, coarse, below (room for drawings under the rule),
+  //      onChange(rule), slideText(rule), cursorText(rule) }
+  constructor(svg, o) {
+    this.svg = svg;
+    this.o = Object.assign({ top: [], slide: [], bottom: [], span: 1, slideLen: 1, fine: 0.002, coarse: 0.02, below: 0 }, o);
+    this.s = o.s;
+    this.u = o.u;
+    this.hidden = new Set(o.hidden || []);
+    const clipId = `${svg.id}-clip`;
+    this.clipRect = svgEl("rect");
+    const defs = svgEl("defs"), cp = svgEl("clipPath", { id: clipId });
+    cp.append(this.clipRect);
+    defs.append(cp);
+    this.body = svgEl("g", { "clip-path": `url(#${clipId})` });
+    this.gStock = svgEl("g");
+    this.gSlide = svgEl("g", { class: "slide", tabindex: 0, role: "slider", "aria-label": o.slideName || "Slide" });
+    this.gOver = svgEl("g");
+    this.gNames = svgEl("g");
+    this.gCursor = svgEl("g", { class: "cursor", tabindex: 0, role: "slider", "aria-label": "Cursor" });
+    this.body.append(this.gStock, this.gSlide);
+    svg.append(defs, this.body, this.gOver, this.gNames, this.gCursor);
+    this.events();
+    // a frame later, so a new layout never resizes what the observer is still measuring
+    new ResizeObserver(() => requestAnimationFrame(() => this.layout())).observe(svg.parentElement);
+    this.layout();
+  }
+
+  X(p) { return this.m + p * this.ppu; }
+  isSlide(id) { return this.o.slide.includes(id); }
+
+  // what scale id reads under the hairline, or null past its ends
+  read(id) {
+    const sc = this.o.scales[id];
+    const p = this.isSlide(id) ? this.u - this.s : this.u;
+    const a = sc.pos(sc.lo), b = sc.pos(sc.hi);
+    if (p < Math.min(a, b) - 1e-9 || p > Math.max(a, b) + 1e-9) return null;
+    return sc.val(p);
+  }
+
+  setHidden(ids) {
+    this.hidden = new Set(ids);
+    this.W = 0;
+    this.layout();
+  }
+
+  layout() {
+    const W = Math.round(this.svg.parentElement.clientWidth);
+    if (!W || W === this.W) return;
+    this.W = W;
+    const o = this.o, narrow = W < 560;
+    const m = narrow ? 30 : 38, r = narrow ? 12 : 18, rh = narrow ? 29 : 31;
+    this.m = m;
+    this.ppu = (W - m - r) / o.span;
+    this.rh = rh;
+    const vis = (ids) => ids.filter((id) => !this.hidden.has(id));
+    const top = vis(o.top), sl = vis(o.slide), bot = vis(o.bottom);
+
+    let y = 8;
+    const topY = y, topH = Math.max(14, top.length * rh + 4);
+    y += topH + 2;
+    const slY = y, slH = Math.max(1, sl.length) * rh + 2;
+    y += slH + 2;
+    const botY = y, botH = Math.max(14, bot.length * rh + 4);
+    y += botH;
+    this.ruleTop = topY;
+    this.ruleBottom = y;
+    this.slideY = slY;
+    this.slideH = slH;
+    const H = Math.ceil(y + 10 + o.below);
+    this.H = H;
+    this.svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    this.svg.style.aspectRatio = `${W} / ${H}`;
+    const x0 = m - 6, x1 = W - 3;
+    for (const [k, v] of Object.entries({ x: x0 - 2, y: 0, width: x1 - x0 + 4, height: H })) this.clipRect.setAttribute(k, v);
+
+    // the stock: two strips joined behind the slide
+    const stock = [
+      svgEl("rect", { class: "slot", x: x0, y: slY - 2, width: x1 - x0, height: slH + 4 }),
+      svgEl("rect", { class: "stock", x: x0, y: topY, width: x1 - x0, height: topH, rx: 3 }),
+      svgEl("rect", { class: "stock", x: x0, y: botY, width: x1 - x0, height: botH, rx: 3 }),
+    ];
+    const names = [];
+    const addName = (id, rowTop) => {
+      const sc = o.scales[id];
+      if (sc.name) names.push(svgEl("text", { class: `name${sc.red ? " red" : ""}`, x: m - 12, y: rowTop + rh / 2 }, sc.name));
+    };
+    top.forEach((id, i) => {
+      const rowTop = topY + topH - (top.length - i) * rh;
+      stock.push(this.row(o.scales[id], rowTop, "up"));
+      addName(id, rowTop);
+    });
+    bot.forEach((id, i) => {
+      const rowTop = botY + i * rh;
+      stock.push(this.row(o.scales[id], rowTop, "down"));
+      addName(id, rowTop);
+    });
+    this.gStock.replaceChildren(...stock);
+
+    // the slide, drawn at its home position and moved by a transform
+    const pad = 7, sx0 = m - pad, sx1 = this.X(o.slideLen) + pad;
+    const slide = [
+      svgEl("rect", { class: "slide-body", x: sx0, y: slY, width: sx1 - sx0, height: slH, rx: 2 }),
+    ];
+    sl.forEach((id, i) => {
+      const rowTop = slY + 1 + i * rh;
+      slide.push(this.row(o.scales[id], rowTop, i === 0 && sl.length > 1 ? "down" : "up"));
+      addName(id, rowTop);
+    });
+    slide.push(svgEl("rect", { class: "ring", x: sx0 + 2, y: slY + 2, width: sx1 - sx0 - 4, height: slH - 4, rx: 3 }));
+    this.gSlide.replaceChildren(...slide);
+    this.gNames.replaceChildren(...names);
+
+    // the cursor: a window of glass with a hairline down its middle
+    const cw = narrow ? 28 : 36, cy0 = 2, cy1 = this.ruleBottom + 6;
+    this.gCursor.replaceChildren(
+      svgEl("rect", { class: "hit", x: -cw / 2 - 6, y: cy0, width: cw + 12, height: cy1 - cy0 }),
+      svgEl("rect", { class: "glass", x: -cw / 2, y: cy0, width: cw, height: cy1 - cy0, rx: 4 }),
+      svgEl("line", { class: "hair", x1: 0, y1: cy0 + 1, x2: 0, y2: cy1 - 1 }),
+      svgEl("rect", { class: "ring", x: -cw / 2 - 3, y: cy0 - 2, width: cw + 6, height: cy1 - cy0 + 4, rx: 6 }),
+    );
+    this.place();
+  }
+
+  // one scale's ticks and numbers, hanging down from the top of its row or rising from the bottom
+  row(sc, rowTop, dir) {
+    const g = svgEl("g", { class: sc.red ? "red" : null });
+    const ticks = ticksFor(sc, this.ppu);
+    const base = dir === "down" ? rowTop : rowTop + this.rh, sgn = dir === "down" ? 1 : -1;
+    let major = "", minor = "";
+    for (const t of ticks) {
+      const x = f1(this.X(sc.pos(t.v))), len = TICK[t.level];
+      const d = `M${x} ${f1(base)}V${f1(base + sgn * len)}`;
+      if (t.level === 1) major += d;
+      else minor += d;
+    }
+    for (const [v] of sc.marks || []) {
+      const x = f1(this.X(sc.pos(v)));
+      major += `M${x} ${f1(base)}V${f1(base + sgn * TICK[2])}`;
+    }
+    g.append(svgEl("path", { class: "tick major", d: major }), svgEl("path", { class: "tick", d: minor }));
+    for (const lab of labelsFor(sc, ticks, this.ppu)) {
+      const len = lab.mark ? TICK[2] : TICK[lab.level], fs = lab.small ? 10.5 : 12.5;
+      const y = dir === "down" ? base + len + 1 + fs * 0.8 : base - len - 2.5;
+      g.append(svgEl("text", { class: `num${lab.small ? " small" : ""}`, x: f1(this.X(sc.pos(lab.v))), y: f1(y) }, lab.text));
+    }
+    return g;
+  }
+
+  place() {
+    this.gSlide.setAttribute("transform", `translate(${f1(this.s * this.ppu)} 0)`);
+    this.gCursor.setAttribute("transform", `translate(${f1(this.X(this.u))} 0)`);
+    if (this.o.onChange) this.o.onChange(this);
+    if (this.o.slideText) this.gSlide.setAttribute("aria-valuetext", this.o.slideText(this));
+    if (this.o.cursorText) this.gCursor.setAttribute("aria-valuetext", this.o.cursorText(this));
+    this.gSlide.setAttribute("aria-valuenow", this.s.toFixed(3));
+    this.gCursor.setAttribute("aria-valuenow", this.u.toFixed(3));
+  }
+
+  setS(v) {
+    this.s = clamp(v, this.o.sMin, this.o.sMax);
+    this.place();
+  }
+  setU(v) {
+    this.u = clamp(v, this.o.uMin, this.o.uMax);
+    this.place();
+  }
+
+  // glide to a setting, or jump there with reduced motion
+  go({ s = this.s, u = this.u }) {
+    this.stop();
+    if (reduceMotion.matches) {
+      this.s = s;
+      this.u = u;
+      this.place();
+      return Promise.resolve();
+    }
+    const s0 = this.s, u0 = this.u, t0 = performance.now();
+    const dur = clamp(Math.max(Math.abs(s - s0), Math.abs(u - u0)) * 900, 250, 700);
+    return new Promise((res) => {
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / dur), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+        this.s = k === 1 ? s : s0 + (s - s0) * e;
+        this.u = k === 1 ? u : u0 + (u - u0) * e;
+        this.place();
+        if (k < 1) this.raf = requestAnimationFrame(tick);
+        else { this.raf = 0; res(); }
+      };
+      this.raf = requestAnimationFrame(tick);
+    });
+  }
+  stop() {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = 0;
+  }
+
+  toPx(e) {
+    const r = this.svg.getBoundingClientRect();
+    return [(e.clientX - r.left) * (this.W / r.width), (e.clientY - r.top) * (this.H / r.height)];
+  }
+
+  events() {
+    const svg = this.svg;
+    let drag = null;
+    const fromPx = (px) => (px - this.m) / this.ppu;
+    svg.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const [px, py] = this.toPx(e);
+      let mode;
+      if (this.gCursor.contains(e.target)) mode = "cursor";
+      else if (this.gSlide.contains(e.target)) mode = "slide";
+      else if (py >= this.ruleTop - 4 && py <= this.ruleBottom + 6) mode = "jump";
+      else return;
+      this.stop();
+      // a touch on the stock might be the start of a scroll, so it only moves the cursor once it lifts
+      if (mode === "jump" && e.pointerType === "touch") {
+        drag = { mode: "tap", px0: px, py0: py };
+        return;
+      }
+      e.preventDefault();
+      svg.setPointerCapture(e.pointerId);
+      if (mode === "jump") {
+        this.setU(fromPx(px));
+        mode = "cursor";
+      }
+      drag = { mode, px0: px, s0: this.s, u0: this.u };
+      const g = mode === "slide" ? this.gSlide : this.gCursor;
+      g.classList.add("drag");
+      g.focus({ preventScroll: true });
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const [px] = this.toPx(e);
+      const d = (px - drag.px0) / this.ppu;
+      if (drag.mode === "slide") this.setS(drag.s0 + d);
+      else if (drag.mode === "cursor") this.setU(drag.u0 + d);
+    });
+    const end = (e) => {
+      if (!drag) return;
+      if (drag.mode === "tap" && e.type === "pointerup") {
+        const [px, py] = this.toPx(e);
+        if (Math.hypot(px - drag.px0, py - drag.py0) < 8) this.setU(fromPx(px));
+      }
+      drag = null;
+      this.gSlide.classList.remove("drag");
+      this.gCursor.classList.remove("drag");
+    };
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => svg.addEventListener(t, end));
+    // keep a finger on the slide or the cursor from scrolling the page
+    for (const g of [this.gSlide, this.gCursor]) g.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+
+    const keys = (g, get, set) => g.addEventListener("keydown", (e) => {
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      this.stop();
+      const st = this.o.fine;
+      set(Math.round((get() + d * (e.shiftKey ? this.o.coarse : st)) / st) * st);
+    });
+    keys(this.gSlide, () => this.s, (v) => this.setS(v));
+    keys(this.gCursor, () => this.u, (v) => this.setU(v));
+  }
+}
+
+// ---------- Readouts ----------
+
+const pairRow = (dt, dd, small) => `<div><dt>${dt}</dt><dd>${dd}${small ? `<small>${small}</small>` : ""}</dd></div>`;
+const OFF = `<span class="small-note">off the end</span>`;
+
+function chipRow(el, items, onPick) {
+  el.replaceChildren(...items.map(([html, label], j) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = html;
+    if (label) b.setAttribute("aria-label", label);
+    b.addEventListener("click", () => onPick(j));
+    return b;
+  }));
+}
+
+// two bars laid end to end under the rule, and a brace under both for their total
+function drawBars(rule, pa, pb, labA, labB, labT, shortA, shortB) {
+  const y = rule.ruleBottom + 14, items = [];
+  const xa0 = rule.X(0), xa1 = rule.X(pa), xb1 = pb == null ? null : rule.X(pa + pb);
+  if (xa1 - xa0 > 0.5) {
+    items.push(svgEl("rect", { class: "bar a", x: f1(xa0), y, width: f1(xa1 - xa0), height: 7, rx: 2 }));
+    items.push(svgEl("text", { class: "bar-lab a", x: f1((xa0 + xa1) / 2), y: y + 21 }, labA));
+  }
+  if (xb1 != null && xb1 - xa1 > 0.5) {
+    items.push(svgEl("rect", { class: "bar b", x: f1(xa1), y, width: f1(xb1 - xa1), height: 7, rx: 2 }));
+    items.push(svgEl("text", { class: "bar-lab b", x: f1((xa1 + xb1) / 2), y: y + 21 }, labB));
+  }
+  if (xb1 != null && xb1 - xa0 > 4) {
+    const yb = y + 31;
+    items.push(svgEl("path", { class: "brace", d: `M${f1(xa0)} ${yb}v6H${f1(xb1)}v-6` }));
+    items.push(svgEl("text", { class: "bar-lab t", x: f1((xa0 + xb1) / 2), y: yb + 22 }, labT));
+  }
+  // labels too wide for their bars step aside rather than overlap
+  rule.gOver.replaceChildren(...items);
+  const labs = items.filter((e) => e.tagName === "text" && (e.classList.contains("a") || e.classList.contains("b")));
+  if (labs.length === 2) {
+    const [la, lb] = labs;
+    const gap = () => la.getBBox().x + la.getBBox().width + 6 - lb.getBBox().x;
+    // too tight for the long labels: drop to the short ones
+    if (gap() > 0 && shortA) {
+      la.textContent = shortA;
+      lb.textContent = shortB;
+    }
+    const overlap = gap();
+    if (overlap > 0) {
+      la.setAttribute("x", f1(+la.getAttribute("x") - overlap / 2));
+      lb.setAttribute("x", f1(+lb.getAttribute("x") + overlap / 2));
+    }
+  }
+  for (const t of rule.gOver.querySelectorAll("text")) {
+    const b = t.getBBox();
+    if (b.x < 2) t.setAttribute("x", f1(+t.getAttribute("x") + 2 - b.x));
+    if (b.x + b.width > rule.W - 2) t.setAttribute("x", f1(+t.getAttribute("x") - (b.x + b.width - rule.W + 2)));
+  }
+}
+
+// ---------- Station 1: two rulers that add ----------
+
+const lin = (id, hi) => ({
+  id, name: "", lo: 0, hi, majors: steps(0, hi, 1),
+  pos: (v) => v / 10, val: (p) => p * 10, label: String,
+  prio: (v) => (v % 10 === 0 ? 0 : v % 5 === 0 ? 1 : v % 2 === 0 ? 2 : 3), minor: null,
+});
+const n1 = (v) => sig(Math.round(v * 10) / 10, 4);
+
+const rule1 = new Rule($("rule1"), {
+  scales: { top: lin("top", 10), bottom: lin("bottom", 20) },
+  slide: ["top"], bottom: ["bottom"],
+  span: 2, slideLen: 1, s: 0.3, u: 0.7, sMin: 0, sMax: 1, uMin: 0, uMax: 2,
+  fine: 0.01, coarse: 0.1, below: 64, slideName: "Top ruler",
+  slideText: (r) => `Top ruler's 0 over ${n1(r.s * 10)}`,
+  cursorText: (r) => `Cursor on ${n1(r.u * 10)} on the bottom ruler`,
+  onChange: draw1,
+});
+const SUMS1 = [[3, 4], [2.5, 6], [7, 8], [12, 5]];
+
+function draw1(r) {
+  const a = r.s * 10, c = r.u * 10, b = c - a, onTop = b >= -1e-9 && b <= 10 + 1e-9;
+  drawBars(r, r.s, onTop ? r.u - r.s : null, n1(a), n1(b), `${n1(a)} + ${n1(b)} = ${n1(c)}`);
+  $("s1-out").innerHTML = [
+    pairRow("Top ruler's 0 over", n1(a)),
+    pairRow("Cursor on the top", onTop ? n1(b) : OFF),
+    pairRow("Cursor on the bottom", n1(c)),
+    pairRow("So", onTop ? `<span class="sum"><span class="ca">${n1(a)}</span> + <span class="cb">${n1(b)}</span> = ${n1(c)}</span>` : "nothing yet"),
+  ].join("");
+  let note;
+  if (!onTop && b < 0) note = `The cursor is left of the top ruler's 0, so there's nothing on the top ruler to add. Move the cursor right, or slide the top ruler left.`;
+  else if (!onTop) note = `The cursor is past the end of the top ruler. Slide it right to reach further.`;
+  else if (Math.abs(a) < 0.05) note = `The top ruler's 0 sits over the bottom's 0, so the two rulers agree everywhere: adding 0 changes nothing.`;
+  else note = `Every number on the top ruler sits over itself plus <span class="ca">${n1(a)}</span>. The <span class="ca">blue</span> bar is how far you slid, and the <span class="cb">orange</span> bar runs on from it to the cursor.`;
+  $("s1-note").innerHTML = note;
+}
+chipRow($("s1-presets"), SUMS1.map(([a, b]) => [`${a} + ${b}`, `${a} plus ${b}`]), (j) => {
+  const [a, b] = SUMS1[j];
+  rule1.go({ s: a / 10, u: (a + b) / 10 });
+});
+
+// ---------- Station 2: spacing that multiplies ----------
+
+const rule2 = new Rule($("rule2"), {
+  scales: {
+    top: logScale("", 1),
+    bottom: { ...logScale("", 2), pos: L10, val: (p) => 10 ** p },
+  },
+  slide: ["top"], bottom: ["bottom"],
+  span: 2, slideLen: 1, s: L10(2), u: L10(6), sMin: 0, sMax: 1, uMin: 0, uMax: 2,
+  fine: 0.002, coarse: 0.02, below: 64, slideName: "Top ruler",
+  slideText: (r) => `Top ruler's 1 over ${rd(10 ** r.s)}`,
+  cursorText: (r) => `Cursor on ${rd(10 ** r.u)} on the bottom ruler`,
+  onChange: draw2,
+});
+const PRODUCTS2 = [[2, 3], [4, 2.5], [1.5, 6], [8, 9]];
+
+function draw2(r) {
+  const la = r.s, lc = r.u, lb = lc - la, onTop = lb >= -1e-9 && lb <= 1 + 1e-9;
+  const a = 10 ** la, b = 10 ** lb, c = 10 ** lc;
+  drawBars(r, la, onTop ? lb : null, `log ${rd(a)} = ${fixed(la, 3)}`, `log ${rd(b)} = ${fixed(lb, 3)}`, `${fixed(la, 3)} + ${fixed(lb, 3)} = ${fixed(lc, 3)} = log ${rd(c)}`, fixed(la, 3), fixed(lb, 3));
+  $("s2-out").innerHTML = [
+    pairRow("Top ruler's 1 over", rd(a)),
+    pairRow("Cursor on the top", onTop ? rd(b) : OFF),
+    pairRow("Cursor on the bottom", rd(c)),
+    pairRow("So", onTop ? `<span class="sum"><span class="ca">${rd(a)}</span> × <span class="cb">${rd(b)}</span> = ${rd(c)}</span>` : "nothing yet"),
+    pairRow("Distances", onTop ? `<span class="sum"><span class="ca">${fixed(la, 3)}</span> + <span class="cb">${fixed(lb, 3)}</span> = ${fixed(lc, 3)}</span>` : "", "measured in top-ruler lengths"),
+  ].join("");
+  let note;
+  if (!onTop && lb < 0) note = `The cursor is left of the top ruler's 1. Move it right, or slide the top ruler left.`;
+  else if (!onTop) note = `The cursor is past the top ruler's 10. Slide the top ruler right to reach further.`;
+  else if (la < 0.001) note = `The two 1s line up, so every number sits over itself: multiplying by 1 changes nothing, and log 1 = 0.`;
+  else note = `Every number on the top ruler sits over itself times <span class="ca">${rd(a)}</span>. The bars are the distances, the logs, and they add the way Station 1's did.`;
+  $("s2-note").innerHTML = note;
+}
+chipRow($("s2-presets"), PRODUCTS2.map(([a, b]) => [`${a} × ${b}`, `${a} times ${b}`]), (j) => {
+  const [a, b] = PRODUCTS2[j];
+  rule2.go({ s: L10(a), u: L10(a * b) });
+});
+
+// ---------- Station 3: the C and D scales ----------
+
+// which index is on the rule, and the number on D it sits over
+function indexOver(r) {
+  if (r.s >= -1e-9) return ["left", 10 ** r.s];
+  return ["right", 10 ** (r.s + 1)];
+}
+const rule3 = new Rule($("rule3"), {
+  scales: { C: SC.C, D: SC.D },
+  slide: ["C"], bottom: ["D"],
+  span: 1, slideLen: 1, s: 0, u: 0.5, sMin: -1, sMax: 1, uMin: 0, uMax: 1,
+  slideText: (r) => { const [side, v] = indexOver(r); return `C's ${side} index over ${rd(v)} on D`; },
+  cursorText: (r) => { const c = r.read("C"); return `Cursor on ${rd(r.read("D"))} on D${c ? `, ${rd(c)} on C` : ""}`; },
+  onChange: draw3,
+});
+
+function draw3(r) {
+  const [side, v] = indexOver(r), c = r.read("C");
+  $("s3-out").innerHTML = [
+    pairRow(`C's ${side} index over`, rd(v)),
+    pairRow("Cursor on C", c == null ? OFF : rd(c)),
+    pairRow("Cursor on D", rd(r.read("D"))),
+  ].join("");
+}
+
+const S3 = { steps: [], at: 0, start: null };
+const PROBLEMS3 = [["2", "×", "3"], ["3", "×", "4"], ["23", "×", "470"], ["π", "×", "2.5"], ["8", "÷", "2"], ["7", "÷", "9"], ["0.6", "÷", "0.025"]];
+
+function parseNum(t) {
+  t = t.trim().replace(/,/g, "");
+  if (/^(π|pi)$/i.test(t)) return Math.PI;
+  const v = Number(t);
+  return t && isFinite(v) && v > 0 ? v : null;
+}
+
+// the moves for a problem: each one a setting of the rule and what to say about it
+function plan(a, op, b) {
+  const [ma, ea] = mant(a), [mb, eb] = mant(b);
+  const la = L10(ma), lb = L10(mb), A = show(a), B = show(b);
+  const dA = a === Math.PI ? "3.14" : sig(ma), dB = b === Math.PI ? "3.14" : sig(mb);
+  const out = [];
+  let reading, exp, est;
+  if (op === "×") {
+    const over = la + lb > 1 + 1e-9;
+    out.push({ s: la, u: la, text: `Find ${dA} on D${dA !== A ? `, the digits of ${A}` : ""}. Slide C's left index, its 1, over it.` });
+    if (!over) {
+      out.push({ s: la, u: la + lb, text: `Move the cursor to ${dB} on C${dB !== B ? `, the digits of ${B}` : ""}.` });
+      reading = la + lb;
+    } else {
+      out.push({ s: la, u: 1, text: `Look for ${dB} on C. It's past the right end of D, with nothing underneath to read.` });
+      out.push({ s: la - 1, u: la, text: `So slide the other way and put C's <b>right</b> index over ${dA} instead.` });
+      out.push({ s: la - 1, u: la + lb - 1, text: `Now move the cursor to ${dB} on C.` });
+      reading = la + lb - 1;
+    }
+    exp = ea + eb + (over ? 1 : 0);
+    est = [rough(a), "×", rough(b), rough(a) * rough(b)];
+  } else {
+    const under = la < lb - 1e-9;
+    out.push({ s: null, u: la, text: `Move the cursor to ${dA} on D${dA !== A ? `, the digits of ${A}` : ""}.` });
+    out.push({ s: la - lb, u: la, text: `Slide C until ${dB}${dB !== B ? `, the digits of ${B},` : ""} sits under the hairline.` });
+    if (!under) {
+      out.push({ s: la - lb, u: la - lb, text: `The answer is on D under C's left index. Move the cursor there.` });
+      reading = la - lb;
+    } else {
+      out.push({ s: la - lb, u: la - lb + 1, text: `C's left index has gone off the left end of D, so read under its right index. Move the cursor there.` });
+      reading = la - lb + 1;
+    }
+    exp = ea - eb - (under ? 1 : 0);
+    est = [rough(a), "÷", rough(b), rough(a) / rough(b)];
+  }
+  const digits = Number((10 ** reading).toPrecision(10 ** reading < 2 ? 4 : 3));
+  const answer = digits * 10 ** exp, exact = op === "×" ? a * b : a / b;
+  const [ra, o, rb, e] = est;
+  out.push({ text: `Read D under the hairline: <b>${sig(digits)}</b>. Those are the answer's digits.` });
+  // round numbers need no rounding, so the sum is just a rough size
+  const sum = ra === a && rb === b ? `${A} ${o} ${B} is about ${sig(e, 1)}` : `${A} ${op} ${B} is about ${sig(ra)} ${o} ${sig(rb)} = ${sig(e, 2)}`;
+  const means = exp === 0 ? `so the point stays put: <b>${sig(digits)}</b>` : `so ${sig(digits)} means <b>${sig(Number(answer.toPrecision(4)))}</b>`;
+  const full = Math.abs(exact - answer) / exact < 1e-9 ? `That's exact.` : `Worked out in full it's ${sig(exact)}.`;
+  out.push({ text: `Place the decimal point with a rough sum: ${sum}, ${means}. ${full}` });
+  return out;
+}
+
+function paint3() {
+  const items = S3.steps.slice(0, S3.at).map((st, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = st.text;
+    if (i === S3.at - 1) li.setAttribute("aria-current", "step");
+    return li;
+  });
+  $("s3-steps").replaceChildren(...items);
+  $("s3-next").disabled = S3.at >= S3.steps.length;
+  $("s3-back").disabled = S3.at === 0;
+}
+
+// a step's setting, with any part it leaves alone taken from the steps before it
+function settingAt(k) {
+  let s = S3.start.s, u = S3.start.u;
+  for (let i = 0; i < k; i++) {
+    if (S3.steps[i].s != null) s = S3.steps[i].s;
+    if (S3.steps[i].u != null) u = S3.steps[i].u;
+  }
+  return { s, u };
+}
+function next3() {
+  if (!S3.steps.length) setProblem();
+  if (S3.at >= S3.steps.length) return;
+  S3.at++;
+  rule3.go(settingAt(S3.at));
+  paint3();
+}
+function back3() {
+  if (S3.at === 0) return;
+  S3.at--;
+  rule3.go(settingAt(S3.at));
+  paint3();
+}
+function setProblem() {
+  const a = parseNum($("s3-a").value), b = parseNum($("s3-b").value), op = $("s3-op").value;
+  if (a == null || b == null) {
+    $("s3-msg").textContent = `Type two numbers bigger than 0, like 23 and 4.7, or pi.`;
+    return false;
+  }
+  if (a < 1e-6 || b < 1e-6 || a > 1e9 || b > 1e9) {
+    $("s3-msg").textContent = `Keep the numbers between 0.000001 and 1,000,000,000.`;
+    return false;
+  }
+  S3.steps = plan(a, op, b);
+  S3.at = 0;
+  S3.start = { s: rule3.s, u: rule3.u };
+  $("s3-msg").textContent = `${show(a)} ${op} ${show(b)}: ${S3.steps.length} steps. Press Next step or N.`;
+  paint3();
+  return true;
+}
+$("s3-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (setProblem()) next3();
+});
+chipRow($("s3-presets"), PROBLEMS3.map(([a, o, b]) => [`${a} ${o} ${b}`, `${a} ${o === "×" ? "times" : "divided by"} ${b}`]), (j) => {
+  const [a, o, b] = PROBLEMS3[j];
+  $("s3-a").value = a;
+  $("s3-op").value = o;
+  $("s3-b").value = b;
+  if (setProblem()) next3();
+});
+$("s3-next").addEventListener("click", next3);
+$("s3-back").addEventListener("click", back3);
+
+// ---------- Station 4: squares, cubes, logs, and angles ----------
+
+const deg = (d) => `${d.toFixed(1)}°`;
+const READS4 = {
+  K: ["the cube of D", rd],
+  A: ["the square of D", rd],
+  B: ["the square of C", rd],
+  CI: ["1 ÷ C, as digits", rd],
+  C: ["on the slide", rd],
+  D: ["the number you start from", rd],
+  L: ["the log of D", (v) => v.toFixed(3)],
+  S: ["the angle whose sine is D ÷ 10", deg],
+  T: ["the angle whose tangent is D ÷ 10", deg],
+};
+const GROUPS4 = [["A and B", ["A", "B"]], ["K", ["K"]], ["CI", ["CI"]], ["L", ["L"]], ["S and T", ["S", "T"]]];
+const S4 = { hidden: new Set() };
+
+const rule4 = new Rule($("rule4"), {
+  scales: SC,
+  top: ["K", "A"], slide: ["B", "CI", "C"], bottom: ["D", "L", "S", "T"],
+  span: 1, slideLen: 1, s: 0, u: L10(3), sMin: -1, sMax: 1, uMin: 0, uMax: 1,
+  slideText: (r) => { const [side, v] = indexOver(r); return `C's ${side} index over ${rd(v)} on D`; },
+  cursorText: (r) => `Cursor on ${rd(r.read("D"))} on D`,
+  onChange: draw4,
+});
+
+const PRESETS4 = [
+  ["3²", "A", 0, L10(3), `The cursor on 3 on D finds <b>9 on A</b>. A packs two copies of D's spacing into the same length, so each distance on A stands for twice the log: a square.`],
+  ["√20", "A", 0, L10(20) / 2, `20 has two digits in front of the point, an even number, so find it on A's right half. D under it reads <b>4.47</b>, and 4.47 × 4.47 = 20.`],
+  ["2³", "K", 0, L10(2), `The cursor on 2 on D finds <b>8 on K</b>, which packs in three copies: cubes.`],
+  ["1 ÷ 4", "CI", 0, L10(4), `With the slide straight, the cursor on 4 on C finds <b>2.5 on CI</b>: the digits of 1 ÷ 4 = 0.25. CI is C backwards, so its distances are 1 − log C.`],
+  ["log 2", "L", 0, L10(2), `The cursor on 2 on D finds <b>0.301 on L</b>. L is evenly spaced, so it reads how far along D the cursor is: Station 2's distance.`],
+  ["sin 30°", "S", 0, L10(5), `30 on S sits over <b>5 on D</b>, which means sin 30° = 0.5. S and T read with D's digits, so you place the decimal point.`],
+  ["tan 20°", "T", 0, L10(10 * tanD(20)), `20 on T sits over <b>3.64 on D</b>, so tan 20° = 0.364.`],
+];
+
+function draw4(r) {
+  const rows = [...r.o.top, ...r.o.slide, ...r.o.bottom].filter((id) => !r.hidden.has(id));
+  $("s4-out").innerHTML = `<tbody>${rows.map((id) => {
+    const v = r.read(id), [what, fmt] = READS4[id];
+    return `<tr><th scope="row"${SC[id].red ? ` class="red"` : ""}>${id}</th><td class="val">${v == null ? OFF : fmt(v)}</td><td class="what">${what}</td></tr>`;
+  }).join("")}</tbody>`;
+}
+chipRow($("s4-show"), GROUPS4.map(([n]) => [n, `Show ${n}`]), (j) => {
+  for (const id of GROUPS4[j][1]) {
+    if (S4.hidden.has(id)) S4.hidden.delete(id);
+    else S4.hidden.add(id);
+  }
+  paintShow4();
+  rule4.setHidden(S4.hidden);
+});
+function paintShow4() {
+  [...$("s4-show").children].forEach((b, j) => b.setAttribute("aria-pressed", !S4.hidden.has(GROUPS4[j][1][0])));
+}
+chipRow($("s4-presets"), PRESETS4.map(([n]) => [n]), (j) => {
+  // a preset needs its scale in view
+  const [, need, s, u, note] = PRESETS4[j];
+  const group = GROUPS4.find(([, ids]) => ids.includes(need));
+  if (S4.hidden.has(need)) {
+    for (const id of group[1]) S4.hidden.delete(id);
+    paintShow4();
+    rule4.setHidden(S4.hidden);
+  }
+  rule4.go({ s, u });
+  $("s4-note").innerHTML = note;
+});
+paintShow4();
+$("s4-note").innerHTML = `The cursor sits on 3 on D. Read up and down the hairline: 9 on A, 27 on K, and the angles whose sine and tangent are 0.3 on S and T.`;
+
+// ---------- Station 5: round the circle ----------
+
+class Dial {
+  constructor(svg, o) {
+    this.svg = svg;
+    this.o = Object.assign({ fine: 0.002, coarse: 0.02 }, o);
+    this.s = o.s;
+    this.u = o.u;
+    this.gRing = svgEl("g");
+    this.gDisc = svgEl("g", { class: "disc", tabindex: 0, role: "slider", "aria-label": "Disc, carrying C" });
+    this.gArm = svgEl("g", { class: "arm", tabindex: 0, role: "slider", "aria-label": "Cursor arm" });
+    svg.append(this.gRing, this.gDisc, this.gArm);
+    this.events();
+    // drawn at its real size, so the numbers stay readable on a phone
+    new ResizeObserver(() => requestAnimationFrame(() => this.layout())).observe(svg.parentElement);
+    this.layout();
+  }
+
+  layout() {
+    const W = Math.round(Math.min(460, this.svg.parentElement.clientWidth));
+    if (!W || W === this.W) return;
+    const c = W / 2;
+    Object.assign(this, { W, c });
+    this.svg.setAttribute("viewBox", `0 0 ${W} ${W}`);
+    const R = c - 6, rb = R * 0.7, ppu = 2 * Math.PI * rb;
+    this.rb = rb;
+    const at = (p, r) => {
+      const a = 2 * Math.PI * p - Math.PI / 2;
+      return [c + r * Math.cos(a), c + r * Math.sin(a)];
+    };
+    // D on the ring, rising outward from the edge it shares with the disc
+    const ring = [svgEl("circle", { class: "ring-body", cx: c, cy: c, r: R })];
+    const ticks = ticksFor(SC.C, ppu, 5).filter((t) => t.v < 10);
+    const path = (r0, sgn, major) => ticks.filter((t) => (t.level === 1) === major).map((t) => {
+      const p = SC.C.pos(t.v), [x0, y0] = at(p, r0), [x1, y1] = at(p, r0 + sgn * TICK[t.level] * 1.1);
+      return `M${f1(x0)} ${f1(y0)}L${f1(x1)} ${f1(y1)}`;
+    }).join("");
+    const labs = labelsFor({ ...SC.C, label: String, marks: [] }, ticks, ppu, true);
+    const text = (lab, r, flip) => {
+      const p = SC.C.pos(lab.v), [x, y] = at(p, r);
+      let rot = p * 360;
+      if (flip && rot > 90 && rot < 270) rot += 180;
+      return svgEl("text", { class: `num${lab.small ? " small" : ""}`, x: f1(x), y: f1(y), transform: `rotate(${f1(rot)} ${f1(x)} ${f1(y)})` }, lab.text);
+    };
+    ring.push(svgEl("path", { class: "tick major", d: path(rb, 1, true) }), svgEl("path", { class: "tick", d: path(rb, 1, false) }));
+    for (const lab of labs) ring.push(text(lab, rb + TICK[lab.level] * 1.1 + 10, true));
+    // the scale's letter in the wide gap between 3 and 4, where no number lands
+    const [dx, dy] = at(0.54, rb + TICK[1] * 1.1 + 10);
+    ring.push(svgEl("text", { class: "num", x: f1(dx), y: f1(dy), "font-weight": 600 }, "D"));
+    this.gRing.replaceChildren(...ring);
+
+    // C on the disc, hanging inward from its rim
+    const disc = [svgEl("circle", { class: "disc-body", cx: c, cy: c, r: rb })];
+    disc.push(svgEl("path", { class: "tick major", d: path(rb, -1, true) }), svgEl("path", { class: "tick", d: path(rb, -1, false) }));
+    for (const lab of labs) disc.push(text(lab, rb - TICK[lab.level] * 1.1 - 10, false));
+    const [cx, cy] = at(0, rb * 0.55);
+    disc.push(svgEl("text", { class: "num", x: f1(cx), y: f1(cy), "font-weight": 600 }, "C"));
+    disc.push(svgEl("circle", { class: "ring", cx: c, cy: c, r: rb - 3 }));
+    this.gDisc.replaceChildren(...disc);
+
+    // the arm: a strip of glass from the center past the ring, with a hairline down it
+    const w = 26;
+    this.gArm.replaceChildren(
+      svgEl("rect", { class: "glass", x: c - w / 2, y: c - R - 2, width: w, height: R - 14, rx: 5 }),
+      svgEl("line", { class: "hair", x1: c, y1: c - R, x2: c, y2: c }),
+      svgEl("circle", { class: "pin", cx: c, cy: c, r: 7 }),
+      svgEl("rect", { class: "ring", x: c - w / 2 - 3, y: c - R - 5, width: w + 6, height: R - 8, rx: 7 }),
+    );
+    this.place();
+  }
+
+  place() {
+    this.gDisc.setAttribute("transform", `rotate(${f1(this.s * 360)} ${this.c} ${this.c})`);
+    this.gArm.setAttribute("transform", `rotate(${(this.u * 360).toFixed(2)} ${this.c} ${this.c})`);
+    if (this.o.onChange) this.o.onChange(this);
+    this.gDisc.setAttribute("aria-valuetext", `The disc's 1 at ${rd(10 ** this.s)} on D`);
+    this.gArm.setAttribute("aria-valuetext", `Arm on ${rd(10 ** this.u)} on D, ${rd(10 ** this.cOn())} on C`);
+  }
+  // where the arm crosses C, as a distance round the disc
+  cOn() { return (((this.u - this.s) % 1) + 1) % 1; }
+  wrap(v) { return ((v % 1) + 1) % 1; }
+  setS(v) { this.s = this.wrap(v); this.place(); }
+  setU(v) { this.u = this.wrap(v); this.place(); }
+
+  // turn the short way round to a setting
+  go({ s = this.s, u = this.u }) {
+    this.stop();
+    const near = (from, to) => to + Math.round(from - to);
+    s = near(this.s, s);
+    u = near(this.u, u);
+    if (reduceMotion.matches) {
+      this.setS(s);
+      this.setU(u);
+      return;
+    }
+    const s0 = this.s, u0 = this.u, t0 = performance.now(), dur = 650;
+    const tick = (now) => {
+      const k = Math.min(1, (now - t0) / dur), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+      this.s = this.wrap(k === 1 ? s : s0 + (s - s0) * e);
+      this.u = this.wrap(k === 1 ? u : u0 + (u - u0) * e);
+      this.place();
+      if (k < 1) this.raf = requestAnimationFrame(tick);
+      else this.raf = 0;
+    };
+    this.raf = requestAnimationFrame(tick);
+  }
+  stop() {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = 0;
+  }
+
+  // the pointer as a turn from the top, 0 to 1, and its distance from the center
+  polar(e) {
+    const r = this.svg.getBoundingClientRect(), k = this.W / r.width;
+    const x = (e.clientX - r.left) * k - this.c, y = (e.clientY - r.top) * k - this.c;
+    return [this.wrap(Math.atan2(y, x) / (2 * Math.PI) + 0.25), Math.hypot(x, y)];
+  }
+
+  events() {
+    const svg = this.svg;
+    let drag = null;
+    svg.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const [t, d] = this.polar(e);
+      let mode;
+      if (this.gArm.contains(e.target) || (d > this.rb && d < this.c)) mode = "arm";
+      else if (this.gDisc.contains(e.target)) mode = "disc";
+      else return;
+      e.preventDefault();
+      this.stop();
+      svg.setPointerCapture(e.pointerId);
+      drag = { mode, t0: t, s0: this.s };
+      const g = mode === "arm" ? this.gArm : this.gDisc;
+      g.classList.add("drag");
+      g.focus({ preventScroll: true });
+      if (mode === "arm") this.setU(t);
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const [t] = this.polar(e);
+      if (drag.mode === "arm") this.setU(t);
+      else this.setS(drag.s0 + (t - drag.t0));
+    });
+    const end = () => {
+      drag = null;
+      this.gArm.classList.remove("drag");
+      this.gDisc.classList.remove("drag");
+    };
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => svg.addEventListener(t, end));
+    for (const g of [this.gDisc, this.gArm]) g.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+    const keys = (g, get, set) => g.addEventListener("keydown", (e) => {
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      this.stop();
+      const st = this.o.fine;
+      set(Math.round((get() + d * (e.shiftKey ? this.o.coarse : st)) / st) * st);
+    });
+    keys(this.gDisc, () => this.s, (v) => this.setS(v));
+    keys(this.gArm, () => this.u, (v) => this.setU(v));
+  }
+}
+
+const PRODUCTS5 = [[3, 4], [2, 3], [7, 8], [2.5, 6]];
+const dial5 = new Dial($("dial5"), { s: L10(3), u: L10(1.2), onChange: draw5 });
+
+function draw5(d) {
+  const a = 10 ** d.s, b = 10 ** d.cOn(), c = 10 ** d.u, wrapped = d.s + d.cOn() >= 1 - 1e-9;
+  $("s5-out").innerHTML = [
+    pairRow("Disc's 1 at", rd(a)),
+    pairRow("Arm on C", rd(b)),
+    pairRow("Arm on D", rd(c)),
+    pairRow("So", `<span class="sum">${rd(a)} × ${rd(b)} → ${rd(c)}</span>`, wrapped ? `past 10, so the digits of ${rd(a * b)}` : null),
+  ].join("");
+  $("s5-note").innerHTML = wrapped
+    ? `The arm has gone past 10 on D and come round to the start again. On a straight rule that's where you'd swap indexes. Here the ring just carries on, and the reading is the answer's digits.`
+    : `Every number on the disc sits at itself times ${rd(a)} on the ring. Swing the arm past the top and keep going: nothing falls off.`;
+}
+chipRow($("s5-presets"), PRODUCTS5.map(([a, b]) => [`${a} × ${b}`, `${a} times ${b}`]), (j) => {
+  const [a, b] = PRODUCTS5[j];
+  dial5.go({ s: L10(a), u: L10(a * b) - Math.floor(L10(a * b)) });
+});
+
+// ---------- Keyboard ----------
+
+// N and B go to the station holding focus, or with nothing focused, the one most in view.
+// arrows stay with the focused slide or cursor, so they never take over scrolling
+const STATION_KEYS = [
+  ["rule3", { n: next3, b: back3 }],
+].map(([el, keys]) => [$(el).closest(".panel"), keys]);
+
+function stationInView() {
+  let best = null, most = 0;
+  for (const entry of STATION_KEYS) {
+    const r = entry[0].getBoundingClientRect();
+    const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+    if (seen > most) { most = seen; best = entry; }
+  }
+  return best;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const action = { n: "n", b: "b" }[e.key.toLowerCase()];
+  if (!action) return;
+  const inPanel = e.target.closest?.(".panel");
+  const entry = inPanel ? STATION_KEYS.find(([panel]) => panel === inPanel) : stationInView();
+  if (!entry || !entry[1][action]) return;
+  e.preventDefault();
+  entry[1][action]();
+});
+
+// ---------- Start ----------
+
+setProblem();
+</script>
+</body>
+</html>
