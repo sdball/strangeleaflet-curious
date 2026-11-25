@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Departures — The Cabinet of Curios</title>
+<meta name="description" content="A word ladder on a railway departure board. Turn one flap at a time to get from one word to another, and every board you stop at has to be a word.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚉</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* one fixed palette, a station concourse at night, like pocket-places keeps its own */
+:root {
+  --wall: #13201b; --wall-2: #182822; --tile: rgba(255, 255, 255, 0.03);
+  --housing: #0a0b0b; --flap-top: #2a2a28; --flap-bot: #1b1b1a; --glyph: #f3ead2;
+  --brass: #c19b54; --brass-lo: #7a5f2f; --brass-hi: #ead08f; --brass-ink: #20180a;
+  --amber: #f3ad3e; --green: #8fd69a; --red: #ec6b57;
+  --enamel: #123a2e; --enamel-edge: #e9dfc3; --cream: #ebe1c6; --muted: #9aa69e;
+  --paper: #f1e7cc; --paper-ink: #2b2417; --paper-rule: #c9b98f;
+  --flapfont: "Oswald", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --serif: "IM Fell English", Georgia, "Times New Roman", serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
+  background-color: var(--wall);
+  background-image:
+    radial-gradient(ellipse at 50% 18%, rgba(243, 173, 62, 0.09), transparent 60%),
+    repeating-linear-gradient(0deg, var(--tile) 0 1px, transparent 1px 38px),
+    repeating-linear-gradient(90deg, var(--tile) 0 1px, transparent 1px 76px),
+    linear-gradient(var(--wall-2), var(--wall));
+  color: var(--cream); font-family: var(--serif); -webkit-font-smoothing: antialiased;
+  touch-action: manipulation; overflow-x: hidden;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+#hall {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(10px, 2.2vh, 20px);
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
+}
+
+/* ---------- the enamel sign ---------- */
+.sign {
+  display: flex; align-items: center; gap: 14px; padding: 7px 18px 7px 10px;
+  background: var(--enamel); border: 3px solid var(--enamel-edge); border-radius: 12px;
+  box-shadow: 0 0 0 4px var(--enamel), 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+.sign h1 {
+  margin: 0; font: 600 clamp(24px, 7vw, 40px)/1 var(--flapfont); letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--enamel-edge);
+}
+.clock { width: clamp(40px, 10vw, 54px); height: auto; flex: none; }
+.clock .face { fill: var(--paper); stroke: var(--brass); stroke-width: 5; }
+.clock .tick { stroke: var(--paper-ink); stroke-width: 2.2; }
+.clock .tick.big { stroke-width: 4.5; }
+.clock .hand { stroke: var(--paper-ink); stroke-linecap: round; }
+.clock .sec { stroke: #b3342a; stroke-width: 1.6; }
+.clock .pin { fill: #b3342a; }
+#service { margin: -4px 0 0; font-style: italic; font-size: 15px; color: var(--muted); text-align: center; }
+
+/* ---------- the board ---------- */
+.board {
+  position: relative; width: min(100%, 620px); padding: 18px clamp(12px, 3.5vw, 26px) 16px;
+  background: var(--housing); border-radius: 14px;
+  box-shadow: 0 0 0 3px var(--brass-lo), 0 0 0 5px var(--brass), 0 0 0 7px var(--brass-lo),
+    0 22px 44px rgba(0, 0, 0, 0.6), inset 0 2px 14px rgba(0, 0, 0, 0.9);
+}
+/* rivets in the corners */
+.board::before {
+  content: ""; position: absolute; inset: 6px; pointer-events: none;
+  background:
+    radial-gradient(circle at 4px 4px, var(--brass-hi) 0 1.5px, var(--brass-lo) 3px, transparent 3.6px) top left / 8px 8px no-repeat,
+    radial-gradient(circle at 4px 4px, var(--brass-hi) 0 1.5px, var(--brass-lo) 3px, transparent 3.6px) top right / 8px 8px no-repeat,
+    radial-gradient(circle at 4px 4px, var(--brass-hi) 0 1.5px, var(--brass-lo) 3px, transparent 3.6px) bottom left / 8px 8px no-repeat,
+    radial-gradient(circle at 4px 4px, var(--brass-hi) 0 1.5px, var(--brass-lo) 3px, transparent 3.6px) bottom right / 8px 8px no-repeat;
+}
+.ends { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 16px; }
+.end { display: flex; align-items: center; gap: 8px; }
+.lbl { font: 500 13px/1 var(--flapfont); letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber); }
+.minis { display: flex; gap: 3px; }
+.minis span {
+  display: grid; place-items: center; width: clamp(24px, 6.4vw, 32px); height: clamp(34px, 9vw, 44px);
+  font: 600 clamp(20px, 5.4vw, 28px)/1 var(--flapfont); color: var(--glyph); border-radius: 3px;
+  background: linear-gradient(var(--flap-top) 0 calc(50% - 1px), #000 calc(50% - 1px) calc(50% + 1px), var(--flap-bot) calc(50% + 1px));
+}
+#to .minis span { color: var(--amber); }
+
+.row { display: flex; justify-content: center; gap: clamp(6px, 2.2vw, 14px); }
+.mod { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.flap {
+  --w: clamp(62px, 19vw, 112px);
+  position: relative; width: var(--w); height: calc(var(--w) * 1.36); padding: 0; border: 0;
+  border-radius: 7px; background: #000; cursor: pointer; perspective: 500px;
+  font: 600 calc(var(--w) * 1.02)/1 var(--flapfont); color: var(--glyph);
+  box-shadow: 0 3px 0 #000, 0 6px 12px rgba(0, 0, 0, 0.6);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none;
+}
+.half { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.half.top { top: 0; border-radius: 7px 7px 0 0; background: linear-gradient(#323230, var(--flap-top)); transform-origin: 50% 100%; }
+.half.bot { bottom: 0; border-radius: 0 0 7px 7px; background: linear-gradient(var(--flap-bot), #141413); transform-origin: 50% 0; }
+.half > b { position: absolute; left: 0; right: 0; height: 200%; display: grid; place-items: center; font-weight: 600; padding-top: 0.02em; }
+.half.top > b { top: 0; }
+.half.bot > b { bottom: 0; }
+/* the leaf that falls on each click sits above both halves */
+.half.leaf { z-index: 2; }
+.half.leaf.top { box-shadow: inset 0 -12px 16px rgba(0, 0, 0, 0.25); }
+.flap::after {
+  content: ""; position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; z-index: 3;
+  background: linear-gradient(90deg, var(--brass-lo) 0 5px, #000 5px calc(100% - 5px), var(--brass-lo) calc(100% - 5px));
+}
+/* faint chevrons say which half turns which way */
+.chev { position: absolute; right: 6px; z-index: 4; width: 0; height: 0; border: 5px solid transparent; opacity: 0.35; pointer-events: none; }
+.chev.up { top: 7px; border-bottom: 7px solid var(--glyph); border-top: 0; }
+.chev.dn { bottom: 7px; border-top: 7px solid var(--glyph); border-bottom: 0; }
+.flap:hover .chev, .flap:focus-visible .chev { opacity: 0.75; }
+.mod.sel .flap { box-shadow: 0 0 0 2px var(--brass), 0 3px 0 #000, 0 6px 14px rgba(0, 0, 0, 0.6); }
+.mod.pend .flap { box-shadow: 0 0 0 3px var(--amber), 0 0 18px rgba(243, 173, 62, 0.45), 0 6px 12px rgba(0, 0, 0, 0.6); }
+.mod.sel .flap:focus-visible, .mod .flap:focus-visible { outline: 3px solid var(--amber); outline-offset: 4px; }
+/* a lamp in a brass bezel under each flap */
+.togo {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #3a3f3a, #151816 70%);
+  box-shadow: 0 0 0 2px var(--brass-lo), 0 0 0 3px var(--brass);
+}
+.togo.lit { background: radial-gradient(circle at 40% 35%, #e9ffe9, var(--green) 45%, #3f8a4c); box-shadow: 0 0 0 2px var(--brass-lo), 0 0 0 3px var(--brass), 0 0 12px rgba(143, 214, 154, 0.7); }
+.togo-cap { margin: 8px 0 0; text-align: center; font: italic 13px var(--serif); color: var(--muted); }
+
+.status {
+  margin: 14px 0 0; min-height: 2.6em; padding: 7px 12px; border-radius: 4px; background: #040404;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 500 clamp(14px, 3.8vw, 17px)/1.3 var(--flapfont); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--amber); box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+.status.bad { color: var(--red); }
+.status.good { color: var(--green); }
+
+/* ---------- route and controls ---------- */
+.calling { width: min(100%, 620px); text-align: center; font-size: 16px; line-height: 1.6; }
+.calling .lead { font-style: italic; color: var(--muted); margin-right: 6px; white-space: nowrap; }
+.calling .stop { font: 500 15px/1 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream); white-space: nowrap; }
+.calling .sep { color: var(--brass); margin: 0 2px; }
+.calling p { margin: 0; }
+#timetable-line { margin-top: 4px; }
+#timetable-line .stop { color: var(--brass-hi); }
+
+
+.levers { display: flex; gap: 12px; justify-content: center; }
+.btn {
+  min-height: 44px; padding: 8px 18px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--brass-lo); background: linear-gradient(#22312b, #16211c);
+  font-size: 17px; color: var(--cream); display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { border-color: var(--brass); }
+.btn.main {
+  padding: 8px 26px; color: var(--brass-ink); border-color: var(--brass-lo);
+  background: linear-gradient(var(--brass-hi), var(--brass) 55%, var(--brass-lo));
+  font-size: 19px; box-shadow: 0 3px 0 #3d2f14, 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+.btn.main:active { transform: translateY(2px); box-shadow: 0 1px 0 #3d2f14, 0 3px 8px rgba(0, 0, 0, 0.45); }
+.btn[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn kbd {
+  font: 500 12px/1 var(--flapfont); padding: 3px 5px; border-radius: 3px;
+  border: 1px solid currentColor; opacity: 0.7;
+}
+.tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; }
+.tools .btn { font-size: 15px; padding: 6px 12px; }
+
+.credit {
+  padding: 10px 16px max(12px, env(safe-area-inset-bottom)); text-align: center;
+  font-style: italic; font-size: 13px; color: rgba(235, 225, 198, 0.36);
+}
+.credit a { color: inherit; text-decoration-color: rgba(235, 225, 198, 0.2); text-underline-offset: 3px; }
+.credit a:hover { color: rgba(235, 225, 198, 0.7); }
+
+/* ---------- placards: the rules card and the ticket ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(3, 8, 6, 0.72);
+}
+.overlay[hidden] { display: none; }
+.placard {
+  position: relative; width: min(100%, 520px); max-height: calc(100dvh - 32px); overflow-y: auto;
+  padding: 22px 24px 20px; border-radius: 6px; background: var(--paper); color: var(--paper-ink);
+  box-shadow: 0 0 0 4px var(--brass), 0 24px 60px rgba(0, 0, 0, 0.6); font-size: 17px; line-height: 1.5;
+}
+.placard h2 { margin: 0 0 10px; font: 600 24px/1.1 var(--flapfont); letter-spacing: 0.12em; text-transform: uppercase; }
+.placard p, .placard ul { margin: 0 0 10px; }
+.placard ul { padding-left: 1.2em; }
+.placard li { margin-bottom: 6px; }
+.placard a { color: #6b3f12; }
+.placard kbd { font: 500 13px/1 var(--flapfont); padding: 2px 5px; border: 1px solid var(--paper-rule); border-radius: 3px; background: #fbf5e3; }
+.placard .fine { font-size: 14px; color: #5d523c; border-top: 1px solid var(--paper-rule); padding-top: 10px; margin-top: 12px; }
+.placard .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.placard .btn { color: var(--paper-ink); background: #fbf5e3; border-color: var(--paper-rule); }
+.placard .btn.main { color: var(--brass-ink); }
+.placard .close { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: 0; background: none; font-size: 26px; cursor: pointer; color: var(--paper-ink); }
+
+/* the ticket has punched edges */
+.ticket {
+  --punch: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat,
+           radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat;
+  -webkit-mask: var(--punch); mask: var(--punch);
+  border-radius: 4px; box-shadow: none; text-align: center; padding: 22px 30px;
+  background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(0, 0, 0, 0.025) 7px 8px), var(--paper);
+}
+.ticket .rail { font: 500 13px/1 var(--flapfont); letter-spacing: 0.24em; text-transform: uppercase; color: #6b5a33; }
+.ticket .journey { margin: 12px 0 4px; font: 600 clamp(28px, 9vw, 40px)/1 var(--flapfont); letter-spacing: 0.08em; text-transform: uppercase; }
+.ticket .journey span { color: #9c7a32; margin: 0 0.2em; }
+.ticket .when { font-style: italic; color: #5d523c; }
+.ticket hr { border: 0; border-top: 2px dashed var(--paper-rule); margin: 14px 0; }
+.ticket .verdict { font: 600 20px/1.2 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px; }
+.ticket .verdict.best { color: #2f6b3a; }
+.ticket .verdict.longer { color: #7a5a1c; }
+.ticket #t-par { color: #6b5a33; }
+.ticket .route { font: 500 15px/1.6 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; }
+.ticket .actions { justify-content: center; }
+
+@media (max-height: 780px) {
+  #hall { gap: 8px; }
+  .board { padding-top: 14px; padding-bottom: 12px; }
+  .ends { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .clock .sec, .clock .pin { display: none; }
+}
+</style>
+<script>
+  // Count the page once someone moves a pointer, touches, wheels, or types.
+  // Scrapers run pages in a real Chrome, so GoatCounter can't tell them from
+  // people, but they load a page and leave without doing any of that.
+  // Not scroll, since a page can scroll itself.
+  window.goatcounter = {
+    no_onload: true,
+    path: function(p) { return location.host + p }
+  }
+  ;(function() {
+    var events = ["pointermove", "pointerdown", "touchstart", "wheel", "keydown"]
+    function count() { if (window.goatcounter.count) window.goatcounter.count() }
+    function human() {
+      events.forEach(function(type) { removeEventListener(type, human, true) })
+      if (window.goatcounter.count || document.readyState === "complete") count()
+      else addEventListener("load", count, { once: true })
+    }
+    events.forEach(function(type) { addEventListener(type, human, { capture: true, passive: true }) })
+  })()
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main id="hall">
+  <header class="sign">
+    <svg class="clock" id="clock" viewBox="0 0 100 100" role="img" aria-label="Station clock"></svg>
+    <h1>Departures</h1>
+  </header>
+  <p id="service">Today's train</p>
+
+  <section class="board" aria-label="Departure board">
+    <div class="ends">
+      <div class="end" id="from"><span class="lbl">From</span><span class="minis" aria-hidden="true"></span></div>
+      <div class="end" id="to"><span class="lbl">To</span><span class="minis" aria-hidden="true"></span></div>
+    </div>
+    <div class="row" id="row" role="group" aria-label="The board's four flaps"></div>
+    <p class="togo-cap" aria-hidden="true">a lamp lights when a flap reads its destination letter</p>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <div class="calling">
+    <p id="calling-line"></p>
+    <p id="timetable-line" hidden></p>
+  </div>
+
+  <div class="levers">
+    <button class="btn" id="back" type="button" aria-keyshortcuts="Backspace">Back <kbd>⌫</kbd></button>
+    <button class="btn main" id="depart" type="button" aria-keyshortcuts="Enter">Depart <kbd>⏎</kbd></button>
+  </div>
+
+  <div class="tools">
+    <button class="btn" id="porter" type="button">Ask the porter</button>
+    <button class="btn" id="timetable" type="button" aria-pressed="false">Timetable</button>
+    <button class="btn" id="another" type="button">Another train</button>
+    <button class="btn" id="today" type="button">Today's train</button>
+    <button class="btn" id="rules" type="button" aria-keyshortcuts="?">How to ride</button>
+    <button class="btn" id="sound" type="button" aria-pressed="true">Sound</button>
+  </div>
+</main>
+
+<footer class="credit">Stephen Ball · <a href="/">The Cabinet of Curios</a></footer>
+
+<div class="overlay" id="card" hidden>
+  <div class="placard" role="dialog" aria-modal="true" aria-labelledby="card-h">
+    <button class="close" type="button" data-close aria-label="Close">×</button>
+    <h2 id="card-h">How to ride</h2>
+    <p>Get from the <b>From</b> word to the <b>To</b> word by changing one letter at a time. Every board you stop at has to be a real word.</p>
+    <p>Take as many stops as you like. When you arrive, your ticket says whether there was a shorter route through everyday words, and shows it. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
+    <p>The lamp under a flap lights when it reads the destination's letter.</p>
+    <ul>
+      <li>Tap the top half of a flap to turn it up a letter, or the bottom half to turn it down. Hold to keep it spinning.</li>
+      <li>On a keyboard, pick a flap with <kbd>1</kbd> to <kbd>4</kbd> or <kbd>←</kbd> <kbd>→</kbd>, then type the letter you want, or turn it with <kbd>↑</kbd> and <kbd>↓</kbd>.</li>
+      <li><b>Depart</b> (<kbd>Enter</kbd>) stops at the word on the board. <b>Back</b> (<kbd>Backspace</kbd>) undoes a turn or a stop, free.</li>
+      <li><b>Ask the porter</b> for the next stop, or read the <b>Timetable</b> to see a shortest route.</li>
+    </ul>
+    <p>A new train leaves every day. <b>Another train</b> picks one at random, and the page's link takes anyone who opens it to the same journey.</p>
+    <p class="fine">Lewis Carroll published this puzzle in 1879 and called it Doublets: join two words with a chain of words, each one letter different from the last. <br>
+    Source: Lewis Carroll, <i>Doublets: A Word-Puzzle</i> (London: Macmillan, 1879).<br>
+    Words from <a href="http://wordlist.aspell.net/">SCOWL</a>, © 2000–2018 Kevin Atkinson, used under its permissive license.</p>
+  </div>
+</div>
+
+<div class="overlay" id="ticket" hidden>
+  <div class="placard ticket" role="dialog" aria-modal="true" aria-labelledby="ticket-h">
+    <p class="rail" id="ticket-h">Departures · Single journey</p>
+    <p class="journey" id="t-journey"></p>
+    <p class="when" id="t-when"></p>
+    <hr>
+    <p class="verdict" id="t-verdict"></p>
+    <p id="t-detail"></p>
+    <p class="route" id="t-route"></p>
+    <p class="route" id="t-par" hidden></p>
+    <div class="actions">
+      <button class="btn" id="t-copy" type="button">Copy ticket</button>
+      <button class="btn main" id="t-next" type="button">Another train</button>
+      <button class="btn" type="button" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+
+// ---------- Words ----------
+// four-letter words from SCOWL (Spell Checker Oriented Word Lists), english and american levels
+// 10 to 50, with slurs, vulgarities, and a few odd entries taken out.
+// Copyright 2000-2018 by Kevin Atkinson. Permission to use, copy, modify, distribute and sell
+// these word lists, the associated scripts, the output created from the scripts, and its
+// documentation for any purpose is hereby granted without fee, provided that the above
+// copyright notice appears in all copies and that both that copyright notice and this
+// permission notice appear in supporting documentation. Kevin Atkinson makes no
+// representations about the suitability of this array for any purpose. It is provided
+// "as is" without express or implied warranty.
+// the words a shortest route may use
+const COMMON = [
+  "abet able ably aced aces ache acid acne acre acts adds afar aged ages ahoy aide aids ails aims airs airy ajar akin alas",
+  "ales alga ally alms also alto amen amid amok amps anew anon ants aped apes apex arch arcs area ares aria arid arks arms",
+  "army arts asks atom aunt aura auto avid avow away awed awes awry axed axes axis axle ayes babe baby back bade bags bail",
+  "bait bake bald bale balk ball balm band bang bank bans barb bard bare bark barn bars base bash bask bass bath bats baud",
+  "bawl bays bead beak beam bean bear beat beds beef been beer bees beet begs bell belt bend bent best beta bets bias bibs",
+  "bide bids bike bile bill bind bins bird bite bits blab bled blew blip blob bloc blog blot blow blue blur boar boas boat",
+  "bobs bode body bogs boil bold bolt bomb bond bone bony book boom boon boor boos boot bore born boss both bout bowl bows",
+  "boys brag bran bras brat bray bred brew brim brow buck buds buff bugs bulb bulk bull bump bums bung bunk buns buoy burn",
+  "burp burr bury bush bust busy butt buys buzz byes byte cabs cage cake calf call calm came camp cane cans cant cape caps",
+  "card care carp cars cart case cash cask cast cats cave caws cede cell cent chap char chat chef chew chic chin chip chop",
+  "chow chug chum cite city clad clam clan clap claw clay clef clip clod clog clot club clue coal coat coax cobs code cods",
+  "cogs coil coin coke cold colt coma comb come cone cons cook cool coop coos cope cops copy cord core cork corn cost cots",
+  "coup cove cows cozy crab crag cram crew crib crop crow crux cube cubs cued cues cuff cull cult cups curb curd cure curl",
+  "curt cute cuts cyst czar dabs dads daft dais dame damp dams dank dare dark darn dart dash data date daub dawn days daze",
+  "dead deaf deal dean dear debt deck deed deem deep deer deft defy deli dens dent deny desk dial dice died dies diet digs",
+  "dike dill dime dims dine dins dips dire dirt disc dish disk dive dock dodo doer does dogs dole doll dome done dons doom",
+  "door dope dose dote dots dour dove down doze drab drag draw drew drip drop drug drum dual dubs duck duct dude duds duel",
+  "dues duet duff duke dull duly dumb dump dune dung dunk dupe dusk dust duty dyed dyes each earl earn ears ease east easy",
+  "eats eave ebbs echo eddy edge edgy edit eels eggs egos eked ekes elks elms else emir emit ends envy eons epic eras ergo",
+  "errs etch even ever eves evil ewes exam exit eyed eyes face fact fade fads fail fair fake fall fame fang fans fare farm",
+  "fast fate fats fawn faze fear feat feds feed feel fees feet fell felt fend fern feud fibs figs file fill film find fine",
+  "fins fire firm firs fish fist fits five fizz flag flak flap flat flaw flea fled flee flew flex flip flit flog flop flow",
+  "flue flux foal foam foes fogs fogy foil fold folk fond font food fool foot ford fore fork form fort foul four fowl foxy",
+  "fray free fret frog from fuel full fume fund furl furs fury fuse fuss fuzz gabs gags gain gait gala gale gall gals game",
+  "gang gape gaps garb gash gasp gate gave gawk gays gaze gear geld gems gene gent germ gets gibe gift gigs gild gill gilt",
+  "gins girl gist give glad glee glen glib glow glue glum glut gnat gnaw gnus goad goal goat gobs gods goes gold golf gone",
+  "gong good goof goon gore gory gosh gout gown grab gram gray grew grid grim grin grip grit grow grub gulf gull gulp gums",
+  "guns guru gush gust guts guys gyms hack hags hail hair hale half hall halo halt hams hand hang hard hare hark harm harp",
+  "hart hash hate hats haul have hawk hays haze hazy head heal heap hear heat heed heel heir held helm help hemp hems hens",
+  "herb herd here hero hers hews hick hide high hike hill hilt hind hint hips hire hiss hits hive hoax hobo hock hoed hoes",
+  "hogs hold hole holy home hone honk hood hoof hook hoop hoot hope hops horn hose host hour hove howl hubs hued hues huff",
+  "huge hugs hulk hull hump hums hung hunk hunt hurl hurt hush husk huts hymn iced ices icon idea idle idly idol ills imps",
+  "inch info inks inky inns into ions iota iris irks iron isle itch item jabs jack jade jail jamb jams jars jaws jays jazz",
+  "jeer jell jerk jest jets jibe jigs jilt jinx jobs jogs join joke jolt jots joys judo jugs jump junk jury just jute juts",
+  "keel keen keep kegs kelp kept keys kick kids kill kiln kilo kilt kind king kink kiss kite kits kiwi knee knew knit knob",
+  "knot know labs lace lack lacy lade lads lady lags laid lain lair lake lamb lame lamp land lane laps lard lark lash lass",
+  "last late lath laud lava lawn laws lays lazy lead leaf leak lean leap leek leer left legs lend lens lent less lest lets",
+  "levy liar lice lick lids lied lies lieu life lift like lilt lily limb lime limp line link lint lion lips lisp list live",
+  "load loaf loam loan lobe lobs lock loft logo logs loin loll lone long look loom loon loop loot lope lops lord lore lose",
+  "loss lost lots loud love lows luck lugs lull lump lung lure lurk lush lust lute lyre mace made mads maid mail maim main",
+  "make male mall malt mama mane mans many maps mare mark mars mart mash mask mass mast mate math mats maul maze meal mean",
+  "meat meek meet melt memo mend menu meow mere mesh mess mete mews mice mien mike mild mile milk mill mime mind mine mink",
+  "mint mire miss mist mite mitt moan moat mobs mock mode mold mole molt moms monk mood moon moor moos moot mope mops more",
+  "morn moss most moth move mows much muck muff mugs mule mull muse mush musk muss must mute mutt myth nabs nags nail name",
+  "nape naps navy nays near neat neck need neon nest nets news newt next nice nick nigh nine nips nits node nods noes none",
+  "nook noon norm nose nosy note noun nova nude null numb nuns nuts oafs oaks oars oath obey oboe odds odes odor offs ogle",
+  "ogre ohms oils oily okay okra omen omit once ones only onto onus ooze opal open opts opus oral ores ouch ours oust outs",
+  "oval oven over ovum owed owes owls owns oxen pace pack pact pads page paid pail pain pair pale pall palm pals pane pang",
+  "pans pant papa pare park pars part pass past pate path pats pave pawn paws pays peak peal pear peas peat peck peek peel",
+  "peep peer pegs pelt pens peon peps perk pert pest pets pews pick pier pies pigs pike pile pill pine pink pins pint pipe",
+  "pits pity plan play plea plod plop plot plow ploy plug plum plus pods poem poet poke poky pole poll polo pomp pond pony",
+  "pool poop poor pope pops pore pork port pose post posy pots pour pout pram pray prey prim prod prom prop pros prow puck",
+  "puff pull pulp puma pump punk puns punt puny pups pure purr push puss puts putt pyre quay quip quit quiz race rack racy",
+  "raft rage rags raid rail rain rake ramp rams rang rank rant raps rapt rare rash rasp rate rats rave rays raze read real",
+  "ream reap rear redo reds reed reef reek reel rein rely rend rent rest revs ribs rice rich ride rids rife rift rigs rile",
+  "rims rind ring rink riot ripe rips rise risk rite road roam roar robe robs rock rode rods roes role roll romp roof rook",
+  "room root rope rose rosy rote rots rout rows rubs ruby rude rued rues ruff rugs ruin rule rump rums rune rung runs runt",
+  "ruse rush rust ruts sack sacs safe saga sage sags said sail sake sale salt same sand sane sang sank saps sari sash save",
+  "saws says scab scan scar scum seal seam sear seas seat sect seed seek seem seen seep seer sees self sell send sent sets",
+  "sewn sews sham shed shin ship shod shoe shoo shop shot show shun shut sick side sift sigh sign silk sill silo silt sine",
+  "sing sink sins sips sire sirs site sits size skew skid skim skin skip skis skit slab slag slam slap slat slay sled slew",
+  "slid slim slip slit slob slog slop slot slow slug slum slur smog smug snag snap snip snob snot snow snub snug soak soap",
+  "soar sobs sock soda sods sofa soft soil sold sole solo some song sons soon soot sops sore sort soul soup sour sown sows",
+  "span spar spas spat spay sped spew spin spit spot spry spud spun spur stab stag star stay stem step stew stir stop stow",
+  "stub stud stun subs such suck suds sued sues suit sulk sums sung sunk suns sure surf swab swam swan swap swat sway swig",
+  "swim swum tabs tack taco tact tags tail take talc tale talk tall tame tang tank tans tape taps tars tart task taut taxi",
+  "teak team tear teas teat teed teem teen tees tell tend tens tent term test text than that thaw thee them then they thin",
+  "this thou thud thug thus tick tide tidy tied tier ties tiff tile till tilt time ting tins tint tiny tips tire toad toed",
+  "toes toga toil told toll tomb tome tone tong tons took tool toot tops tore torn toss tote tots tour tout town tows toys",
+  "trap tray tree trek trim trio trip trod trot true tuba tube tubs tuck tuft tugs tuna tune turf turn tusk twee twig twin",
+  "twos type ugly undo unit unto upon urge urns used user uses vain vane vans vary vase vast vats veal veer veil vein vend",
+  "vent verb very vest veto vets vial vice vied vies view vile vine visa vise void volt vote vows wade wads waft wage wags",
+  "waif wail wait wake walk wall wand wane want ward warm warn warp wars wart wary wash wasp watt wave wavy waxy ways weak",
+  "wean wear webs weds weed week weep weld well welt went wept were west wets what when whet whew whim whip whir whiz whoa",
+  "whom whys wick wide wife wigs wild will wilt wily wind wine wing wink wins wipe wire wiry wise wish wisp with wits wive",
+  "woes woke woks wolf womb wont wood woof wool woos word wore work worm worn wove wows wrap wren writ yaks yams yank yaps",
+  "yard yarn yawn year yell yelp yens yeti yews yoga yoke yolk your yowl yuck zany zeal zero zest zeta zinc zips zone zoom",
+  "zoos"
+].join(" ").split(" ");
+// rarer words: any of them is a station too, and a shortcut through one can bring you in early
+const RARE = [
+  "abed abut achy acme adze aery agar agog ague ahem albs aloe alum ammo ankh ante anti apps apse aqua arty ashy asps atop",
+  "auks aver awls axon baas bane bast bate beau beck beep berg berm bevy bier bilk blah bola bole boll bong bops bosh bozo",
+  "brad brig bunt burg burs buss cads cams chit clew clop cloy coda coed coif cola cols conk coot corm cote cowl craw crud",
+  "cuds curs cusp cuss dado dale debs dell demo dewy ding dint dirk diva docs doff dolt dork dorm dory doth dram dray drub",
+  "duns duos dyer ecru ells emos emus ergs espy euro ewer exec exes expo fain fart faun fens fest feta fiat fief fife fink",
+  "flab flan flax flay floe flub fobs fops frat funk futz gads gaff gamy geek gels gird girt glob glop goop grad grog guff",
+  "gunk gyro haft hake hank hasp hath haws heck heft hied hies hobs hods hula hype hypo iamb ibex ibis icky ides iffy ilks",
+  "imam isms jags jape jeep jeez jibs jinn jive jock john josh jowl kale kens keto khan kith kook lama lams lank lats laze",
+  "leas lees leis lief lien limn limo limy lira lire lite loci loco lode loge lorn lout luau lube lynx maws mayo mead megs",
+  "meld meme mesa mewl mica miff mils mini minx mods moll mono mote murk myna nary nave nerd nibs noel nope nosh nous nubs",
+  "nuke oats obit oink oleo onyx oops orbs orcs paps pawl pecs peed pees pent perm peso pica pied ping pips pita pith pock",
+  "pols pone pooh posh prep prig prof psst pubs pugs pupa purl quad quid raga razz refs reps rhea rick riff rill rime roan",
+  "roil rood rove rube rusk sago sans sass sate scad scam scat scow scud secs semi sere serf shad shag shah shim sims situ",
+  "slaw sloe slue snit sols sots spam spec suet sumo sump sups swag sync tads tamp tams tare taro tarp tats teal temp tern",
+  "thru tics tine tofu togs toke toms tony tors tort tram trig troy tuns tush tutu twit tyke typo tyro ulna umps urea uric",
+  "vale vamp vape veep veld vibe viol viva vole wack wadi wale ware weal weft weir wend wens wham whey whit wiki wile wimp",
+  "wino wuss yawl yaws yeah yeas yips yogi yore yuks yule zaps zebu zeds zing zits"
+].join(" ").split(" ");
+// the departure and destination words: the most common ones, and no plain plurals
+const ENDS = [
+  "able acid akin ally also arch area army atom aunt away baby back bake ball band bang bank bare bark base bash bass bath",
+  "baud beam bean bear beat beef been beer bell belt bend bent best beta bill bind bird bite blew blob blow blue boat body",
+  "boil bold bolt bomb bond bone book boom boot bore born boss both bout bowl buck bulb bulk bull bump burn bury bush bust",
+  "busy byte cage cake call calm came camp cant card care case cash cast cave cell cent chap char chat chew chip chop cite",
+  "city clip clog club clue coal coat code coin coke cold come cook cool cope copy core corn cost cozy crew crop cube cult",
+  "cure cute daft damp dare dark dash data date dawn dead deaf deal dear debt deck deem deep defy deny desk dial dice diet",
+  "dine dire dirt disc dish disk dive dole done doom door dose down drag draw drew drip drop drug drum dual duck duff dull",
+  "duly dumb dump dust duty each earn ease east easy echo edge edit else emit envy epic ergo even ever evil exam exit face",
+  "fact fail fair fake fall fame fare farm fast fate fear feat feel feet fell felt file fill film find fine fire firm fish",
+  "five flag flat flaw flew flip flow foam fold folk fond font food fool foot fork form foul four free frog from fuel full",
+  "fume fund fuse fuss gain game gang gasp gate gave gear gene gift girl give glad glow glue goal goat gold golf gone good",
+  "gown grab gray grew grid grim grip grow gulf hack hail hair half hall halt hand hang hard harm hash hate have hazy head",
+  "heap hear heat heel held help herd here hero hide high hill hint hire hold hole holy home hook hope horn host hour huge",
+  "hung hunt hurt icon idea idle inch info into iron item jack jail jazz jerk jest join joke jump junk jury just keen keep",
+  "kept kick kill kind king kiss knee knew know lack lady laid lain lake lamp land lane lark last late lawn lazy lead leaf",
+  "leak lean leap left lend lent less lest life lift like limb line link lion lisp list live load loan lock logo long look",
+  "loop lord lose loss lost loud love luck lump lung lurk lust made mail main make male many mark mask mass mate maze meal",
+  "mean meat meet melt mend menu mere mess mice mild mile milk mill mind mine mint miss mist moan mock mode mold mole mood",
+  "moon more most move much muck must myth nail name near neat neck nest next nice nick nine node none noon norm nose note",
+  "noun null numb obey omit once only onto open oral over pace pack page paid pain pair pale pant park part pass past path",
+  "peak peer pick pile pill pink pint pipe pity plan play plea plot ploy plug poem poet poke pole poll pool poor pope pork",
+  "port pose post pour pray pull pulp pump punt pure push putt quit quiz race rack rage raid rail rain rang rank rant rare",
+  "rash rate rave read real rear rely rend rent rest rice rich ride ring riot rise risk road rock rode role roll roof room",
+  "root rope rose rout rude ruin rule rung rush sack safe saga said sail sake sale salt same sand sane sang sank save scan",
+  "scum seal seat sect seek seem seen self sell send sent ship shoe shop shot show shut sick side sigh sign sine sing sink",
+  "site size skin skip slag slid slim slip slot slow smug snag snow soap sock soft soil sold sole solo some song soon sore",
+  "sort soul soup span spin spit spot spur star stay stem step stir stop stun such suit sung sunk sure swam swap swim swum",
+  "tack tail take tale talk tall tame tank tape task taxi team tear tell tend term test text than that thee them then they",
+  "thin thou tick tidy tile till time tiny tire toad told toll tome tone took tool tore torn toss tour town trap tray tree",
+  "trek trip true tube tune turn twin type ugly undo unit unto upon urge user vain vary vast vein vend verb very vice view",
+  "vile void vote wade wage wait wake walk wall want ward warm warn warp wary wash wave weak wear week well went were west",
+  "what when whim whom wide wife wild will wind wine wing wipe wire wise wish with wive woke wolf wont wood word wore work",
+  "worm worn wrap wren yard yawn year yeti your zero zone zoom"
+].join(" ").split(" ");
+const WORDS = [...COMMON, ...RARE].sort();
+const N = WORDS.length;
+const INDEX = new Map(WORDS.map((w, i) => [w, i]));
+const COMMONSET = new Set(COMMON);
+const A = 97;
+const letter = (n) => String.fromCharCode(A + ((n % 26) + 26) % 26);
+// how far a flap turns forward from one letter to another, for the spin
+const ahead = (a, b) => (b.charCodeAt(0) - a.charCodeAt(0) + 26) % 26;
+const swap = (w, col, ch) => w.slice(0, col) + ch + w.slice(col + 1);
+
+// ---------- The network ----------
+// every word links to the words one letter away
+const LINKS = WORDS.map((w) => {
+  const out = [];
+  for (let col = 0; col < 4; col++) {
+    for (let n = 1; n < 26; n++) {
+      const v = INDEX.get(swap(w, col, letter(w.charCodeAt(col) - A + n)));
+      if (v !== undefined) out.push(v);
+    }
+  }
+  return out.sort((a, b) => a - b);
+});
+const NONE = -1;
+// how many stops every word is from the destination, searched outward from it.
+// with only, the search keeps to the words that pass it
+function distancesTo(target, only = () => true) {
+  const dist = new Int16Array(N).fill(NONE);
+  dist[target] = 0;
+  const q = [target];
+  for (let i = 0; i < q.length; i++) {
+    for (const v of LINKS[q[i]]) {
+      if (dist[v] === NONE && only(v)) { dist[v] = dist[q[i]] + 1; q.push(v); }
+    }
+  }
+  return dist;
+}
+// the best next stop from a word, alphabetical among ties
+function bestNext(u, dist) {
+  for (const v of LINKS[u]) if (dist[v] !== NONE && dist[v] === dist[u] - 1) return v;
+  return -1;
+}
+function parRoute(from, dist) {
+  const route = [from];
+  for (let u = from; dist[u] !== 0;) { u = bestNext(u, dist); route.push(u); }
+  return route;
+}
+
+// ---------- Trains ----------
+// a seeded generator, so everyone gets the same train on the same day
+function seeded(text) {
+  let h = 2166136261;
+  for (const ch of text) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return () => {
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// par keeps to common words, so the timetable never leans on one you'd have to look up. the
+// board still takes every word it knows, and a rare one can be a shortcut that gets you in early
+function journey(from, to, check) {
+  const f = INDEX.get(from), t = INDEX.get(to);
+  if (f === undefined || t === undefined || f === t) return null;
+  let dist = distancesTo(t, (v) => v === f || COMMONSET.has(WORDS[v]));
+  const rare = dist[f] === NONE;
+  if (rare) dist = distancesTo(t);
+  if (dist[f] === NONE) return null;
+  const j = { from, to, dist, rare, par: dist[f] };
+  j.any = rare ? dist : distancesTo(t);
+  if (check && !check(j)) return null;
+  j.parRoute = parRoute(f, dist).map((i) => WORDS[i]);
+  return j;
+}
+// a fair train: three to seven stops at par, and no rare shortcut of fewer than three
+function pickTrain(rand) {
+  for (let tries = 0; tries < 2000; tries++) {
+    const from = ENDS[Math.floor(rand() * ENDS.length)], to = ENDS[Math.floor(rand() * ENDS.length)];
+    const j = journey(from, to, (j) => !j.rare && j.par >= 3 && j.par <= 7 && j.any[INDEX.get(from)] >= 3);
+    if (j) return j;
+  }
+  return journey("cold", "warm");
+}
+const pad = (n) => String(n).padStart(2, "0");
+function todayKey(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+const longDate = (d = new Date()) => d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+// ---------- Saved things ----------
+// sound and each day's result stay in this browser only
+let saved = { sound: true, days: {} };
+try { Object.assign(saved, JSON.parse(localStorage.getItem("departures") || "{}")); } catch (e) {}
+function save() { try { localStorage.setItem("departures", JSON.stringify(saved)); } catch (e) {} }
+
+// ---------- State ----------
+let game = null;
+function start(j, kind) {
+  game = {
+    ...j, kind, date: todayKey(),
+    route: [j.from], pend: null, sel: 0, hints: 0, timetable: false, arrived: false,
+  };
+  closeAll();
+  if (kind === "daily") history.replaceState(null, "", location.pathname + location.search);
+  else history.replaceState(null, "", "#" + new URLSearchParams({ from: j.from, to: j.to }));
+  $("timetable").setAttribute("aria-pressed", "false");
+  for (let c = 0; c < 4; c++) setFlap(c, j.from[c], false);
+  paint();
+  say(`From ${up(j.from)} to ${up(j.to)}. Turn a flap, then depart when the board reads a word.`);
+}
+const here = () => game.route[game.route.length - 1];
+const showing = () => (game.pend ? swap(here(), game.pend.col, game.pend.letter) : here());
+const stops = () => game.route.length - 1;
+const nStops = (n) => (n === 1 ? "one stop" : `${n} stops`);
+// nothing is scored along the way. on arrival the route is set against the shortest one
+// through everyday words: more stops than that, and the ticket shows the shorter route
+function verdict() {
+  const extra = stops() - game.par;
+  if (extra > 0) return { short: `${nStops(extra)} longer than the shortest`, long: `There was a route with ${extra === 1 ? "one stop" : extra + " stops"} fewer.`, shortest: false };
+  if (extra < 0) return { short: "shorter than the timetable", long: "Shorter than the timetable! A rarer word cut the journey.", shortest: true };
+  return { short: "the shortest route", long: "No route through everyday words is shorter.", shortest: true };
+}
+const up = (w) => w.toUpperCase();
+
+// ---------- Flaps ----------
+// each flap shows one letter and turns forward one click at a time toward the letter it wants
+const flaps = [];
+function buildFlaps() {
+  for (let c = 0; c < 4; c++) {
+    const mod = document.createElement("div");
+    mod.className = "mod";
+    const btn = document.createElement("button");
+    btn.className = "flap";
+    btn.type = "button";
+    btn.tabIndex = c === 0 ? 0 : -1;
+    btn.innerHTML = '<span class="half top"><b></b></span><span class="half bot"><b></b></span><i class="chev up" aria-hidden="true"></i><i class="chev dn" aria-hidden="true"></i>';
+    btn.setAttribute("aria-keyshortcuts", "ArrowUp ArrowDown");
+    const plate = document.createElement("span");
+    plate.className = "togo";
+    mod.append(btn, plate);
+    $("row").append(mod);
+    const f = { mod, btn, plate, top: btn.querySelector(".top b"), bot: btn.querySelector(".bot b"), shown: "a", want: "a", dir: 1, timer: 0, leaf: null };
+    flaps.push(f);
+    wireFlap(f, c);
+  }
+}
+function face(f, ch) { f.top.textContent = f.bot.textContent = up(ch); }
+// one click. turning up, the top half of the old letter falls and the bottom of the new one
+// lands; turning down, the bottom half of the old letter lifts and the top of the new one lands
+function flip(f, old, nw, ms, dir = 1) {
+  if (f.leaf) { f.leaf.forEach((el) => el.remove()); f.leaf = null; }
+  if (reduced.matches || ms < 16) { face(f, nw); return; }
+  const fwd = dir > 0;
+  (fwd ? f.top : f.bot).textContent = up(nw);
+  const front = document.createElement("span"), back = document.createElement("span");
+  front.className = `half ${fwd ? "top" : "bot"} leaf`; front.innerHTML = `<b>${up(old)}</b>`;
+  back.className = `half ${fwd ? "bot" : "top"} leaf`; back.innerHTML = `<b>${up(nw)}</b>`;
+  const away = fwd ? "rotateX(-90deg)" : "rotateX(90deg)", toward = fwd ? "rotateX(90deg)" : "rotateX(-90deg)";
+  back.style.transform = toward;
+  f.btn.append(front, back);
+  f.leaf = [front, back];
+  const half = ms / 2;
+  front.animate([{ transform: "rotateX(0deg)" }, { transform: away }], { duration: half, easing: "ease-in", fill: "forwards" });
+  back.animate([{ transform: toward }, { transform: "rotateX(0deg)" }], { duration: half, delay: half, easing: "ease-out", fill: "forwards" })
+    .finished.then(() => {
+      if (f.leaf && f.leaf[1] === back) { face(f, nw); front.remove(); back.remove(); f.leaf = null; }
+    }).catch(() => {});
+}
+// letters from a to b going one way round: dir 1 is up the alphabet, -1 down
+const apart = (a, b, dir) => (dir > 0 ? ahead(a, b) : ahead(b, a));
+// spin to a letter a click at a time, or snap straight to it. without a dir it goes the short way
+function setFlap(c, ch, spin = true, dir = 0) {
+  const f = flaps[c];
+  f.want = ch;
+  f.dir = dir || (ahead(f.shown, ch) <= 13 ? 1 : -1);
+  clearTimeout(f.timer);
+  if (!spin || reduced.matches) {
+    if (f.shown !== ch) { if (spin) play("flap"); flip(f, f.shown, ch, 0); }
+    f.shown = ch;
+    face(f, ch);
+    return;
+  }
+  const tick = () => {
+    if (f.shown === f.want) return;
+    const left = apart(f.shown, f.want, f.dir);
+    const next = letter(f.shown.charCodeAt(0) - A + f.dir);
+    const ms = left > 8 ? 30 : left > 3 ? 46 : 74;
+    flip(f, f.shown, next, ms, f.dir);
+    play("flap");
+    f.shown = next;
+    f.timer = setTimeout(tick, ms + 6);
+  };
+  tick();
+}
+
+// ---------- Turning and departing ----------
+function cancelPend() {
+  if (!game.pend) return;
+  const c = game.pend.col;
+  game.pend = null;
+  setFlap(c, here()[c], false);
+}
+function turnTo(col, ch, dir = 0) {
+  if (game.arrived) return;
+  if (game.pend && game.pend.col !== col) cancelPend();
+  game.pend = ch === here()[col] ? null : { col, letter: ch };
+  setFlap(col, ch, true, dir);
+  paint();
+  narratePend();
+}
+// one letter up (dir 1) or down (dir -1)
+function nudge(col, dir = 1) {
+  const base = game.pend && game.pend.col === col ? game.pend.letter : here()[col];
+  turnTo(col, letter(base.charCodeAt(0) - A + dir), dir);
+}
+let narrateTimer = 0;
+// wait for the flap to settle before saying anything, so a spin isn't read out letter by letter
+function narratePend() {
+  clearTimeout(narrateTimer);
+  const f = game.pend ? flaps[game.pend.col] : null;
+  const settle = f && !reduced.matches ? Math.min(apart(f.shown, f.want, f.dir) * 40, 900) : 0;
+  narrateTimer = setTimeout(() => {
+    if (!game.pend) return say("Back where you were. Turn a flap.");
+    const w = showing();
+    if (INDEX.has(w)) say(`${up(w)} is a station. Depart?`);
+    else say(`${up(w)}: no such station.`, "bad");
+  }, 260 + settle);
+}
+function depart() {
+  if (game.arrived) return;
+  if (!game.pend) { say("Turn a flap first.", "bad"); play("refuse"); return; }
+  const w = showing();
+  if (!INDEX.has(w)) { say(`${up(w)}: no such station. Keep turning, or go Back.`, "bad"); play("refuse"); return; }
+  game.route.push(w);
+  game.pend = null;
+  clearTimeout(narrateTimer);
+  if (w === game.to) return arrive();
+  play("depart");
+  paint();
+  if (game.any[INDEX.get(w)] === NONE) say(`${up(w)}. No line runs on from here. Go back a stop.`, "bad");
+  else say(`${up(w)}. Where next?`);
+}
+function back() {
+  if (game.pend) { cancelPend(); paint(); say("Flap turned back. That was free."); return; }
+  if (game.route.length < 2) { say("You're at the start already."); return; }
+  if (game.arrived) { game.arrived = false; closeAll(); }
+  game.route.pop();
+  for (let c = 0; c < 4; c++) setFlap(c, here()[c], false);
+  paint();
+  say(`Back at ${up(here())}.`);
+}
+function arrive() {
+  game.arrived = true;
+  play("arrive");
+  paint();
+  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.`, "good");
+  if (game.kind === "daily" && !saved.days[game.date]) {
+    saved.days[game.date] = { stops: stops(), par: game.par };
+    save();
+  }
+  setTimeout(showTicket, reduced.matches ? 0 : 900);
+}
+function porter() {
+  if (game.arrived) return;
+  cancelPend();
+  const u = INDEX.get(here());
+  if (game.any[u] === NONE) { say("The porter says no line runs on from here. Go back a stop.", "bad"); return; }
+  // the porter knows the common routes, and only falls back on rare words when there are none
+  const v = WORDS[bestNext(u, game.dist[u] !== NONE ? game.dist : game.any)];
+  game.hints++;
+  paint();
+  say(v === game.to ? `The porter points at ${up(v)}. That's the last stop.` : `The porter suggests ${up(v)} next.`);
+}
+function toggleTimetable() {
+  game.timetable = !game.timetable;
+  $("timetable").setAttribute("aria-pressed", game.timetable);
+  paint();
+}
+
+// ---------- Paint ----------
+function say(text, tone = "") {
+  const s = $("status");
+  s.textContent = text;
+  s.className = "status" + (tone ? " " + tone : "");
+}
+function minis(el, w) {
+  el.replaceChildren(...[...w].map((ch) => { const s = document.createElement("span"); s.textContent = up(ch); return s; }));
+}
+function stopsLine(words) {
+  const frag = document.createDocumentFragment();
+  words.forEach((w, i) => {
+    // spaces around the dot give a long route somewhere to wrap
+    if (i) { const s = document.createElement("span"); s.className = "sep"; s.textContent = "·"; frag.append(" ", s, " "); }
+    const s = document.createElement("span"); s.className = "stop"; s.textContent = up(w); frag.append(s);
+  });
+  return frag;
+}
+function paint() {
+  minis($("from").querySelector(".minis"), game.from);
+  minis($("to").querySelector(".minis"), game.to);
+  $("from").setAttribute("aria-label", "From " + up(game.from));
+  $("to").setAttribute("aria-label", "To " + up(game.to));
+  const w = showing();
+  flaps.forEach((f, c) => {
+    const lit = w[c] === game.to[c];
+    f.plate.classList.toggle("lit", lit);
+    f.mod.classList.toggle("sel", c === game.sel);
+    f.mod.classList.toggle("pend", !!game.pend && game.pend.col === c);
+    f.btn.tabIndex = c === game.sel ? 0 : -1;
+    f.btn.setAttribute("aria-label", `Flap ${c + 1}: ${up(w[c])}, ${lit ? "matches the destination" : "not yet the destination letter"}`);
+  });
+  const line = $("calling-line");
+  line.replaceChildren();
+  const lead = document.createElement("span");
+  lead.className = "lead";
+  lead.textContent = "Calling at";
+  line.append(lead, stopsLine(game.route));
+  const tt = $("timetable-line");
+  tt.hidden = !game.timetable;
+  if (game.timetable) {
+    tt.replaceChildren();
+    const l = document.createElement("span"); l.className = "lead"; l.textContent = "Timetable";
+    tt.append(l, stopsLine(game.parRoute));
+  }
+  $("depart").disabled = game.arrived;
+  $("porter").disabled = game.arrived;
+  $("back").disabled = !game.pend && game.route.length < 2;
+  const done = saved.days[todayKey()];
+  $("service").textContent = game.kind === "daily"
+    ? `Today's train, ${longDate()}` + (done && done.stops != null ? `. You arrived in ${nStops(done.stops)}.` : "")
+    : "A special train. Share the link to send someone on it.";
+  $("today").disabled = game.kind === "daily";
+}
+
+// ---------- Ticket ----------
+function ticketText() {
+  const head = game.kind === "daily" ? `Departures, ${longDate()}` : "Departures, a special train";
+  const url = location.origin + location.pathname + (game.kind === "daily" ? "" : location.hash);
+  return [
+    head,
+    `${up(game.from)} → ${up(game.to)}`,
+    `${nStops(stops())}, ${verdict().short}` + (game.hints ? `, ${game.hints} from the porter` : "") + (game.timetable ? ", timetable read" : ""),
+    url,
+  ].join("\n");
+}
+function showTicket() {
+  if (!game.arrived) return;
+  const v = verdict();
+  $("t-journey").innerHTML = `${up(game.from)}<span>→</span>${up(game.to)}`;
+  $("t-when").textContent = game.kind === "daily" ? longDate() : "A special train";
+  $("t-verdict").textContent = v.shortest ? "Arrived" : "Arrived, the long way";
+  $("t-verdict").className = "verdict " + (v.shortest ? "best" : "longer");
+  const helped = [game.hints ? `${game.hints} ${game.hints === 1 ? "tip" : "tips"} from the porter` : "", game.timetable ? "timetable read" : ""].filter(Boolean).join(", ");
+  $("t-detail").textContent = `${nStops(stops())}. ${v.long}` + (helped ? ` With ${helped}.` : "");
+  $("t-route").textContent = game.route.map(up).join(" · ");
+  // show the shorter route when there was one
+  $("t-par").hidden = v.shortest;
+  $("t-par").textContent = "Shorter: " + game.parRoute.map(up).join(" · ");
+  open("ticket");
+}
+async function copyTicket() {
+  const text = ticketText();
+  try { await navigator.clipboard.writeText(text); $("t-copy").textContent = "Copied"; }
+  catch (e) { $("t-copy").textContent = "Couldn't copy"; }
+  setTimeout(() => { $("t-copy").textContent = "Copy ticket"; }, 1600);
+}
+
+// ---------- Placards ----------
+let opener = null;
+function open(id) {
+  closeAll();
+  opener = document.activeElement;
+  $(id).hidden = false;
+  const first = $(id).querySelector(id === "ticket" ? ".btn.main" : ".close");
+  if (first) first.focus();
+}
+function closeAll() {
+  const was = ["card", "ticket"].some((id) => !$(id).hidden);
+  ["card", "ticket"].forEach((id) => { $(id).hidden = true; });
+  if (was && opener && opener.focus) opener.focus();
+  opener = null;
+}
+const anyOpen = () => !$("card").hidden || !$("ticket").hidden;
+document.querySelectorAll(".overlay").forEach((o) => {
+  o.addEventListener("click", (e) => { if (e.target === o || e.target.closest("[data-close]")) closeAll(); });
+  // keep Tab inside the placard while it's up
+  o.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const els = [...o.querySelectorAll("button, a[href]")].filter((el) => !el.hidden && el.offsetParent !== null);
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+});
+
+// ---------- Input ----------
+function select(c, focus = false) {
+  game.sel = (c + 4) % 4;
+  paint();
+  if (focus) flaps[game.sel].btn.focus();
+}
+function wireFlap(f, c) {
+  let hold = 0, spin = 0;
+  const stop = () => { clearTimeout(hold); clearInterval(spin); hold = spin = 0; };
+  f.btn.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || game.arrived) return;
+    e.preventDefault();
+    f.btn.focus();
+    game.sel = c;
+    // the top half turns it up a letter, the bottom half down, and holding keeps it spinning
+    const r = f.btn.getBoundingClientRect();
+    const dir = e.clientY < r.top + r.height / 2 ? 1 : -1;
+    nudge(c, dir);
+    hold = setTimeout(() => { spin = setInterval(() => nudge(c, dir), 110); }, 380);
+  });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((t) => f.btn.addEventListener(t, stop));
+  f.btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  // a click from the keyboard (Space) turns it one; pointer clicks were handled on pointerdown
+  f.btn.addEventListener("click", (e) => { if (e.detail === 0) { game.sel = c; nudge(c); } });
+  f.btn.addEventListener("focus", () => { if (game.sel !== c) select(c); });
+  f.btn.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); select(c + (e.key === "ArrowLeft" ? -1 : 1), true); }
+    else if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); game.sel = c; nudge(c, e.key === "ArrowUp" ? 1 : -1); }
+  });
+}
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (anyOpen()) { if (e.key === "Escape") { e.preventDefault(); closeAll(); } return; }
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  if (/^[a-z]$/i.test(e.key)) { e.preventDefault(); turnTo(game.sel, e.key.toLowerCase()); }
+  else if (/^[1-4]$/.test(e.key)) { e.preventDefault(); select(+e.key - 1, true); }
+  else if (e.key === "Enter") { e.preventDefault(); depart(); }
+  else if (e.key === "Backspace") { e.preventDefault(); back(); }
+  else if (e.key === "Escape") { if (game.pend) { e.preventDefault(); back(); } }
+  else if (e.key === "?") { e.preventDefault(); open("card"); }
+});
+$("depart").addEventListener("click", depart);
+$("back").addEventListener("click", back);
+$("porter").addEventListener("click", porter);
+$("timetable").addEventListener("click", toggleTimetable);
+$("another").addEventListener("click", () => start(pickTrain(Math.random), "special"));
+$("t-next").addEventListener("click", () => start(pickTrain(Math.random), "special"));
+$("today").addEventListener("click", () => start(pickTrain(seeded("departures:" + todayKey())), "daily"));
+$("rules").addEventListener("click", () => open("card"));
+$("t-copy").addEventListener("click", copyTicket);
+$("sound").addEventListener("click", () => setSound(!saved.sound));
+
+// ---------- Station clock ----------
+const SVG = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
+const hands = {};
+function buildClock() {
+  const c = $("clock");
+  c.append(svgEl("circle", { cx: 50, cy: 50, r: 45, class: "face" }));
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2, r1 = i % 3 ? 35 : 31;
+    c.append(svgEl("line", { x1: 50 + Math.sin(a) * r1, y1: 50 - Math.cos(a) * r1, x2: 50 + Math.sin(a) * 39, y2: 50 - Math.cos(a) * 39, class: "tick" + (i % 3 ? "" : " big") }));
+  }
+  hands.h = c.appendChild(svgEl("line", { x1: 50, y1: 54, x2: 50, y2: 28, class: "hand", "stroke-width": 5 }));
+  hands.m = c.appendChild(svgEl("line", { x1: 50, y1: 56, x2: 50, y2: 16, class: "hand", "stroke-width": 3.4 }));
+  hands.s = c.appendChild(svgEl("line", { x1: 50, y1: 60, x2: 50, y2: 14, class: "sec" }));
+  c.append(svgEl("circle", { cx: 50, cy: 50, r: 3, class: "pin" }));
+  tickClock();
+}
+function tickClock() {
+  const d = new Date();
+  const s = d.getSeconds(), m = d.getMinutes() + s / 60, h = (d.getHours() % 12) + m / 60;
+  hands.h.setAttribute("transform", `rotate(${h * 30} 50 50)`);
+  hands.m.setAttribute("transform", `rotate(${m * 6} 50 50)`);
+  hands.s.setAttribute("transform", `rotate(${s * 6} 50 50)`);
+  $("clock").setAttribute("aria-label", "Station clock: " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }));
+  setTimeout(tickClock, 1000 - d.getMilliseconds());
+}
+
+// ---------- Sound ----------
+// every sound is built on the spot from oscillators and filtered noise, so there are no audio files
+let audio = null, master = null, noiseBuf = null;
+function ac() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    // playback, so the board is heard even with the iPhone's silent switch on. the Sound button mutes it
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+    // a limiter that only steps in when sounds pile up
+    const comp = audio.createDynamicsCompressor();
+    comp.threshold.value = -4;
+    comp.knee.value = 0;
+    comp.ratio.value = 20;
+    comp.attack.value = 0.001;
+    comp.release.value = 0.1;
+    master = audio.createGain();
+    master.gain.value = 0.8;
+    master.connect(comp).connect(audio.destination);
+    noiseBuf = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
+    const ch = noiseBuf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  }
+  // iOS can leave the context suspended or "interrupted" after calls and app switches
+  if (audio.state !== "running") audio.resume();
+  return audio;
+}
+// a touch pointerdown doesn't count as a gesture, so start and resume audio from the ones that do
+["pointerup", "touchend", "keydown"].forEach((t) =>
+  document.addEventListener(t, () => { if (saved.sound) ac(); }, { capture: true, passive: true }));
+const live = () => (saved.sound && audio && audio.state === "running" ? audio : null);
+function setSound(on) {
+  saved.sound = on;
+  save();
+  $("sound").setAttribute("aria-pressed", on);
+  if (on && ac()) audio.resume().then(() => play("depart"));
+}
+// a gain that jumps up over attack seconds, stays up for hold, then dies away by dur
+function env(a, t, peak, attack, dur, hold = 0) {
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  if (hold > 0) g.gain.setValueAtTime(peak, t + attack + hold);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(master);
+  return g;
+}
+
+// ---------- Sound data ----------
+// each sound is layers of tones and noise. a tone is an oscillator gliding from freq to to; noise
+// runs through a filter whose cutoff glides from freq to to. every layer rises to gain over attack
+// seconds and dies away by dur. at starts a layer late, vary nudges its pitch each time it plays,
+// and repeat scatters that many copies across spread seconds. the Sound Bench (../sound-bench/)
+// has an identical copy to play and edit, so a change here goes there too, and the other way round.
+const SOUNDS = {
+  "flap": { "name": "Flap click", "use": "Each click of a flap turning", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 2600, "q": 1.3, "gain": 0.32, "attack": 0.001, "dur": 0.022, "vary": 0.18 },
+    { "kind": "tone", "wave": "square", "freq": 190, "to": 120, "gain": 0.045, "attack": 0.001, "dur": 0.02, "vary": 0.1 }
+  ] },
+  "depart": { "name": "Platform chime", "use": "Departing a stop, and turning sound on", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 784, "gain": 0.16, "attack": 0.004, "dur": 0.45 },
+    { "kind": "tone", "wave": "sine", "freq": 659, "gain": 0.16, "attack": 0.004, "dur": 0.7, "at": 0.16 }
+  ] },
+  "refuse": { "name": "Ticket refused", "use": "Departing with no word on the board", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 140, "to": 120, "gain": 0.05, "attack": 0.004, "hold": 0.12, "dur": 0.2 },
+    { "kind": "tone", "wave": "square", "freq": 140, "to": 110, "gain": 0.05, "attack": 0.004, "hold": 0.1, "dur": 0.2, "at": 0.24 }
+  ] },
+  "arrive": { "name": "Arrival bells", "use": "Reaching the destination", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 659, "gain": 0.15, "attack": 0.004, "dur": 0.6 },
+    { "kind": "tone", "wave": "sine", "freq": 784, "gain": 0.15, "attack": 0.004, "dur": 0.6, "at": 0.15 },
+    { "kind": "tone", "wave": "sine", "freq": 1047, "gain": 0.15, "attack": 0.004, "dur": 1.1, "at": 0.3 },
+    { "kind": "tone", "wave": "triangle", "freq": 2094, "gain": 0.03, "attack": 0.004, "dur": 0.9, "at": 0.3 }
+  ] }
+};
+
+const soundLength = (s) => Math.max(...s.layers.map((L) => (L.at || 0) + (L.spread || 0) + L.dur));
+// play a sound at seconds from now; len stretches it to last that long
+function play(id, at = 0, len) {
+  const a = live(), s = SOUNDS[id];
+  if (!a || !s) return;
+  const k = len ? len / soundLength(s) : 1;
+  for (const L of s.layers) {
+    for (let n = 0; n < (L.repeat || 1); n++) {
+      const v = L.vary ? 1 + (Math.random() * 2 - 1) * L.vary : 1;
+      const late = (L.at || 0) + (L.repeat ? Math.random() * (L.spread || 0) : 0);
+      voice(a, L, a.currentTime + at + late * k, L.dur * k, (L.attack || 0.003) * k, (L.hold || 0) * k, v);
+    }
+  }
+}
+function voice(a, L, t, dur, attack, hold, v) {
+  const tone = L.kind === "tone";
+  const src = tone ? a.createOscillator() : a.createBufferSource();
+  let out = src, glide;
+  if (tone) {
+    src.type = L.wave || "sine";
+    glide = src.frequency;
+  } else {
+    src.buffer = noiseBuf;
+    src.loop = true;
+    out = a.createBiquadFilter();
+    out.type = L.filter || "bandpass";
+    out.Q.value = L.q ?? 1;
+    src.connect(out);
+    glide = out.frequency;
+  }
+  glide.setValueAtTime(L.freq * v, t);
+  if (L.to) glide.exponentialRampToValueAtTime(L.to * v, t + dur);
+  attack = Math.min(attack, dur * 0.95);
+  out.connect(env(a, t, L.gain, attack, dur, Math.min(hold, dur * 0.95 - attack)));
+  if (tone) src.start(t); else src.start(t, Math.random() * 0.8);
+  src.stop(t + dur + 0.05);
+}
+
+// ---------- Start ----------
+buildClock();
+buildFlaps();
+$("sound").setAttribute("aria-pressed", saved.sound);
+// a link with from and to in its hash boards that train; anything else boards today's
+function boardFromLink() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  const j = p.get("from") && p.get("to") ? journey(p.get("from").toLowerCase(), p.get("to").toLowerCase()) : null;
+  if (j) start(j, "special");
+  else start(pickTrain(seeded("departures:" + todayKey())), "daily");
+}
+addEventListener("hashchange", boardFromLink);
+boardFromLink();
+</script>
+</body>
+</html>

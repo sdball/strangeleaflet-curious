@@ -283,7 +283,7 @@ textarea { font-family: var(--mono); font-size: 16px; min-height: 8rem; resize: 
 <div class="wrap">
   <a class="back" href="/">The Cabinet of Curios</a>
   <h1>Sound Bench</h1>
-  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a>, <a href="../cozy-submarine/">Cozy Submarine</a>, the <a href="../z-machine-interpreter/">Z-Machine Interpreter</a>, <a href="../chyron-wire/">Chyron Wire</a>, and <a href="../air-to-ground/">Air to Ground</a>, or build your own.</p>
+  <p class="lede">Most sound effects in a browser game are built from just two ingredients: tones and noise. Work through the stations to hear what each piece does to a sound, then open the bench and take apart every sound in <a href="../hardpoint/">Hardpoint</a>, <a href="../cozy-submarine/">Cozy Submarine</a>, the <a href="../z-machine-interpreter/">Z-Machine Interpreter</a>, <a href="../chyron-wire/">Chyron Wire</a>, <a href="../air-to-ground/">Air to Ground</a>, and <a href="../departures/">Departures</a>, or build your own.</p>
   <p class="howto">Every station has a Play button. Change a control, press Play again, and listen for the difference. The pictures are drawn from the exact sound you'll hear. No sound on a phone? Check its volume.</p>
 
   <!-- ---------- Station 1 ---------- -->
@@ -659,12 +659,34 @@ const AIR_TO_GROUND_SOUNDS = {
   ] }
 };
 
+// Departures' sounds, exactly as public/departures/index.html has them
+const DEPARTURES_SOUNDS = {
+  "flap": { "name": "Flap click", "use": "Each click of a flap turning", "layers": [
+    { "kind": "noise", "filter": "bandpass", "freq": 2600, "q": 1.3, "gain": 0.32, "attack": 0.001, "dur": 0.022, "vary": 0.18 },
+    { "kind": "tone", "wave": "square", "freq": 190, "to": 120, "gain": 0.045, "attack": 0.001, "dur": 0.02, "vary": 0.1 }
+  ] },
+  "depart": { "name": "Platform chime", "use": "Departing a stop, and turning sound on", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 784, "gain": 0.16, "attack": 0.004, "dur": 0.45 },
+    { "kind": "tone", "wave": "sine", "freq": 659, "gain": 0.16, "attack": 0.004, "dur": 0.7, "at": 0.16 }
+  ] },
+  "refuse": { "name": "Ticket refused", "use": "Departing with no word on the board", "layers": [
+    { "kind": "tone", "wave": "square", "freq": 140, "to": 120, "gain": 0.05, "attack": 0.004, "hold": 0.12, "dur": 0.2 },
+    { "kind": "tone", "wave": "square", "freq": 140, "to": 110, "gain": 0.05, "attack": 0.004, "hold": 0.1, "dur": 0.2, "at": 0.24 }
+  ] },
+  "arrive": { "name": "Arrival bells", "use": "Reaching the destination", "layers": [
+    { "kind": "tone", "wave": "sine", "freq": 659, "gain": 0.15, "attack": 0.004, "dur": 0.6 },
+    { "kind": "tone", "wave": "sine", "freq": 784, "gain": 0.15, "attack": 0.004, "dur": 0.6, "at": 0.15 },
+    { "kind": "tone", "wave": "sine", "freq": 1047, "gain": 0.15, "attack": 0.004, "dur": 1.1, "at": 0.3 },
+    { "kind": "tone", "wave": "triangle", "freq": 2094, "gain": 0.03, "attack": 0.004, "dur": 0.9, "at": 0.3 }
+  ] }
+};
 const GROUPS = [
   { id: "hardpoint", name: "Hardpoint", href: "../hardpoint/", sounds: HARDPOINT_SOUNDS },
   { id: "cozy-submarine", name: "Cozy Submarine", href: "../cozy-submarine/", sounds: COZY_SUBMARINE_SOUNDS },
   { id: "z-machine-interpreter", name: "Z-Machine Interpreter", href: "../z-machine-interpreter/", sounds: Z_MACHINE_INTERPRETER_SOUNDS },
   { id: "chyron-wire", name: "Chyron Wire", href: "../chyron-wire/", sounds: CHYRON_WIRE_SOUNDS },
   { id: "air-to-ground", name: "Air to Ground", href: "../air-to-ground/", sounds: AIR_TO_GROUND_SOUNDS },
+  { id: "departures", name: "Departures", href: "../departures/", sounds: DEPARTURES_SOUNDS },
   // sounds of your own, for no game in particular: it ships empty, so every sound in it lives in edits
   { id: "mine", name: "My own sounds", href: null, sounds: {} },
 ];
