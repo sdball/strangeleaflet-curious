@@ -218,12 +218,18 @@ button { font: inherit; color: inherit; }
 .ticket .journey span { color: #9c7a32; margin: 0 0.2em; }
 .ticket .when { font-style: italic; color: #5d523c; }
 .ticket hr { border: 0; border-top: 2px dashed var(--paper-rule); margin: 14px 0; }
-.ticket .verdict { font: 600 20px/1.2 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px; }
+.ticket .verdict { font: 600 30px/1.1 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px; }
 .ticket .verdict.best { color: #2f6b3a; }
 .ticket .verdict.longer { color: #7a5a1c; }
 .ticket #t-par { color: #6b5a33; }
 .ticket .route { font: 500 15px/1.6 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; }
 .ticket .actions { justify-content: center; }
+/* a quiet link-like button, so the shorter route is there only for those who ask */
+.ticket .reveal {
+  min-height: 44px; padding: 0 10px; border: 0; background: none; cursor: pointer;
+  font: italic 16px var(--serif); color: #6b3f12; text-decoration: underline; text-underline-offset: 3px;
+}
+.ticket .reveal[hidden] { display: none; }
 
 @media (max-height: 780px) {
   #hall { gap: 8px; }
@@ -280,7 +286,7 @@ button { font: inherit; color: inherit; }
   </section>
 
   <div class="calling">
-    <p id="calling-line"></p>
+    <p id="calling-line" aria-label="Your route so far"></p>
     <p id="timetable-line" hidden></p>
   </div>
 
@@ -313,7 +319,7 @@ button { font: inherit; color: inherit; }
     <button class="close" type="button" data-close aria-label="Close">×</button>
     <h2 id="card-h">How to ride</h2>
     <p>Get from the <b>From</b> word to the <b>To</b> word by changing one letter at a time. Every board you stop at has to be a real word.</p>
-    <p>Take as many stops as you like. When you arrive, your ticket says whether there was a shorter route through everyday words, and shows it. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
+    <p>Take as many stops as you like. When you arrive, your ticket counts them. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
     <p>The lamp under a flap lights when it reads the destination's letter.</p>
     <ul>
       <li>Tap the top half of a flap to turn it up a letter, or the bottom half to turn it down. Hold to keep it spinning.</li>
@@ -336,12 +342,14 @@ button { font: inherit; color: inherit; }
     <p class="when" id="t-when"></p>
     <hr>
     <p class="verdict" id="t-verdict"></p>
-    <p id="t-detail"></p>
+    <p id="t-detail" hidden></p>
     <p class="route" id="t-route"></p>
     <p class="route" id="t-par" hidden></p>
+    <button class="reveal" id="t-reveal" type="button" hidden>Show a shorter route</button>
     <div class="actions">
+      <button class="btn main" id="t-retry" type="button" hidden>Try again</button>
+      <button class="btn" id="t-next" type="button">Another train</button>
       <button class="btn" id="t-copy" type="button">Copy ticket</button>
-      <button class="btn main" id="t-next" type="button">Another train</button>
       <button class="btn" type="button" data-close>Close</button>
     </div>
   </div>
@@ -618,13 +626,9 @@ const showing = () => (game.pend ? swap(here(), game.pend.col, game.pend.letter)
 const stops = () => game.route.length - 1;
 const nStops = (n) => (n === 1 ? "one stop" : `${n} stops`);
 // nothing is scored along the way. on arrival the route is set against the shortest one
-// through everyday words: more stops than that, and the ticket shows the shorter route
-function verdict() {
-  const extra = stops() - game.par;
-  if (extra > 0) return { short: `${nStops(extra)} longer than the shortest`, long: `There was a route with ${extra === 1 ? "one stop" : extra + " stops"} fewer.`, shortest: false };
-  if (extra < 0) return { short: "shorter than the timetable", long: "Shorter than the timetable! A rarer word cut the journey.", shortest: true };
-  return { short: "the shortest route", long: "No route through everyday words is shorter.", shortest: true };
-}
+// through everyday words, and a longer route gets the chance to try again
+const shortest = () => stops() <= game.par;
+const hintWords = () => (game.hints ? (game.hints === 1 ? "one hint" : `${game.hints} hints`) : "");
 const up = (w) => w.toUpperCase();
 
 // ---------- Flaps ----------
@@ -810,11 +814,7 @@ function paint() {
     f.btn.setAttribute("aria-label", `Flap ${c + 1}: ${up(w[c])}, ${lit ? "matches the destination" : "not yet the destination letter"}`);
   });
   const line = $("calling-line");
-  line.replaceChildren();
-  const lead = document.createElement("span");
-  lead.className = "lead";
-  lead.textContent = "Calling at";
-  line.append(lead, stopsLine(game.route));
+  line.replaceChildren(stopsLine(game.route));
   const tt = $("timetable-line");
   tt.hidden = !game.timetable;
   if (game.timetable) {
@@ -842,23 +842,27 @@ function ticketText() {
   return [
     head,
     `${up(game.from)} → ${up(game.to)}`,
-    `${nStops(stops())}, ${verdict().short}` + (game.hints ? `, ${game.hints === 1 ? "one hint" : game.hints + " hints"}` : ""),
+    nStops(stops()) + (shortest() ? ", the shortest route" : "") + (game.hints ? ", " + hintWords() : ""),
     url,
   ].join("\n");
 }
 function showTicket() {
   if (!game.arrived) return;
-  const v = verdict();
+  const best = shortest();
   $("t-journey").innerHTML = `${up(game.from)}<span>→</span>${up(game.to)}`;
   $("t-when").textContent = game.kind === "daily" ? longDate() : "A special train";
-  $("t-verdict").textContent = v.shortest ? "Arrived" : "Arrived, the long way";
-  $("t-verdict").className = "verdict " + (v.shortest ? "best" : "longer");
-  const helped = game.hints ? (game.hints === 1 ? "one hint" : `${game.hints} hints`) : "";
-  $("t-detail").textContent = `${nStops(stops())}. ${v.long}` + (helped ? ` With ${helped}.` : "");
+  $("t-verdict").textContent = nStops(stops());
+  $("t-verdict").className = "verdict " + (best ? "best" : "longer");
+  $("t-detail").hidden = !game.hints;
+  $("t-detail").textContent = game.hints ? `With ${hintWords()}.` : "";
   $("t-route").textContent = game.route.map(up).join(" · ");
-  // show the shorter route when there was one
-  $("t-par").hidden = v.shortest;
+  // a longer route offers another go at the same train; the shorter route stays hidden until asked for
+  $("t-par").hidden = true;
   $("t-par").textContent = "Shorter: " + game.parRoute.map(up).join(" · ");
+  $("t-reveal").hidden = best;
+  $("t-retry").hidden = best;
+  $("t-retry").classList.toggle("main", !best);
+  $("t-next").classList.toggle("main", best);
   open("ticket");
 }
 async function copyTicket() {
@@ -877,7 +881,7 @@ function open(id) {
   PLACARDS.forEach((p) => { $(p).hidden = true; });
   opener = from;
   $(id).hidden = false;
-  const first = $(id).querySelector(id === "ticket" ? ".btn.main" : ".close");
+  const first = $(id).querySelector(id === "ticket" ? ".actions .btn.main:not([hidden])" : ".close");
   if (first) first.focus();
 }
 function closeAll() {
@@ -950,6 +954,18 @@ $("hint").addEventListener("click", () => { closeAll(); hint(); });
 $("timetable").addEventListener("click", () => { closeAll(); toggleTimetable(); });
 $("another").addEventListener("click", () => start(pickTrain(Math.random), "special"));
 $("t-next").addEventListener("click", () => start(pickTrain(Math.random), "special"));
+// the same train from the start; the timetable stays open if you've reached the end once
+$("t-retry").addEventListener("click", () => {
+  const reached = game.reached;
+  start(game, game.kind);
+  game.reached = reached;
+  paint();
+});
+$("t-reveal").addEventListener("click", () => {
+  $("t-par").hidden = false;
+  $("t-reveal").hidden = true;
+  $("t-retry").focus();
+});
 $("today").addEventListener("click", () => start(pickTrain(seeded("departures:" + todayKey())), "daily"));
 $("rules").addEventListener("click", () => open("card"));
 $("t-copy").addEventListener("click", copyTicket);
