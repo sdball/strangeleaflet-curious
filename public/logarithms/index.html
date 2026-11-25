@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Logarithms — The Cabinet of Curios</title>
+<meta name="description" content="Count the hops from 1 to any number and you have its logarithm. See why logs count digits, turn multiplying into adding, and can be built from square roots, then multiply the old way with a log table.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Libre+Bodoni:wght@500;600&family=Overpass+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Page: a printed book of tables, blue-black ink on cream with rubricated headings */
+  --bg: #F1ECE0;
+  --paper: #FAF6EC;
+  --sheet: #FFFDF7;
+  --ink: #1B2233;
+  --muted: #5A6072;
+  --edge: #D5CDBB;
+  --grid: #E8E1D1;
+  --grid-strong: #D6CCB6;
+  --focus: #2D5F93;
+  --accent: #A8452A;  /* station labels and the hops: a printer's red */
+  --a: #2D5F93;       /* a first number */
+  --b: #2F7D4E;       /* a second */
+  --hl: #F5DE8E;      /* a highlighter on the tables */
+
+  --head: "Libre Bodoni", "Bodoni 72", Didot, Georgia, serif;
+  --text: "Crimson Pro", Georgia, "Times New Roman", serif;
+  --mono: "Overpass Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12141A; --paper: #191C24; --sheet: #1E222B; --ink: #E7E3D8; --muted: #A3A6B0; --edge: #333847;
+    --grid: #252A35; --grid-strong: #323949; --focus: #7FB0E6;
+    --accent: #EE8E6C; --a: #7FB0E6; --b: #6CCB95; --hl: rgba(240, 200, 90, .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12141A; --paper: #191C24; --sheet: #1E222B; --ink: #E7E3D8; --muted: #A3A6B0; --edge: #333847;
+  --grid: #252A35; --grid-strong: #323949; --focus: #7FB0E6;
+  --accent: #EE8E6C; --a: #7FB0E6; --b: #6CCB95; --hl: rgba(240, 200, 90, .3);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.15rem/1.55 var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+/* up to 1240px on a wide screen, so the boards can grow; the prose keeps its own reading width */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font: 400 .8em var(--mono); border: 1px solid var(--edge); border-radius: 4px; padding: 0 .3em; background: var(--paper); }
+code { font: 400 .85em var(--mono); background: var(--sheet); border: 1px solid var(--edge); border-radius: 4px; padding: 0 .25em; }
+.v { font-style: italic; }
+sub, sup { line-height: 0; }
+
+.back { display: inline-block; color: var(--muted); font-size: 1rem; margin-bottom: 1rem; }
+h1 { font: 500 clamp(2.4rem, 8vw, 4rem)/1.05 var(--head); margin: 0 0 .6rem; }
+.lede { margin: 0 0 .6rem; max-width: 64ch; }
+.howto { margin: 0 0 1.6rem; color: var(--muted); font-size: 1rem; max-width: 64ch; }
+h2 { font: 500 1.75rem/1.2 var(--head); margin: 0 0 .75rem; }
+.ca { color: var(--a); }
+.cb { color: var(--b); }
+.chop { color: var(--accent); }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-top: 3px double var(--accent);
+  border-radius: 3px;
+  padding: 1.1rem 1.2rem 1.25rem;
+  margin-bottom: 1.6rem;
+  box-shadow: 0 14px 28px -24px rgba(40, 30, 10, .55);
+}
+.station { font: 600 .74rem var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0 0 .15rem; }
+.panel-head h2 { margin: 0; }
+.panel-head p { margin: .35rem 0 0; max-width: 70ch; }
+
+.under { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem 1.75rem; margin-top: 1rem; align-items: start; }
+@media (max-width: 820px) { .under { grid-template-columns: minmax(0, 1fr); } }
+.split { display: grid; grid-template-columns: minmax(0, clamp(420px, 52%, 600px)) minmax(0, 1fr); gap: 1rem 1.75rem; margin-top: 1rem; align-items: start; }
+.split.wide { grid-template-columns: minmax(0, clamp(480px, 60%, 720px)) minmax(0, 1fr); }
+@media (max-width: 820px) { .split, .split.wide { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 821px) { .split > .board { position: sticky; top: 1rem; } }
+.col { display: grid; gap: .8rem; align-content: start; min-width: 0; }
+.full { margin-top: 1rem; }
+
+/* ---------- Boards ---------- */
+.board {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+.board .grid { stroke: var(--grid); stroke-width: 1; }
+.board .grid.strong { stroke: var(--grid-strong); }
+.board .axis { stroke: var(--muted); stroke-width: 1.5; }
+.board .line { stroke: var(--ink); stroke-width: 2; }
+.board .tick { stroke: var(--ink); stroke-width: 1.5; }
+.board .lab { fill: var(--ink); font: 600 14px var(--mono); text-anchor: middle; }
+.board .lab.small { font-size: 12px; font-weight: 400; fill: var(--muted); }
+.board .lab.start { text-anchor: start; }
+.board .lab.end { text-anchor: end; }
+.board .lab.big { font-size: 16px; }
+.board .lab.hop { fill: var(--accent); }
+.board .lab.ca { fill: var(--a); }
+.board .lab.cb { fill: var(--b); }
+.bar { text-decoration: overline; }
+.board .halo { paint-order: stroke; stroke: var(--sheet); stroke-width: 4px; stroke-linejoin: round; }
+.board .arc { fill: none; stroke: var(--accent); stroke-width: 2.25; }
+.board .arc.part { stroke-dasharray: 5 4; }
+.board .pin { stroke: var(--a); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.board .curve { fill: none; stroke: var(--muted); stroke-width: 1.5; opacity: .55; }
+.board .curve.on { stroke: var(--accent); stroke-width: 3.5; opacity: 1; }
+.board .guide { stroke: var(--a); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.board .dot { fill: var(--ink); }
+.board .series { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+.board .series.a { stroke: var(--accent); }
+.board .series.b { stroke: var(--a); }
+.board .pt.a { fill: var(--accent); }
+.board .pt.b { fill: var(--a); }
+
+.handle { cursor: grab; outline: none; touch-action: none; }
+.handle.drag { cursor: grabbing; }
+.handle .hit { fill: transparent; }
+.handle .knob { fill: var(--a); stroke: var(--sheet); stroke-width: 2; }
+.handle .halo-ring { fill: none; stroke: var(--focus); stroke-width: 2.5; opacity: 0; }
+.handle:hover .halo-ring { opacity: .45; }
+.handle:focus-visible .halo-ring, .handle.drag .halo-ring { opacity: 1; }
+
+/* ---------- Controls ---------- */
+.btn {
+  font: 600 1.05rem var(--text);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 5px;
+  padding: .3rem .9rem;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.go { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn kbd { margin-left: .45rem; font-size: .72rem; color: var(--ink); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .6rem; }
+.row > .lbl { font-size: 1rem; color: var(--muted); }
+
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chips button {
+  font: 400 .95rem var(--mono);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  padding: 0 .85rem;
+  min-height: 40px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.chips button:hover { border-color: var(--accent); }
+.chips button[aria-pressed="true"] { color: var(--paper); background: var(--accent); border-color: var(--accent); }
+
+.seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 5px; overflow: hidden; }
+.seg button { font: 600 1rem var(--text); color: var(--muted); background: var(--sheet); border: 0; padding: .3rem .9rem; min-height: 44px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--edge); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--paper); }
+
+.field { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.field label { font-size: 1rem; color: var(--muted); }
+.field input, .field select {
+  font: 400 1rem var(--mono);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 5px;
+  min-height: 44px;
+  padding: 0 .6rem;
+}
+.field input { width: 8rem; }
+.field input.long { width: min(100%, 16rem); }
+.field select { font-size: 1.1rem; padding: 0 .4rem; }
+
+.slider { display: flex; align-items: center; gap: .6rem; }
+.slider label { font-size: 1rem; color: var(--muted); white-space: nowrap; }
+.slider input { flex: 1; min-width: 0; margin: 0; accent-color: var(--accent); height: 40px; }
+.slider output { font: 600 1rem var(--mono); white-space: nowrap; min-width: 3.5rem; text-align: right; }
+
+/* ---------- Readouts ---------- */
+.pair { margin: 0; display: grid; gap: .45rem; }
+.pair > div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); align-items: baseline; gap: .7rem; }
+.pair dt { font-size: 1rem; color: var(--muted); text-align: right; }
+.pair dd { margin: 0; font: 400 1rem var(--mono); overflow-wrap: anywhere; }
+.pair dd small { display: block; font: 400 .95rem var(--text); color: var(--muted); }
+@media (max-width: 480px) { .pair > div { grid-template-columns: 7rem minmax(0, 1fr); gap: .5rem; } }
+
+.note { margin: 0; font-size: 1.05rem; max-width: 70ch; }
+.panel > .note { margin-top: 1rem; }
+.small-note { margin: 0; font-size: .98rem; color: var(--muted); }
+.steps { margin: 0; padding-left: 1.4rem; display: grid; gap: .35rem; }
+.steps li { padding: .15rem .45rem; border-radius: 5px; }
+.steps li[aria-current="step"] { background: color-mix(in srgb, var(--hl) 70%, transparent); }
+.steps:empty { display: none; }
+
+/* the number in Station 2, in groups of three */
+.bignum {
+  font: 400 1rem/1.6 var(--mono);
+  background: var(--sheet);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  padding: .45rem .7rem;
+  max-height: 9.5rem;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.strip { display: block; width: 100%; max-width: 460px; height: auto; }
+.strip .lab { fill: var(--ink); font: 600 13px var(--mono); text-anchor: middle; }
+.strip .lab.small { fill: var(--muted); font-weight: 400; font-size: 12px; }
+
+/* ---------- Tables ---------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--edge); border-radius: 6px; background: var(--sheet); }
+table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.rows { width: 100%; }
+.rows th, .rows td { padding: .25rem .2rem; text-align: center; border-bottom: 1px solid var(--edge); white-space: nowrap; }
+.rows tr:last-child th, .rows tr:last-child td { border-bottom: 0; }
+.rows th { font: 400 .95rem var(--text); color: var(--muted); text-align: right; padding: .25rem .6rem; position: sticky; left: 0; background: var(--sheet); }
+.rows td { font: 400 .95rem var(--mono); min-width: 2.9rem; }
+.rows td.hop { color: var(--accent); }
+.rows button {
+  font: 400 .95rem var(--mono);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  min-height: 40px;
+  min-width: 2.75rem;
+  padding: 0 .3rem;
+  cursor: pointer;
+}
+.rows button:hover { border-color: var(--edge); }
+.rows .pa { background: color-mix(in srgb, var(--a) 22%, transparent); }
+.rows .pb { background: color-mix(in srgb, var(--b) 22%, transparent); }
+.rows .pr { background: var(--hl); font-weight: 600; }
+.rows .pa.pr, .rows .pb.pr { box-shadow: inset 0 0 0 2px var(--accent); }
+
+table.roots { width: 100%; font-size: .95rem; }
+.roots th, .roots td { padding: .25rem .6rem; border-bottom: 1px solid var(--edge); text-align: right; white-space: nowrap; }
+.roots thead th { font: 400 .9rem var(--text); color: var(--muted); position: sticky; top: 0; background: var(--sheet); }
+.roots td { font: 400 .95rem var(--mono); }
+.roots td.used { color: var(--accent); font-weight: 600; text-align: center; }
+.roots td.skip { color: var(--muted); text-align: center; }
+.roots tr.on td { background: color-mix(in srgb, var(--hl) 55%, transparent); }
+.roots-box { max-height: 24rem; overflow: auto; }
+
+.logbox { max-height: 22rem; overflow: auto; position: relative; }
+table.logs { width: 100%; font-size: .88rem; }
+.logs th, .logs td { padding: .12rem .35rem; text-align: right; border-bottom: 1px solid var(--grid); }
+.logs thead th { position: sticky; top: 0; z-index: 2; background: var(--sheet); font: 600 .85rem var(--mono); color: var(--accent); border-bottom: 1px solid var(--edge); }
+.logs tbody th { font: 600 .88rem var(--mono); color: var(--accent); position: sticky; left: 0; z-index: 1; background: var(--sheet); }
+.logs td { font: 400 .88rem var(--mono); }
+.logs tr:nth-child(5n) td, .logs tr:nth-child(5n) th { border-bottom-color: var(--edge); }
+.logs .ha { background: color-mix(in srgb, var(--a) 28%, transparent); }
+.logs .hb { background: color-mix(in srgb, var(--b) 28%, transparent); }
+.logs .hr { background: var(--hl); font-weight: 600; }
+
+/* ---------- Prose ---------- */
+.notes { max-width: 68ch; margin-top: 2.4rem; }
+.notes li { margin-bottom: .7rem; }
+.sources { max-width: 68ch; margin-top: 2.4rem; color: var(--muted); font-size: 1.02rem; }
+.sources h2 { color: var(--ink); }
+.sources li { margin-bottom: .5rem; }
+
+@media (max-width: 480px) {
+  .panel { padding: 1rem .85rem 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .handle .halo-ring { transition: none; }
+}
+</style>
+<script>
+  // Count the page once someone moves a pointer, touches, wheels, or types.
+  // Scrapers run pages in a real Chrome, so GoatCounter can't tell them from
+  // people, but they load a page and leave without doing any of that.
+  // Not scroll, since a page can scroll itself.
+  window.goatcounter = {
+    no_onload: true,
+    path: function(p) { return location.host + p }
+  }
+  ;(function() {
+    var events = ["pointermove", "pointerdown", "touchstart", "wheel", "keydown"]
+    function count() { if (window.goatcounter.count) window.goatcounter.count() }
+    function human() {
+      events.forEach(function(type) { removeEventListener(type, human, true) })
+      if (window.goatcounter.count || document.readyState === "complete") count()
+      else addEventListener("load", count, { once: true })
+    }
+    events.forEach(function(type) { addEventListener(type, human, { capture: true, passive: true }) })
+  })()
+</script>
+<script data-goatcounter="https://sdball.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">The Cabinet of Curios</a>
+  <h1>Logarithms</h1>
+  <!-- md: text.md#intro -->
+  <p class="lede">A logarithm counts multiplications. Start at 1, multiply by 2 three times, and you reach 8, so the logarithm of 8 in base 2 is 3. That one idea turns multiplying into adding, tells you how many digits a number has, and filled the books of tables that people calculated with for three hundred years.</p>
+  <p class="howto">Drag the points on the boards, or Tab to them and use the arrow keys (<kbd>Shift</kbd> moves further). Letter keys shown on a button go to the station you're using.</p>
+  <!-- /md -->
+
+  <!-- 1. Counting hops -->
+  <section class="panel" aria-labelledby="s1-h">
+    <div class="panel-head">
+      <p class="station">Station 1</p>
+      <h2 id="s1-h">Counting hops</h2>
+      <!-- md: text.md#station-1 -->
+      <p>Stand on 1 and hop. Each hop multiplies where you are by 2: 1, 2, 4, 8. <b>The number of hops it takes to reach a number is its logarithm</b>, written log<sub>2</sub>, with the 2 saying what each hop multiplies by. That 2 is the <b>base</b>. log<sub>2</sub> 8 = 3, because three hops get you there. Most numbers fall between landing spots, so the last hop is only part of one: 10 is 3.32 hops, three whole hops to 8 and a third of a hop more. Hop backward to divide, and numbers below 1 have negative logarithms. Drag the target, or pick a base.</p>
+      <!-- /md -->
+    </div>
+    <div class="full">
+      <svg class="board" id="board1" role="group" aria-label="A line marked with every whole hop from 1, the number each lands on above its hop count, with arcs hopping from 1 to the target and a last part-hop"></svg>
+    </div>
+    <div class="under">
+      <div class="col">
+        <div class="row">
+          <span class="lbl">Each hop</span>
+          <div class="chips" id="s1-base" role="group" aria-label="Each hop multiplies by"></div>
+        </div>
+        <form class="field" id="s1-form">
+          <label for="s1-t">Target</label>
+          <input id="s1-t" inputmode="decimal" autocomplete="off" spellcheck="false">
+          <button type="submit" class="btn">Hop</button>
+        </form>
+        <div class="chips" id="s1-presets" role="group" aria-label="Set the target to"></div>
+        <p class="note" id="s1-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s1-out"></dl>
+    </div>
+  </section>
+
+  <!-- 2. Digits -->
+  <section class="panel" aria-labelledby="s2-h">
+    <div class="panel-head">
+      <p class="station">Station 2</p>
+      <h2 id="s2-h">Digits are a rough log</h2>
+      <!-- md: text.md#station-2 -->
+      <p>Hops of ×10 count digits. 10 is one hop, 100 is two, 1,000 is three, and every number with four digits lies between 1,000 and 10,000, so its log<sub>10</sub> is between 3 and 4. <b>A whole number's log<sub>10</sub> is one less than its digit count, plus a fraction.</b> That makes the log a quick way to say how big a number is, even one too long to read. In base 2 the same count gives the bits a computer needs to store it. Type a number, a power like <code>2^100</code>, or a factorial like <code>100!</code>.</p>
+      <!-- /md -->
+    </div>
+    <div class="under">
+      <div class="col">
+        <form class="field" id="s2-form">
+          <label for="s2-n">Number</label>
+          <input class="long" id="s2-n" autocomplete="off" spellcheck="false" value="2^100">
+          <button type="submit" class="btn">Count</button>
+        </form>
+        <div class="chips" id="s2-presets" role="group" aria-label="Pick a number"></div>
+        <div class="bignum" id="s2-num" aria-label="The number, in groups of three digits"></div>
+        <svg class="strip" id="s2-strip" viewBox="0 0 460 52" role="img" aria-label=""></svg>
+      </div>
+      <div class="col">
+        <dl class="pair" id="s2-out"></dl>
+        <p class="note" id="s2-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Multiplying by adding -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 3</p>
+      <h2 id="s3-h">Multiplying by adding</h2>
+      <!-- md: text.md#station-3 -->
+      <p>In 1544 Michael Stifel lined up two rows: hops along the top, and where each one lands in base 2 underneath. Pick two numbers in the bottom row and add their hops. The total lands on their product, because <b>hops add when numbers multiply</b>: 8 is 3 hops and 32 is 5, and 3 + 5 = 8 hops lands on 256. Dividing subtracts hops, squaring doubles them, and a square root halves them. Pick an operation, then pick numbers.</p>
+      <!-- /md -->
+    </div>
+    <div class="table-wrap full"><table class="rows" id="s3-table"></table></div>
+    <div class="under">
+      <div class="col">
+        <div class="chips" id="s3-op" role="group" aria-label="Operation"></div>
+        <p class="note" id="s3-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s3-out"></dl>
+    </div>
+  </section>
+
+  <!-- 4. Filling in the gaps -->
+  <section class="panel" aria-labelledby="s4-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="s4-h">Filling in the gaps</h2>
+      <!-- md: text.md#station-4 -->
+      <p>The rows only cover whole hops. To fill in the gaps, take square roots. √10 is half a hop of ×10, so log<sub>10</sub> √10 = ½. Its square root is a quarter of a hop, the next is an eighth, and each new root is a smaller step. <b>Any number can be built by multiplying some of these roots together, and its logarithm is the sum of their fractions.</b> Take more roots and watch the sum close in on the real logarithm. Henry Briggs started his base-10 tables this way, taking the square root of 10 fifty-four times in a row, by hand.</p>
+      <!-- /md -->
+    </div>
+    <div class="under">
+      <div class="col">
+        <div class="row">
+          <span class="lbl">Build the log of</span>
+          <div class="chips" id="s4-target" role="group" aria-label="Build the log of"></div>
+        </div>
+        <div class="row">
+          <button type="button" class="btn" id="s4-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s4-next" aria-keyshortcuts="N">Another root<kbd>N</kbd></button>
+          <button type="button" class="btn" id="s4-all">All 30</button>
+        </div>
+        <p class="note" id="s4-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="s4-out"></dl>
+    </div>
+    <div class="table-wrap full roots-box"><table class="roots" id="s4-table"></table></div>
+    <!-- md: text.md#station-4-note -->
+    <p class="note">Each row divides out a root if it fits, and the leftover shrinks toward 1. A number just above 1 has a logarithm of about 0.4343 × its distance above 1, which is how the last digits can be finished without taking roots forever.</p>
+    <!-- /md -->
+  </section>
+
+  <!-- 5. Any base -->
+  <section class="panel" aria-labelledby="s5-h">
+    <div class="panel-head">
+      <p class="station">Station 5</p>
+      <h2 id="s5-h">Any base</h2>
+      <!-- md: text.md#station-5 -->
+      <p>Every base draws the same curve. A bigger base needs fewer hops to reach anything, so its curve is lower, but only stretched: base 2's curve is base 10's made 3.32 times taller, because log<sub>2</sub> 10 = 3.32. <b>So log<sub>b</sub> <span class="v">x</span> = log <span class="v">x</span> ÷ log <span class="v">b</span>, in any base you like</b>, which is how a calculator with one log button finds the rest. Every curve passes through 1 at height 0, since no hops reach 1, and through its own base at height 1. Drag the base, or pick one. The base <span class="v">e</span> ≈ 2.718 gives the <b>natural logarithm</b>, written ln.</p>
+      <!-- /md -->
+    </div>
+    <div class="split">
+      <svg class="board" id="board5" role="group" aria-label="Graphs of the logarithm in base 2, e, and 10, with the chosen base drawn bold and a point on it to drag"></svg>
+      <div class="col">
+        <div class="slider">
+          <label for="s5-base">Base</label>
+          <input type="range" id="s5-base" min="1.2" max="20" step="0.01" value="2">
+          <output id="s5-baseOut" for="s5-base"></output>
+        </div>
+        <div class="chips" id="s5-presets" role="group" aria-label="Set the base to"></div>
+        <dl class="pair" id="s5-out"></dl>
+        <p class="note" id="s5-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Straight lines from growth -->
+  <section class="panel" aria-labelledby="s6-h">
+    <div class="panel-head">
+      <p class="station">Station 6</p>
+      <h2 id="s6-h">Growth on a log axis</h2>
+      <!-- md: text.md#station-6 -->
+      <p>Growth by the same percentage each step is multiplying by the same number each step: hops. On an ordinary axis it hugs the floor, then shoots off the top. Put the axis on a log scale, where each power of 10 is the same height, and <b>steady percentage growth becomes a straight line</b>, its slope the log of the growth factor. A straight line on an ordinary axis bends over on a log one. Both series below start at 1 and end at the same height.</p>
+      <!-- /md -->
+    </div>
+    <div class="split wide">
+      <svg class="board" id="board6" role="img" aria-label=""></svg>
+      <div class="col">
+        <div class="row">
+          <span class="lbl">Axis</span>
+          <div class="seg" id="s6-axis" role="group" aria-label="Vertical axis"></div>
+        </div>
+        <div class="slider">
+          <label for="s6-rate">Growth a step</label>
+          <input type="range" id="s6-rate" min="1" max="100" step="1" value="26">
+          <output id="s6-rateOut" for="s6-rate"></output>
+        </div>
+        <div class="chips" id="s6-presets" role="group" aria-label="Set the growth to"></div>
+        <dl class="pair" id="s6-out"></dl>
+        <p class="note" id="s6-note" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. A log table -->
+  <section class="panel" aria-labelledby="s7-h">
+    <div class="panel-head">
+      <p class="station">Station 7</p>
+      <h2 id="s7-h">A book of tables</h2>
+      <!-- md: text.md#station-7 -->
+      <p>Before calculators, and beside every slide rule, sat a book of logarithm tables. To multiply, you looked up each number's logarithm, added the two, and looked the sum up backwards. The table gives only the fraction, called the <b>mantissa</b>. The whole-number part, the <b>characteristic</b>, is the digit count less one from Station 2, and that's where the decimal point goes. Type a problem, or pick one, then step through it.</p>
+      <!-- /md -->
+    </div>
+    <div class="under">
+      <div class="col">
+        <form class="field" id="s7-form">
+          <label for="s7-a">Work out</label>
+          <input id="s7-a" inputmode="decimal" autocomplete="off" spellcheck="false" value="3.14" aria-label="First number">
+          <select id="s7-op" aria-label="Operation"><option value="×">×</option><option value="÷">÷</option></select>
+          <input id="s7-b" inputmode="decimal" autocomplete="off" spellcheck="false" value="27.5" aria-label="Second number">
+          <button type="submit" class="btn">Set it up</button>
+        </form>
+        <div class="chips" id="s7-presets" role="group" aria-label="Pick a problem"></div>
+        <ol class="steps" id="s7-steps" aria-live="polite"></ol>
+        <div class="row">
+          <button type="button" class="btn" id="s7-back" aria-keyshortcuts="B">Back<kbd>B</kbd></button>
+          <button type="button" class="btn go" id="s7-next" aria-keyshortcuts="N">Next step<kbd>N</kbd></button>
+        </div>
+        <p class="small-note" id="s7-msg" aria-live="polite"></p>
+        <dl class="pair" id="s7-out"></dl>
+      </div>
+      <div class="table-wrap logbox" id="s7-box" tabindex="0" role="region" aria-label="Four-figure table of base-10 logarithms, rows 10 to 99, columns 0 to 9">
+        <table class="logs" id="s7-table"></table>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notice-h">
+    <h2 id="notice-h">Things to notice</h2>
+    <!-- md: text.md#notes -->
+    <ul>
+      <li><b>Logarithms turn powers into multiplying.</b> <span class="v">x</span><sup>3</sup> is three copies of <span class="v">x</span> multiplied, so its log is 3 × log <span class="v">x</span>. That's how log tables took cube roots: divide the log by 3 and look it up backwards.</li>
+      <li><b>No number of hops reaches 0.</b> Each backward hop halves what's left, and halving never gets to nothing, so log 0 doesn't exist. Negative numbers have no logarithm either: multiplying positive numbers keeps them positive.</li>
+      <li><b>Many measuring scales are logarithms.</b> A sound 10 decibels louder carries 10 times the power. A pH lower by 1 means 10 times as acidic. A star 5 magnitudes brighter gives off 100 times the light. Each is a count of hops, so huge ranges fit on a short scale.</li>
+      <li><b>The rule of 72.</b> Growth of <span class="v">r</span> percent a step doubles in about 72 ÷ <span class="v">r</span> steps. The exact count is log 2 ÷ log(1 + <span class="v">r</span>/100), and 72 is a round number that comes close for everyday rates. Station 6 shows both.</li>
+      <li><b>Leading 1s are common.</b> In many collections of real numbers, like populations or prices, about 30% start with the digit 1 and under 5% start with 9. On a log scale the stretch from 1 to 2 is 30% of the way from 1 to 10, the same log<sub>10</sub> 2 = 0.301 as Station 4. Simon Newcomb noticed it in 1881 from library log tables, whose first pages were the most worn. Frank Benford stated it again in 1938, and it's called Benford's law.</li>
+      <li><b>Floats keep their logarithm in plain view.</b> A computer stores a floating-point number's whole-number log<sub>2</sub> in its exponent field, which is why the gaps between floats double at every power of 2. The <a href="../minifloat-ruler/">Minifloat Ruler</a> and the <a href="../bitfield-explorer/">Bitfield Explorer</a> show the field.</li>
+      <li><b>A slide rule is Station 3 made of wood.</b> Space numbers by their logs along a ruler and sliding adds lengths, so it multiplies. <a href="../slide-rules/">Slide Rules</a> builds one from two plain rulers.</li>
+      <li><b>The natural log is about growth.</b> ln <span class="v">x</span> is how long something growing continuously at 100% takes to reach <span class="v">x</span>. <a href="../exploring-e/">Exploring <span class="v">e</span></a> builds <span class="v">e</span> from that kind of growth.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <section class="notes" aria-labelledby="history-h">
+    <h2 id="history-h">A little history</h2>
+    <!-- md: text.md#history -->
+    <ul>
+      <li><b>Two rows.</b> Michael Stifel's <i>Arithmetica integra</i> of 1544 set 1, 2, 3, 4, 5 against 2, 4, 8, 16, 32, and carried the rows backward so that 0 goes with 1, −1 with ½, and −2 with ¼. Those are Station 3's rows.</li>
+      <li><b>Napier.</b> John Napier published <i>Mirifici logarithmorum canonis descriptio</i> in 1614, to spare people the long multiplying and dividing that his preface calls the most troublesome part of mathematical practice. His logarithms weren't in base 10.</li>
+      <li><b>Bürgi, separately.</b> The Swiss clockmaker Jost Bürgi made tables of his own, probably around 1588, though they weren't printed until 1620. His method differs from Napier's and was invented independently. Kepler, who worked with him in Prague, wrote that Bürgi reached logarithms many years before Napier's appeared.</li>
+      <li><b>Base 10.</b> Henry Briggs suggested base 10 to Napier, and when they met in 1615 Napier proposed that the log of 1 should be 0. Briggs's <i>Arithmetica logarithmica</i> of 1624 gave the logarithms of 1 to 20,000 and of 90,000 to 100,000, to 14 decimal places. Adriaan Vlacq filled in the gap from 20,000 to 90,000 in an edition printed at Gouda in 1628.</li>
+      <li><b>Fifty-four square roots.</b> Briggs began by taking the square root of 10 over and over, fifty-four times, carrying more than thirty decimal places, and built logarithms from the roots as Station 4 does.</li>
+      <li><b>Worn pages.</b> In 1881 Simon Newcomb noticed that the first pages of log tables, the numbers starting with 1, were more worn than the rest. Frank Benford stated the pattern again in 1938, and it took his name.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+
+  <section class="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <!-- md: text.md#sources -->
+    <ul>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Stifel/">"Michael Stifel"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Napier/">"John Napier"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Burgi/">"Jost Bürgi"</a>, MacTutor History of Mathematics.</li>
+      <li>J. J. O'Connor and E. F. Robertson, <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Briggs/">"Henry Briggs"</a>, MacTutor History of Mathematics.</li>
+      <li>Denis Roegel, <a href="https://locomat.loria.fr/briggs1624/briggs1624doc.pdf">"A reconstruction of the tables of Briggs' <i>Arithmetica logarithmica</i> (1624)"</a>, LOCOMAT project, for Briggs's fifty-four square roots of 10.</li>
+      <li>Simon Newcomb, "Note on the frequency of use of the different digits in natural numbers", <i>American Journal of Mathematics</i> 4 (1881), 39–40.</li>
+      <li>Frank Benford, "The law of anomalous numbers", <i>Proceedings of the American Philosophical Society</i> 78 (1938), 551–572.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Benford%27s_law">"Benford's law"</a>, Wikipedia, for the leading-digit shares.</li>
+    </ul>
+    <!-- /md -->
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const L10 = Math.log10;
+const LN = Math.log;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+// ---------- Formatting ----------
+
+const MINUS = "−";
+const f1 = (v) => Math.round(v * 10) / 10;
+// up to n significant figures, with thousands commas, a real minus sign, and no trailing zeros
+const sig = (v, n = 6) => v.toLocaleString("en-US", { maximumSignificantDigits: n }).replace("-", MINUS);
+// fixed decimals, with a real minus sign and no −0
+const fix = (x, d = 3) => (x < 0 && +x.toFixed(d) !== 0 ? MINUS : "") + Math.abs(x).toFixed(d);
+const logOf = (b) => `log<sub>${b}</sub>`;
+const baseName = (b) => (b === Math.E ? "<span class=\"v\">e</span>" : sig(b, 3));
+const baseText = (b) => (b === Math.E ? "e" : sig(b, 3));
+
+// a number split into its digits, 1 to 10, and a power of 10
+function mant(v) {
+  let e = Math.floor(L10(v));
+  let m = v / 10 ** e;
+  if (m >= 10 - 1e-9) { m /= 10; e += 1; }
+  if (m < 1 - 1e-12) { m *= 10; e -= 1; }
+  return [m, e];
+}
+
+// ---------- Drawing ----------
+
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const lab = (x, y, text, cls = "") => svgEl("text", { class: `lab ${cls}`, x: f1(x), y: f1(y) }, text);
+const line = (x1, y1, x2, y2, cls) => svgEl("line", { class: cls, x1: f1(x1), y1: f1(y1), x2: f1(x2), y2: f1(y2) });
+const toSvg = (svg, e) => {
+  const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+  return [p.x, p.y];
+};
+
+// a board with a scene redrawn on every change, and one point to drag that stays put between redraws.
+// a drag anywhere on the board moves the point; a touch that isn't on the point only moves it on a tap,
+// so a finger can still scroll the page past the board
+function board(svg, { name, onPoint, onKey }) {
+  const scene = svgEl("g");
+  const h = svgEl("g", { class: "handle", tabindex: 0, role: "slider", "aria-label": name });
+  h.append(svgEl("circle", { class: "hit", r: 22 }), svgEl("circle", { class: "halo-ring", r: 13 }), svgEl("circle", { class: "knob", r: 8 }));
+  svg.append(scene, h);
+  let drag = null;
+  svg.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const onHandle = h.contains(e.target);
+    if (!onHandle && e.pointerType === "touch") {
+      drag = { tap: toSvg(svg, e) };
+      return;
+    }
+    e.preventDefault();
+    svg.setPointerCapture(e.pointerId);
+    drag = { live: true };
+    h.classList.add("drag");
+    h.focus({ preventScroll: true });
+    onPoint(...toSvg(svg, e));
+  });
+  svg.addEventListener("pointermove", (e) => { if (drag?.live) onPoint(...toSvg(svg, e)); });
+  const end = (e) => {
+    if (drag?.tap && e.type === "pointerup") {
+      const [x, y] = toSvg(svg, e);
+      if (Math.hypot(x - drag.tap[0], y - drag.tap[1]) < 10) onPoint(x, y);
+    }
+    drag = null;
+    h.classList.remove("drag");
+  };
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => svg.addEventListener(t, end));
+  h.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  h.addEventListener("keydown", (e) => {
+    const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    onKey(d, e.shiftKey);
+  });
+  return {
+    svg, scene, h,
+    place(x, y, valueText) {
+      h.setAttribute("transform", `translate(${f1(x)} ${f1(y)})`);
+      h.setAttribute("aria-valuetext", valueText);
+    },
+  };
+}
+
+// redraw at the board's real width whenever it changes
+function watchWidth(el, paint) {
+  const st = { W: 0 };
+  const check = () => {
+    // the board's own width: its grid column decides it, and a new viewBox only changes its height
+    const W = Math.round(el.getBoundingClientRect().width);
+    if (W && W !== st.W) { st.W = W; paint(); }
+  };
+  new ResizeObserver(() => requestAnimationFrame(check)).observe(el);
+  st.check = check;
+  return st;
+}
+
+// ---------- Controls ----------
+
+function chipRow(el, items, onPick) {
+  el.replaceChildren(...items.map(([html, label], j) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = html;
+    if (label) b.setAttribute("aria-label", label);
+    b.addEventListener("click", () => onPick(j));
+    return b;
+  }));
+}
+const pressChips = (el, test) => [...el.children].forEach((b, j) => b.setAttribute("aria-pressed", test(j)));
+const pairRow = (dt, dd, small) => `<div><dt>${dt}</dt><dd>${dd}${small ? `<small>${small}</small>` : ""}</dd></div>`;
+function parseNum(t) {
+  t = String(t).trim().replace(/,/g, "");
+  if (/^(π|pi)$/i.test(t)) return Math.PI;
+  if (/^e$/i.test(t)) return Math.E;
+  const v = Number(t);
+  return t && isFinite(v) && v > 0 ? v : null;
+}
+
+// ---------- Station 1: counting hops ----------
+
+const S1 = { base: 2, t: 10 };
+const BASES1 = [2, 3, 10];
+const T_LO = 0.1, T_HI = 1000;
+const TARGETS1 = [8, 10, 100, 1, 0.25, 1000];
+const logb = (x, b) => LN(x) / LN(b);
+// a whole number of hops as the number it lands on: 8, or 1/8 for hops backward
+const landing = (b, k) => (k >= 0 ? sig(b ** k) : `1/${sig(b ** -k)}`);
+
+const b1 = board($("board1"), {
+  name: "Target",
+  onPoint(x) {
+    const L = lay1(), h = L.lo + (x - L.ml) / L.hp;
+    setT1(Number(clamp(S1.base ** h, T_LO, T_HI).toPrecision(3)));
+  },
+  // each press moves about 2%, and Shift about 25%, rounded to three figures
+  onKey(d, big) { setT1(Number(clamp(S1.t * 10 ** (d * (big ? 0.1 : 0.01)), T_LO, T_HI).toPrecision(3))); },
+});
+const w1 = watchWidth(b1.svg, paint1);
+
+function lay1() {
+  const W = w1.W || 800, narrow = W < 560, H = narrow ? 200 : 220, ml = narrow ? 22 : 34;
+  const lo = logb(T_LO, S1.base), hi = logb(T_HI, S1.base), hp = (W - 2 * ml) / (hi - lo);
+  return { W, H, ml, lo, hi, hp, narrow, X: (h) => ml + (h - lo) * hp, y: H - 62 };
+}
+function setT1(t) {
+  if (t === S1.t) return;
+  S1.t = t;
+  paint1();
+}
+
+function paint1() {
+  const L = lay1(), b = S1.base, h = logb(S1.t, b), y = L.y, items = [];
+  b1.svg.setAttribute("viewBox", `0 0 ${L.W} ${L.H}`);
+  b1.svg.style.aspectRatio = `${L.W} / ${L.H}`;
+  items.push(line(L.X(L.lo), y, L.X(L.hi), y, "line"));
+  // whole hops: what they land on under the line, and the count under that
+  const k0 = Math.ceil(L.lo - 1e-9), k1 = Math.floor(L.hi + 1e-9), every = L.hp < 34 ? 2 : 1;
+  for (let k = k0; k <= k1; k++) {
+    items.push(line(L.X(k), y - 7, L.X(k), y + 7, "tick"));
+    if (k % every === 0) {
+      items.push(lab(L.X(k), y + 25, landing(b, k)));
+      items.push(lab(L.X(k), y + 44, String(k).replace("-", MINUS), "small"));
+    }
+  }
+  // the hops from 1 to the target: whole ones, then a part
+  const sgn = h >= 0 ? 1 : -1, whole = sgn * Math.floor(Math.abs(h) + 1e-9);
+  const arc = (from, to, cls, text) => {
+    const xa = L.X(Math.min(from, to)), xb = L.X(Math.max(from, to)), rx = (xb - xa) / 2;
+    if (rx < 0.5) return;
+    const ry = Math.min(L.narrow ? 38 : 50, rx * 0.95);
+    items.push(svgEl("path", { class: `arc ${cls}`, d: `M${f1(xa)} ${y}A${f1(rx)} ${f1(ry)} 0 0 1 ${f1(xb)} ${y}` }));
+    if (rx >= 13 && text) items.push(lab((xa + xb) / 2, y - ry - 7, text, "hop halo"));
+  };
+  for (let i = 0; i < Math.abs(whole); i++) arc(i * sgn, (i + 1) * sgn, "", sgn > 0 ? `×${sig(b)}` : `÷${sig(b)}`);
+  const part = h - whole, f = b ** part;
+  if (Math.abs(part) > 0.004) arc(whole, h, "part", part > 0 ? `×${sig(f, 3)}` : `÷${sig(1 / f, 3)}`);
+  // the target, flagged above the hops
+  const xt = L.X(h);
+  items.push(line(xt, 22, xt, y, "pin"));
+  items.push(lab(clamp(xt, 30, L.W - 30), 16, sig(S1.t, 3), "big ca halo"));
+  b1.scene.replaceChildren(...items);
+  b1.place(xt, y, `Target ${sig(S1.t, 3)}, ${fix(h, 2)} hops of times ${sig(b)}`);
+  if (document.activeElement !== $("s1-t")) $("s1-t").value = sig(S1.t, 3);
+
+  const B = sig(b), lg = `${logOf(B)} ${sig(S1.t, 3)}`;
+  const reach = landing(b, whole);
+  $("s1-out").innerHTML = [
+    pairRow("Each hop", `× ${B}`),
+    pairRow("Hops to the target", `<span class="chop">${fix(h, 3)}</span>`, `${lg} = ${fix(h, 3)}`),
+    pairRow("Whole hops", `${String(whole).replace("-", MINUS)}`, `landing on ${reach}`),
+    pairRow("Part of a hop", Math.abs(part) > 0.0005 ? fix(part, 3) : "none", Math.abs(part) > 0.0005 ? `${part > 0 ? "multiplies" : "divides"} by ${sig(part > 0 ? f : 1 / f, 3)}, since ${B}<sup>${fix(Math.abs(part), 3)}</sup> = ${sig(part > 0 ? f : 1 / f, 3)}` : null),
+  ].join("");
+  let note;
+  if (Math.abs(h) < 0.0005) note = `No hops at all: you're standing on 1 already. The log of 1 is 0 in every base.`;
+  else if (Math.abs(part) < 0.0005) note = `${sig(S1.t, 3)} is a landing spot: exactly ${Math.abs(whole)} hop${Math.abs(whole) === 1 ? "" : "s"} ${h > 0 ? "forward" : "backward"}, so ${lg} is a whole number.`;
+  else if (h < 0) note = `Below 1 you hop backward, dividing by ${B} each time, so the log is negative. ${sig(S1.t, 3)} takes ${fix(-h, 2)} hops back.`;
+  else note = `${Math.abs(whole)} whole hop${Math.abs(whole) === 1 ? "" : "s"} reach ${reach}, short of ${sig(S1.t, 3)}. The rest is ${fix(part, 2)} of a hop: multiply by ${B} to the ${fix(part, 2)} power, ${sig(f, 3)}, and you land on it.`;
+  $("s1-note").innerHTML = note;
+  pressChips($("s1-base"), (j) => BASES1[j] === b);
+}
+chipRow($("s1-base"), BASES1.map((b) => [`×${b}`, `Each hop times ${b}`]), (j) => { S1.base = BASES1[j]; paint1(); });
+chipRow($("s1-presets"), TARGETS1.map((t) => [sig(t)]), (j) => setT1(TARGETS1[j]));
+$("s1-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = parseNum($("s1-t").value);
+  if (t == null) { $("s1-note").textContent = `Type a number bigger than 0.`; return; }
+  S1.t = -1;
+  setT1(Number(clamp(t, T_LO, T_HI).toPrecision(3)));
+  if (t < T_LO || t > T_HI) $("s1-note").textContent = `The line runs from 0.1 to 1,000, so that target sits at the end.`;
+});
+
+// ---------- Station 2: digits are a rough log ----------
+
+const PRESETS2 = ["7", "365", "1000000", "2^10", "2^100", "100!", "2^1024"];
+
+// whole numbers, powers like 2^100, and factorials like 100!, kept to about 20,000 digits
+function parseBig(t) {
+  t = t.trim().replace(/[,\s_]/g, "");
+  let m;
+  if ((m = t.match(/^(\d+)$/))) return BigInt(m[1]);
+  if ((m = t.match(/^(\d+)\^(\d+)$/))) {
+    const a = BigInt(m[1]), p = Number(m[2]);
+    if (a === 0n) return 0n;
+    if (p * L10(Number(m[1])) > 20000) return "big";
+    return a ** BigInt(p);
+  }
+  if ((m = t.match(/^(\d+)!$/))) {
+    const n = Number(m[1]);
+    if (n > 5000) return "big";
+    let f = 1n;
+    for (let i = 2n; i <= BigInt(n); i++) f *= i;
+    return f;
+  }
+  return null;
+}
+function group3(s) {
+  const out = [];
+  for (let i = s.length; i > 0; i -= 3) out.unshift(s.slice(Math.max(0, i - 3), i));
+  return out.join(",");
+}
+
+function paint2() {
+  const v = parseBig($("s2-n").value);
+  if (v === null || v === "big" || v === 0n) {
+    $("s2-note").textContent = v === "big" ? `That one runs past 20,000 digits. Try something smaller.` : v === 0n ? `0 has no logarithm: no number of hops reaches it. Try 1 or more.` : `Type a whole number, a power like 2^100, or a factorial like 100!.`;
+    return;
+  }
+  const s = v.toString(), digits = s.length;
+  // the log from the digit count and the first seventeen digits
+  const lg = digits - 1 + L10(Number(s[0] + "." + (s.slice(1, 17) || "0")));
+  const bits = v.toString(2).length, lg2 = lg / L10(2);
+  $("s2-num").textContent = group3(s);
+  const fl = lg2 < 1024
+    ? `${Math.floor(lg2 + 1e-12)}, stored as ${Math.floor(lg2 + 1e-12)} + 1,023 = ${sig(Math.floor(lg2 + 1e-12) + 1023)}`
+    : `none: past 2<sup>1024</sup>, too big for a 64-bit float`;
+  $("s2-out").innerHTML = [
+    pairRow("Digits", sig(digits)),
+    pairRow(`${logOf(10)}`, `<span class="chop">${fix(lg, 4)}</span>`, `between ${sig(digits - 1)} and ${sig(digits)}`),
+    pairRow("Bits", sig(bits)),
+    pairRow(`${logOf(2)}`, fix(lg2, 4), `between ${sig(bits - 1)} and ${sig(bits)}`),
+    pairRow("Float exponent", fl, "a 64-bit float keeps the whole part of its log₂ here"),
+  ].join("");
+  const frac = lg - (digits - 1);
+  $("s2-note").innerHTML = digits === 1
+    ? `One digit, so ${logOf(10)} is between 0 and 1. Every number from 1 to 9 lives in the first hop.`
+    : `${sig(digits)} digits means ${sig(digits - 1)} whole hops of ×10 and part of one more. The part, ${fix(frac, 3)}, comes from the leading digits: it's ${logOf(10)} ${s[0]}.${s.slice(1, 4)}…, the number with its point moved to after the first digit.`;
+  // a strip from digits − 1 to digits, with the log marked
+  const x0 = 40, x1 = 420, xm = x0 + (x1 - x0) * frac;
+  const strip = $("s2-strip");
+  strip.setAttribute("aria-label", `The log, ${fix(lg, 3)}, sits ${Math.round(frac * 100)}% of the way from ${digits - 1} to ${digits}`);
+  strip.replaceChildren(
+    svgEl("line", { x1: x0, y1: 22, x2: x1, y2: 22, stroke: "var(--ink)", "stroke-width": 2 }),
+    svgEl("line", { x1: x0, y1: 14, x2: x0, y2: 30, stroke: "var(--ink)", "stroke-width": 2 }),
+    svgEl("line", { x1: x1, y1: 14, x2: x1, y2: 30, stroke: "var(--ink)", "stroke-width": 2 }),
+    svgEl("circle", { cx: f1(xm), cy: 22, r: 6, fill: "var(--accent)" }),
+    lab(x0, 46, sig(digits - 1)), lab(x1, 46, sig(digits)),
+    lab(clamp(xm, 70, 390), 10, fix(lg, 3), "small"),
+  );
+}
+$("s2-form").addEventListener("submit", (e) => { e.preventDefault(); paint2(); });
+chipRow($("s2-presets"), PRESETS2.map((p) => [p.includes("^") ? p.replace(/\^(\d+)/, "<sup>$1</sup>") : p === "1000000" ? "1,000,000" : p, p.replace("^", " to the power ")]), (j) => {
+  $("s2-n").value = PRESETS2[j];
+  paint2();
+});
+
+// ---------- Station 3: multiplying by adding ----------
+
+const KS = [];
+for (let k = -3; k <= 12; k++) KS.push(k);
+const OPS3 = [["×", "times"], ["÷", "divided by"], ["x²", "squared"], ["√x", "square root"]];
+const S3 = { op: 0, picks: [3, 5] };
+const two = (k) => (k >= 0 ? sig(2 ** k) : `1/${2 ** -k}`);
+
+$("s3-table").innerHTML = `<tbody>
+  <tr><th scope="row">Hops</th>${KS.map((k) => `<td class="hop" data-k="${k}">${String(k).replace("-", MINUS)}</td>`).join("")}</tr>
+  <tr><th scope="row">Lands on</th>${KS.map((k) => `<td data-k="${k}"><button type="button" data-k="${k}" aria-label="${two(k)}, ${k} hops">${two(k)}</button></td>`).join("")}</tr>
+</tbody>`;
+$("s3-table").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const k = +b.dataset.k, unary = S3.op >= 2;
+  if (unary || S3.picks.length >= 2) S3.picks = [k];
+  else S3.picks.push(k);
+  paint3();
+});
+
+function result3() {
+  const [a, b] = S3.picks;
+  if (S3.op >= 2 ? a == null : b == null) return null;
+  return [a + b, a - b, 2 * a, a / 2][S3.op];
+}
+function paint3() {
+  const [a, b] = S3.picks, r = result3(), op = OPS3[S3.op][0];
+  const cells = $("s3-table").querySelectorAll("td");
+  cells.forEach((td) => {
+    const k = +td.dataset.k;
+    td.classList.toggle("pa", k === a);
+    td.classList.toggle("pb", k === b && S3.op < 2);
+    td.classList.toggle("pr", k === r);
+  });
+  $("s3-table").querySelectorAll("button").forEach((btn) => btn.setAttribute("aria-pressed", S3.picks.includes(+btn.dataset.k)));
+  const K = (k) => String(k).replace("-", MINUS);
+  const P = (k) => (Number.isInteger(k) ? K(k) : fix(k, 1));
+  let hops = "", nums = "", note = "";
+  if (r == null) {
+    hops = S3.op >= 2 ? "pick a number" : a == null ? "pick two numbers" : `${K(a)} and …`;
+    nums = a == null ? "" : `${two(a)} and …`;
+    note = S3.op >= 2 ? `Pick a number in the bottom row.` : a == null ? `Pick two numbers in the bottom row.` : `Now pick the second number.`;
+  } else {
+    const val = 2 ** r, show = Number.isInteger(r) && r >= -3 && r <= 12 ? two(r) : sig(val, 4);
+    const hx = [`<span class="ca">${K(a)}</span> + <span class="cb">${K(b)}</span>`, `<span class="ca">${K(a)}</span> − <span class="cb">${P(b)}</span>`, `2 × <span class="ca">${K(a)}</span>`, `<span class="ca">${K(a)}</span> ÷ 2`][S3.op];
+    hops = `${hx} = ${P(r)}`;
+    nums = [`${two(a)} × ${two(b)}`, `${two(a)} ÷ ${two(b)}`, `${two(a)}²`, `√${two(a)}`][S3.op] + ` = ${show}`;
+    if (!Number.isInteger(r)) note = `Half of ${K(a)} hops is ${P(r)}, which falls between two columns: √${two(a)} = ${sig(val, 4)} isn't in the rows. Filling in the gaps takes Station 4.`;
+    else if (r < -3 || r > 12) note = `${P(r)} hops runs off the end of the rows, but the rule still holds: 2 to the ${P(r)} is ${sig(val)}.`;
+    else note = [`Multiplying by ${two(b)} is ${K(b)} more hops, so the hops add.`, `Dividing by ${two(b)} is ${K(b)} hops back, so the hops subtract.`, `Squaring multiplies a number by itself, so its hops add to themselves: they double.`, `A square root is the number that squares back, so its hops are half as many.`][S3.op];
+  }
+  $("s3-out").innerHTML = [pairRow("Hops", hops), pairRow("Numbers", nums || "&nbsp;")].join("");
+  $("s3-note").innerHTML = note;
+  pressChips($("s3-op"), (j) => j === S3.op);
+}
+chipRow($("s3-op"), OPS3.map(([o, n]) => [o, n]), (j) => {
+  S3.op = j;
+  S3.picks = j >= 2 ? S3.picks.slice(0, 1) : S3.picks;
+  paint3();
+});
+
+// ---------- Station 4: filling in the gaps ----------
+
+const S4 = { depth: 6, t: 0 };
+const TARGETS4 = [2, 3, 5, 7, Math.PI];
+const MAX4 = 30;
+
+// divide out each root of 10 that fits, adding its share of a hop
+function build4() {
+  const target = TARGETS4[S4.t];
+  let x = target, sum = 0;
+  const rows = [];
+  for (let k = 1; k <= S4.depth; k++) {
+    const r = 10 ** (2 ** -k), used = r <= x * (1 + 1e-15);
+    if (used) { x /= r; sum += 2 ** -k; }
+    rows.push({ k, r, used, left: x });
+  }
+  return { target, rows, sum, x };
+}
+const frac4 = (k) => (k <= 12 ? `1/${2 ** k}` : `1/2<sup>${k}</sup>`);
+// how many decimal places two values share
+const places = (a, b) => (a === b ? 15 : clamp(Math.floor(-L10(Math.abs(a - b))), 0, 15));
+
+function paint4() {
+  const B = build4(), truth = L10(B.target), est = B.sum + (B.x - 1) * 0.4342944819;
+  const T = TARGETS4[S4.t] === Math.PI ? "π" : sig(B.target);
+  $("s4-table").innerHTML = `<thead><tr><th scope="col">Roots taken</th><th scope="col">Number</th><th scope="col">Share of a hop</th><th scope="col">Fits?</th><th scope="col">Left of ${T}</th></tr></thead><tbody>${
+    B.rows.map((r) => `<tr class="${r.used ? "on" : ""}"><td>${r.k}</td><td>${r.r.toFixed(10)}</td><td>${frac4(r.k)}${r.k <= 12 ? ` = ${sig(2 ** -r.k, 6)}` : ""}</td><td class="${r.used ? "used" : "skip"}">${r.used ? "yes" : "no"}</td><td>${r.left.toFixed(10)}</td></tr>`).join("")
+  }</tbody>`;
+  const used = B.rows.filter((r) => r.used).map((r) => frac4(r.k));
+  $("s4-out").innerHTML = [
+    pairRow("Roots taken", `${S4.depth}`),
+    pairRow("Shares that fit", used.length ? used.join(" + ") : "none yet"),
+    pairRow("Their sum", `<span class="chop">${B.sum.toFixed(10)}</span>`, `${places(B.sum, truth)} decimal places right`),
+    pairRow("Finished off", est.toFixed(10), `adding 0.4343 × (${B.x.toFixed(6)} − 1) for what's left: ${places(est, truth)} places right`),
+    pairRow(`${logOf(10)} ${T}`, truth.toFixed(10), "for comparison"),
+  ].join("");
+  const last = B.rows[B.rows.length - 1];
+  const d4 = last.k > 12 ? 10 : 6, before = last.used ? last.left * last.r : last.left;
+  $("s4-note").innerHTML = last.used
+    ? `The ${ordinal(last.k)} root, ${last.r.toFixed(d4)}, fits into what's left of ${T}, ${before.toFixed(d4)}, so it's divided out and ${frac4(last.k)} of a hop is added.`
+    : `The ${ordinal(last.k)} root, ${last.r.toFixed(d4)}, is bigger than what's left, ${last.left.toFixed(d4)}, so it's skipped.`;
+  $("s4-next").disabled = S4.depth >= MAX4;
+  $("s4-all").disabled = S4.depth >= MAX4;
+  $("s4-back").disabled = S4.depth <= 1;
+  pressChips($("s4-target"), (j) => j === S4.t);
+}
+const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+const more4 = () => { if (S4.depth < MAX4) { S4.depth++; paint4(); } };
+const less4 = () => { if (S4.depth > 1) { S4.depth--; paint4(); } };
+$("s4-next").addEventListener("click", more4);
+$("s4-back").addEventListener("click", less4);
+$("s4-all").addEventListener("click", () => { S4.depth = MAX4; paint4(); });
+chipRow($("s4-target"), TARGETS4.map((t) => [t === Math.PI ? "π" : String(t)]), (j) => { S4.t = j; paint4(); });
+
+// ---------- Station 5: any base ----------
+
+const S5 = { base: 2, x: 6 };
+const BASES5 = [2, Math.E, 10];
+// x from 0 to 10 across, height −2.5 to 4 up
+// drawn at the board's real width, so the numbers stay readable on a phone
+const G5 = { W: 560, H: 440, ml: 40, sx: 50, sy: 64, y0: 266 };
+const X5 = (x) => G5.ml + x * G5.sx, Y5 = (y) => G5.y0 - y * G5.sy;
+function lay5() {
+  const W = w5?.W || 560, H = Math.round(clamp(W * 0.79, 300, 440));
+  Object.assign(G5, { W, H, ml: 40, sx: (W - 40 - 18) / 10, sy: (H - 22) / 6.5 });
+  G5.y0 = 12 + 4 * G5.sy;
+}
+const b5 = board($("board5"), {
+  name: "x on the curve",
+  onPoint(px) { setX5(Math.round(clamp((px - G5.ml) / G5.sx, 0.05, 10) * 100) / 100); },
+  onKey(d, big) { setX5(Math.round(clamp(S5.x + d * (big ? 0.5 : 0.05), 0.05, 10) * 100) / 100); },
+});
+const clip5 = svgEl("clipPath", { id: "clip5" });
+const clipRect5 = svgEl("rect");
+clip5.append(clipRect5);
+const defs5 = svgEl("defs");
+defs5.append(clip5);
+b5.svg.prepend(defs5);
+function setX5(x) { if (x !== S5.x) { S5.x = x; paint5(); } }
+const w5 = watchWidth(b5.svg, paint5);
+
+function curve5(b, cls) {
+  const pts = [];
+  for (let i = 0; i <= 200; i++) {
+    const x = 0.005 * 2000 ** (i / 200);
+    pts.push(`${f1(X5(x))},${f1(Y5(logb(x, b)))}`);
+  }
+  return svgEl("polyline", { class: cls, points: pts.join(" "), "clip-path": "url(#clip5)" });
+}
+
+function paint5() {
+  lay5();
+  b5.svg.setAttribute("viewBox", `0 0 ${G5.W} ${G5.H}`);
+  b5.svg.style.aspectRatio = `${G5.W} / ${G5.H}`;
+  for (const [k, v] of Object.entries({ x: X5(0), y: Y5(4), width: X5(10) - X5(0), height: Y5(-2.5) - Y5(4) })) clipRect5.setAttribute(k, f1(v));
+  const b = S5.base, items = [];
+  for (let x = 0; x <= 10; x++) items.push(line(X5(x), Y5(4), X5(x), Y5(-2.5), x % 5 ? "grid" : "grid strong"));
+  for (let y = -2; y <= 4; y++) items.push(line(X5(0), Y5(y), X5(10), Y5(y), "grid"));
+  items.push(line(X5(0), Y5(0), X5(10), Y5(0), "axis"), line(X5(0), Y5(4), X5(0), Y5(-2.5), "axis"));
+  for (let x = 1; x <= 10; x++) if (x % 2 === 0 || x === 1) items.push(lab(X5(x), Y5(0) + 20, String(x), "small"));
+  for (let y = -2; y <= 4; y++) if (y) items.push(lab(X5(0) - 8, Y5(y) + 4, String(y).replace("-", MINUS), "small end"));
+  // the three everyday bases, faint, named at the right
+  for (const r of BASES5) {
+    if (Math.abs(r - b) < 1e-9) continue;
+    items.push(curve5(r, "curve"));
+    items.push(lab(X5(10) - 4, Y5(logb(10, r)) - 7, r === Math.E ? "ln" : `log${r === 2 ? "₂" : "₁₀"}`, "small end halo"));
+  }
+  items.push(curve5(b, "curve on"));
+  // every curve passes through (1, 0) and (b, 1)
+  items.push(svgEl("circle", { class: "dot", cx: X5(1), cy: Y5(0), r: 4 }));
+  if (b <= 10) {
+    items.push(line(X5(b), Y5(0), X5(b), Y5(1), "guide"), line(X5(0), Y5(1), X5(b), Y5(1), "guide"));
+    items.push(svgEl("circle", { class: "dot", cx: f1(X5(b)), cy: Y5(1), r: 4 }));
+    items.push(lab(X5(b) + 6, Y5(1) - 8, `(${baseText(b)}, 1)`, "small start halo"));
+  }
+  const y = logb(S5.x, b);
+  items.push(line(X5(S5.x), Y5(0), X5(S5.x), Y5(clamp(y, -2.5, 4)), "guide"));
+  items.push(lab(clamp(X5(S5.x), G5.ml + 30, G5.W - 34), Y5(0) + (y >= 0 ? 38 : -12), `x = ${sig(S5.x, 3)}`, "ca halo"));
+  b5.scene.replaceChildren(...items);
+  b5.place(X5(S5.x), Y5(clamp(y, -2.5, 4)), `x ${sig(S5.x, 3)}, log base ${baseText(b)} ${fix(y, 3)}`);
+
+  const B = baseName(b), X = sig(S5.x, 3);
+  $("s5-baseOut").innerHTML = B;
+  $("s5-out").innerHTML = [
+    pairRow(`${logOf(B)} ${X}`, `<span class="chop">${fix(y, 3)}</span>`),
+    pairRow("From ln", `${fix(LN(S5.x), 3)} ÷ ${fix(LN(b), 3)} = ${fix(y, 3)}`, `ln ${X} ÷ ln ${B}`),
+    pairRow(`From ${logOf(10)}`, `${fix(L10(S5.x), 3)} ÷ ${fix(L10(b), 3)} = ${fix(y, 3)}`, `${logOf(10)} ${X} ÷ ${logOf(10)} ${B}`),
+    pairRow("Stretch", `× ${sig(1 / L10(b), 3)}`, `base 10's curve, made ${sig(1 / L10(b), 3)} times as tall`),
+  ].join("");
+  let note;
+  if (Math.abs(S5.x - 1) < 1e-9) note = `At 1 every curve crosses 0 together: it takes no hops to reach 1, whatever the hop.`;
+  else if (S5.x < 1) note = `Left of 1 the logs are negative, hops backward, and they plunge toward 0, which no number of hops ever reaches.`;
+  else if (b < 2) note = `A base this close to 1 makes tiny hops, so it takes many of them to get anywhere and the curve climbs steeply.`;
+  else note = `${sig(1 / L10(b), 3)} × ${logOf(10)} ${X}: every base's curve is the same shape, stretched or squashed.`;
+  $("s5-note").innerHTML = note;
+  $("s5-base").value = b;
+  pressChips($("s5-presets"), (j) => Math.abs(BASES5[j] - b) < 1e-9);
+}
+$("s5-base").addEventListener("input", (e) => { S5.base = +e.target.value; paint5(); });
+chipRow($("s5-presets"), BASES5.map((b) => [b === Math.E ? "<i>e</i>" : String(b), `Base ${b === Math.E ? "e" : b}`]), (j) => { S5.base = BASES5[j]; paint5(); });
+
+// ---------- Station 6: growth on a log axis ----------
+
+const S6 = { rate: 26, log: false };
+const RATES6 = [5, 10, 26, 100];
+const STEPS6 = 30;
+// x is steps 0 to 30, y fills 30 to 330
+const G6 = { W: 640, H: 380, ml: 66, mr: 14, top: 30, bot: 330 };
+const X6 = (k) => G6.ml + k * ((G6.W - G6.ml - G6.mr) / STEPS6);
+const w6 = watchWidth($("board6"), () => paint6());
+const niceUp = (v) => {
+  const e = 10 ** Math.floor(L10(v)), m = v / e;
+  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * e;
+};
+const short6 = (v) => (v >= 1e6 ? `${sig(v / 1e6, 3)}M` : v >= 1e4 ? `${sig(v / 1e3, 3)}k` : sig(v, 3));
+
+function paint6() {
+  const r = S6.rate / 100, A = (k) => (1 + r) ** k, end = A(STEPS6), B = (k) => 1 + (k * (end - 1)) / STEPS6;
+  const W = w6.W || 640, H = Math.round(clamp(W * 0.6, 280, 380));
+  Object.assign(G6, { W, H, ml: W < 500 ? 52 : 66, top: 30, bot: H - 52 });
+  $("board6").setAttribute("viewBox", `0 0 ${W} ${H}`);
+  $("board6").style.aspectRatio = `${W} / ${H}`;
+  const x0 = G6.ml, x1 = W - G6.mr, ph = G6.bot - G6.top, items = [];
+  let Y;
+  if (S6.log) {
+    const top = Math.max(1, Math.ceil(L10(end) - 1e-9)), Lt = top;
+    Y = (v) => G6.bot - (L10(v) / Lt) * ph;
+    for (let d = 0; d <= top; d++) {
+      items.push(line(x0, Y(10 ** d), x1, Y(10 ** d), "grid strong"));
+      items.push(lab(x0 - 8, Y(10 ** d) + 4, short6(10 ** d), "small end"));
+      if (d < top && top <= 6) for (const m of [2, 5]) items.push(line(x0, Y(m * 10 ** d), x1, Y(m * 10 ** d), "grid"));
+    }
+  } else {
+    const top = niceUp(end);
+    Y = (v) => G6.bot - (v / top) * ph;
+    for (let i = 0; i <= 5; i++) {
+      const v = (top * i) / 5;
+      items.push(line(x0, Y(v), x1, Y(v), i ? "grid" : "axis"));
+      items.push(lab(x0 - 8, Y(v) + 4, short6(v), "small end"));
+    }
+  }
+  for (let k = 0; k <= STEPS6; k += 5) items.push(lab(X6(k), G6.bot + 22, String(k), "small"));
+  items.push(lab((x0 + x1) / 2, G6.bot + 44, "steps", "small"));
+  const poly = (f, cls) => svgEl("polyline", { class: `series ${cls}`, points: Array.from({ length: STEPS6 + 1 }, (_, k) => `${f1(X6(k))},${f1(Y(f(k)))}`).join(" ") });
+  items.push(poly(B, "b"), poly(A, "a"));
+  for (let k = 0; k <= STEPS6; k += 5) items.push(svgEl("circle", { class: "pt a", cx: f1(X6(k)), cy: f1(Y(A(k))), r: 3.5 }), svgEl("circle", { class: "pt b", cx: f1(X6(k)), cy: f1(Y(B(k))), r: 3.5 }));
+  items.push(lab(x0 + 14, G6.top + 16, `× ${sig(1 + r, 3)} each step`, "start hop halo"), lab(x0 + 14, G6.top + 36, `+ ${sig((end - 1) / STEPS6, 3)} each step`, "start ca halo"));
+  $("board6").replaceChildren(...items);
+  $("board6").setAttribute("aria-label", `Two series over 30 steps on ${S6.log ? "a log" : "an ordinary"} axis: growth of ${S6.rate}% a step ${S6.log ? "is a straight line" : "curves upward"}, and adding the same amount each step ${S6.log ? "bends over" : "is a straight line"}. Both reach ${sig(end, 3)}.`);
+
+  const dbl = L10(2) / L10(1 + r);
+  $("s6-rateOut").textContent = `${S6.rate}%`;
+  $("s6-rate").value = S6.rate;
+  $("s6-out").innerHTML = [
+    pairRow("After 30 steps", sig(end, 4)),
+    pairRow("Doubles every", `${fix(dbl, 2)} steps`, `${logOf(10)} 2 ÷ ${logOf(10)} ${sig(1 + r, 3)}`),
+    pairRow("Rule of 72", `${fix(72 / S6.rate, 2)} steps`, `72 ÷ ${S6.rate}`),
+    pairRow("Each step climbs", `${fix(L10(1 + r), 4)}`, `of a power of 10 on the log axis`),
+  ].join("");
+  $("s6-note").innerHTML = S6.log
+    ? `On the log axis every step of growth climbs the same ${fix(L10(1 + r), 3)}, so the red series is a straight line. The blue one adds the same amount each time, a smaller share as it grows, so it bends over.`
+    : `On an ordinary axis the red series hardly leaves the floor for half its run, then climbs past the blue one at the very end. Press <b>Log</b> to straighten it.`;
+  pressChips($("s6-presets"), (j) => RATES6[j] === S6.rate);
+  [...$("s6-axis").children].forEach((b, j) => b.setAttribute("aria-pressed", (j === 1) === S6.log));
+}
+chipRow($("s6-axis"), [["Ordinary"], ["Log"]], (j) => { S6.log = j === 1; paint6(); });
+chipRow($("s6-presets"), RATES6.map((v) => [`${v}%`, `${v} percent a step`]), (j) => { S6.rate = RATES6[j]; paint6(); });
+$("s6-rate").addEventListener("input", (e) => { S6.rate = +e.target.value; paint6(); });
+
+// ---------- Station 7: a book of tables ----------
+
+// four-figure mantissas, in ten-thousandths, for the three-digit numbers 100 to 999
+const MANT7 = (n) => Math.round(L10(n / 100) * 10000);
+const pad4 = (m) => String(m).padStart(4, "0");
+const PROBLEMS7 = [["3.14", "×", "27.5"], ["2", "×", "3"], ["0.0456", "×", "812"], ["7", "÷", "9"], ["365", "×", "24"], ["1", "÷", "7"]];
+const S7 = { steps: [], at: 0, A: null, B: null, L: null, R: null };
+
+$("s7-table").innerHTML = `<thead><tr><th scope="col">N</th>${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((c) => `<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>${
+  Array.from({ length: 90 }, (_, i) => {
+    const r = i + 10;
+    return `<tr><th scope="row">${r}</th>${Array.from({ length: 10 }, (_, c) => `<td id="lt-${r * 10 + c}">${pad4(MANT7(r * 10 + c))}</td>`).join("")}</tr>`;
+  }).join("")
+}</tbody>`;
+
+// a number rounded to the table's three figures, and its logarithm as characteristic and mantissa
+function look7(v) {
+  let [m, e] = mant(v);
+  let n = Math.round(m * 100);
+  if (n >= 1000) { n = 100; e += 1; }
+  return { n, ch: e, mt: MANT7(n), L: e * 10000 + MANT7(n), v: (n / 100) * 10 ** e };
+}
+// a log written the way the books did: 1.4393, or −2 + 0.6590 below 1
+function logText(L) {
+  const ch = Math.floor(L / 10000), mt = L - ch * 10000;
+  return ch >= 0 ? `${ch}.${pad4(mt)}` : `${MINUS}${-ch} + 0.${pad4(mt)}`;
+}
+function charText(A) {
+  const V = sig(A.v, 3);
+  if (A.ch >= 0) return `${V} has ${A.ch + 1} digit${A.ch ? "s" : ""} before the point, so its characteristic is ${A.ch}`;
+  return `${V} starts ${-A.ch} place${A.ch === -1 ? "" : "s"} after the point, so its characteristic is ${MINUS}${-A.ch}`;
+}
+const where7 = (n) => `row ${Math.floor(n / 10)}, column ${n % 10}`;
+// three figures, keeping trailing zeros: the table gives back 37.0, not 37
+const three = (v) => v.toLocaleString("en-US", { minimumSignificantDigits: 3, maximumSignificantDigits: 3 });
+// a negative log goes in brackets inside a sum
+const inSum = (L) => (L < 0 ? `(${logText(L)})` : logText(L));
+
+function plan7(a, op, b) {
+  const A = look7(a), B = look7(b);
+  const L = op === "×" ? A.L + B.L : A.L - B.L;
+  const ch = Math.floor(L / 10000), mt = L - ch * 10000;
+  let best = 100;
+  for (let n = 101; n <= 999; n++) if (Math.abs(MANT7(n) - mt) < Math.abs(MANT7(best) - mt)) best = n;
+  const ans = (best / 100) * 10 ** ch, exact = op === "×" ? a * b : a / b;
+  const round = (x, X) => (Math.abs(X.v - x) / x > 1e-9 ? `The table has three figures, so ${sig(x)} becomes ${sig(X.v, 3)}. ` : "");
+  const neg = (X) => (X.ch < 0 ? ` Books wrote that as <span class="bar">${-X.ch}</span>.${pad4(X.mt)}, the bar meaning only the characteristic is negative.` : "");
+  const steps = [
+    { hl: { a: A.n }, show: "A", text: `${round(a, A)}Find ${A.n} in the table: ${where7(A.n)} gives .${pad4(A.mt)}. ${charText(A)}. So log ${sig(A.v, 3)} = ${logText(A.L)}.${neg(A)}` },
+    { hl: { a: A.n, b: B.n }, show: "B", text: `${round(b, B)}Find ${B.n}: ${where7(B.n)} gives .${pad4(B.mt)}. ${charText(B)}. So log ${sig(B.v, 3)} = ${logText(B.L)}.${neg(B)}` },
+    { hl: { a: A.n, b: B.n }, show: "L", text: `${op === "×" ? "Add" : "Subtract"} the logs: ${inSum(A.L)} ${op === "×" ? "+" : MINUS} ${inSum(B.L)} = <b>${logText(L)}</b>.` },
+    { hl: { r: best }, show: "R", text: `Look the mantissa .${pad4(mt)} up backwards, in the body of the table. ${MANT7(best) === mt ? "It's there exactly" : `The nearest entry is .${pad4(MANT7(best))}`}, at ${where7(best)}, so the answer's digits are ${best}.` },
+    { hl: { r: best }, show: "R", text: `The characteristic, ${String(ch).replace("-", MINUS)}, places the point: <b>${three(ans)}</b>. ${Math.abs(exact - ans) / exact < 1e-9 ? "That's exact." : `Worked out in full it's ${sig(exact)}.`}` },
+  ];
+  return { steps, A, B, L, R: { n: best, ch, ans }, op };
+}
+
+function paint7() {
+  const P = S7.plan, k = S7.at;
+  $("s7-steps").replaceChildren(...(P ? P.steps.slice(0, k) : []).map((st, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = st.text;
+    if (i === k - 1) li.setAttribute("aria-current", "step");
+    return li;
+  }));
+  document.querySelectorAll("#s7-table .ha, #s7-table .hb, #s7-table .hr").forEach((td) => td.classList.remove("ha", "hb", "hr"));
+  const hl = k ? P.steps[k - 1].hl : {};
+  let focus = null;
+  for (const [key, cls] of [["a", "ha"], ["b", "hb"], ["r", "hr"]]) {
+    if (hl[key] == null) continue;
+    const td = $(`lt-${hl[key]}`);
+    td.classList.add(cls);
+    focus = td;
+  }
+  // bring the last highlighted entry into the middle of the table's own scroll, leaving the page alone
+  if (focus) {
+    const box = $("s7-box"), br = box.getBoundingClientRect(), cr = focus.getBoundingClientRect();
+    const top = box.scrollTop + cr.top - br.top - box.clientHeight / 2;
+    box.scrollTo({ top, behavior: reduceMotion.matches ? "auto" : "smooth" });
+  }
+  const seen = new Set(P ? P.steps.slice(0, k).map((s) => s.show) : []);
+  $("s7-out").innerHTML = P ? [
+    pairRow(`log ${sig(P.A.v, 3)}`, seen.has("A") ? `<span class="ca">${logText(P.A.L)}</span>` : "&nbsp;"),
+    pairRow(`log ${sig(P.B.v, 3)}`, seen.has("B") ? `<span class="cb">${logText(P.B.L)}</span>` : "&nbsp;"),
+    pairRow(P.op === "×" ? "Sum" : "Difference", seen.has("L") ? logText(P.L) : "&nbsp;"),
+    pairRow("Answer", k >= 5 ? `<b>${three(P.R.ans)}</b>` : seen.has("R") ? `digits ${P.R.n}` : "&nbsp;"),
+  ].join("") : "";
+  $("s7-next").disabled = !P || k >= P.steps.length;
+  $("s7-back").disabled = k === 0;
+}
+function setProblem7() {
+  const a = parseNum($("s7-a").value), b = parseNum($("s7-b").value), op = $("s7-op").value;
+  if (a == null || b == null) {
+    $("s7-msg").textContent = `Type two numbers bigger than 0, like 3.14 and 27.5.`;
+    return false;
+  }
+  if (a < 1e-6 || b < 1e-6 || a > 1e9 || b > 1e9) {
+    $("s7-msg").textContent = `Keep the numbers between 0.000001 and 1,000,000,000.`;
+    return false;
+  }
+  S7.plan = plan7(a, op, b);
+  S7.at = 0;
+  $("s7-msg").textContent = `${sig(a)} ${op} ${sig(b)}: five steps. Press Next step or N.`;
+  paint7();
+  return true;
+}
+const next7 = () => { if (!S7.plan) setProblem7(); if (S7.plan && S7.at < S7.plan.steps.length) { S7.at++; paint7(); } };
+const back7 = () => { if (S7.at > 0) { S7.at--; paint7(); } };
+$("s7-form").addEventListener("submit", (e) => { e.preventDefault(); if (setProblem7()) next7(); });
+$("s7-next").addEventListener("click", next7);
+$("s7-back").addEventListener("click", back7);
+chipRow($("s7-presets"), PROBLEMS7.map(([a, o, b]) => [`${a} ${o} ${b}`, `${a} ${o === "×" ? "times" : "divided by"} ${b}`]), (j) => {
+  const [a, o, b] = PROBLEMS7[j];
+  $("s7-a").value = a;
+  $("s7-op").value = o;
+  $("s7-b").value = b;
+  if (setProblem7()) next7();
+});
+
+// ---------- Keyboard ----------
+
+// N and B go to the station holding focus, or with nothing focused, the one most in view.
+// arrows stay with the focused point, so they never take over scrolling
+const STATION_KEYS = [
+  ["s4-next", { n: more4, b: less4 }],
+  ["s7-next", { n: next7, b: back7 }],
+].map(([el, keys]) => [$(el).closest(".panel"), keys]);
+
+function stationInView() {
+  let best = null, most = 0;
+  for (const entry of STATION_KEYS) {
+    const r = entry[0].getBoundingClientRect();
+    const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+    if (seen > most) { most = seen; best = entry; }
+  }
+  return best;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.matches("input:not([type=range]), textarea, select")) return;
+  const action = { n: "n", b: "b" }[e.key.toLowerCase()];
+  if (!action) return;
+  const inPanel = e.target.closest?.(".panel");
+  const entry = inPanel ? STATION_KEYS.find(([panel]) => panel === inPanel) : stationInView();
+  if (!entry || !entry[1][action]) return;
+  e.preventDefault();
+  entry[1][action]();
+});
+
+// ---------- Start ----------
+
+w1.check();
+w5.check();
+w6.check();
+paint1();
+paint2();
+paint3();
+paint4();
+paint5();
+paint6();
+setProblem7();
+</script>
+</body>
+</html>
