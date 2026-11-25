@@ -274,7 +274,7 @@ button { font: inherit; color: inherit; }
     <svg class="clock" id="clock" viewBox="0 0 100 100" role="img" aria-label="Station clock"></svg>
     <h1>Departures</h1>
   </header>
-  <p id="service">Today's train</p>
+  <p id="service"></p>
 
   <section class="board" aria-label="Departure board">
     <div class="ends">
@@ -827,11 +827,7 @@ function paint() {
   // the timetable gives the answer away, so it waits until you've reached the end once
   $("timetable").hidden = !game.reached;
   $("back").disabled = !game.pend && game.route.length < 2;
-  const done = saved.days[todayKey()];
-  $("service").hidden = game.kind !== "daily";
-  $("service").textContent = game.kind === "daily"
-    ? `Today's train, ${longDate()}` + (done && done.stops != null ? `. You arrived in ${nStops(done.stops)}.` : "")
-    : "";
+  $("service").textContent = longDate();
   $("today").disabled = game.kind === "daily";
 }
 
