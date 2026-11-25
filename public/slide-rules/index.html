@@ -241,6 +241,8 @@ table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
 .steps:empty { display: none; }
 
 .note { margin: 0; font-size: .97rem; max-width: 70ch; }
+.quiz { margin-top: 1rem; display: grid; gap: .7rem; padding: .9rem 1rem; background: var(--sheet); border: 1px solid var(--edge); border-radius: 8px; max-width: 46rem; }
+.quiz .right { color: var(--a); font-weight: 700; }
 .panel > .note { margin-top: 1rem; }
 .small-note { margin: 0; font-size: .9rem; color: var(--muted); }
 .sum { font: 500 1rem var(--mono); }
@@ -318,7 +320,7 @@ table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
       <p class="station">Station 2</p>
       <h2 id="s2-h">Spacing that multiplies</h2>
       <!-- md: text.md#station-2 -->
-      <p>Now space the numbers differently. Put 1 at the left end and 10 at the right end of the top ruler, and every number in between at its <b>logarithm</b>: the power you raise 10 to to get it. 10<sup>0.301</sup> = 2, so log 2 = 0.301, and 2 sits 0.301 of the way along. log 3 = 0.477 puts 3 a little short of halfway. The bottom ruler carries on past 10 to 100, spaced the same way.</p>
+      <p>Now space the numbers differently. Put 1 at the left end and 10 at the right end of the top ruler, and every number in between at its <b>logarithm</b>: the power you raise 10 to to get it. <a href="../logarithms/">Logarithms</a> builds the idea up from counting hops. 10<sup>0.301</sup> = 2, so log 2 = 0.301, and 2 sits 0.301 of the way along. log 3 = 0.477 puts 3 a little short of halfway. The bottom ruler carries on past 10 to 100, spaced the same way.</p>
       <p>Slide exactly as before. The top ruler's 1 over 2, the cursor on 3, and below it you read 6. The lengths still add: 0.301 + 0.477 = 0.778, and 6 sits at 0.778. <b>Adding the logs of two numbers gives the log of their product</b>, so the slide that added in Station 1 multiplies here.</p>
       <!-- /md -->
     </div>
@@ -337,14 +339,44 @@ table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
     <!-- /md -->
   </section>
 
-  <!-- 3. C and D -->
-  <section class="panel" aria-labelledby="s3-h">
+  <!-- 3. Only the digits -->
+  <section class="panel" aria-labelledby="sd-h">
     <div class="panel-head">
       <p class="station">Station 3</p>
-      <h2 id="s3-h">The C and D scales</h2>
+      <h2 id="sd-h">Only the digits</h2>
       <!-- md: text.md#station-3 -->
-      <p>A real slide rule keeps Station 2's spacing but makes both scales the same length. The scale on the slide is called <b>C</b>, and the one under it on the fixed body, the <b>stock</b>, is called <b>D</b>. Both run from 1 to 10, and the 1 at each end of C is called an <b>index</b>. To multiply, put C's left index over the first number on D, move the cursor to the second number on C, and read the answer on D under the hairline.</p>
-      <p>With D only running to 10, 3 × 4 falls off the end. So use the other index: put C's <b>right</b> index over 3 and the cursor on 4 finds 1.2 on D. <b>The rule only shows the digits</b>, so 1.2 could mean 12, 0.12, or 1,200, and you keep track of the decimal point yourself with a rough sum in your head. Division runs multiplication backwards. Type a problem, or pick one, then step through it.</p>
+      <p>Look again at Station 2's bottom ruler. The stretch from 10 to 100 is an exact copy of the stretch from 1 to 10: 20 sits where 2 does, and 35 where 3.5 does, one copy further along. Multiplying by 10 is always the same length, so <b>every power of 10 starts the same pattern over</b>. This ruler runs from 0.1 to 100, three copies end to end, and the slide is one copy long. Slide it along: it fits each copy exactly, and the cursor shows the same digits in each one.</p>
+      <!-- /md -->
+    </div>
+    <div class="rule-box">
+      <svg class="rule" id="ruleD" role="group" aria-label="A ruler from 0.1 to 100 spaced by logarithms, three copies of 1 to 10 end to end, with a slide one copy long and a cursor across both"></svg>
+    </div>
+    <div class="under">
+      <div class="col">
+        <div class="chips" id="sd-presets" role="group" aria-label="Line the slide up over"></div>
+        <p class="note" id="sd-note" aria-live="polite"></p>
+      </div>
+      <dl class="pair" id="sd-out"></dl>
+    </div>
+    <!-- md: text.md#station-3-note -->
+    <p class="note">So a slide rule only needs one copy, 1 to 10, and that's all it carries. The price is that <b>it only shows the digits</b>. A reading of 1.2 could mean 0.12, 1.2, 12, or 120, and you choose with a rough sum in your head: round each number to one figure and multiply. For 3 × 4 that's just 3 × 4 = 12, nowhere near 0.12 or 120. Try it: the rule's reading is given, and you place the point.</p>
+    <!-- /md -->
+    <div class="quiz">
+      <p class="note" id="sd-q"></p>
+      <div class="chips" id="sd-choices" role="group" aria-label="Place the point"></div>
+      <p class="note" id="sd-fb" aria-live="polite"></p>
+      <div class="row"><button type="button" class="btn" id="sd-next" aria-keyshortcuts="N">Another problem<kbd>N</kbd></button></div>
+    </div>
+  </section>
+
+  <!-- 4. C and D -->
+  <section class="panel" aria-labelledby="s3-h">
+    <div class="panel-head">
+      <p class="station">Station 4</p>
+      <h2 id="s3-h">The C and D scales</h2>
+      <!-- md: text.md#station-4 -->
+      <p>A real slide rule carries one copy on the slide and one on the body. The slide's scale is called <b>C</b>, and the one under it on the fixed body, the <b>stock</b>, is called <b>D</b>. Both run from 1 to 10, and the 1 at each end of C is called an <b>index</b>. To multiply, put C's left index over the first number on D, move the cursor to the second number on C, and read the answer on D under the hairline.</p>
+      <p>With one copy, 3 × 4 falls off the end of D. So use the other index: put C's <b>right</b> index over 3, and the cursor on 4 finds 1.2 on D. Those are the digits of 12, and Station 3's rough sum puts the point back. To divide, run it backwards: put the cursor on the first number on D, slide the second number on C under the hairline, and read the answer on D under C's index. Type a problem, or pick one, then step through it.</p>
       <!-- /md -->
     </div>
     <div class="rule-box">
@@ -371,12 +403,12 @@ table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
     </div>
   </section>
 
-  <!-- 4. More scales -->
+  <!-- 5. More scales -->
   <section class="panel" aria-labelledby="s4-h">
     <div class="panel-head">
-      <p class="station">Station 4</p>
+      <p class="station">Station 5</p>
       <h2 id="s4-h">Squares, cubes, logs, and angles</h2>
-      <!-- md: text.md#station-4 -->
+      <!-- md: text.md#station-5 -->
       <p>Every other scale is a way of relabeling D, read through the cursor. <b>A</b> squeezes two copies of C's spacing into the same length, so 3 on D sits under 9 on A, its square. <b>K</b> squeezes in three copies, for cubes. <b>CI</b> is C running backwards, so it reads 1 ÷ C. <b>L</b> is evenly spaced and reads the logarithm of D: the distance Station 2 measured. <b>S</b> and <b>T</b> mark angles where 10 × their sine and 10 × their tangent fall on D. Move the cursor and every scale gives its reading at once. Turn scales off to see fewer.</p>
       <!-- /md -->
     </div>
@@ -394,17 +426,17 @@ table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
       </div>
       <div class="table-wrap"><table class="reads" id="s4-out"></table></div>
     </div>
-    <!-- md: text.md#station-4-note -->
+    <!-- md: text.md#station-5-note -->
     <p class="note">Reading backwards works too. Put the cursor on a number on A and read its square root on D, or on K for a cube root. A has two halves, 1 to 10 and 10 to 100: count the digits in front of the decimal point and use the left half when there's an odd number of them, so √2 comes from the left half and √20 from the right.</p>
     <!-- /md -->
   </section>
 
-  <!-- 5. Circular -->
+  <!-- 6. Circular -->
   <section class="panel" aria-labelledby="s5-h">
     <div class="panel-head">
-      <p class="station">Station 5</p>
+      <p class="station">Station 6</p>
       <h2 id="s5-h">Round the circle</h2>
-      <!-- md: text.md#station-5 -->
+      <!-- md: text.md#station-6 -->
       <p>Bend D into a ring and its two ends meet, with 10 landing on 1. On a <b>circular slide rule</b>, C is a disc that turns inside that ring, so nothing can run off the end. Turn the disc to put its 1 at 3 on D, swing the cursor arm to 4 on the disc, and the arm points at 1.2 on D, with no index to swap. The answer still comes out as digits, and the decimal point is still yours to place.</p>
       <!-- /md -->
     </div>
@@ -429,6 +461,7 @@ table.reads { border-collapse: collapse; width: 100%; font-size: .95rem; }
       <li><b>A slide rule can't add.</b> It only multiplies and divides, because sliding adds logs. Engineers did their adding on paper.</li>
       <li><b>The trig scales borrow D's digits.</b> sin 30° is 0.5, but S puts 30° over 5 on D, so you place the decimal point there too. Angles under about 5.7° have sines under 0.1 and fall off the left end. For small angles the sine is nearly the angle in radians, as <a href="../circles-and-triangles/">Circles and Triangles</a> shows.</li>
       <li><b>Floats space themselves the same way.</b> A computer's floating-point numbers sit closer together near 0 and farther apart as they grow, the gaps doubling with each power of 2, much like the crowding toward the right of C and D. The <a href="../minifloat-ruler/">Minifloat Ruler</a> lays every value of an 8-bit float along one line.</li>
+      <li><b>Tables came first.</b> Before and beside slide rules, people multiplied with books of logarithm tables: look up two logs, add them, and look the sum up backwards, to four figures or more. <a href="../logarithms/">Logarithms</a> works a problem that way in its last station.</li>
       <li><b>Base 10 is a choice.</b> Logs in any base turn multiplying into adding. Base 10 makes the scale repeat for each power of 10, which is why the rule only shows digits. The natural log uses <span class="v">e</span> instead, the number <a href="../exploring-e/">Exploring <span class="v">e</span></a> builds.</li>
     </ul>
     <!-- /md -->
@@ -731,7 +764,7 @@ class Rule {
     ];
     sl.forEach((id, i) => {
       const rowTop = slY + 1 + i * rh;
-      slide.push(this.row(o.scales[id], rowTop, i === 0 && sl.length > 1 ? "down" : "up"));
+      slide.push(this.row(o.scales[id], rowTop, o.slideDir || (i === 0 && sl.length > 1 ? "down" : "up")));
       addName(id, rowTop);
     });
     slide.push(svgEl("rect", { class: "ring", x: sx0 + 2, y: slY + 2, width: sx1 - sx0 - 4, height: slH - 4, rx: 3 }));
@@ -785,6 +818,8 @@ class Rule {
   }
 
   setS(v) {
+    // a slide close to a whole length clicks into place there
+    if (this.o.snapS && Math.abs(v - Math.round(v)) < this.o.snapS) v = Math.round(v);
     this.s = clamp(v, this.o.sMin, this.o.sMax);
     this.place();
   }
@@ -893,6 +928,7 @@ class Rule {
 
 const pairRow = (dt, dd, small) => `<div><dt>${dt}</dt><dd>${dd}${small ? `<small>${small}</small>` : ""}</dd></div>`;
 const OFF = `<span class="small-note">off the end</span>`;
+const pressChips = (el, test) => [...el.children].forEach((b, j) => b.setAttribute("aria-pressed", test(j)));
 
 function chipRow(el, items, onPick) {
   el.replaceChildren(...items.map(([html, label], j) => {
@@ -1026,7 +1062,71 @@ chipRow($("s2-presets"), PRODUCTS2.map(([a, b]) => [`${a} × ${b}`, `${a} times 
   rule2.go({ s: L10(a), u: L10(a * b) });
 });
 
-// ---------- Station 3: the C and D scales ----------
+// ---------- Station 3: only the digits ----------
+
+// three copies of 1 to 10, from 0.1 to 100, one rule length each
+const COPIES = [[0.1, 1], [1, 10], [10, 100]];
+const longScale = {
+  id: "long", name: "", lo: 0.1, hi: 100, majors: decades(3).map((v) => +(v / 10).toFixed(6)),
+  pos: (v) => L10(v) + 1, val: (p) => 10 ** (p - 1), label: (v) => sig(v), prio: logPrio, minor: null,
+};
+const ruleD = new Rule($("ruleD"), {
+  scales: { long: longScale, digits: logScale("", 1, { label: idxLabel, minor: tenthDigit }) },
+  top: ["long"], slide: ["digits"], slideDir: "down",
+  span: 3, slideLen: 1, s: 1, u: 1 + L10(2.35), sMin: 0, sMax: 2, uMin: 0, uMax: 3, snapS: 0.012,
+  slideName: "One-copy slide",
+  slideText: (r) => `Slide's left end over ${sig(10 ** (r.s - 1), 3)}`,
+  cursorText: (r) => `Cursor on ${rd(10 ** (r.u - 1))}`,
+  onChange: drawD,
+});
+
+function drawD(r) {
+  const v = 10 ** (r.u - 1), d = r.u - r.s, onSlide = d >= -1e-9 && d <= 1 + 1e-9;
+  const m = mant(v)[0], k = Math.round(r.s), lined = Math.abs(r.s - k) < 1e-9;
+  $("sd-out").innerHTML = [
+    pairRow("Cursor on the ruler", rd(v)),
+    pairRow("Cursor on the slide", onSlide ? rd(10 ** d) : OFF),
+    pairRow("Its digits", rd(m), `the same spot in each copy: ${[0.1, 1, 10].map((p) => rd(m * p)).join(", ")}`),
+  ].join("");
+  let note;
+  if (lined && onSlide) note = `The slide sits exactly over the copy from ${sig(COPIES[k][0])} to ${sig(COPIES[k][1])}, and every mark matches: ${rd(10 ** d)} on the slide is over ${rd(v)}${[", the same digits a tenth the size", " itself", ", the same digits ten times the size"][k]}.`;
+  else if (lined) note = `The slide sits over the copy from ${sig(COPIES[k][0])} to ${sig(COPIES[k][1])}. Move the cursor onto it to compare.`;
+  else note = `Slide it until its ends meet two powers of 10, like 1 and 10. Anywhere in between, its marks fall out of step with the ruler's.`;
+  $("sd-note").innerHTML = note;
+  pressChips($("sd-presets"), (j) => lined && j === k);
+}
+chipRow($("sd-presets"), COPIES.map(([a, b]) => [`${sig(a)} to ${sig(b)}`, `Over ${sig(a)} to ${sig(b)}`]), (j) => {
+  ruleD.go({ s: j, u: j + L10(mant(10 ** (ruleD.u - 1))[0]) });
+});
+
+// place the point: the rule's digits are given, and a rough sum picks the power of 10
+const QUIZ = [["3", "×", "4"], ["2.5", "×", "40"], ["23", "×", "470"], ["0.3", "×", "0.2"], ["8", "÷", "200"], ["6", "÷", "0.03"]];
+// where the right answer sits among the four choices, so it isn't always in the same place
+const RIGHT = [1, 2, 0, 3, 2, 1];
+const SD = { q: 0 };
+const rough1 = (v) => Number(v.toPrecision(1));
+
+function paintQuiz() {
+  const [as, op, bs] = QUIZ[SD.q], a = +as, b = +bs;
+  const exact = op === "×" ? a * b : a / b, [m, e] = mant(exact);
+  const digits = Number(m.toPrecision(m < 2 ? 4 : 3));
+  const choices = [0, 1, 2, 3].map((i) => Number((digits * 10 ** (e - RIGHT[SD.q] + i)).toPrecision(6)));
+  const ra = rough1(a), rb = rough1(b), est = op === "×" ? ra * rb : ra / rb;
+  const sum = ra === a && rb === b ? `${as} ${op} ${bs} = ${sig(est, 2)}` : `${as} ${op} ${bs} is about ${sig(ra)} ${op} ${sig(rb)} = ${sig(est, 2)}`;
+  $("sd-q").innerHTML = `Problem ${SD.q + 1} of ${QUIZ.length}: <b>${as} ${op} ${bs}</b>. The rule reads <b>${sig(digits)}</b>. Where does the point go?`;
+  $("sd-fb").textContent = "";
+  chipRow($("sd-choices"), choices.map((c) => [sig(c)]), (j) => {
+    pressChips($("sd-choices"), (i) => i === j);
+    $("sd-fb").innerHTML = j === RIGHT[SD.q]
+      ? `<span class="right">Yes.</span> ${sum}, and ${sig(choices[j])} is the only choice near that.`
+      : `Not that one: ${sig(choices[j])} is a long way from the rough answer. ${sum}.`;
+  });
+}
+const nextQuiz = () => { SD.q = (SD.q + 1) % QUIZ.length; paintQuiz(); };
+$("sd-next").addEventListener("click", nextQuiz);
+paintQuiz();
+
+// ---------- Station 4: the C and D scales ----------
 
 // which index is on the rule, and the number on D it sits over
 function indexOver(r) {
@@ -1173,7 +1273,7 @@ chipRow($("s3-presets"), PROBLEMS3.map(([a, o, b]) => [`${a} ${o} ${b}`, `${a} $
 $("s3-next").addEventListener("click", next3);
 $("s3-back").addEventListener("click", back3);
 
-// ---------- Station 4: squares, cubes, logs, and angles ----------
+// ---------- Station 5: squares, cubes, logs, and angles ----------
 
 const deg = (d) => `${d.toFixed(1)}°`;
 const READS4 = {
@@ -1242,7 +1342,7 @@ chipRow($("s4-presets"), PRESETS4.map(([n]) => [n]), (j) => {
 paintShow4();
 $("s4-note").innerHTML = `The cursor sits on 3 on D. Read up and down the hairline: 9 on A, 27 on K, and the angles whose sine and tangent are 0.3 on S and T.`;
 
-// ---------- Station 5: round the circle ----------
+// ---------- Station 6: round the circle ----------
 
 class Dial {
   constructor(svg, o) {
@@ -1430,6 +1530,7 @@ chipRow($("s5-presets"), PRODUCTS5.map(([a, b]) => [`${a} × ${b}`, `${a} times 
 // N and B go to the station holding focus, or with nothing focused, the one most in view.
 // arrows stay with the focused slide or cursor, so they never take over scrolling
 const STATION_KEYS = [
+  ["ruleD", { n: nextQuiz }],
   ["rule3", { n: next3, b: back3 }],
 ].map(([el, keys]) => [$(el).closest(".panel"), keys]);
 
