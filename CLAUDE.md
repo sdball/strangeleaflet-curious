@@ -5,7 +5,7 @@ Static site served at curious.strangeleaflet.com: interactive exhibits, toys, gu
 ## Layout
 
 ```
-public/index.html          the hub: the shelf of curio tags plus a text-adventure interface
+public/index.html          the hub: the shelf of curio tags
 public/<slug>/index.html   one curio per directory, served at /<slug>/
 public/<slug>/*.md         prose that scripts/render copies into the page, if the page has any
 scripts/serve              serves public/ locally (python3 http.server)
@@ -176,18 +176,14 @@ stories/check-saves game.z5 commands.txt  # any story file and commands of your 
 
    ```js
    { id: "odometers", name: "Odometers", kind: "exhibit", href: "odometers/",
-     blurb: "Explore how number bases work: base-10, base-2, clock, and factorial base.",
-     words: ["odometers", "odometer"] },
+     blurb: "Explore how number bases work: base-10, base-2, clock, and factorial base." },
    ```
 
    - `kind` is `exhibit` (learn something by playing with it), `toy` (just for fun), `guide` (a walkthrough), or `gadget` (a working instrument, often fed by outside data, like `chyron-wire`). These drive the hub's filter buttons.
    - The tag's "No. N" comes from array position, so reordering renumbers every tag.
    - `href` is relative with a trailing slash.
-   - `words` are the nouns the text interface answers to (`get morse`, `examine odometer`). `words[0]` appears in the "Try get …" hint, so make it the most obvious one. A curio matches if any typed word is in its `words`, so avoid generic words another curio might also claim.
    - The blurb sits on a small paper tag. Keep it to about one sentence that says what you do there.
 5. Cross-link related curios with relative links (`<a href="../lehmer-codes/">`) where one explains the other.
-
-Keep `DEMO` and `SIMULATE_DIRECT_ARRIVAL` in the hub set to `false`. They're for previewing the text interface.
 
 ## Exhibit structure
 
@@ -274,8 +270,6 @@ Cozy Submarine's own sub is not in that set. Players draw their own in `custom-s
 - Explain from what the visitor already knows, one idea at a time. Prefer turns, hops, and wheels to jargon, and define a term the first time it appears.
 - In math, use the real minus sign `−` and `×`, and wrap variables in `<span class="v">` where the page styles them.
 - `tic-check` (in `~/local_bin`, outside the repo) enforces the above plus a list of LLM tics (em dashes, "it's not X, it's Y", "let's dive in", "genuinely", "delve", and so on) on visible text and script strings. Rewrite the sentence rather than dodging the pattern. For a deliberate use, put `tic-ok` on that source line. The pre-commit hook runs it when it's on PATH and says so when it isn't.
-- The hub's text interface is a Zork-style parser with in-jokes (leaflet, frotz, xyzzy). Keep new responses in that voice.
-- The text interface opens as a full-screen Infocom-on-an-Atari-800 screen: VT323 with ligatures off, white on Atari blue, an inverse status line, nothing but the prompt. Like `pocket-places`, it keeps its own fixed palette instead of light and dark tokens. `quit` (confirmed with Y) or Esc closes it.
 
 ## Before you commit
 
