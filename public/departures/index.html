@@ -41,7 +41,7 @@ button { font: inherit; color: inherit; }
 
 #hall {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: clamp(10px, 2.2vh, 20px);
+  gap: clamp(10px, 2.4vh, 26px);
   padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
 }
 
@@ -52,10 +52,10 @@ button { font: inherit; color: inherit; }
   box-shadow: 0 0 0 4px var(--enamel), 0 10px 24px rgba(0, 0, 0, 0.45);
 }
 .sign h1 {
-  margin: 0; font: 600 clamp(24px, 7vw, 40px)/1 var(--flapfont); letter-spacing: 0.16em;
+  margin: 0; font: 600 clamp(24px, min(7vw, 5vh), 46px)/1 var(--flapfont); letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--enamel-edge);
 }
-.clock { width: clamp(40px, 10vw, 54px); height: auto; flex: none; }
+.clock { width: clamp(40px, min(10vw, 7vh), 62px); height: auto; flex: none; }
 .clock .face { fill: var(--paper); stroke: var(--brass); stroke-width: 5; }
 .clock .tick { stroke: var(--paper-ink); stroke-width: 2.2; }
 .clock .tick.big { stroke-width: 4.5; }
@@ -66,7 +66,10 @@ button { font: inherit; color: inherit; }
 
 /* ---------- the board ---------- */
 .board {
-  position: relative; width: min(100%, 620px); padding: 18px clamp(12px, 3.5vw, 26px) 16px;
+  /* the flap width sets the scale of the whole board: as wide as a phone allows, as tall as a desktop allows */
+  --w: clamp(62px, min(19vw, 23vh), 210px);
+  position: relative; width: fit-content; min-width: min(100%, 620px); max-width: 100%;
+  padding: calc(var(--w) * 0.18) calc(var(--w) * 0.22) calc(var(--w) * 0.16);
   background: var(--housing); border-radius: 14px;
   box-shadow: 0 0 0 3px var(--brass-lo), 0 0 0 5px var(--brass), 0 0 0 7px var(--brass-lo),
     0 22px 44px rgba(0, 0, 0, 0.6), inset 0 2px 14px rgba(0, 0, 0, 0.9);
@@ -80,21 +83,20 @@ button { font: inherit; color: inherit; }
     radial-gradient(circle at 4px 4px, var(--brass-hi) 0 1.5px, var(--brass-lo) 3px, transparent 3.6px) bottom left / 8px 8px no-repeat,
     radial-gradient(circle at 4px 4px, var(--brass-hi) 0 1.5px, var(--brass-lo) 3px, transparent 3.6px) bottom right / 8px 8px no-repeat;
 }
-.ends { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 16px; }
+.ends { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: calc(var(--w) * 0.18); }
 .end { display: flex; align-items: center; gap: 8px; }
-.lbl { font: 500 13px/1 var(--flapfont); letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber); }
+.lbl { font: 500 clamp(13px, calc(var(--w) * 0.12), 20px)/1 var(--flapfont); letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber); }
 .minis { display: flex; gap: 3px; }
 .minis span {
-  display: grid; place-items: center; width: clamp(24px, 6.4vw, 32px); height: clamp(34px, 9vw, 44px);
-  font: 600 clamp(20px, 5.4vw, 28px)/1 var(--flapfont); color: var(--glyph); border-radius: 3px;
+  display: grid; place-items: center; width: calc(var(--w) * 0.36); height: calc(var(--w) * 0.5);
+  font: 600 calc(var(--w) * 0.4)/1 var(--flapfont); color: var(--glyph); border-radius: 3px;
   background: linear-gradient(var(--flap-top) 0 calc(50% - 1px), #000 calc(50% - 1px) calc(50% + 1px), var(--flap-bot) calc(50% + 1px));
 }
 #to .minis span { color: var(--amber); }
 
-.row { display: flex; justify-content: center; gap: clamp(6px, 2.2vw, 14px); }
-.mod { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.row { display: flex; justify-content: center; gap: calc(var(--w) * 0.12); }
+.mod { display: flex; flex-direction: column; align-items: center; gap: calc(var(--w) * 0.11); }
 .flap {
-  --w: clamp(62px, 19vw, 112px);
   position: relative; width: var(--w); height: calc(var(--w) * 1.36); padding: 0; border: 0;
   border-radius: 7px; background: #000; cursor: pointer; perspective: 500px;
   font: 600 calc(var(--w) * 1.02)/1 var(--flapfont); color: var(--glyph);
@@ -124,26 +126,22 @@ button { font: inherit; color: inherit; }
 .mod.sel .flap:focus-visible, .mod .flap:focus-visible { outline: 3px solid var(--amber); outline-offset: 4px; }
 /* a lamp in a brass bezel under each flap */
 .togo {
-  width: 16px; height: 16px; border-radius: 50%;
+  margin-bottom: 2px; width: clamp(16px, calc(var(--w) * 0.14), 24px); aspect-ratio: 1; border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #3a3f3a, #151816 70%);
   box-shadow: 0 0 0 2px var(--brass-lo), 0 0 0 3px var(--brass);
 }
 .togo.lit { background: radial-gradient(circle at 40% 35%, #e9ffe9, var(--green) 45%, #3f8a4c); box-shadow: 0 0 0 2px var(--brass-lo), 0 0 0 3px var(--brass), 0 0 12px rgba(143, 214, 154, 0.7); }
-.togo-cap { margin: 8px 0 0; text-align: center; font: italic 13px var(--serif); color: var(--muted); }
 
-.status {
-  margin: 14px 0 0; min-height: 2.6em; padding: 7px 12px; border-radius: 4px; background: #040404;
-  display: flex; align-items: center; justify-content: center; text-align: center;
-  font: 500 clamp(14px, 3.8vw, 17px)/1.3 var(--flapfont); letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--amber); box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.9);
-}
-.status.bad { color: var(--red); }
-.status.good { color: var(--green); }
+/* words for screen readers only: the board itself says nothing until you try a word */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* a word that isn't a station: the turned flap flashes red and shakes */
+.mod.refused .flap { box-shadow: 0 0 0 3px var(--red), 0 0 18px rgba(236, 107, 87, 0.5), 0 6px 12px rgba(0, 0, 0, 0.6); animation: shake 0.36s ease-in-out; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
 /* ---------- route and controls ---------- */
-.calling { width: min(100%, 620px); text-align: center; font-size: 16px; line-height: 1.6; }
+.calling { width: min(100%, 900px); text-align: center; font-size: clamp(16px, 2.2vh, 21px); line-height: 1.6; }
 .calling .lead { font-style: italic; color: var(--muted); margin-right: 6px; white-space: nowrap; }
-.calling .stop { font: 500 15px/1 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream); white-space: nowrap; }
+.calling .stop { font: 500 0.94em/1 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream); white-space: nowrap; }
 .calling .sep { color: var(--brass); margin: 0 2px; }
 .calling p { margin: 0; }
 #timetable-line { margin-top: 4px; }
@@ -157,6 +155,8 @@ button { font: inherit; color: inherit; }
   font-size: 17px; color: var(--cream); display: inline-flex; align-items: center; gap: 8px;
 }
 .btn:hover { border-color: var(--brass); }
+.btn[hidden] { display: none; }
+.levers .btn { font-size: clamp(17px, 2.3vh, 21px); min-height: clamp(44px, 6vh, 56px); }
 .btn.main {
   padding: 8px 26px; color: var(--brass-ink); border-color: var(--brass-lo);
   background: linear-gradient(var(--brass-hi), var(--brass) 55%, var(--brass-lo));
@@ -169,8 +169,10 @@ button { font: inherit; color: inherit; }
   font: 500 12px/1 var(--flapfont); padding: 3px 5px; border-radius: 3px;
   border: 1px solid currentColor; opacity: 0.7;
 }
-.tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; }
-.tools .btn { font-size: 15px; padding: 6px 12px; }
+/* the menu's buttons stack down the placard */
+.menu-list { display: grid; gap: 8px; margin-top: 6px; }
+.menu-list .btn { justify-content: center; width: 100%; }
+.placard .btn[aria-pressed="true"] { color: var(--paper-ink); background: #ecdcae; border-color: var(--brass-lo); }
 
 .credit {
   padding: 10px 16px max(12px, env(safe-area-inset-bottom)); text-align: center;
@@ -225,8 +227,12 @@ button { font: inherit; color: inherit; }
 
 @media (max-height: 780px) {
   #hall { gap: 8px; }
-  .board { padding-top: 14px; padding-bottom: 12px; }
-  .ends { margin-bottom: 10px; }
+}
+/* key hints only help with a keyboard, and three buttons need the room on a phone */
+@media (hover: none), (max-width: 480px) {
+  .levers { gap: 8px; }
+  .levers .btn kbd { display: none; }
+  .levers .btn { padding: 8px 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -270,8 +276,7 @@ button { font: inherit; color: inherit; }
       <div class="end" id="to"><span class="lbl">To</span><span class="minis" aria-hidden="true"></span></div>
     </div>
     <div class="row" id="row" role="group" aria-label="The board's four flaps"></div>
-    <p class="togo-cap" aria-hidden="true">a lamp lights when a flap reads its destination letter</p>
-    <p class="status" id="status" aria-live="polite"></p>
+    <p class="sr-only" id="status" aria-live="polite"></p>
   </section>
 
   <div class="calling">
@@ -282,19 +287,26 @@ button { font: inherit; color: inherit; }
   <div class="levers">
     <button class="btn" id="back" type="button" aria-keyshortcuts="Backspace">Back <kbd>⌫</kbd></button>
     <button class="btn main" id="depart" type="button" aria-keyshortcuts="Enter">Depart <kbd>⏎</kbd></button>
-  </div>
-
-  <div class="tools">
-    <button class="btn" id="porter" type="button">Ask the porter</button>
-    <button class="btn" id="timetable" type="button" aria-pressed="false">Timetable</button>
-    <button class="btn" id="another" type="button">Another train</button>
-    <button class="btn" id="today" type="button">Today's train</button>
-    <button class="btn" id="rules" type="button" aria-keyshortcuts="?">How to ride</button>
-    <button class="btn" id="sound" type="button" aria-pressed="true">Sound</button>
+    <button class="btn" id="menu-btn" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape">Menu <kbd>Esc</kbd></button>
   </div>
 </main>
 
 <footer class="credit">Stephen Ball · <a href="/">The Cabinet of Curios</a></footer>
+
+<div class="overlay" id="menu" hidden>
+  <div class="placard" role="dialog" aria-modal="true" aria-labelledby="menu-h">
+    <button class="close" type="button" data-close aria-label="Close">×</button>
+    <h2 id="menu-h">Menu</h2>
+    <div class="menu-list">
+      <button class="btn" id="hint" type="button">Hint</button>
+      <button class="btn" id="timetable" type="button" aria-pressed="false" hidden>Timetable</button>
+      <button class="btn" id="today" type="button">Today's train</button>
+      <button class="btn" id="another" type="button">Another train</button>
+      <button class="btn" id="rules" type="button" aria-keyshortcuts="?">How to ride</button>
+      <button class="btn" id="sound" type="button" aria-pressed="true">Sound</button>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="card" hidden>
   <div class="placard" role="dialog" aria-modal="true" aria-labelledby="card-h">
@@ -306,8 +318,9 @@ button { font: inherit; color: inherit; }
     <ul>
       <li>Tap the top half of a flap to turn it up a letter, or the bottom half to turn it down. Hold to keep it spinning.</li>
       <li>On a keyboard, pick a flap with <kbd>1</kbd> to <kbd>4</kbd> or <kbd>←</kbd> <kbd>→</kbd>, then type the letter you want, or turn it with <kbd>↑</kbd> and <kbd>↓</kbd>.</li>
-      <li><b>Depart</b> (<kbd>Enter</kbd>) stops at the word on the board. <b>Back</b> (<kbd>Backspace</kbd>) undoes a turn or a stop, free.</li>
-      <li><b>Ask the porter</b> for the next stop, or read the <b>Timetable</b> to see a shortest route.</li>
+      <li><b>Depart</b> (<kbd>Enter</kbd>) stops at the word on the board. <b>Back</b> (<kbd>Backspace</kbd>) undoes a turn or a stop.</li>
+      <li>The board won't tell you whether a word is a station until you depart for it.</li>
+      <li>The <b>Menu</b> (<kbd>Esc</kbd>) has a <b>Hint</b>, which turns a flap to a good next stop. Once you've arrived, its <b>Timetable</b> shows a shortest route.</li>
     </ul>
     <p>A new train leaves every day. <b>Another train</b> picks one at random, and the page's link takes anyone who opens it to the same journey.</p>
     <p class="fine">Lewis Carroll published this puzzle in 1879 and called it Doublets: join two words with a chain of words, each one letter different from the last. <br>
@@ -356,139 +369,145 @@ const COMMON = [
   "bait bake bald bale balk ball balm band bang bank bans barb bard bare bark barn bars base bash bask bass bath bats baud",
   "bawl bays bead beak beam bean bear beat beds beef been beer bees beet begs bell belt bend bent best beta bets bias bibs",
   "bide bids bike bile bill bind bins bird bite bits blab bled blew blip blob bloc blog blot blow blue blur boar boas boat",
-  "bobs bode body bogs boil bold bolt bomb bond bone bony book boom boon boor boos boot bore born boss both bout bowl bows",
-  "boys brag bran bras brat bray bred brew brim brow buck buds buff bugs bulb bulk bull bump bums bung bunk buns buoy burn",
-  "burp burr bury bush bust busy butt buys buzz byes byte cabs cage cake calf call calm came camp cane cans cant cape caps",
-  "card care carp cars cart case cash cask cast cats cave caws cede cell cent chap char chat chef chew chic chin chip chop",
-  "chow chug chum cite city clad clam clan clap claw clay clef clip clod clog clot club clue coal coat coax cobs code cods",
-  "cogs coil coin coke cold colt coma comb come cone cons cook cool coop coos cope cops copy cord core cork corn cost cots",
-  "coup cove cows cozy crab crag cram crew crib crop crow crux cube cubs cued cues cuff cull cult cups curb curd cure curl",
-  "curt cute cuts cyst czar dabs dads daft dais dame damp dams dank dare dark darn dart dash data date daub dawn days daze",
-  "dead deaf deal dean dear debt deck deed deem deep deer deft defy deli dens dent deny desk dial dice died dies diet digs",
-  "dike dill dime dims dine dins dips dire dirt disc dish disk dive dock dodo doer does dogs dole doll dome done dons doom",
-  "door dope dose dote dots dour dove down doze drab drag draw drew drip drop drug drum dual dubs duck duct dude duds duel",
-  "dues duet duff duke dull duly dumb dump dune dung dunk dupe dusk dust duty dyed dyes each earl earn ears ease east easy",
-  "eats eave ebbs echo eddy edge edgy edit eels eggs egos eked ekes elks elms else emir emit ends envy eons epic eras ergo",
-  "errs etch even ever eves evil ewes exam exit eyed eyes face fact fade fads fail fair fake fall fame fang fans fare farm",
-  "fast fate fats fawn faze fear feat feds feed feel fees feet fell felt fend fern feud fibs figs file fill film find fine",
-  "fins fire firm firs fish fist fits five fizz flag flak flap flat flaw flea fled flee flew flex flip flit flog flop flow",
-  "flue flux foal foam foes fogs fogy foil fold folk fond font food fool foot ford fore fork form fort foul four fowl foxy",
-  "fray free fret frog from fuel full fume fund furl furs fury fuse fuss fuzz gabs gags gain gait gala gale gall gals game",
-  "gang gape gaps garb gash gasp gate gave gawk gays gaze gear geld gems gene gent germ gets gibe gift gigs gild gill gilt",
-  "gins girl gist give glad glee glen glib glow glue glum glut gnat gnaw gnus goad goal goat gobs gods goes gold golf gone",
-  "gong good goof goon gore gory gosh gout gown grab gram gray grew grid grim grin grip grit grow grub gulf gull gulp gums",
-  "guns guru gush gust guts guys gyms hack hags hail hair hale half hall halo halt hams hand hang hard hare hark harm harp",
-  "hart hash hate hats haul have hawk hays haze hazy head heal heap hear heat heed heel heir held helm help hemp hems hens",
-  "herb herd here hero hers hews hick hide high hike hill hilt hind hint hips hire hiss hits hive hoax hobo hock hoed hoes",
-  "hogs hold hole holy home hone honk hood hoof hook hoop hoot hope hops horn hose host hour hove howl hubs hued hues huff",
-  "huge hugs hulk hull hump hums hung hunk hunt hurl hurt hush husk huts hymn iced ices icon idea idle idly idol ills imps",
+  "bobs bode body bogs boil bold bolt bond bone bony book boom boon boor boos boot bore born boss both bout bowl bows boys",
+  "brag bran brat bray bred brew brim brow buck buds buff bugs bulb bulk bull bump bung bunk buns buoy burn burp burr bury",
+  "bush bust busy buys buzz byes byte cabs cage cake calf call calm came camp cane cans cant cape caps card care carp cars",
+  "cart case cash cask cast cats cave caws cede cell cent chap char chat chef chew chic chin chip chop chow chug chum cite",
+  "city clad clam clan clap claw clay clef clip clod clog clot club clue coal coat coax cobs code cods cogs coil coin cold",
+  "colt comb come cone cons cook cool coop coos cope cops copy cord core cork corn cost cots coup cove cows cozy crab crag",
+  "cram crew crib crop crow crux cube cubs cued cues cuff cull cult cups curb curd cure curl curt cute cuts cyst czar dabs",
+  "dads daft dais dame damp dams dank dare dark darn dart dash data date daub dawn days daze deaf deal dean dear debt deck",
+  "deed deem deep deer deft defy deli dens dent deny desk dial dice diet digs dill dime dims dine dins dips dire dirt disc",
+  "dish disk dive dock dodo doer does dogs dole doll dome done dons doom door dose dote dots dour dove down doze drab drag",
+  "draw drew drip drop drum dual dubs duck duct dude duds duel dues duet duff duke dull duly dumb dump dune dung dunk dupe",
+  "dusk dust duty dyed dyes each earl earn ears ease east easy eats eave ebbs echo eddy edge edgy edit eels eggs egos eked",
+  "ekes elks elms else emir emit ends envy eons epic eras ergo errs etch even ever eves evil ewes exam exit eyed eyes face",
+  "fact fade fads fail fair fake fall fame fang fans fare farm fast fate fats fawn faze fear feat feds feed feel fees feet",
+  "fell felt fend fern feud fibs figs file fill film find fine fins fire firm firs fish fist fits five fizz flag flak flap",
+  "flat flaw flea fled flee flew flex flip flit flop flow flue flux foal foam foes fogs fogy foil fold folk fond font food",
+  "fool foot ford fore fork form fort foul four fowl foxy fray free fret frog from fuel full fume fund furl furs fury fuse",
+  "fuss fuzz gabs gags gain gait gala gale gall gals game gang gape gaps garb gasp gate gave gawk gaze gear geld gems gene",
+  "gent germ gets gibe gift gigs gild gill gilt gins girl gist give glad glee glen glib glow glue glum glut gnat gnaw gnus",
+  "goad goal goat gobs gods goes gold golf gone gong good goof goon gosh gout gown grab gram gray grew grid grim grin grip",
+  "grit grow grub gulf gull gulp gums guru gush gust guts guys gyms hack hail hair hale half hall halo halt hams hand hard",
+  "hare hark harm harp hart hash hate hats haul have hawk hays haze hazy head heal heap hear heat heed heel heir held helm",
+  "help hemp hems hens herb herd here hero hers hews hide high hike hill hilt hind hint hips hire hiss hits hive hoax hobo",
+  "hock hoed hogs hold hole holy home hone honk hood hoof hook hoop hoot hope hops horn hose host hour hove howl hubs hued",
+  "hues huff huge hugs hulk hull hums hunk hunt hurl hurt hush husk huts hymn iced ices icon idea idle idly idol ills imps",
   "inch info inks inky inns into ions iota iris irks iron isle itch item jabs jack jade jail jamb jams jars jaws jays jazz",
   "jeer jell jerk jest jets jibe jigs jilt jinx jobs jogs join joke jolt jots joys judo jugs jump junk jury just jute juts",
-  "keel keen keep kegs kelp kept keys kick kids kill kiln kilo kilt kind king kink kiss kite kits kiwi knee knew knit knob",
-  "knot know labs lace lack lacy lade lads lady lags laid lain lair lake lamb lame lamp land lane laps lard lark lash lass",
-  "last late lath laud lava lawn laws lays lazy lead leaf leak lean leap leek leer left legs lend lens lent less lest lets",
-  "levy liar lice lick lids lied lies lieu life lift like lilt lily limb lime limp line link lint lion lips lisp list live",
-  "load loaf loam loan lobe lobs lock loft logo logs loin loll lone long look loom loon loop loot lope lops lord lore lose",
-  "loss lost lots loud love lows luck lugs lull lump lung lure lurk lush lust lute lyre mace made mads maid mail maim main",
-  "make male mall malt mama mane mans many maps mare mark mars mart mash mask mass mast mate math mats maul maze meal mean",
-  "meat meek meet melt memo mend menu meow mere mesh mess mete mews mice mien mike mild mile milk mill mime mind mine mink",
-  "mint mire miss mist mite mitt moan moat mobs mock mode mold mole molt moms monk mood moon moor moos moot mope mops more",
-  "morn moss most moth move mows much muck muff mugs mule mull muse mush musk muss must mute mutt myth nabs nags nail name",
-  "nape naps navy nays near neat neck need neon nest nets news newt next nice nick nigh nine nips nits node nods noes none",
-  "nook noon norm nose nosy note noun nova nude null numb nuns nuts oafs oaks oars oath obey oboe odds odes odor offs ogle",
-  "ogre ohms oils oily okay okra omen omit once ones only onto onus ooze opal open opts opus oral ores ouch ours oust outs",
-  "oval oven over ovum owed owes owls owns oxen pace pack pact pads page paid pail pain pair pale pall palm pals pane pang",
-  "pans pant papa pare park pars part pass past pate path pats pave pawn paws pays peak peal pear peas peat peck peek peel",
-  "peep peer pegs pelt pens peon peps perk pert pest pets pews pick pier pies pigs pike pile pill pine pink pins pint pipe",
-  "pits pity plan play plea plod plop plot plow ploy plug plum plus pods poem poet poke poky pole poll polo pomp pond pony",
-  "pool poop poor pope pops pore pork port pose post posy pots pour pout pram pray prey prim prod prom prop pros prow puck",
-  "puff pull pulp puma pump punk puns punt puny pups pure purr push puss puts putt pyre quay quip quit quiz race rack racy",
-  "raft rage rags raid rail rain rake ramp rams rang rank rant raps rapt rare rash rasp rate rats rave rays raze read real",
-  "ream reap rear redo reds reed reef reek reel rein rely rend rent rest revs ribs rice rich ride rids rife rift rigs rile",
-  "rims rind ring rink riot ripe rips rise risk rite road roam roar robe robs rock rode rods roes role roll romp roof rook",
-  "room root rope rose rosy rote rots rout rows rubs ruby rude rued rues ruff rugs ruin rule rump rums rune rung runs runt",
-  "ruse rush rust ruts sack sacs safe saga sage sags said sail sake sale salt same sand sane sang sank saps sari sash save",
-  "saws says scab scan scar scum seal seam sear seas seat sect seed seek seem seen seep seer sees self sell send sent sets",
-  "sewn sews sham shed shin ship shod shoe shoo shop shot show shun shut sick side sift sigh sign silk sill silo silt sine",
-  "sing sink sins sips sire sirs site sits size skew skid skim skin skip skis skit slab slag slam slap slat slay sled slew",
-  "slid slim slip slit slob slog slop slot slow slug slum slur smog smug snag snap snip snob snot snow snub snug soak soap",
-  "soar sobs sock soda sods sofa soft soil sold sole solo some song sons soon soot sops sore sort soul soup sour sown sows",
-  "span spar spas spat spay sped spew spin spit spot spry spud spun spur stab stag star stay stem step stew stir stop stow",
-  "stub stud stun subs such suck suds sued sues suit sulk sums sung sunk suns sure surf swab swam swan swap swat sway swig",
-  "swim swum tabs tack taco tact tags tail take talc tale talk tall tame tang tank tans tape taps tars tart task taut taxi",
-  "teak team tear teas teat teed teem teen tees tell tend tens tent term test text than that thaw thee them then they thin",
-  "this thou thud thug thus tick tide tidy tied tier ties tiff tile till tilt time ting tins tint tiny tips tire toad toed",
-  "toes toga toil told toll tomb tome tone tong tons took tool toot tops tore torn toss tote tots tour tout town tows toys",
-  "trap tray tree trek trim trio trip trod trot true tuba tube tubs tuck tuft tugs tuna tune turf turn tusk twee twig twin",
-  "twos type ugly undo unit unto upon urge urns used user uses vain vane vans vary vase vast vats veal veer veil vein vend",
-  "vent verb very vest veto vets vial vice vied vies view vile vine visa vise void volt vote vows wade wads waft wage wags",
-  "waif wail wait wake walk wall wand wane want ward warm warn warp wars wart wary wash wasp watt wave wavy waxy ways weak",
-  "wean wear webs weds weed week weep weld well welt went wept were west wets what when whet whew whim whip whir whiz whoa",
-  "whom whys wick wide wife wigs wild will wilt wily wind wine wing wink wins wipe wire wiry wise wish wisp with wits wive",
-  "woes woke woks wolf womb wont wood woof wool woos word wore work worm worn wove wows wrap wren writ yaks yams yank yaps",
-  "yard yarn yawn year yell yelp yens yeti yews yoga yoke yolk your yowl yuck zany zeal zero zest zeta zinc zips zone zoom",
-  "zoos"
+  "keel keen keep kegs kelp kept keys kick kids kiln kilo kilt kind king kiss kite kits kiwi knee knew knit knot know labs",
+  "lace lack lacy lade lads lady lags laid lain lair lake lamb lame lamp land lane laps lard lark lash lass last late lath",
+  "laud lava lawn laws lays lazy lead leaf leak lean leap leek leer left legs lend lens lent less lest lets levy liar lice",
+  "lick lids lied lies lieu life lift like lilt lily limb lime limp line link lint lion lips lisp list live load loaf loam",
+  "loan lobe lobs lock loft logo logs loin loll lone long look loom loon loop loot lope lops lord lore lose loss lost lots",
+  "loud love lows luck lugs lull lump lung lure lurk lush lute lyre mace made mads maid mail main make male mall malt mama",
+  "mane mans many maps mare mark mars mart mash mask mass mast mate math mats maze meal mean meat meek meet melt memo mend",
+  "menu meow mere mesh mess mete mews mice mien mike mild mile milk mill mime mind mine mink mint mire miss mist mite mitt",
+  "moan moat mobs mock mode mold mole molt moms monk mood moon moor moos moot mope mops more morn moss most moth move mows",
+  "much muck muff mugs mule mull muse mush musk muss must mute mutt myth nabs nags nail name nape naps navy nays near neat",
+  "neck need neon nest nets news newt next nice nick nigh nine nits node nods noes none nook noon norm nose nosy note noun",
+  "nova null numb nuns nuts oafs oaks oars oath obey oboe odds odes odor offs ogle ogre ohms oils oily okay okra omen omit",
+  "once ones only onto onus ooze opal open opts opus ores ouch ours oust outs oval oven over ovum owed owes owls owns oxen",
+  "pace pack pact pads page paid pail pain pair pale pall palm pals pane pang pans pant papa pare park pars part pass past",
+  "pate path pats pave pawn paws pays peak peal pear peas peat peck peek peel peep peer pegs pelt pens peon peps perk pert",
+  "pest pets pews pick pier pies pigs pike pile pill pine pink pins pint pipe pits pity plan play plea plod plop plot plow",
+  "ploy plug plum plus pods poem poet poke poky pole poll polo pomp pond pony pool poop poor pope pops pore pork port pose",
+  "post posy pots pour pout pram pray prey prim prod prom prop pros prow puck puff pull pulp puma pump punk puns punt puny",
+  "pups pure purr push puts putt pyre quay quip quit quiz race rack racy raft rage rags raid rail rain rake ramp rams rang",
+  "rank rant raps rapt rare rash rasp rate rats rave rays raze read real ream reap rear redo reds reed reef reek reel rein",
+  "rely rend rent rest revs ribs rice rich ride rids rife rift rigs rile rims rind ring rink riot ripe rips rise risk rite",
+  "road roam roar robe robs rock rode rods roes role roll romp roof rook room root rope rose rosy rote rots rout rows rubs",
+  "ruby rude rued rues ruff rugs ruin rule rump rums rune rung runs runt ruse rush rust ruts sack sacs safe saga sage sags",
+  "said sail sake sale salt same sand sane sang sank saps sari sash save saws says scab scan scar scum seal seam sear seas",
+  "seat sect seed seek seem seen seep seer sees self sell send sent sets sewn sews sham shed shin ship shod shoe shoo shop",
+  "show shun shut sick side sift sigh sign silk sill silo silt sine sing sink sins sips sire sirs site sits size skew skid",
+  "skim skin skip skis skit slab slam slap slat sled slew slid slim slip slob slog slop slot slow slug slum slur smog smug",
+  "snag snap snip snob snot snow snub snug soak soap soar sobs sock soda sods sofa soft soil sold sole solo some song sons",
+  "soon soot sops sore sort soul soup sour sown sows span spar spas spat spay sped spew spin spit spot spry spud spun spur",
+  "stag star stay stem step stew stir stop stow stub stud stun subs such suck suds sued sues suit sulk sums sung sunk suns",
+  "sure surf swab swam swan swap swat sway swig swim swum tabs tack taco tact tags tail take talc tale talk tall tame tang",
+  "tank tans tape taps tars tart task taut taxi teak team tear teas teed teem teen tees tell tend tens tent term test text",
+  "than that thaw thee them then they thin this thou thud thus tick tide tidy tied tier ties tiff tile till tilt time ting",
+  "tins tint tiny tips tire toad toed toes toga toil told toll tomb tome tone tong tons took tool toot tops tore torn toss",
+  "tote tots tour tout town tows toys trap tray tree trek trim trio trip trod trot true tuba tube tubs tuck tuft tugs tuna",
+  "tune turf turn tusk twee twig twin twos type ugly undo unit unto upon urge urns used user uses vain vane vans vary vase",
+  "vast vats veal veer veil vein vend vent verb very vest veto vets vial vice vied vies view vile vine visa vise void volt",
+  "vote vows wade wads waft wage wags waif wail wait wake walk wall wand wane want ward warm warn warp wars wart wary wash",
+  "wasp watt wave wavy waxy ways weak wean wear webs weds weed week weep weld well welt went wept were west wets what when",
+  "whet whew whim whip whir whiz whoa whom whys wick wide wife wigs wild will wilt wily wind wine wing wink wins wipe wire",
+  "wiry wise wish wisp with wits wive woes woke woks wolf womb wont wood woof wool woos word wore work worm worn wove wows",
+  "wrap wren writ yaks yams yank yaps yard yarn yawn year yell yelp yens yeti yews yoga yoke yolk your yowl yuck zany zeal",
+  "zero zest zeta zinc zips zone zoom zoos"
 ].join(" ").split(" ");
 // rarer words: any of them is a station too, and a shortcut through one can bring you in early
 const RARE = [
-  "abed abut achy acme adze aery agar agog ague ahem albs aloe alum ammo ankh ante anti apps apse aqua arty ashy asps atop",
-  "auks aver awls axon baas bane bast bate beau beck beep berg berm bevy bier bilk blah bola bole boll bong bops bosh bozo",
-  "brad brig bunt burg burs buss cads cams chit clew clop cloy coda coed coif cola cols conk coot corm cote cowl craw crud",
-  "cuds curs cusp cuss dado dale debs dell demo dewy ding dint dirk diva docs doff dolt dork dorm dory doth dram dray drub",
-  "duns duos dyer ecru ells emos emus ergs espy euro ewer exec exes expo fain fart faun fens fest feta fiat fief fife fink",
-  "flab flan flax flay floe flub fobs fops frat funk futz gads gaff gamy geek gels gird girt glob glop goop grad grog guff",
-  "gunk gyro haft hake hank hasp hath haws heck heft hied hies hobs hods hula hype hypo iamb ibex ibis icky ides iffy ilks",
-  "imam isms jags jape jeep jeez jibs jinn jive jock john josh jowl kale kens keto khan kith kook lama lams lank lats laze",
-  "leas lees leis lief lien limn limo limy lira lire lite loci loco lode loge lorn lout luau lube lynx maws mayo mead megs",
-  "meld meme mesa mewl mica miff mils mini minx mods moll mono mote murk myna nary nave nerd nibs noel nope nosh nous nubs",
-  "nuke oats obit oink oleo onyx oops orbs orcs paps pawl pecs peed pees pent perm peso pica pied ping pips pita pith pock",
-  "pols pone pooh posh prep prig prof psst pubs pugs pupa purl quad quid raga razz refs reps rhea rick riff rill rime roan",
-  "roil rood rove rube rusk sago sans sass sate scad scam scat scow scud secs semi sere serf shad shag shah shim sims situ",
-  "slaw sloe slue snit sols sots spam spec suet sumo sump sups swag sync tads tamp tams tare taro tarp tats teal temp tern",
-  "thru tics tine tofu togs toke toms tony tors tort tram trig troy tuns tush tutu twit tyke typo tyro ulna umps urea uric",
-  "vale vamp vape veep veld vibe viol viva vole wack wadi wale ware weal weft weir wend wens wham whey whit wiki wile wimp",
-  "wino wuss yawl yaws yeah yeas yips yogi yore yuks yule zaps zebu zeds zing zits"
+  "abed abut achy acme adze aery agar agog ague ahem albs aloe alum ankh ante anti apps apse aqua arty ashy asps atop auks",
+  "aver awls axon baas bane bast bate beau beck beep berg berm bevy bilk blah bola bole boll bops bosh bozo brad brig bunt",
+  "burg burs buss cads cams chit clew clop cloy coda coed coif cola cols conk coot corm cote cowl craw crud cuds curs cusp",
+  "cuss dado dale debs dell demo dewy ding dint dirk diva docs doff dolt dork dorm dory doth dram dray drub duns duos dyer",
+  "ecru ells emos emus ergs espy euro ewer exec exes expo fain faun fens fest feta fiat fief fife fink flab flan flax flay",
+  "floe flub fobs fops frat funk futz gads gaff gamy geek gels gird girt glob glop goop grad grog guff gunk gyro haft hake",
+  "hank hasp hath haws heck heft hied hies hobs hods hula hype hypo iamb ibex ibis icky ides iffy ilks imam isms jags jape",
+  "jeep jeez jibs jinn jive jock josh jowl kale kens keto khan kith kook lama lams lank lats laze leas lees leis lief lien",
+  "limn limo limy lira lire lite loci loco lode loge lorn lout luau lube lynx maws mayo mead megs meld meme mesa mewl mica",
+  "miff mils mini minx mods mono mote murk myna nary nave nerd nibs noel nope nosh nous nubs oats oink oleo onyx oops orbs",
+  "orcs paps pawl pecs pent perm peso pica pied ping pips pita pith pock pols pone pooh posh prep prig prof psst pubs pugs",
+  "pupa purl quad quid raga razz refs reps rhea rick riff rill rime roan roil rood rove rube rusk sago sans sass sate scad",
+  "scam scat scow scud secs semi sere serf shad shah shim sims situ slaw sloe slue snit sols sots spam spec suet sumo sump",
+  "sups swag sync tads tamp tams tare taro tarp tats teal temp tern thru tics tine tofu togs toms tony tors tort tram trig",
+  "troy tuns tush tutu twit tyke typo tyro ulna umps urea uric vale vamp veep veld vibe viol viva vole wack wadi wale ware",
+  "weal weft weir wend wens wham whey whit wiki wile wimp wuss yawl yaws yeah yeas yips yogi yore yuks yule zaps zebu zeds",
+  "zing zits"
+].join(" ").split(" ");
+// words about death, violence, drugs, and bodies: still stations if you type them, but the board
+// never offers one, as a train's ends, on a shortest route, or as a hint
+const QUIET = [
+  "ammo bier bomb bong bras bums butt coke coma dead died dies dike dope drug fart flog gash gays gore gory guns hags hang",
+  "hick hoes hump hung john kill kink knob lust maim maul moll nips nude nuke obit oral peed pees puss shag shot slag slay",
+  "slit stab teat thug toke vape wino"
 ].join(" ").split(" ");
 // the departure and destination words: the most common ones, and no plain plurals
 const ENDS = [
   "able acid akin ally also arch area army atom aunt away baby back bake ball band bang bank bare bark base bash bass bath",
   "baud beam bean bear beat beef been beer bell belt bend bent best beta bill bind bird bite blew blob blow blue boat body",
-  "boil bold bolt bomb bond bone book boom boot bore born boss both bout bowl buck bulb bulk bull bump burn bury bush bust",
-  "busy byte cage cake call calm came camp cant card care case cash cast cave cell cent chap char chat chew chip chop cite",
-  "city clip clog club clue coal coat code coin coke cold come cook cool cope copy core corn cost cozy crew crop cube cult",
-  "cure cute daft damp dare dark dash data date dawn dead deaf deal dear debt deck deem deep defy deny desk dial dice diet",
-  "dine dire dirt disc dish disk dive dole done doom door dose down drag draw drew drip drop drug drum dual duck duff dull",
-  "duly dumb dump dust duty each earn ease east easy echo edge edit else emit envy epic ergo even ever evil exam exit face",
-  "fact fail fair fake fall fame fare farm fast fate fear feat feel feet fell felt file fill film find fine fire firm fish",
-  "five flag flat flaw flew flip flow foam fold folk fond font food fool foot fork form foul four free frog from fuel full",
-  "fume fund fuse fuss gain game gang gasp gate gave gear gene gift girl give glad glow glue goal goat gold golf gone good",
-  "gown grab gray grew grid grim grip grow gulf hack hail hair half hall halt hand hang hard harm hash hate have hazy head",
-  "heap hear heat heel held help herd here hero hide high hill hint hire hold hole holy home hook hope horn host hour huge",
-  "hung hunt hurt icon idea idle inch info into iron item jack jail jazz jerk jest join joke jump junk jury just keen keep",
-  "kept kick kill kind king kiss knee knew know lack lady laid lain lake lamp land lane lark last late lawn lazy lead leaf",
-  "leak lean leap left lend lent less lest life lift like limb line link lion lisp list live load loan lock logo long look",
-  "loop lord lose loss lost loud love luck lump lung lurk lust made mail main make male many mark mask mass mate maze meal",
-  "mean meat meet melt mend menu mere mess mice mild mile milk mill mind mine mint miss mist moan mock mode mold mole mood",
-  "moon more most move much muck must myth nail name near neat neck nest next nice nick nine node none noon norm nose note",
-  "noun null numb obey omit once only onto open oral over pace pack page paid pain pair pale pant park part pass past path",
-  "peak peer pick pile pill pink pint pipe pity plan play plea plot ploy plug poem poet poke pole poll pool poor pope pork",
-  "port pose post pour pray pull pulp pump punt pure push putt quit quiz race rack rage raid rail rain rang rank rant rare",
-  "rash rate rave read real rear rely rend rent rest rice rich ride ring riot rise risk road rock rode role roll roof room",
-  "root rope rose rout rude ruin rule rung rush sack safe saga said sail sake sale salt same sand sane sang sank save scan",
-  "scum seal seat sect seek seem seen self sell send sent ship shoe shop shot show shut sick side sigh sign sine sing sink",
-  "site size skin skip slag slid slim slip slot slow smug snag snow soap sock soft soil sold sole solo some song soon sore",
-  "sort soul soup span spin spit spot spur star stay stem step stir stop stun such suit sung sunk sure swam swap swim swum",
-  "tack tail take tale talk tall tame tank tape task taxi team tear tell tend term test text than that thee them then they",
-  "thin thou tick tidy tile till time tiny tire toad told toll tome tone took tool tore torn toss tour town trap tray tree",
-  "trek trip true tube tune turn twin type ugly undo unit unto upon urge user vain vary vast vein vend verb very vice view",
-  "vile void vote wade wage wait wake walk wall want ward warm warn warp wary wash wave weak wear week well went were west",
-  "what when whim whom wide wife wild will wind wine wing wipe wire wise wish with wive woke wolf wont wood word wore work",
-  "worm worn wrap wren yard yawn year yeti your zero zone zoom"
+  "boil bold bolt bond bone book boom boot bore born boss both bout bowl buck bulb bulk bull bump burn bury bush bust busy",
+  "byte cage cake call calm came camp cant card care case cash cast cave cell cent chap char chat chew chip chop cite city",
+  "clip clog club clue coal coat code coin cold come cook cool cope copy core corn cost cozy crew crop cube cult cure cute",
+  "daft damp dare dark dash data date dawn deaf deal dear debt deck deem deep defy deny desk dial dice diet dine dire dirt",
+  "disc dish disk dive dole done doom door dose down drag draw drew drip drop drum dual duck duff dull duly dumb dump dust",
+  "duty each earn ease east easy echo edge edit else emit envy epic ergo even ever evil exam exit face fact fail fair fake",
+  "fall fame fare farm fast fate fear feat feel feet fell felt file fill film find fine fire firm fish five flag flat flaw",
+  "flew flip flow foam fold folk fond font food fool foot fork form foul four free frog from fuel full fume fund fuse fuss",
+  "gain game gang gasp gate gave gear gene gift girl give glad glow glue goal goat gold golf gone good gown grab gray grew",
+  "grid grim grip grow gulf hack hail hair half hall halt hand hard harm hash hate have hazy head heap hear heat heel held",
+  "help herd here hero hide high hill hint hire hold hole holy home hook hope horn host hour huge hunt hurt icon idea idle",
+  "inch info into iron item jack jail jazz jerk jest join joke jump junk jury just keen keep kept kick kind king kiss knee",
+  "knew know lack lady laid lain lake lamp land lane lark last late lawn lazy lead leaf leak lean leap left lend lent less",
+  "lest life lift like limb line link lion lisp list live load loan lock logo long look loop lord lose loss lost loud love",
+  "luck lump lung lurk made mail main make male many mark mask mass mate maze meal mean meat meet melt mend menu mere mess",
+  "mice mild mile milk mill mind mine mint miss mist moan mock mode mold mole mood moon more most move much muck must myth",
+  "nail name near neat neck nest next nice nick nine node none noon norm nose note noun null numb obey omit once only onto",
+  "open over pace pack page paid pain pair pale pant park part pass past path peak peer pick pile pill pink pint pipe pity",
+  "plan play plea plot ploy plug poem poet poke pole poll pool poor pope pork port pose post pour pray pull pulp pump punt",
+  "pure push putt quit quiz race rack rage raid rail rain rang rank rant rare rash rate rave read real rear rely rend rent",
+  "rest rice rich ride ring riot rise risk road rock rode role roll roof room root rope rose rout rude ruin rule rung rush",
+  "sack safe saga said sail sake sale salt same sand sane sang sank save scan scum seal seat sect seek seem seen self sell",
+  "send sent ship shoe shop show shut sick side sigh sign sine sing sink site size skin skip slid slim slip slot slow smug",
+  "snag snow soap sock soft soil sold sole solo some song soon sore sort soul soup span spin spit spot spur star stay stem",
+  "step stir stop stun such suit sung sunk sure swam swap swim swum tack tail take tale talk tall tame tank tape task taxi",
+  "team tear tell tend term test text than that thee them then they thin thou tick tidy tile till time tiny tire toad told",
+  "toll tome tone took tool tore torn toss tour town trap tray tree trek trip true tube tune turn twin type ugly undo unit",
+  "unto upon urge user vain vary vast vein vend verb very vice view vile void vote wade wage wait wake walk wall want ward",
+  "warm warn warp wary wash wave weak wear week well went were west what when whim whom wide wife wild will wind wine wing",
+  "wipe wire wise wish with wive woke wolf wont wood word wore work worm worn wrap wren yard yawn year yeti your zero zone",
+  "zoom"
 ].join(" ").split(" ");
-const WORDS = [...COMMON, ...RARE].sort();
+const WORDS = [...COMMON, ...RARE, ...QUIET].sort();
 const N = WORDS.length;
 const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 const COMMONSET = new Set(COMMON);
+const QUIETSET = new Set(QUIET);
 const A = 97;
 const letter = (n) => String.fromCharCode(A + ((n % 26) + 26) % 26);
 // how far a flap turns forward from one letter to another, for the spin
@@ -521,9 +540,9 @@ function distancesTo(target, only = () => true) {
   }
   return dist;
 }
-// the best next stop from a word, alphabetical among ties
+// the best next stop from a word, alphabetical among ties, and never a quiet word
 function bestNext(u, dist) {
-  for (const v of LINKS[u]) if (dist[v] !== NONE && dist[v] === dist[u] - 1) return v;
+  for (const v of LINKS[u]) if (dist[v] !== NONE && dist[v] === dist[u] - 1 && (dist[v] === 0 || !QUIETSET.has(WORDS[v]))) return v;
   return -1;
 }
 function parRoute(from, dist) {
@@ -548,13 +567,14 @@ function seeded(text) {
 // board still takes every word it knows, and a rare one can be a shortcut that gets you in early
 function journey(from, to, check) {
   const f = INDEX.get(from), t = INDEX.get(to);
-  if (f === undefined || t === undefined || f === t) return null;
+  // a train never starts or ends on a quiet word, even from a link
+  if (f === undefined || t === undefined || f === t || QUIETSET.has(from) || QUIETSET.has(to)) return null;
   let dist = distancesTo(t, (v) => v === f || COMMONSET.has(WORDS[v]));
   const rare = dist[f] === NONE;
-  if (rare) dist = distancesTo(t);
+  if (rare) dist = distancesTo(t, (v) => v === f || !QUIETSET.has(WORDS[v]));
   if (dist[f] === NONE) return null;
   const j = { from, to, dist, rare, par: dist[f] };
-  j.any = rare ? dist : distancesTo(t);
+  j.any = distancesTo(t);
   if (check && !check(j)) return null;
   j.parRoute = parRoute(f, dist).map((i) => WORDS[i]);
   return j;
@@ -583,7 +603,7 @@ let game = null;
 function start(j, kind) {
   game = {
     ...j, kind, date: todayKey(),
-    route: [j.from], pend: null, sel: 0, hints: 0, timetable: false, arrived: false,
+    route: [j.from], pend: null, sel: 0, hints: 0, timetable: false, arrived: false, reached: false,
   };
   closeAll();
   if (kind === "daily") history.replaceState(null, "", location.pathname + location.search);
@@ -591,7 +611,7 @@ function start(j, kind) {
   $("timetable").setAttribute("aria-pressed", "false");
   for (let c = 0; c < 4; c++) setFlap(c, j.from[c], false);
   paint();
-  say(`From ${up(j.from)} to ${up(j.to)}. Turn a flap, then depart when the board reads a word.`);
+  say("");
 }
 const here = () => game.route[game.route.length - 1];
 const showing = () => (game.pend ? swap(here(), game.pend.col, game.pend.letter) : here());
@@ -691,42 +711,37 @@ function turnTo(col, ch, dir = 0) {
   game.pend = ch === here()[col] ? null : { col, letter: ch };
   setFlap(col, ch, true, dir);
   paint();
-  narratePend();
 }
 // one letter up (dir 1) or down (dir -1)
 function nudge(col, dir = 1) {
   const base = game.pend && game.pend.col === col ? game.pend.letter : here()[col];
   turnTo(col, letter(base.charCodeAt(0) - A + dir), dir);
 }
-let narrateTimer = 0;
-// wait for the flap to settle before saying anything, so a spin isn't read out letter by letter
-function narratePend() {
-  clearTimeout(narrateTimer);
-  const f = game.pend ? flaps[game.pend.col] : null;
-  const settle = f && !reduced.matches ? Math.min(apart(f.shown, f.want, f.dir) * 40, 900) : 0;
-  narrateTimer = setTimeout(() => {
-    if (!game.pend) return say("Back where you were. Turn a flap.");
-    const w = showing();
-    if (INDEX.has(w)) say(`${up(w)} is a station. Depart?`);
-    else say(`${up(w)}: no such station.`, "bad");
-  }, 260 + settle);
+// the board says no with a buzz, and the flap you turned flashes red and shakes
+function refuse(text) {
+  say(text);
+  play("refuse");
+  const c = game.pend ? game.pend.col : game.sel;
+  const m = flaps[c].mod;
+  m.classList.remove("refused");
+  void m.offsetWidth;
+  m.classList.add("refused");
+  setTimeout(() => m.classList.remove("refused"), 600);
 }
 function depart() {
   if (game.arrived) return;
-  if (!game.pend) { say("Turn a flap first.", "bad"); play("refuse"); return; }
+  if (!game.pend) return refuse("Turn a flap first.");
   const w = showing();
-  if (!INDEX.has(w)) { say(`${up(w)}: no such station. Keep turning, or go Back.`, "bad"); play("refuse"); return; }
+  if (!INDEX.has(w)) return refuse(`${up(w)}: no such station.`);
   game.route.push(w);
   game.pend = null;
-  clearTimeout(narrateTimer);
   if (w === game.to) return arrive();
   play("depart");
   paint();
-  if (game.any[INDEX.get(w)] === NONE) say(`${up(w)}. No line runs on from here. Go back a stop.`, "bad");
-  else say(`${up(w)}. Where next?`);
+  say(`${up(w)}.`);
 }
 function back() {
-  if (game.pend) { cancelPend(); paint(); say("Flap turned back. That was free."); return; }
+  if (game.pend) { cancelPend(); paint(); say(""); return; }
   if (game.route.length < 2) { say("You're at the start already."); return; }
   if (game.arrived) { game.arrived = false; closeAll(); }
   game.route.pop();
@@ -736,25 +751,29 @@ function back() {
 }
 function arrive() {
   game.arrived = true;
+  game.reached = true;
   play("arrive");
   paint();
-  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.`, "good");
+  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.`);
   if (game.kind === "daily" && !saved.days[game.date]) {
     saved.days[game.date] = { stops: stops(), par: game.par };
     save();
   }
   setTimeout(showTicket, reduced.matches ? 0 : 900);
 }
-function porter() {
+function hint() {
   if (game.arrived) return;
   cancelPend();
   const u = INDEX.get(here());
-  if (game.any[u] === NONE) { say("The porter says no line runs on from here. Go back a stop.", "bad"); return; }
-  // the porter knows the common routes, and only falls back on rare words when there are none
-  const v = WORDS[bestNext(u, game.dist[u] !== NONE ? game.dist : game.any)];
+  // hints keep to the common routes, and only fall back on rare words when there are none
+  const i = game.any[u] === NONE ? -1 : bestNext(u, game.dist[u] !== NONE ? game.dist : game.any);
+  if (i < 0) return refuse("No line runs on from here. Go back a stop.");
+  // the hint turns the one flap that changes; you still press Depart
+  const v = WORDS[i], col = [...v].findIndex((ch, c) => ch !== here()[c]);
   game.hints++;
-  paint();
-  say(v === game.to ? `The porter points at ${up(v)}. That's the last stop.` : `The porter suggests ${up(v)} next.`);
+  game.sel = col;
+  turnTo(col, v[col]);
+  say(`Hint: ${up(v)}.`);
 }
 function toggleTimetable() {
   game.timetable = !game.timetable;
@@ -763,11 +782,7 @@ function toggleTimetable() {
 }
 
 // ---------- Paint ----------
-function say(text, tone = "") {
-  const s = $("status");
-  s.textContent = text;
-  s.className = "status" + (tone ? " " + tone : "");
-}
+function say(text) { $("status").textContent = text; }
 function minis(el, w) {
   el.replaceChildren(...[...w].map((ch) => { const s = document.createElement("span"); s.textContent = up(ch); return s; }));
 }
@@ -808,12 +823,15 @@ function paint() {
     tt.append(l, stopsLine(game.parRoute));
   }
   $("depart").disabled = game.arrived;
-  $("porter").disabled = game.arrived;
+  $("hint").disabled = game.arrived;
+  // the timetable gives the answer away, so it waits until you've reached the end once
+  $("timetable").hidden = !game.reached;
   $("back").disabled = !game.pend && game.route.length < 2;
   const done = saved.days[todayKey()];
+  $("service").hidden = game.kind !== "daily";
   $("service").textContent = game.kind === "daily"
     ? `Today's train, ${longDate()}` + (done && done.stops != null ? `. You arrived in ${nStops(done.stops)}.` : "")
-    : "A special train. Share the link to send someone on it.";
+    : "";
   $("today").disabled = game.kind === "daily";
 }
 
@@ -824,7 +842,7 @@ function ticketText() {
   return [
     head,
     `${up(game.from)} → ${up(game.to)}`,
-    `${nStops(stops())}, ${verdict().short}` + (game.hints ? `, ${game.hints} from the porter` : "") + (game.timetable ? ", timetable read" : ""),
+    `${nStops(stops())}, ${verdict().short}` + (game.hints ? `, ${game.hints === 1 ? "one hint" : game.hints + " hints"}` : ""),
     url,
   ].join("\n");
 }
@@ -835,7 +853,7 @@ function showTicket() {
   $("t-when").textContent = game.kind === "daily" ? longDate() : "A special train";
   $("t-verdict").textContent = v.shortest ? "Arrived" : "Arrived, the long way";
   $("t-verdict").className = "verdict " + (v.shortest ? "best" : "longer");
-  const helped = [game.hints ? `${game.hints} ${game.hints === 1 ? "tip" : "tips"} from the porter` : "", game.timetable ? "timetable read" : ""].filter(Boolean).join(", ");
+  const helped = game.hints ? (game.hints === 1 ? "one hint" : `${game.hints} hints`) : "";
   $("t-detail").textContent = `${nStops(stops())}. ${v.long}` + (helped ? ` With ${helped}.` : "");
   $("t-route").textContent = game.route.map(up).join(" · ");
   // show the shorter route when there was one
@@ -851,21 +869,24 @@ async function copyTicket() {
 }
 
 // ---------- Placards ----------
+const PLACARDS = ["menu", "card", "ticket"];
 let opener = null;
 function open(id) {
-  closeAll();
-  opener = document.activeElement;
+  // opening one placard from another hands focus back to whatever opened the first
+  const from = anyOpen() ? opener : document.activeElement;
+  PLACARDS.forEach((p) => { $(p).hidden = true; });
+  opener = from;
   $(id).hidden = false;
   const first = $(id).querySelector(id === "ticket" ? ".btn.main" : ".close");
   if (first) first.focus();
 }
 function closeAll() {
-  const was = ["card", "ticket"].some((id) => !$(id).hidden);
-  ["card", "ticket"].forEach((id) => { $(id).hidden = true; });
+  const was = anyOpen();
+  PLACARDS.forEach((id) => { $(id).hidden = true; });
   if (was && opener && opener.focus) opener.focus();
   opener = null;
 }
-const anyOpen = () => !$("card").hidden || !$("ticket").hidden;
+const anyOpen = () => PLACARDS.some((id) => !$(id).hidden);
 document.querySelectorAll(".overlay").forEach((o) => {
   o.addEventListener("click", (e) => { if (e.target === o || e.target.closest("[data-close]")) closeAll(); });
   // keep Tab inside the placard while it's up
@@ -904,11 +925,6 @@ function wireFlap(f, c) {
   // a click from the keyboard (Space) turns it one; pointer clicks were handled on pointerdown
   f.btn.addEventListener("click", (e) => { if (e.detail === 0) { game.sel = c; nudge(c); } });
   f.btn.addEventListener("focus", () => { if (game.sel !== c) select(c); });
-  f.btn.addEventListener("keydown", (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); select(c + (e.key === "ArrowLeft" ? -1 : 1), true); }
-    else if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); game.sel = c; nudge(c, e.key === "ArrowUp" ? 1 : -1); }
-  });
 }
 document.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -916,15 +932,22 @@ document.addEventListener("keydown", (e) => {
   if (e.target.matches("input:not([type=range]), textarea, select")) return;
   if (/^[a-z]$/i.test(e.key)) { e.preventDefault(); turnTo(game.sel, e.key.toLowerCase()); }
   else if (/^[1-4]$/.test(e.key)) { e.preventDefault(); select(+e.key - 1, true); }
+  // nothing on the page scrolls, so the arrows always work the board, wherever focus is
+  else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+    select(game.sel + (e.key === "ArrowLeft" ? -1 : 1), flaps.some((f) => f.btn === document.activeElement));
+  }
+  else if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); nudge(game.sel, e.key === "ArrowUp" ? 1 : -1); }
   else if (e.key === "Enter") { e.preventDefault(); depart(); }
   else if (e.key === "Backspace") { e.preventDefault(); back(); }
-  else if (e.key === "Escape") { if (game.pend) { e.preventDefault(); back(); } }
+  else if (e.key === "Escape") { e.preventDefault(); if (game.pend) back(); else open("menu"); }
   else if (e.key === "?") { e.preventDefault(); open("card"); }
 });
 $("depart").addEventListener("click", depart);
 $("back").addEventListener("click", back);
-$("porter").addEventListener("click", porter);
-$("timetable").addEventListener("click", toggleTimetable);
+$("menu-btn").addEventListener("click", () => open("menu"));
+$("hint").addEventListener("click", () => { closeAll(); hint(); });
+$("timetable").addEventListener("click", () => { closeAll(); toggleTimetable(); });
 $("another").addEventListener("click", () => start(pickTrain(Math.random), "special"));
 $("t-next").addEventListener("click", () => start(pickTrain(Math.random), "special"));
 $("today").addEventListener("click", () => start(pickTrain(seeded("departures:" + todayKey())), "daily"));
