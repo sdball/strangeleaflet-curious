@@ -230,6 +230,14 @@ button { font: inherit; color: inherit; }
 .ticket .verdict { font: 600 30px/1.1 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 6px; }
 .ticket .verdict.best { color: #2f6b3a; }
 .ticket .verdict.longer { color: #7a5a1c; }
+/* a rubber stamp for the fastest route, inked on a little crooked */
+.ticket .stamp {
+  display: inline-block; margin: 2px 0 10px; padding: 5px 12px 4px; border: 2px solid currentColor; border-radius: 4px;
+  font: 600 16px/1.1 var(--flapfont); letter-spacing: 0.18em; text-transform: uppercase;
+  color: #2f6b3a; box-shadow: inset 0 0 0 1px rgba(47, 107, 58, 0.35); transform: rotate(-3deg); opacity: 0.88;
+}
+.ticket .stamp[hidden] { display: none; }
+.ticket #t-still { margin-top: -4px; font-style: italic; color: #5d523c; }
 .ticket #t-par { color: #6b5a33; }
 .ticket .route { font: 500 15px/1.6 var(--flapfont); letter-spacing: 0.1em; text-transform: uppercase; }
 .ticket .actions { justify-content: center; }
@@ -389,7 +397,7 @@ body.keys .chev { display: none; }
     <button class="close" type="button" data-close aria-label="Close">×</button>
     <h2 id="card-h">How to ride</h2>
     <p>Get from the <b>From</b> word to the <b>To</b> word by changing one letter at a time. Every board you stop at has to be a real word.</p>
-    <p>Take as many stops as you like. When you arrive, your ticket counts them. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
+    <p>Take as many stops as you like. When you arrive, your ticket counts them, and stamps it if you came the fastest way. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
     <p>The lamp under a flap lights when it reads the destination's letter.</p>
     <ul>
       <li>With the <b>Typewriter</b> out (it starts out on touch screens, and Options puts it away or brings it back), tap a flap or use its arrow keys to pick a flap, then tap a letter. The flap turns to it the short way round.</li>
@@ -413,6 +421,8 @@ body.keys .chev { display: none; }
     <p class="when" id="t-when"></p>
     <hr>
     <p class="verdict" id="t-verdict"></p>
+    <p class="stamp" id="t-stamp" hidden></p>
+    <p id="t-still" hidden>A rarer word makes it shorter still.</p>
     <p id="t-detail" hidden></p>
     <p class="route" id="t-route"></p>
     <p class="route" id="t-par" hidden></p>
@@ -699,6 +709,17 @@ const nStops = (n) => (n === 1 ? "one stop" : `${n} stops`);
 // nothing is scored along the way. on arrival the route is set against the shortest one
 // through everyday words, and a longer route gets the chance to try again
 const shortest = () => stops() <= game.par;
+// what the ticket's stamp says. par is the shortest route through everyday words, and a rare
+// word can beat it, so a route at par also learns whether a rarer one runs shorter still.
+// quiet words don't count for that: the board never points anyone at one
+function fastest() {
+  const n = stops();
+  if (n < game.par) return { stamp: "Ahead of the timetable", still: false };
+  if (n > game.par) return null;
+  const t = INDEX.get(game.to);
+  const rare = distancesTo(t, (v) => v === t || !QUIETSET.has(WORDS[v]))[INDEX.get(game.from)];
+  return { stamp: "Fastest route", still: rare < n };
+}
 const hintWords = () => (game.hints ? (game.hints === 1 ? "one hint" : `${game.hints} hints`) : "");
 const up = (w) => w.toUpperCase();
 
@@ -829,7 +850,8 @@ function arrive() {
   game.reached = true;
   play("arrive");
   paint();
-  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.`);
+  const fast = fastest();
+  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.` + (fast ? ` ${fast.stamp}.` : ""));
   if (game.kind === "daily" && !saved.days[game.date]) {
     saved.days[game.date] = { stops: stops(), par: game.par };
     save();
@@ -907,10 +929,11 @@ function paint() {
 function ticketText() {
   const head = game.kind === "daily" ? `Departures, ${longDate()}` : "Departures, a special train";
   const url = location.origin + location.pathname + (game.kind === "daily" ? "" : location.hash);
+  const fast = fastest();
   return [
     head,
     `${up(game.from)} → ${up(game.to)}`,
-    nStops(stops()) + (shortest() ? ", the shortest route" : "") + (game.hints ? ", " + hintWords() : ""),
+    nStops(stops()) + (fast ? ", " + fast.stamp.toLowerCase() : "") + (game.hints ? ", " + hintWords() : ""),
     url,
   ].join("\n");
 }
@@ -921,6 +944,10 @@ function showTicket() {
   $("t-when").textContent = game.kind === "daily" ? longDate() : "A special train";
   $("t-verdict").textContent = nStops(stops());
   $("t-verdict").className = "verdict " + (best ? "best" : "longer");
+  const fast = fastest();
+  $("t-stamp").hidden = !fast;
+  $("t-stamp").textContent = fast ? fast.stamp : "";
+  $("t-still").hidden = !(fast && fast.still);
   $("t-detail").hidden = !game.hints;
   $("t-detail").textContent = game.hints ? `With ${hintWords()}.` : "";
   $("t-route").textContent = game.route.map(up).join(" · ");
