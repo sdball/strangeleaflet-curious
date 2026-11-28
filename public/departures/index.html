@@ -67,7 +67,7 @@ button { font: inherit; color: inherit; }
 /* ---------- the board ---------- */
 .board {
   /* the flap width sets the scale of the whole board: as wide as a phone allows, as tall as a desktop allows */
-  --w: clamp(62px, min(19vw, 23vh), 210px);
+  --w: clamp(62px, min(19vw, 20vh), 210px);
   position: relative; width: fit-content; min-width: min(100%, 620px); max-width: 100%;
   padding: calc(var(--w) * 0.18) calc(var(--w) * 0.22) calc(var(--w) * 0.16);
   background: var(--housing); border-radius: 14px;
@@ -148,7 +148,6 @@ button { font: inherit; color: inherit; }
 #timetable-line .stop { color: var(--brass-hi); }
 
 
-.levers { display: flex; gap: 12px; justify-content: center; }
 .btn {
   min-height: 44px; padding: 8px 18px; border-radius: 8px; cursor: pointer;
   border: 1px solid var(--brass-lo); background: linear-gradient(#22312b, #16211c);
@@ -156,7 +155,8 @@ button { font: inherit; color: inherit; }
 }
 .btn:hover { border-color: var(--brass); }
 .btn[hidden] { display: none; }
-.levers .btn { font-size: clamp(17px, 2.3vh, 21px); min-height: clamp(44px, 6vh, 56px); }
+.levers, .menu-row { display: flex; gap: 12px; justify-content: center; }
+.levers .btn, .menu-row .btn { font-size: clamp(17px, 2.3vh, 21px); min-height: clamp(44px, 6vh, 56px); }
 .btn.main {
   padding: 8px 26px; color: var(--brass-ink); border-color: var(--brass-lo);
   background: linear-gradient(var(--brass-hi), var(--brass) 55%, var(--brass-lo));
@@ -271,7 +271,7 @@ button { font: inherit; color: inherit; }
 .key:focus-visible .cap { outline: 3px solid var(--amber); outline-offset: calc(var(--k) * 0.1); }
 /* with the typewriter out, the board gives up some height to make room, the picked flap
    shows plainly, and the up and down chevrons go, since a tap on a flap only picks it */
-body.keys .board { --w: clamp(56px, min(19vw, 15vh), 180px); }
+body.keys .board { --w: clamp(56px, min(19vw, 12.5vh), 180px); }
 body.keys .mod.sel .flap { box-shadow: 0 0 0 3px var(--brass-hi), 0 3px 0 #000, 0 6px 14px rgba(0, 0, 0, 0.6); }
 body.keys .mod.pend .flap { box-shadow: 0 0 0 3px var(--amber), 0 0 18px rgba(243, 173, 62, 0.45), 0 6px 12px rgba(0, 0, 0, 0.6); }
 body.keys .chev { display: none; }
@@ -279,10 +279,21 @@ body.keys .chev { display: none; }
 @media (max-height: 780px) {
   #hall { gap: 8px; }
 }
+/* a short phone with the typewriter out: the date gives way and everything else tightens */
+@media (max-height: 600px) {
+  body.keys #hall { gap: 6px; }
+  body.keys #service { display: none; }
+  body.keys .sign { padding: 4px 14px 4px 8px; }
+  body.keys .sign h1 { font-size: 22px; }
+  body.keys .clock { width: 34px; }
+  body.keys .board { --w: clamp(52px, min(19vw, 10.5vh), 180px); }
+  body.keys .key { height: 40px; }
+  body.keys .credit { padding-top: 4px; }
+}
 /* key hints only help with a keyboard, and three buttons need the room on a phone */
 @media (hover: none), (max-width: 480px) {
   .levers { gap: 8px; }
-  .levers .btn kbd { display: none; }
+  .levers .btn kbd, .menu-row .btn kbd { display: none; }
   .levers .btn { padding: 8px 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -338,10 +349,14 @@ body.keys .chev { display: none; }
   <div class="levers">
     <button class="btn" id="back" type="button" aria-keyshortcuts="Backspace">Back <kbd>⌫</kbd></button>
     <button class="btn main" id="depart" type="button" aria-keyshortcuts="Enter">Depart <kbd>⏎</kbd></button>
-    <button class="btn" id="menu-btn" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape">Menu <kbd>Esc</kbd></button>
   </div>
 
   <div class="typewriter" id="keys" role="group" aria-label="Typewriter: pick a flap, then a letter" hidden></div>
+
+  <!-- the menu sits apart from Back and Depart, so a thumb reaching for Depart can't catch it -->
+  <div class="menu-row">
+    <button class="btn" id="menu-btn" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape">Menu <kbd>Esc</kbd></button>
+  </div>
 </main>
 
 <footer class="credit">Stephen Ball · <a href="/">The Cabinet of Curios</a></footer>
