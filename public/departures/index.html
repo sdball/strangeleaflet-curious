@@ -231,6 +231,51 @@ button { font: inherit; color: inherit; }
 }
 .ticket .reveal[hidden] { display: none; }
 
+/* ---------- the typewriter ---------- */
+/* round glass-topped keys in brass rims, like an old booking office machine, for screens without a keyboard */
+.typewriter {
+  --k: min(calc((100vw - 44px) / 11), 52px);
+  display: grid; justify-items: center; gap: calc(var(--k) * 0.04);
+  padding: 4px calc(var(--k) * 0.18) 6px; border-radius: 12px 12px 22px 22px;
+  background: linear-gradient(#1f211f, #0b0c0b);
+  box-shadow: 0 0 0 2px var(--brass-lo), 0 0 0 3px var(--brass), 0 14px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.typewriter[hidden] { display: none; }
+.krow { display: flex; gap: calc(var(--k) * 0.08); }
+.key {
+  width: var(--k); height: max(44px, calc(var(--k) * 1.08)); padding: 0; border: 0; background: none; cursor: pointer;
+  display: grid; place-items: center; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.key.wide { width: calc(var(--k) * 1.5); }
+.cap {
+  width: calc(var(--k) * 0.82); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  font: 500 calc(var(--k) * 0.44)/1 var(--flapfont); color: var(--cream); padding-top: 0.04em;
+  background: radial-gradient(circle at 50% 28%, #4a4b47, #171716 58%, #050505);
+  box-shadow: 0 0 0 calc(var(--k) * 0.055) var(--brass), 0 0 0 calc(var(--k) * 0.075) var(--brass-lo),
+    0 calc(var(--k) * 0.09) 0 calc(var(--k) * 0.06) #000, inset 0 2px 2px rgba(255, 255, 255, 0.16);
+}
+.key.wide .cap {
+  width: calc(var(--k) * 1.32); height: calc(var(--k) * 0.82); aspect-ratio: auto; border-radius: 999px;
+  color: var(--brass-ink); background: linear-gradient(var(--brass-hi), var(--brass) 55%, var(--brass-lo));
+}
+.key.wide svg { width: calc(var(--k) * 0.34); height: auto; fill: currentColor; }
+/* the letter the picked flap shows now */
+.key.now .cap { color: var(--amber); }
+.key.down .cap {
+  transform: translateY(calc(var(--k) * 0.07));
+  box-shadow: 0 0 0 calc(var(--k) * 0.055) var(--brass), 0 0 0 calc(var(--k) * 0.075) var(--brass-lo),
+    0 calc(var(--k) * 0.02) 0 calc(var(--k) * 0.06) #000, inset 0 2px 2px rgba(255, 255, 255, 0.1);
+}
+.key:focus-visible { outline: 0; }
+.key:focus-visible .cap { outline: 3px solid var(--amber); outline-offset: calc(var(--k) * 0.1); }
+/* with the typewriter out, the board gives up some height to make room, the picked flap
+   shows plainly, and the up and down chevrons go, since a tap on a flap only picks it */
+body.keys .board { --w: clamp(56px, min(19vw, 15vh), 180px); }
+body.keys .mod.sel .flap { box-shadow: 0 0 0 3px var(--brass-hi), 0 3px 0 #000, 0 6px 14px rgba(0, 0, 0, 0.6); }
+body.keys .mod.pend .flap { box-shadow: 0 0 0 3px var(--amber), 0 0 18px rgba(243, 173, 62, 0.45), 0 6px 12px rgba(0, 0, 0, 0.6); }
+body.keys .chev { display: none; }
+
 @media (max-height: 780px) {
   #hall { gap: 8px; }
 }
@@ -295,6 +340,8 @@ button { font: inherit; color: inherit; }
     <button class="btn main" id="depart" type="button" aria-keyshortcuts="Enter">Depart <kbd>⏎</kbd></button>
     <button class="btn" id="menu-btn" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape">Menu <kbd>Esc</kbd></button>
   </div>
+
+  <div class="typewriter" id="keys" role="group" aria-label="Typewriter: pick a flap, then a letter" hidden></div>
 </main>
 
 <footer class="credit">Stephen Ball · <a href="/">The Cabinet of Curios</a></footer>
@@ -308,6 +355,7 @@ button { font: inherit; color: inherit; }
       <button class="btn" id="timetable" type="button" aria-pressed="false" hidden>Timetable</button>
       <button class="btn" id="today" type="button">Today's train</button>
       <button class="btn" id="another" type="button">Another train</button>
+      <button class="btn" id="typewriter" type="button" aria-pressed="false">Typewriter</button>
       <button class="btn" id="rules" type="button" aria-keyshortcuts="?">How to ride</button>
       <button class="btn" id="sound" type="button" aria-pressed="true">Sound</button>
     </div>
@@ -322,7 +370,8 @@ button { font: inherit; color: inherit; }
     <p>Take as many stops as you like. When you arrive, your ticket counts them. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
     <p>The lamp under a flap lights when it reads the destination's letter.</p>
     <ul>
-      <li>Tap the top half of a flap to turn it up a letter, or the bottom half to turn it down. Hold to keep it spinning.</li>
+      <li>With the <b>Typewriter</b> out (it starts out on touch screens, and the Menu puts it away or brings it back), tap a flap or use its arrow keys to pick a flap, then tap a letter. The flap turns to it the short way round.</li>
+      <li>With it away, tap the top half of a flap to turn it up a letter, or the bottom half to turn it down. Hold to keep it spinning.</li>
       <li>On a keyboard, pick a flap with <kbd>1</kbd> to <kbd>4</kbd> or <kbd>←</kbd> <kbd>→</kbd>, then type the letter you want, or turn it with <kbd>↑</kbd> and <kbd>↓</kbd>.</li>
       <li><b>Depart</b> (<kbd>Enter</kbd>) stops at the word on the board. <b>Back</b> (<kbd>Backspace</kbd>) undoes a turn or a stop.</li>
       <li>The board won't tell you whether a word is a station until you depart for it.</li>
@@ -601,7 +650,7 @@ function todayKey(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth(
 const longDate = (d = new Date()) => d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
 // ---------- Saved things ----------
-// sound and each day's result stay in this browser only
+// sound, the typewriter, and each day's result stay in this browser only
 let saved = { sound: true, days: {} };
 try { Object.assign(saved, JSON.parse(localStorage.getItem("departures") || "{}")); } catch (e) {}
 function save() { try { localStorage.setItem("departures", JSON.stringify(saved)); } catch (e) {} }
@@ -813,6 +862,7 @@ function paint() {
     f.btn.tabIndex = c === game.sel ? 0 : -1;
     f.btn.setAttribute("aria-label", `Flap ${c + 1}: ${up(w[c])}, ${lit ? "matches the destination" : "not yet the destination letter"}`);
   });
+  for (const [ch, b] of Object.entries(keyEls)) b.classList.toggle("now", ch === w[game.sel]);
   const line = $("calling-line");
   line.replaceChildren(stopsLine(game.route));
   const tt = $("timetable-line");
@@ -909,16 +959,24 @@ function select(c, focus = false) {
 function wireFlap(f, c) {
   let hold = 0, spin = 0;
   const stop = () => { clearTimeout(hold); clearInterval(spin); hold = spin = 0; };
+  f.stop = stop;
   f.btn.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || game.arrived) return;
     e.preventDefault();
+    // a second finger landing mid-hold used to start a second timer and lose the first,
+    // which then spun the flap forever. one press at a time per flap
+    stop();
     f.btn.focus();
     game.sel = c;
+    // with the typewriter out, a tap only picks the flap; the keys turn it
+    if (keysOn()) { paint(); return; }
     // the top half turns it up a letter, the bottom half down, and holding keeps it spinning
     const r = f.btn.getBoundingClientRect();
     const dir = e.clientY < r.top + r.height / 2 ? 1 : -1;
     nudge(c, dir);
-    hold = setTimeout(() => { spin = setInterval(() => nudge(c, dir), 110); }, 380);
+    hold = setTimeout(() => {
+      spin = setInterval(() => { if (game.arrived) stop(); else nudge(c, dir); }, 110);
+    }, 380);
   });
   ["pointerup", "pointerleave", "pointercancel"].forEach((t) => f.btn.addEventListener(t, stop));
   f.btn.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -926,11 +984,21 @@ function wireFlap(f, c) {
   f.btn.addEventListener("click", (e) => { if (e.detail === 0) { game.sel = c; nudge(c); } });
   f.btn.addEventListener("focus", () => { if (game.sel !== c) select(c); });
 }
+// a release can land off the flap, or never arrive if the page loses focus mid-hold
+const stopSpins = () => flaps.forEach((f) => f.stop());
+["pointerup", "pointercancel"].forEach((t) => addEventListener(t, stopSpins, true));
+addEventListener("blur", stopSpins);
+document.addEventListener("visibilitychange", stopSpins);
 document.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (anyOpen()) { if (e.key === "Escape") { e.preventDefault(); closeAll(); } return; }
   if (e.target.matches("input:not([type=range]), textarea, select")) return;
-  if (/^[a-z]$/i.test(e.key)) { e.preventDefault(); turnTo(game.sel, e.key.toLowerCase()); }
+  if (/^[a-z]$/i.test(e.key)) {
+    e.preventDefault();
+    const ch = e.key.toLowerCase();
+    turnTo(game.sel, ch);
+    if (keyEls[ch]) strike(keyEls[ch]);
+  }
   else if (/^[1-4]$/.test(e.key)) { e.preventDefault(); select(+e.key - 1, true); }
   // nothing on the page scrolls, so the arrows always work the board, wherever focus is
   else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
@@ -966,6 +1034,63 @@ $("today").addEventListener("click", () => start(pickTrain(seeded("departures:" 
 $("rules").addEventListener("click", () => open("card"));
 $("t-copy").addEventListener("click", copyTicket);
 $("sound").addEventListener("click", () => setSound(!saved.sound));
+$("typewriter").addEventListener("click", () => { saved.keys = !keysOn(); save(); showKeys(); paint(); });
+
+// ---------- Typewriter ----------
+// keys under the board, for screens with no keyboard of their own. pick a flap with the arrow
+// keys or by tapping it, then strike a letter, and the flap turns to it the short way round
+const keyEls = {};
+const ROWS = ["qwertyuiop", "asdfghjkl", "<zxcvbnm>"];
+// out by default where the pointer is a finger, until the menu says otherwise
+const keysOn = () => saved.keys ?? matchMedia("(pointer: coarse)").matches;
+function showKeys() {
+  const on = keysOn();
+  $("keys").hidden = !on;
+  document.body.classList.toggle("keys", on);
+  $("typewriter").setAttribute("aria-pressed", on);
+}
+// a key dips while it's struck, and stays down long enough to see on a quick tap
+function strike(b) {
+  b.classList.add("down");
+  clearTimeout(b.up);
+  b.up = setTimeout(() => b.classList.remove("down"), 110);
+}
+// keys act as they go down, as a typewriter's do. Space on a focused key clicks it instead
+function onStrike(b, act) {
+  b.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    strike(b);
+    act();
+  });
+  b.addEventListener("click", (e) => { if (e.detail === 0) { strike(b); act(); } });
+  b.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+function buildKeys() {
+  for (const keys of ROWS) {
+    const row = document.createElement("div");
+    row.className = "krow";
+    for (const ch of keys) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "key";
+      if (ch === "<" || ch === ">") {
+        const left = ch === "<";
+        b.classList.add("wide");
+        b.setAttribute("aria-label", left ? "Pick the flap to the left" : "Pick the flap to the right");
+        // drawn, since the arrow characters turn into emoji on iOS
+        b.innerHTML = `<span class="cap"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="${left ? "M7.5 1 2 5l5.5 4z" : "M2.5 1 8 5 2.5 9z"}"/></svg></span>`;
+        onStrike(b, () => select(game.sel + (left ? -1 : 1)));
+      } else {
+        b.innerHTML = `<span class="cap">${up(ch)}</span>`;
+        onStrike(b, () => turnTo(game.sel, ch));
+        keyEls[ch] = b;
+      }
+      row.append(b);
+    }
+    $("keys").append(row);
+  }
+}
 
 // ---------- Station clock ----------
 const SVG = "http://www.w3.org/2000/svg";
@@ -1116,6 +1241,8 @@ function voice(a, L, t, dur, attack, hold, v) {
 // ---------- Start ----------
 buildClock();
 buildFlaps();
+buildKeys();
+showKeys();
 $("sound").setAttribute("aria-pressed", saved.sound);
 // a link with from and to in its hash boards that train; anything else boards today's
 function boardFromLink() {
