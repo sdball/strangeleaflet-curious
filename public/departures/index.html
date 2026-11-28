@@ -155,8 +155,8 @@ button { font: inherit; color: inherit; }
 }
 .btn:hover { border-color: var(--brass); }
 .btn[hidden] { display: none; }
-.levers, .menu-row { display: flex; gap: 12px; justify-content: center; }
-.levers .btn, .menu-row .btn { font-size: clamp(17px, 2.3vh, 21px); min-height: clamp(44px, 6vh, 56px); }
+.levers { display: flex; gap: 12px; justify-content: center; }
+.levers .btn { font-size: clamp(17px, 2.3vh, 21px); min-height: clamp(44px, 6vh, 56px); }
 .btn.main {
   padding: 8px 26px; color: var(--brass-ink); border-color: var(--brass-lo);
   background: linear-gradient(var(--brass-hi), var(--brass) 55%, var(--brass-lo));
@@ -169,9 +169,18 @@ button { font: inherit; color: inherit; }
   font: 500 12px/1 var(--flapfont); padding: 3px 5px; border-radius: 3px;
   border: 1px solid currentColor; opacity: 0.7;
 }
-/* the menu's buttons stack down the placard */
-.menu-list { display: grid; gap: 8px; margin-top: 6px; }
-.menu-list .btn { justify-content: center; width: 100%; }
+/* a quiet link under everything else for the options, well away from Depart */
+.options {
+  min-height: 44px; padding: 0 14px; border: 0; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  font: italic clamp(16px, 2.2vh, 19px) var(--serif); color: var(--muted);
+  text-decoration: underline; text-decoration-color: var(--brass-lo); text-underline-offset: 4px;
+}
+.options:hover { color: var(--cream); text-decoration-color: var(--brass); }
+.options kbd { font: 500 11px/1 var(--flapfont); font-style: normal; padding: 3px 5px; border-radius: 3px; border: 1px solid var(--brass-lo); }
+/* the options' buttons stack down the placard */
+.options-list { display: grid; gap: 8px; margin-top: 6px; }
+.options-list .btn { justify-content: center; width: 100%; }
 .placard .btn[aria-pressed="true"] { color: var(--paper-ink); background: #ecdcae; border-color: var(--brass-lo); }
 
 .credit {
@@ -293,7 +302,7 @@ body.keys .chev { display: none; }
 /* key hints only help with a keyboard, and three buttons need the room on a phone */
 @media (hover: none), (max-width: 480px) {
   .levers { gap: 8px; }
-  .levers .btn kbd, .menu-row .btn kbd { display: none; }
+  .levers .btn kbd, .options kbd { display: none; }
   .levers .btn { padding: 8px 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -353,19 +362,17 @@ body.keys .chev { display: none; }
 
   <div class="typewriter" id="keys" role="group" aria-label="Typewriter: pick a flap, then a letter" hidden></div>
 
-  <!-- the menu sits apart from Back and Depart, so a thumb reaching for Depart can't catch it -->
-  <div class="menu-row">
-    <button class="btn" id="menu-btn" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape">Menu <kbd>Esc</kbd></button>
-  </div>
+  <!-- apart from Back and Depart, so a thumb reaching for Depart can't catch it -->
+  <button class="options" id="options-btn" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape">Options <kbd>Esc</kbd></button>
 </main>
 
 <footer class="credit">Stephen Ball · <a href="/">The Cabinet of Curios</a></footer>
 
-<div class="overlay" id="menu" hidden>
-  <div class="placard" role="dialog" aria-modal="true" aria-labelledby="menu-h">
+<div class="overlay" id="options" hidden>
+  <div class="placard" role="dialog" aria-modal="true" aria-labelledby="options-h">
     <button class="close" type="button" data-close aria-label="Close">×</button>
-    <h2 id="menu-h">Menu</h2>
-    <div class="menu-list">
+    <h2 id="options-h">Options</h2>
+    <div class="options-list">
       <button class="btn" id="hint" type="button">Hint</button>
       <button class="btn" id="timetable" type="button" aria-pressed="false" hidden>Timetable</button>
       <button class="btn" id="today" type="button">Today's train</button>
@@ -385,12 +392,12 @@ body.keys .chev { display: none; }
     <p>Take as many stops as you like. When you arrive, your ticket counts them. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
     <p>The lamp under a flap lights when it reads the destination's letter.</p>
     <ul>
-      <li>With the <b>Typewriter</b> out (it starts out on touch screens, and the Menu puts it away or brings it back), tap a flap or use its arrow keys to pick a flap, then tap a letter. The flap turns to it the short way round.</li>
+      <li>With the <b>Typewriter</b> out (it starts out on touch screens, and Options puts it away or brings it back), tap a flap or use its arrow keys to pick a flap, then tap a letter. The flap turns to it the short way round.</li>
       <li>With it away, tap the top half of a flap to turn it up a letter, or the bottom half to turn it down. Hold to keep it spinning.</li>
       <li>On a keyboard, pick a flap with <kbd>1</kbd> to <kbd>4</kbd> or <kbd>←</kbd> <kbd>→</kbd>, then type the letter you want, or turn it with <kbd>↑</kbd> and <kbd>↓</kbd>.</li>
       <li><b>Depart</b> (<kbd>Enter</kbd>) stops at the word on the board. <b>Back</b> (<kbd>Backspace</kbd>) undoes a turn or a stop.</li>
       <li>The board won't tell you whether a word is a station until you depart for it.</li>
-      <li>The <b>Menu</b> (<kbd>Esc</kbd>) has a <b>Hint</b>, which turns a flap to a good next stop. Once you've arrived, its <b>Timetable</b> shows a shortest route.</li>
+      <li><b>Options</b> (<kbd>Esc</kbd>) has a <b>Hint</b>, which turns a flap to a good next stop. Once you've arrived, its <b>Timetable</b> shows a shortest route.</li>
     </ul>
     <p>A new train leaves every day. <b>Another train</b> picks one at random, and the page's link takes anyone who opens it to the same journey.</p>
     <p class="fine">Lewis Carroll published this puzzle in 1879 and called it Doublets: join two words with a chain of words, each one letter different from the last. <br>
@@ -934,7 +941,7 @@ async function copyTicket() {
 }
 
 // ---------- Placards ----------
-const PLACARDS = ["menu", "card", "ticket"];
+const PLACARDS = ["options", "card", "ticket"];
 let opener = null;
 function open(id) {
   // opening one placard from another hands focus back to whatever opened the first
@@ -1023,12 +1030,12 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); nudge(game.sel, e.key === "ArrowUp" ? 1 : -1); }
   else if (e.key === "Enter") { e.preventDefault(); depart(); }
   else if (e.key === "Backspace") { e.preventDefault(); back(); }
-  else if (e.key === "Escape") { e.preventDefault(); if (game.pend) back(); else open("menu"); }
+  else if (e.key === "Escape") { e.preventDefault(); if (game.pend) back(); else open("options"); }
   else if (e.key === "?") { e.preventDefault(); open("card"); }
 });
 $("depart").addEventListener("click", depart);
 $("back").addEventListener("click", back);
-$("menu-btn").addEventListener("click", () => open("menu"));
+$("options-btn").addEventListener("click", () => open("options"));
 $("hint").addEventListener("click", () => { closeAll(); hint(); });
 $("timetable").addEventListener("click", () => { closeAll(); toggleTimetable(); });
 $("another").addEventListener("click", () => start(pickTrain(Math.random), "special"));
@@ -1056,7 +1063,7 @@ $("typewriter").addEventListener("click", () => { saved.keys = !keysOn(); save()
 // keys or by tapping it, then strike a letter, and the flap turns to it the short way round
 const keyEls = {};
 const ROWS = ["qwertyuiop", "asdfghjkl", "<zxcvbnm>"];
-// out by default where the pointer is a finger, until the menu says otherwise
+// out by default where the pointer is a finger, until Options says otherwise
 const keysOn = () => saved.keys ?? matchMedia("(pointer: coarse)").matches;
 function showKeys() {
   const on = keysOn();
