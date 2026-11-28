@@ -397,7 +397,7 @@ body.keys .chev { display: none; }
     <button class="close" type="button" data-close aria-label="Close">×</button>
     <h2 id="card-h">How to ride</h2>
     <p>Get from the <b>From</b> word to the <b>To</b> word by changing one letter at a time. Every board you stop at has to be a real word.</p>
-    <p>Take as many stops as you like. When you arrive, your ticket counts them, and stamps it if you came the fastest way. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
+    <p>Take as many stops as you like. When you arrive, your ticket counts them, and stamps it if you matched the shortest route through everyday words or beat it. If a shorter route through everyday words exists, you can try the same train again, or ask to see that route. Rarer words are stations too, and now and then one of them makes a shortcut.</p>
     <p>The lamp under a flap lights when it reads the destination's letter.</p>
     <ul>
       <li>With the <b>Typewriter</b> out (it starts out on touch screens, and Options puts it away or brings it back), tap a flap or use its arrow keys to pick a flap, then tap a letter. The flap turns to it the short way round.</li>
@@ -460,7 +460,7 @@ const COMMON = [
   "bide bids bike bile bill bind bins bird bite bits blab bled blew blip blob bloc blog blot blow blue blur boar boas boat",
   "bobs bode body bogs boil bold bolt bond bone bony book boom boon boor boos boot bore born boss both bout bowl bows boys",
   "brag bran brat bray bred brew brim brow buck buds buff bugs bulb bulk bull bump bung bunk buns buoy burn burp burr bury",
-  "bush bust busy buys buzz byes byte cabs cage cake calf call calm came camp cane cans cant cape caps card care carp cars",
+  "bush bust busy buys buzz byes byte cabs cage cake calf call calm came camp cane cans cape caps card care carp cars",
   "cart case cash cask cast cats cave caws cede cell cent chap char chat chef chew chic chin chip chop chow chug chum cite",
   "city clad clam clan clap claw clay clef clip clod clog clot club clue coal coat coax cobs code cods cogs coil coin cold",
   "colt comb come cone cons cook cool coop coos cope cops copy cord core cork corn cost cots coup cove cows cozy crab crag",
@@ -525,7 +525,7 @@ const COMMON = [
   "vote vows wade wads waft wage wags waif wail wait wake walk wall wand wane want ward warm warn warp wars wart wary wash",
   "wasp watt wave wavy waxy ways weak wean wear webs weds weed week weep weld well welt went wept were west wets what when",
   "whet whew whim whip whir whiz whoa whom whys wick wide wife wigs wild will wilt wily wind wine wing wink wins wipe wire",
-  "wiry wise wish wisp with wits wive woes woke woks wolf womb wont wood woof wool woos word wore work worm worn wove wows",
+  "wiry wise wish wisp with wits wive woes woke woks wolf womb wood woof wool woos word wore work worm worn wove wows",
   "wrap wren writ yaks yams yank yaps yard yarn yawn year yell yelp yens yeti yews yoga yoke yolk your yowl yuck zany zeal",
   "zero zest zeta zinc zips zone zoom zoos"
 ].join(" ").split(" ");
@@ -533,7 +533,7 @@ const COMMON = [
 const RARE = [
   "abed abut achy acme adze aery agar agog ague ahem albs aloe alum ankh ante anti apps apse aqua arty ashy asps atop auks",
   "aver awls axon baas bane bast bate beau beck beep berg berm bevy bilk blah bola bole boll bops bosh bozo brad brig bunt",
-  "burg burs buss cads cams chit clew clop cloy coda coed coif cola cols conk coot corm cote cowl craw crud cuds curs cusp",
+  "burg burs buss cads cams cant chit clew clop cloy coda coed coif cola cols conk coot corm cote cowl craw crud cuds curs cusp",
   "cuss dado dale debs dell demo dewy ding dint dirk diva docs doff dolt dork dorm dory doth dram dray drub duns duos dyer",
   "ecru ells emos emus ergs espy euro ewer exec exes expo fain faun fens fest feta fiat fief fife fink flab flan flax flay",
   "floe flub fobs fops frat funk futz gads gaff gamy geek gels gird girt glob glop goop grad grog guff gunk gyro haft hake",
@@ -546,7 +546,7 @@ const RARE = [
   "scam scat scow scud secs semi sere serf shad shah shim sims situ slaw sloe slue snit sols sots spam spec suet sumo sump",
   "sups swag sync tads tamp tams tare taro tarp tats teal temp tern thru tics tine tofu togs toms tony tors tort tram trig",
   "troy tuns tush tutu twit tyke typo tyro ulna umps urea uric vale vamp veep veld vibe viol viva vole wack wadi wale ware",
-  "weal weft weir wend wens wham whey whit wiki wile wimp wuss yawl yaws yeah yeas yips yogi yore yuks yule zaps zebu zeds",
+  "weal weft weir wend wens wham whey whit wiki wile wimp wont wuss yawl yaws yeah yeas yips yogi yore yuks yule zaps zebu zeds",
   "zing zits"
 ].join(" ").split(" ");
 // words about death, violence, drugs, and bodies: still stations if you type them, but the board
@@ -556,7 +556,8 @@ const QUIET = [
   "hick hoes hump hung john kill kink knob lust maim maul moll nips nude nuke obit oral peed pees puss shag shot slag slay",
   "slit stab teat thug toke vape wino"
 ].join(" ").split(" ");
-// the departure and destination words: the most common ones, and no plain plurals
+// the departure and destination words: the most common ones, and no plain plurals. pickTrain
+// passes over one that isn't in COMMON, so a word can move to RARE without reshuffling the days
 const ENDS = [
   "able acid akin ally also arch area army atom aunt away baby back bake ball band bang bank bare bark base bash bass bath",
   "baud beam bean bear beat beef been beer bell belt bend bent best beta bill bind bird bite blew blob blow blue boat body",
@@ -672,7 +673,7 @@ function journey(from, to, check) {
 function pickTrain(rand) {
   for (let tries = 0; tries < 2000; tries++) {
     const from = ENDS[Math.floor(rand() * ENDS.length)], to = ENDS[Math.floor(rand() * ENDS.length)];
-    const j = journey(from, to, (j) => !j.rare && j.par >= 3 && j.par <= 7 && j.any[INDEX.get(from)] >= 3);
+    const j = journey(from, to, (j) => COMMONSET.has(from) && COMMONSET.has(to) && !j.rare && j.par >= 3 && j.par <= 7 && j.any[INDEX.get(from)] >= 3);
     if (j) return j;
   }
   return journey("cold", "warm");
@@ -710,7 +711,8 @@ const nStops = (n) => (n === 1 ? "one stop" : `${n} stops`);
 // through everyday words, and a longer route gets the chance to try again
 const shortest = () => stops() <= game.par;
 // what the ticket's stamp says. par is the shortest route through everyday words, and a rare
-// word can beat it, so a route at par also learns whether a rarer one runs shorter still.
+// word can beat it, so a route at par only counts as the fastest when no rarer one runs shorter.
+// otherwise it kept to the timetable, and the line under the stamp says a shortcut exists.
 // quiet words don't count for that: the board never points anyone at one
 function fastest() {
   const n = stops();
@@ -718,7 +720,7 @@ function fastest() {
   if (n > game.par) return null;
   const t = INDEX.get(game.to);
   const rare = distancesTo(t, (v) => v === t || !QUIETSET.has(WORDS[v]))[INDEX.get(game.from)];
-  return { stamp: "Fastest route", still: rare < n };
+  return rare < n ? { stamp: "On the timetable", still: true } : { stamp: "Fastest route", still: false };
 }
 const hintWords = () => (game.hints ? (game.hints === 1 ? "one hint" : `${game.hints} hints`) : "");
 const up = (w) => w.toUpperCase();
@@ -851,7 +853,7 @@ function arrive() {
   play("arrive");
   paint();
   const fast = fastest();
-  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.` + (fast ? ` ${fast.stamp}.` : ""));
+  say(`Arrived at ${up(game.to)} in ${nStops(stops())}.` + (fast ? ` ${fast.stamp}.` : "") + (fast && fast.still ? " " + $("t-still").textContent : ""));
   if (game.kind === "daily" && !saved.days[game.date]) {
     saved.days[game.date] = { stops: stops(), par: game.par };
     save();
